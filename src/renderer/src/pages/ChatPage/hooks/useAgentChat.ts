@@ -7,12 +7,14 @@ import {
 } from '@aws-sdk/client-bedrock-runtime'
 import { StreamChatCompletionProps, streamChatCompletion } from '@renderer/lib/api'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSettings } from '@renderer/contexts/SettingsContext'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { ToolState } from '@/types/agent-chat'
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ChatMessage } from '@/types/chat/history'
 import { ToolName } from '@/types/tools'
+import { notificationService } from '@renderer/services/NotificationService'
 
 // メッセージの送信時に、Trace を全て載せると InputToken が逼迫するので取り除く
 function removeTraces(messages) {
@@ -69,6 +71,7 @@ export const useAgentChat = (
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
   const abortController = useRef<AbortController | null>(null)
   const { t } = useTranslation()
+  const { notification } = useSettings()
 
   // 通信を中断する関数
   const abortCurrentRequest = useCallback(() => {
@@ -377,6 +380,44 @@ export const useAgentChat = (
         } else {
           result = await recursivelyExecTool(lastMessage.content, currentMessages)
         }
+      }
+
+      // チャット完了時に通知を表示（設定が有効な場合のみ）
+      if (notification) {
+        // 最新のアシスタントメッセージを取得
+        const lastAssistantMessage = currentMessages.filter((msg) => msg.role === 'assistant').pop()
+
+        // テキストコンテンツを抽出
+        let notificationBody = ''
+        if (lastAssistantMessage?.content) {
+          const textContent = lastAssistantMessage.content
+            .filter((content) => 'text' in content)
+            .map((content) => (content as { text: string }).text)
+            .join(' ')
+
+          // 最初の1-2文を抽出（または最初の100文字程度）
+          notificationBody = textContent
+            .split(/[.。]/)
+            .filter((sentence) => sentence.trim().length > 0)
+            .slice(0, 2)
+            .join('. ')
+            .trim()
+
+          // 長すぎる場合は切り詰める
+          if (notificationBody.length > 100) {
+            notificationBody = notificationBody.substring(0, 100) + '...'
+          }
+        }
+
+        // 応答が空の場合はデフォルトメッセージを使用
+        if (!notificationBody) {
+          notificationBody = t('notification.messages.chatComplete.body')
+        }
+
+        await notificationService.showNotification(t('notification.messages.chatComplete.title'), {
+          body: notificationBody,
+          silent: false // 通知音を有効化
+        })
       }
     } catch (error: any) {
       console.error('Error in handleSubmit:', error)

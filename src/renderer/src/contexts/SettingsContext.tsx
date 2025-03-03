@@ -95,6 +95,10 @@ export interface SettingsContextType {
   sendMsgKey: SendMsgKey
   updateSendMsgKey: (key: SendMsgKey) => void
 
+  // Notification Settings
+  notification: boolean
+  setNotification: (enabled: boolean) => void
+
   // LLM Settings
   currentLLM: LLM
   updateLLM: (selectedModel: LLM) => void
@@ -163,6 +167,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Advanced Settings
   const [sendMsgKey, setSendMsgKey] = useState<SendMsgKey>('Enter')
 
+  // Notification Settings
+  const [notification, setStateNotification] = useState<boolean>(true)
+
   // LLM Settings
   const [llmError, setLLMError] = useState<any>()
   const defaultModel = {
@@ -220,6 +227,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Load Advanced Settings
     const advancedSetting = window.store.get('advancedSetting')
     setSendMsgKey(advancedSetting?.keybinding?.sendMsgKey)
+
+    // Load Notification Settings
+    const notificationSetting = window.store.get('notification')
+    if (notificationSetting !== undefined) {
+      setStateNotification(notificationSetting)
+    }
 
     // Load LLM Settings
     const storedLLM = window.store.get('llm')
@@ -575,10 +588,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
   }
 
+  const setNotification = useCallback((enabled: boolean) => {
+    setStateNotification(enabled)
+    window.store.set('notification', enabled)
+  }, [])
+
   const value = {
     // Advanced Settings
     sendMsgKey,
     updateSendMsgKey,
+
+    // Notification Settings
+    notification,
+    setNotification,
 
     // LLM Settings
     currentLLM,

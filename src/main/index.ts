@@ -250,6 +250,12 @@ app.whenReady().then(() => {
     }
   })
 
+  // Window focus state handler
+  ipcMain.handle('window:isFocused', (event) => {
+    const window = BrowserWindow.fromWebContents(event.sender)
+    return window?.isFocused() ?? false
+  })
+
   // Web fetch handler for Tool execution
   ipcMain.handle('fetch-website', async (_event, url: string, options?: any) => {
     try {

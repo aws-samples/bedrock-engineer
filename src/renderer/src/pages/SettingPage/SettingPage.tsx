@@ -7,7 +7,8 @@ import {
   AgentChatSection,
   AWSSection,
   BedrockSection,
-  AdvancedSection
+  AdvancedSection,
+  NotificationSection
 } from './components/sections'
 import { ConfigDirSection } from './components/sections/ConfigDirSection'
 
@@ -84,6 +85,8 @@ export const SettingPage: React.FC = () => {
       />
 
       <AdvancedSection sendMsgKey={sendMsgKey} onUpdateSendMsgKey={updateSendMsgKey} />
+
+      <NotificationSection />
     </div>
   )
 }
