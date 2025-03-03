@@ -8,6 +8,7 @@ import {
 } from '@aws-sdk/client-bedrock-runtime'
 import { createRuntimeClient } from '../client'
 import { processImageContent } from '../utils/imageUtils'
+import { getAlternateRegionOnThrottling } from '../utils/awsUtils'
 import type { CallConverseAPIProps, ServiceContext } from '../types'
 
 // contentBlockのテキストフィールドが空でないことを確認する関数
@@ -71,6 +72,7 @@ export class ConverseService {
   async converse(props: CallConverseAPIProps, retries = 0): Promise<ConverseCommandOutput> {
     // スコープ外で変数を宣言して、catch ブロックでもアクセスできるようにする
     let processedMessages: Message[] = []
+    let commandParams: any
 
     try {
       const { modelId, messages, system, toolConfig } = props
@@ -101,22 +103,58 @@ export class ConverseService {
       const sanitizedMessages = sanitizeMessages(processedMessages)
 
       const { maxTokens, temperature, topP } = this.context.store.get('inferenceParams')
-      const command = new ConverseCommand({
+      commandParams = {
         modelId,
         messages: sanitizedMessages,
         system,
         toolConfig,
         inferenceConfig: { maxTokens, temperature, topP }
-      })
+      }
 
       const runtimeClient = createRuntimeClient(this.context.store.get('aws'))
-      return runtimeClient.send(command)
+      return runtimeClient.send(new ConverseCommand(commandParams))
     } catch (error: any) {
       if (error.name === 'ThrottlingException' || error.name === 'ServiceUnavailableException') {
         console.log({ retry: retries, error, errorName: error.name })
         if (retries >= ConverseService.MAX_RETRIES) {
           throw error
         }
+
+        // ThrottlingException の場合、設定に応じて別のリージョンを試す
+        if (error.name === 'ThrottlingException') {
+          const awsConfig = this.context.store.get('aws')
+          const bedrockSettings = this.context.store.get('bedrockSettings')
+
+          if (bedrockSettings?.enableRegionFailover) {
+            const availableRegions = bedrockSettings.availableRegions || []
+            const alternateRegion = getAlternateRegionOnThrottling(
+              awsConfig.region,
+              props.modelId,
+              availableRegions
+            )
+
+            // 別のリージョンが利用可能な場合は、そのリージョンで再試行
+            if (alternateRegion !== awsConfig.region) {
+              console.log({
+                message: 'Switching to alternate region due to throttling',
+                currentRegion: awsConfig.region,
+                alternateRegion
+              })
+              const alternateClient = createRuntimeClient({
+                ...awsConfig,
+                region: alternateRegion
+              })
+              try {
+                const command = new ConverseCommand(commandParams)
+                return await alternateClient.send(command)
+              } catch (alternateError) {
+                console.log({ alternateRegionError: alternateError })
+                // 別リージョンでもエラーの場合は通常の再試行へ
+              }
+            }
+          }
+        }
+
         await new Promise((resolve) => setTimeout(resolve, ConverseService.RETRY_DELAY))
         return this.converse(props, retries + 1)
       }
@@ -140,9 +178,9 @@ export class ConverseService {
     props: CallConverseAPIProps,
     retries = 0
   ): Promise<ConverseStreamCommandOutput> {
-    const runtimeClient = createRuntimeClient(this.context.store.get('aws'))
     // スコープ外で変数を宣言して、catch ブロックでもアクセスできるようにする
     let processedMessages: Message[] = []
+    let commandParams: any
 
     try {
       const { modelId, messages, system, toolConfig } = props
@@ -171,21 +209,58 @@ export class ConverseService {
       // Sanitize messages to handle empty text fields
       const sanitizedMessages = sanitizeMessages(processedMessages)
 
-      const command = new ConverseStreamCommand({
+      commandParams = {
         modelId,
         messages: sanitizedMessages,
         system,
         toolConfig,
         inferenceConfig: this.context.store.get('inferenceParams')
-      })
+      }
 
-      return await runtimeClient.send(command)
+      const runtimeClient = createRuntimeClient(this.context.store.get('aws'))
+      return await runtimeClient.send(new ConverseStreamCommand(commandParams))
     } catch (error: any) {
       if (error.name === 'ThrottlingException' || error.name === 'ServiceUnavailableException') {
         console.log({ retry: retries, error, errorName: error.name })
         if (retries >= ConverseService.MAX_RETRIES) {
           throw error
         }
+
+        // ThrottlingException の場合、設定に応じて別のリージョンを試す
+        if (error.name === 'ThrottlingException') {
+          const awsConfig = this.context.store.get('aws')
+          const bedrockSettings = this.context.store.get('bedrockSettings')
+
+          if (bedrockSettings?.enableRegionFailover) {
+            const availableRegions = bedrockSettings.availableRegions || []
+            const alternateRegion = getAlternateRegionOnThrottling(
+              awsConfig.region,
+              props.modelId,
+              availableRegions
+            )
+
+            // 別のリージョンが利用可能な場合は、そのリージョンで再試行
+            if (alternateRegion !== awsConfig.region) {
+              console.log({
+                message: 'Switching to alternate region due to throttling',
+                currentRegion: awsConfig.region,
+                alternateRegion
+              })
+              const alternateClient = createRuntimeClient({
+                ...awsConfig,
+                region: alternateRegion
+              })
+              try {
+                const command = new ConverseStreamCommand(commandParams)
+                return await alternateClient.send(command)
+              } catch (alternateError) {
+                console.log({ alternateRegionError: alternateError })
+                // 別リージョンでもエラーの場合は通常の再試行へ
+              }
+            }
+          }
+        }
+
         await new Promise((resolve) => setTimeout(resolve, ConverseService.RETRY_DELAY))
         return this.converseStream(props, retries + 1)
       }

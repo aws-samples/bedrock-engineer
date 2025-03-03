@@ -13,6 +13,11 @@ export const AWS_REGIONS: AwsRegion[] = [
     bedrockSupported: true
   },
   {
+    id: 'us-east-2',
+    name: 'US East (Ohio)',
+    bedrockSupported: true
+  },
+  {
     id: 'us-west-2',
     name: 'US West (Oregon)',
     bedrockSupported: true
@@ -43,11 +48,6 @@ export const AWS_REGIONS: AwsRegion[] = [
     bedrockSupported: true
   },
   // その他の主要なリージョン（Bedrock非対応）
-  {
-    id: 'us-east-2',
-    name: 'US East (Ohio)',
-    bedrockSupported: false
-  },
   {
     id: 'us-west-1',
     name: 'US West (N. California)',

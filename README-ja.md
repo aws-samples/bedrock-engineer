@@ -36,6 +36,10 @@ MacOS:
 2. プライバシーとセキュリティをクリックします
 3. 下にスクロールして、「Mac を保護するために、Bedrock Engineer がブロックされました」の横にある「とにかく開く」をクリックします。
 
+アプリケーション起動時に設定ファイルエラーが発生する場合、以下の設定ファイルを確認ください。設定ファイルを削除してアプリケーションを再起動し直しても起動できない場合、issue に起票ください。
+
+`/Users/{{username}}/Library/Application Support/bedrock-engineer/config.json`
+
 </details>
 
 ### ビルド

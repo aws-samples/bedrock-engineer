@@ -35,6 +35,11 @@ If you see "'Bedrock Engineer' can't be opened because Apple cannot check it for
 1. Open System Preferences
 2. Click Privacy & Security
 3. Scroll down and click "Open Anyway" next to "Bedrock Engineer was blocked to protect your Mac."
+
+If a configuration file error occurs when starting the application, please check the following configuration files. If you cannot start the application even after deleting the configuration files and restarting it, please file an issue.
+
+`/Users/{{username}}/Library/Application Support/bedrock-engineer/config.json`
+
 </details>
 
 ### Build

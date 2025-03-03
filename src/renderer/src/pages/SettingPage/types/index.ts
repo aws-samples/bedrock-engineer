@@ -20,6 +20,16 @@ export interface SettingFormData {
     temperature: number
     topP: number
   }
+  bedrockSettings: {
+    enableRegionFailover: boolean
+    availableRegions: string[]
+  }
+  onUpdateBedrockSettings: (
+    settings: Partial<{
+      enableRegionFailover: boolean
+      availableRegions: string[]
+    }>
+  ) => void
 
   // Advanced Settings
   sendMsgKey: 'Enter' | 'Cmd+Enter'
