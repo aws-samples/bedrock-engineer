@@ -131,6 +131,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
       return
     }
     if (value.trim() || attachedImages.length > 0) {
+      SoundService.playChatCompleteSound()
       onSubmit(value, attachedImages)
       setAttachedImages([])
     }

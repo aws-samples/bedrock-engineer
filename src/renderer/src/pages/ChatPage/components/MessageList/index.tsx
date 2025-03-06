@@ -2,7 +2,6 @@ import { Message as MessageType } from '@aws-sdk/client-bedrock-runtime'
 import React, { useEffect, useRef } from 'react'
 import { ChatMessage } from './Message'
 import AILogo from '@renderer/assets/images/icons/ai.svg'
-import SoundService from '@renderer/services/SoundService'
 
 type MessageListProps = {
   messages: MessageType[]
@@ -36,10 +35,6 @@ export const MessageList: React.FC<MessageListProps> = ({ messages, loading, del
   const prevLoadingRef = useRef(loading)
 
   useEffect(() => {
-    // チャット完了時（ローディングが終了したとき）にサウンドを再生
-    if (prevLoadingRef.current && !loading && messages.length > 0) {
-      SoundService.playChatCompleteSound()
-    }
     prevLoadingRef.current = loading
   }, [loading, messages.length])
 
