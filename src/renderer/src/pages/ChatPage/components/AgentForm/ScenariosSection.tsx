@@ -28,30 +28,27 @@ export const ScenariosSection: React.FC<ScenariosSectionProps> = ({
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-between">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+      <div className="mb-2">
+        <div className="flex items-center space-x-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 flex-shrink-0">
             Scenarios {t('optional')}
           </label>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-            {t('scenariosDescription')}
-          </p>
+          {name && description && system && (
+            <button
+              type="button"
+              onClick={onAutoGenerate}
+              disabled={isGenerating}
+              className="inline-flex items-center text-xs bg-blue-50 hover:bg-blue-100 dark:bg-blue-900 dark:hover:bg-blue-800
+              text-blue-600 dark:text-blue-400 rounded px-1.5 py-0.5 transition-colors duration-200 border border-blue-200 dark:border-blue-800"
+            >
+              <FiZap className={`w-3 h-3 mr-1 ${isGenerating ? 'animate-pulse' : ''}`} />
+              <span>{isGenerating ? t('generating') : 'Scenarios を自動生成する'}</span>
+            </button>
+          )}
         </div>
-
-        {name && description && system && (
-          <button
-            type="button"
-            onClick={onAutoGenerate}
-            disabled={isGenerating}
-            className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-green-600 dark:bg-green-700
-              border border-transparent rounded-md shadow-sm hover:bg-green-700 dark:hover:bg-green-600
-              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-900
-              disabled:opacity-50"
-          >
-            <FiZap />
-            <span>{isGenerating ? t('generating') : t('autoGenerateScinario')}</span>
-          </button>
-        )}
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 mt-1">
+          {t('scenariosDescription')}
+        </p>
       </div>
 
       <div className="space-y-2">

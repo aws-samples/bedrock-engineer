@@ -1,16 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
-import { Agent, KnowledgeBase, Scenario, SendMsgKey, ToolState } from 'src/types/agent-chat'
+import { KnowledgeBase, Scenario, SendMsgKey, ToolState } from 'src/types/agent-chat'
 import { listModels } from '@renderer/lib/api'
 import { CustomAgent } from '@/types/agent-chat'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BedrockAgent } from '../pages/ChatPage/modals/useToolSettingModal/BedrockAgentSettingForm'
 import { replacePlaceholders } from '@renderer/pages/ChatPage/utils/placeholder'
 import { useTranslation } from 'react-i18next'
-import {
-  SOFTWARE_AGENT_SYSTEM_PROMPT,
-  CODE_BUDDY_SYSTEM_PROMPT,
-  PRODUCT_DESIGNER_SYSTEM_PROMPT
-} from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
+import { DEFAULT_AGENTS } from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
 import { InferenceParameters, LLM, BEDROCK_SUPPORTED_REGIONS } from '@/types/llm'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
@@ -145,6 +141,8 @@ export interface SettingsContextType {
   // Custom Agents Settings
   customAgents: CustomAgent[]
   saveCustomAgents: (agents: CustomAgent[]) => void
+  sharedAgents: CustomAgent[]
+  loadSharedAgents: () => Promise<void>
 
   // Selected Agent Settings
   selectedAgentId: string
@@ -218,6 +216,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Custom Agents Settings
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([])
+  const [sharedAgents, setSharedAgents] = useState<CustomAgent[]>([])
 
   // Selected Agent Settings
   const [selectedAgentId, setStateSelectedAgentId] = useState<string>('softwareAgent')
@@ -373,6 +372,26 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [awsRegion, awsAccessKeyId, awsSecretAccessKey])
 
+  // Load shared agents when component mounts or project path changes
+  useEffect(() => {
+    // Load shared agents right away
+    loadSharedAgents()
+  }, [projectPath])
+
+  // Function to load shared agents from project directory
+  const loadSharedAgents = async () => {
+    try {
+      const { agents, error } = await window.file.readSharedAgents()
+      if (error) {
+        console.error('Error loading shared agents:', error)
+      } else {
+        setSharedAgents(agents || [])
+      }
+    } catch (error) {
+      console.error('Failed to load shared agents:', error)
+    }
+  }
+
   useEffect(() => {
     if (currentLLM && currentLLM.toolUse === false) {
       // currentLLM が ToolUse をサポートしないモデルだった場合ツールを全て disabled にする
@@ -484,61 +503,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }
 
   const { t, i18n } = useTranslation()
-  // エージェントの基本定義を取得
-  const getBaseAgents = useCallback((): Agent[] => {
-    return [
-      {
-        name: 'Software Developer',
-        id: 'softwareAgent',
-        description: t('softwareAgent.description'),
-        system: SOFTWARE_AGENT_SYSTEM_PROMPT,
-        scenarios: [
-          { title: 'What is Amazon Bedrock', content: '' },
-          { title: 'Organizing folders', content: '' },
-          { title: 'Simple website', content: '' },
-          { title: 'Simple Web API', content: '' },
-          { title: 'CDK Project', content: '' },
-          { title: 'Understanding the source code', content: '' },
-          { title: 'Refactoring', content: '' },
-          { title: 'Testcode', content: '' }
-        ]
-      },
-      {
-        name: 'Programming Mentor',
-        id: 'codeBuddy',
-        description: t('codeBuddy.description'),
-        system: CODE_BUDDY_SYSTEM_PROMPT,
-        scenarios: [
-          { title: 'Learning JavaScript Basics', content: '' },
-          { title: 'Understanding Functions', content: '' },
-          { title: 'DOM Manipulation', content: '' },
-          { title: 'Debugging JavaScript', content: '' },
-          { title: 'Building a Simple Web App', content: '' },
-          { title: 'Learning Python', content: '' },
-          { title: 'Object-Oriented Programming', content: '' },
-          { title: 'Data Visualization with Python', content: '' }
-        ]
-      },
-      {
-        name: 'Product Designer',
-        id: 'productDesigner',
-        description: t('productDesigner.description'),
-        system: PRODUCT_DESIGNER_SYSTEM_PROMPT,
-        scenarios: [
-          { title: 'Wireframing a Mobile App', content: '' },
-          { title: 'Designing a Landing Page', content: '' },
-          { title: 'Improving User Experience', content: '' },
-          { title: 'Creating a Design System', content: '' },
-          { title: 'Accessibility Evaluation', content: '' },
-          { title: 'Prototyping an Interface', content: '' },
-          { title: 'Design Handoff', content: '' },
-          { title: 'Design Trend Research', content: '' }
-        ]
-      }
-    ]
-  }, [t])
 
-  const getLocalizedBaseAgents = useCallback((): CustomAgent[] => {
+  const getBaseAgents = useCallback((): CustomAgent[] => {
     // シナリオをローカライズする関数
     const localizeScenarios = useCallback(
       (scenarios: Scenario[]): Scenario[] => {
@@ -557,10 +523,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // ローカライズされたエージェントを生成
     const localizedAgents = useMemo(() => {
-      const baseAgents = getBaseAgents()
-      return baseAgents.map((agent) => ({
+      return DEFAULT_AGENTS.map((agent) => ({
         ...agent,
         name: agent.name,
+        description: t(agent.description),
         system: replacePlaceholders(agent.system, {
           projectPath: projectPath || t('no project path'),
           allowedCommands: allowedCommands,
@@ -569,15 +535,48 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }),
         scenarios: localizeScenarios(agent.scenarios)
       }))
-    }, [getBaseAgents, i18n.language, t, replacePlaceholders, localizeScenarios])
+    }, [i18n.language, t, replacePlaceholders, localizeScenarios])
 
     return localizedAgents
   }, [t, projectPath, allowedCommands, knowledgeBases, bedrockAgents])
 
-  const baseAgents = getLocalizedBaseAgents()
+  const baseAgents = getBaseAgents()
+  // Make sure there are no duplicate IDs between agents from different sources
   const allAgents = useMemo(() => {
-    return [...baseAgents, ...customAgents]
-  }, [baseAgents, customAgents])
+    // Create a mapping of IDs to count occurrences
+    const idCounts = new Map<string, number>()
+
+    // First pass - count all IDs
+    ;[...baseAgents, ...customAgents, ...sharedAgents].forEach((agent) => {
+      if (agent.id) {
+        idCounts.set(agent.id, (idCounts.get(agent.id) || 0) + 1)
+      }
+    })
+
+    // Clone and fix duplicate IDs by adding a suffix
+    const result = [
+      ...baseAgents,
+      ...customAgents,
+      // Apply special handling for shared agents which may have duplicates
+      ...sharedAgents.map((agent) => {
+        // If this ID is unique or already has 'shared-' prefix, keep it as is
+        if (
+          (agent.id && idCounts.get(agent.id) === 1) ||
+          (agent.id && agent.id.startsWith('shared-'))
+        ) {
+          return agent
+        }
+
+        // Otherwise, generate a new ID with timestamp to make it unique
+        return {
+          ...agent,
+          id: `shared-${agent.id || ''}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`
+        }
+      })
+    ]
+
+    return result
+  }, [baseAgents, customAgents, sharedAgents])
   const currentAgent = allAgents.find((a) => a.id === selectedAgentId)
   const systemPrompt = currentAgent?.system
     ? replacePlaceholders(currentAgent?.system, {
@@ -682,6 +681,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Custom Agents Settings
     customAgents,
     saveCustomAgents,
+    sharedAgents,
+    loadSharedAgents,
 
     // Selected Agent Settings
     selectedAgentId,

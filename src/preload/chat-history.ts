@@ -5,20 +5,20 @@ import { ChatSessionManager } from '../main/store/chatSession'
 const chatSessionManager = new ChatSessionManager()
 
 export const chatHistory = {
-  createSession(agentId: string, modelId: string, systemPrompt?: string) {
-    return chatSessionManager.createSession(agentId, modelId, systemPrompt)
+  async createSession(agentId: string, modelId: string, systemPrompt?: string) {
+    return await chatSessionManager.createSession(agentId, modelId, systemPrompt)
   },
 
-  addMessage(sessionId: string, message: ChatMessage) {
-    return chatSessionManager.addMessage(sessionId, message)
+  async addMessage(sessionId: string, message: ChatMessage) {
+    return await chatSessionManager.addMessage(sessionId, message)
   },
 
   getSession(sessionId: string) {
     return chatSessionManager.getSession(sessionId)
   },
 
-  updateSessionTitle(sessionId: string, title: string) {
-    return chatSessionManager.updateSessionTitle(sessionId, title)
+  async updateSessionTitle(sessionId: string, title: string) {
+    return await chatSessionManager.updateSessionTitle(sessionId, title)
   },
 
   deleteSession(sessionId: string) {
@@ -45,11 +45,11 @@ export const chatHistory = {
     return chatSessionManager.getActiveSessionId()
   },
 
-  updateMessageContent(sessionId: string, messageIndex: number, updatedMessage: ChatMessage) {
-    return chatSessionManager.updateMessageContent(sessionId, messageIndex, updatedMessage)
+  async updateMessageContent(sessionId: string, messageIndex: number, updatedMessage: ChatMessage) {
+    return await chatSessionManager.updateMessageContent(sessionId, messageIndex, updatedMessage)
   },
 
-  deleteMessage(sessionId: string, messageIndex: number) {
-    return chatSessionManager.deleteMessage(sessionId, messageIndex)
+  async deleteMessage(sessionId: string, messageIndex: number) {
+    return await chatSessionManager.deleteMessage(sessionId, messageIndex)
   }
 }

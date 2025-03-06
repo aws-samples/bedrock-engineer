@@ -116,3 +116,13 @@ export async function listModels(): Promise<LLM[]> {
   })
   return res.json()
 }
+
+export async function listAgentTags(): Promise<string[]> {
+  const res = await fetch(`${API_ENDPOINT}/listAgentTags`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+  return res.json()
+}

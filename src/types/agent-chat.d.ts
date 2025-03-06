@@ -22,10 +22,58 @@ export type Agent = {
   description: string
   system: string
   scenarios: Scenario[]
+  icon?: AgentIcon
+  iconColor?: string
+  tags?: string[]
 }
+
+export type AgentIcon =
+  | 'robot'
+  | 'brain'
+  | 'chat'
+  | 'bulb'
+  | 'books'
+  | 'pencil'
+  | 'messages'
+  | 'puzzle'
+  | 'world'
+  | 'code'
+  | 'terminal'
+  | 'terminal2'
+  | 'keyboard'
+  | 'bug'
+  | 'test'
+  | 'api'
+  | 'database'
+  | 'architecture'
+  | 'design'
+  | 'diagram'
+  | 'settings'
+  | 'tool'
+  | 'aws'
+  | 'cloud'
+  | 'server'
+  | 'network'
+  | 'laptop'
+  | 'microchip'
+  | 'docker'
+  | 'kubernetes'
+  | 'terraform'
+  | 'git'
+  | 'github'
+  | 'kanban'
+  | 'security'
+  | 'lock'
+  | 'shield'
+  | 'bank'
+  | 'search'
+  | 'chart'
+  | 'grafana'
+  | 'prometheus'
 
 export type CustomAgent = Agent & {
   isCustom?: boolean
+  isShared?: boolean
 }
 
 export type AgentSettings = {

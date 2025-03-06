@@ -135,7 +135,13 @@ export const useScenarioGenerator = () => {
 
   const promptTemplate = getScenarioPromptTemplate()
 
-  const { messages, loading, handleSubmit } = useAgentChat(llm?.modelId, promptTemplate, [])
+  const { messages, loading, handleSubmit } = useAgentChat(
+    llm?.modelId,
+    promptTemplate,
+    [],
+    undefined,
+    { enableHistory: false }
+  )
 
   const generateScenarios = async (name: string, description: string, systemPrompt: string) => {
     const input = `Agent Name: ${name}

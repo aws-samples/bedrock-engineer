@@ -1,6 +1,6 @@
 import { chatPage } from './chat'
 import { awsDiagramGenerator } from './awsDiagramGenerator'
-import { iamPolicy, notificationSettings, bedrockSettings } from './settings'
+import { iamPolicy, notificationSettings, bedrockSettings, agentSettings } from './settings'
 
 const HomePage = {
   'set your aws credential':
@@ -164,6 +164,7 @@ const ja = {
   ...iamPolicy.ja,
   ...notificationSettings.ja,
   ...bedrockSettings.ja,
+  ...agentSettings.ja,
   ...awsDiagramGenerator.ja
 }
 
