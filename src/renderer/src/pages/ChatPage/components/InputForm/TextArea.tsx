@@ -17,6 +17,7 @@ type TextAreaProps = {
   isComposing: boolean
   setIsComposing: (value: boolean) => void
   sendMsgKey?: 'Enter' | 'Cmd+Enter'
+  placeholder?: string
 }
 
 export const TextArea: React.FC<TextAreaProps> = ({
@@ -26,7 +27,8 @@ export const TextArea: React.FC<TextAreaProps> = ({
   disabled = false,
   isComposing,
   setIsComposing,
-  sendMsgKey = 'Enter'
+  sendMsgKey = 'Enter',
+  placeholder: customPlaceholder
 }) => {
   const { t } = useTranslation()
   const [dragActive, setDragActive] = useState(false)
@@ -40,8 +42,8 @@ export const TextArea: React.FC<TextAreaProps> = ({
 
   // プレースホルダーテキストの生成
   const placeholder = useMemo(() => {
-    return t('textarea.placeholder', { modifier: modifierKey })
-  }, [t, modifierKey])
+    return customPlaceholder || t('textarea.placeholder', { modifier: modifierKey })
+  }, [t, modifierKey, customPlaceholder])
 
   const validateAndProcessImage = useCallback(
     (file: File) => {
