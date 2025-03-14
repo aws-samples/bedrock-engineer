@@ -2,7 +2,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { SettingSection } from '../../SettingSection'
 import { SettingSelect } from '../../SettingSelect'
-import { SoundType } from '@renderer/services/SoundService'
+import { SoundType } from '@/types/sound'
 
 interface SoundSectionProps {
   soundType: SoundType

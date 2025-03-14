@@ -4,6 +4,7 @@ import { AgentChatConfig, KnowledgeBase, SendMsgKey, ToolState } from '../types/
 import { CustomAgent } from '../types/agent-chat'
 import { CommandSettings } from '../main/api/command/types'
 import { BedrockAgent } from '../types/agent'
+import { SoundType } from '../types/sound'
 
 const DEFAULT_SHELL = '/bin/bash'
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
@@ -111,6 +112,11 @@ type StoreScheme = {
 
   /** 使用可能なAmazon Bedrockエージェントの一覧 */
   bedrockAgents?: BedrockAgent[]
+
+  sound: {
+    type: SoundType
+    enabled: boolean
+  }
 }
 
 const electronStore = new Store<StoreScheme>()

@@ -1,11 +1,5 @@
+import { SoundType } from '@/types/sound'
 import Snd from 'snd-lib'
-
-export enum SoundType {
-  NONE = 'none',
-  SND01 = '01', // sine
-  SND02 = '02', // piano
-  SND03 = '03' // industrial
-}
 
 export class SoundService {
   private static instance: SoundService
