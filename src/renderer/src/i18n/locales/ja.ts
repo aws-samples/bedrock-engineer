@@ -41,7 +41,17 @@ const SettingPage = {
   'Send the message': 'メッセージを送信',
   'Start a new line (use': '改行（',
   'to send)': 'で送信）',
-  'Invalid model': '無効なモデル'
+  'Invalid model': '無効なモデル',
+  'Sound Settings': 'サウンド設定',
+  'Configure sound settings for typing': 'タイピング時のサウンド設定を行います',
+  'Sound Enabled': 'サウンドを有効にする',
+  'Sound Type': 'サウンドの種類',
+  None: 'なし',
+  Sine: 'サイン波',
+  Piano: 'ピアノ',
+  Industrial: 'インダストリアル',
+  Enabled: '有効',
+  Disabled: '無効'
 }
 
 const StepFunctionsGeneratorPage = {

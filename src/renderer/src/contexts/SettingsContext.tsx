@@ -5,10 +5,12 @@ import { CustomAgent } from '@/types/agent-chat'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { replacePlaceholders } from '@renderer/pages/ChatPage/utils/placeholder'
 import { useTranslation } from 'react-i18next'
+import SoundService from '@renderer/services/SoundService'
 import { DEFAULT_AGENTS } from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
 import { InferenceParameters, LLM, BEDROCK_SUPPORTED_REGIONS, ThinkingMode } from '@/types/llm'
 import type { AwsCredentialIdentity } from '@smithy/types'
 import { BedrockAgent } from '@/types/agent'
+import { SoundType } from '@/types/sound'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -181,6 +183,10 @@ export interface SettingsContextType {
   shell: string
   setShell: (shell: string) => void
 
+  // Sound Settings
+  soundType: SoundType
+  setSoundType: (soundType: SoundType) => void
+
   // Ignore Files Settings
   ignoreFiles: string[]
   setIgnoreFiles: (files: string[]) => void
@@ -262,6 +268,21 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Shell Settings
   const [shell, setStateShell] = useState<string>(DEFAULT_SHELL)
+
+  // Sound Settings
+  const [soundType, setStateSoundType] = useState<SoundType>(SoundType.NONE)
+
+  // Initialize sound service
+  useEffect(() => {
+    const initSound = async () => {
+      try {
+        await SoundService.initialize(soundType)
+      } catch (error) {
+        console.error('Failed to initialize sound service:', error)
+      }
+    }
+    initSound()
+  }, [soundType])
 
   // Ignore Files Settings
   const [ignoreFiles, setStateIgnoreFiles] = useState<string[]>([
@@ -403,6 +424,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         allowedCommands: initialCommands,
         shell: DEFAULT_SHELL
       })
+    }
+
+    // Load Sound Settings
+    const soundSettings = window.store.get('sound')
+    if (soundSettings) {
+      setStateSoundType(soundSettings.type || SoundType.NONE)
     }
 
     // Load Ignore Files Settings および Context Length
@@ -758,6 +785,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
   }
 
+  const setSoundType = (type: SoundType) => {
+    setStateSoundType(type)
+    window.store.set('sound', {
+      type
+    })
+  }
+
   const setIgnoreFiles = useCallback((files: string[]) => {
     setStateIgnoreFiles(files)
     const agentChatConfig = window.store.get('agentChatConfig') || {}
@@ -856,6 +890,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Shell Settings
     shell,
     setShell,
+
+    // Sound Settings
+    soundType,
+    setSoundType,
 
     // Ignore Files Settings
     ignoreFiles,

@@ -41,7 +41,17 @@ const SettingPage = {
   'Send the message': 'Send the message',
   'Start a new line (use': 'Start a new line (use',
   'to send)': 'to send)',
-  'Invalid model': 'Invalid model'
+  'Invalid model': 'Invalid model',
+  'Sound Settings': 'Sound Settings',
+  'Configure sound settings for typing': 'Configure sound settings for typing',
+  'Sound Enabled': 'Sound Enabled',
+  'Sound Type': 'Sound Type',
+  None: 'None',
+  Sine: 'Sine',
+  Piano: 'Piano',
+  Industrial: 'Industrial',
+  Enabled: 'Enabled',
+  Disabled: 'Disabled'
 }
 
 const StepFunctionsGeneratorPage = {

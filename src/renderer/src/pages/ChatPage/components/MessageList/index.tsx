@@ -1,5 +1,5 @@
 import { Message as MessageType } from '@aws-sdk/client-bedrock-runtime'
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { ChatMessage } from './Message'
 import AILogo from '@renderer/assets/images/icons/ai.svg'
 
@@ -38,6 +38,12 @@ export const MessageList: React.FC<MessageListProps> = ({
   reasoning,
   deleteMessage
 }) => {
+  const prevLoadingRef = useRef(loading)
+
+  useEffect(() => {
+    prevLoadingRef.current = loading
+  }, [loading, messages.length])
+
   const handleDeleteMessage = (messageIndex: number) => () => {
     if (deleteMessage) {
       deleteMessage(messageIndex)

@@ -63,6 +63,7 @@
     "react-router-dom": "6.26.1",
     "react-syntax-highlighter": "15.5.0",
     "remark-gfm": "4.0.0",
+    "snd-lib": "^1.2.3",
     "vite-plugin-svgr": "4.2.0"
   },
   "devDependencies": {

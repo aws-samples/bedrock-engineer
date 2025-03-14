@@ -9,6 +9,7 @@ import {
   AdvancedSection,
   NotificationSection
 } from './components/sections'
+import { SoundSection } from './components/sections/SoundSection'
 import { ConfigDirSection } from './components/sections/ConfigDirSection'
 
 export const SettingPage: React.FC = () => {
@@ -36,6 +37,8 @@ export const SettingPage: React.FC = () => {
     setAwsSessionToken,
     inferenceParams,
     updateInferenceParams,
+    soundType,
+    setSoundType,
     bedrockSettings,
     updateBedrockSettings
   } = useSetting()
@@ -91,6 +94,8 @@ export const SettingPage: React.FC = () => {
         onUpdateInferenceParams={updateInferenceParams}
         onUpdateBedrockSettings={updateBedrockSettings}
       />
+
+      <SoundSection soundType={soundType} onUpdateSoundType={setSoundType} />
 
       <AdvancedSection sendMsgKey={sendMsgKey} onUpdateSendMsgKey={updateSendMsgKey} />
 

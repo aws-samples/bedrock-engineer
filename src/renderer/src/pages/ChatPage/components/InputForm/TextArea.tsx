@@ -2,6 +2,7 @@ import React, { useCallback, useState, useMemo, useRef, useEffect } from 'react'
 import { FiLoader, FiSend, FiX } from 'react-icons/fi'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
+import SoundService from '@renderer/services/SoundService'
 import { ModelSelector } from '../ModelSelector'
 import { ThinkingModeSelector } from '../ThinkingModeSelector'
 import { useSettings } from '@renderer/contexts/SettingsContext'
@@ -132,6 +133,11 @@ export const TextArea: React.FC<TextAreaProps> = ({
   )
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Play typing sound for all keystrokes except special keys
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) {
+      SoundService.playTypingSound()
+    }
+
     if (e.shiftKey || isComposing) {
       return
     }
@@ -151,6 +157,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
       return
     }
     if (value.trim() || attachedImages.length > 0) {
+      SoundService.playChatCompleteSound()
       onSubmit(value, attachedImages)
       setAttachedImages([])
     }
