@@ -39,8 +39,6 @@ export const SettingPage: React.FC = () => {
     updateInferenceParams,
     soundType,
     setSoundType,
-    soundEnabled,
-    setSoundEnabled,
     bedrockSettings,
     updateBedrockSettings
   } = useSetting()
@@ -97,12 +95,7 @@ export const SettingPage: React.FC = () => {
         onUpdateBedrockSettings={updateBedrockSettings}
       />
 
-      <SoundSection
-        soundType={soundType}
-        soundEnabled={soundEnabled}
-        onUpdateSoundType={setSoundType}
-        onUpdateSoundEnabled={setSoundEnabled}
-      />
+      <SoundSection soundType={soundType} onUpdateSoundType={setSoundType} />
 
       <AdvancedSection sendMsgKey={sendMsgKey} onUpdateSendMsgKey={updateSendMsgKey} />
 

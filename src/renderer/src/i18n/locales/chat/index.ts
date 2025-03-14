@@ -58,7 +58,7 @@ export const chatPage = {
         }
       },
       ignoreFiles: {
-        title: '無視ファイル設定',
+        title: 'Ignore Files',
         description:
           '以下に記載されたファイルやフォルダは、各種ツールによる読み込みから除外されます。各ファイルやフォルダを1行ずつ入力してください。',
         placeholder: 'その他のファイル...',

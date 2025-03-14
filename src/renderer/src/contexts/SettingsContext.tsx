@@ -186,8 +186,6 @@ export interface SettingsContextType {
   // Sound Settings
   soundType: SoundType
   setSoundType: (soundType: SoundType) => void
-  soundEnabled: boolean
-  setSoundEnabled: (enabled: boolean) => void
 
   // Ignore Files Settings
   ignoreFiles: string[]
@@ -272,24 +270,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [shell, setStateShell] = useState<string>(DEFAULT_SHELL)
 
   // Sound Settings
-  const [soundType, setStateSoundType] = useState<SoundType>(SoundType.SND01)
-  const [soundEnabled, setStateSoundEnabled] = useState<boolean>(true)
+  const [soundType, setStateSoundType] = useState<SoundType>(SoundType.NONE)
 
   // Initialize sound service
   useEffect(() => {
     const initSound = async () => {
       try {
-        if (soundEnabled) {
-          await SoundService.initialize(soundType)
-        } else {
-          await SoundService.initialize(SoundType.NONE)
-        }
+        await SoundService.initialize(soundType)
       } catch (error) {
         console.error('Failed to initialize sound service:', error)
       }
     }
     initSound()
-  }, [soundType, soundEnabled])
+  }, [soundType])
 
   // Ignore Files Settings
   const [ignoreFiles, setStateIgnoreFiles] = useState<string[]>([
@@ -436,8 +429,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Load Sound Settings
     const soundSettings = window.store.get('sound')
     if (soundSettings) {
-      setStateSoundType(soundSettings.type || SoundType.SND01)
-      setStateSoundEnabled(soundSettings.enabled !== undefined ? soundSettings.enabled : true)
+      setStateSoundType(soundSettings.type || SoundType.NONE)
     }
 
     // Load Ignore Files Settings および Context Length
@@ -796,18 +788,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const setSoundType = (type: SoundType) => {
     setStateSoundType(type)
     window.store.set('sound', {
-      type,
-      enabled: soundEnabled
+      type
     })
   }
 
-  const setSoundEnabled = (enabled: boolean) => {
-    setStateSoundEnabled(enabled)
-    window.store.set('sound', {
-      type: soundType,
-      enabled
-    })
-  }
   const setIgnoreFiles = useCallback((files: string[]) => {
     setStateIgnoreFiles(files)
     const agentChatConfig = window.store.get('agentChatConfig') || {}
@@ -910,8 +894,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Sound Settings
     soundType,
     setSoundType,
-    soundEnabled,
-    setSoundEnabled,
 
     // Ignore Files Settings
     ignoreFiles,

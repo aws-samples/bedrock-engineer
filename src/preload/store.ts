@@ -115,7 +115,6 @@ type StoreScheme = {
 
   sound: {
     type: SoundType
-    enabled: boolean
   }
 }
 
