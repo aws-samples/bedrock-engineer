@@ -7,21 +7,15 @@
     "src/preload/*.d.ts",
     "src/types/*.d.ts",
     "src/types/**/*.ts"
- ],
+  ],
   "compilerOptions": {
     "composite": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@renderer/*": [
-        "src/renderer/src/*"
-      ],
-      "@/*": [
-        "src/*"
-      ],
-      "@types/*": [
-        "src/types/*"
-      ]
+      "@renderer/*": ["src/renderer/src/*"],
+      "@/*": ["src/*"],
+      "@types/*": ["src/types/*"]
     }
   }
 }

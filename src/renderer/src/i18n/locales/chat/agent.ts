@@ -1,5 +1,32 @@
 export const agent = {
   en: {
+    active: 'Active',
+    icon: 'Icon',
+    iconDescription: "Select an icon that represents the agent's role",
+    iconColor: 'Icon Color',
+    reset: 'Reset',
+    searchIcons: 'Search icons...',
+    iconCategory: {
+      general: 'General',
+      lifestyle: 'Lifestyle & Home',
+      health: 'Health & Medical',
+      education: 'Education & Learning',
+      travel: 'Travel & Hobbies',
+      food: 'Food & Cooking',
+      shopping: 'Shopping & Finance',
+      development: 'Development',
+      cloud: 'Cloud & Infrastructure',
+      devops: 'DevOps',
+      security: 'Security',
+      monitoring: 'Monitoring & Analytics'
+    },
+    tagsDescription:
+      'You can set tags as identifiers to make it easier to search for agents in the list.',
+    remove: 'Remove',
+    enterTag: 'Enter Tag',
+    addTag: 'Add',
+    availableTags: 'Available Tags',
+    autoSelect: 'Auto Select',
     'What is Amazon Bedrock': 'What is Amazon Bedrock',
     'What is Amazon Bedrock description':
       'Search for the latest information about Amazon Bedrock and summarize what it can do in a concise manner.',
@@ -32,8 +59,8 @@ export const agent = {
     showPreview: 'Show Preview',
     previewResult: 'Placeholder replacement result:',
     copy: 'Copy',
-    cancel: 'Cancel',
     save: 'Save',
+    cancel: 'Cancel',
     optional: '(Optional)',
     namePlaceholder: 'e.g., Programming Mentor',
     descriptionPlaceholder: 'e.g., AI mentor teaching programming from basics to advanced',
@@ -60,9 +87,39 @@ export const agent = {
     duplicate: 'Duplicate',
     delete: 'Delete',
     more: 'More options',
-    inputSystemPrompt: 'Input System Prompt:'
+    inputSystemPrompt: 'Input System Prompt:',
+    shared: 'Shared',
+    saveAsShared: 'Save as Shared File',
+    agentSavedAsShared: 'Agent saved as a shared file successfully',
+    failedToSaveShared: 'Failed to save agent as shared file'
   },
   ja: {
+    active: 'アクティブ',
+    icon: 'アイコン',
+    iconDescription: 'エージェントの役割を表すアイコンを選択してください',
+    iconColor: 'アイコンの色',
+    reset: 'リセット',
+    searchIcons: 'アイコンを検索...',
+    iconCategory: {
+      general: '一般',
+      lifestyle: 'ライフスタイル & ホーム',
+      health: '健康 & 医療',
+      education: '教育 & 学習',
+      travel: '旅行 & 趣味',
+      food: '食事 & 料理',
+      shopping: 'ショッピング & 金融',
+      development: '開発',
+      cloud: 'クラウド & インフラ',
+      devops: 'DevOps',
+      security: 'セキュリティ',
+      monitoring: 'モニタリング & 分析'
+    },
+    tagsDescription: 'エージェント一覧から検索しやすくする識別子としてタグを設定できます。',
+    remove: '削除する',
+    enterTag: 'タグを入力',
+    addTag: '追加',
+    availableTags: '利用可能なタグ',
+    autoSelect: '自動選択',
     'What is Amazon Bedrock': 'Amazon Bedrock とは',
     'What is Amazon Bedrock description':
       'Amazon Bedrock に関する最新情報を検索して、何ができるか簡潔にまとめてください。',
@@ -93,8 +150,8 @@ export const agent = {
     showPreview: 'プレビューを表示',
     previewResult: 'プレースホルダーを置換した結果:',
     copy: 'コピー',
-    cancel: 'キャンセル',
     save: '保存',
+    cancel: 'キャンセル',
     optional: '（オプション）',
     namePlaceholder: '例: プログラミングメンター',
     descriptionPlaceholder: '例: プログラミングの基礎から応用までを教えるAIメンター',
@@ -121,6 +178,11 @@ export const agent = {
     duplicate: '複製する',
     delete: '削除する',
     more: 'その他のオプション',
-    inputSystemPrompt: 'システムプロンプトを入力:'
+    inputSystemPrompt: 'システムプロンプトを入力:',
+    shared: '共有',
+    saveAsShared: '共有ファイルとして保存',
+    agentSavedAsShared:
+      'エージェントが共有ファイルとして正常に保存されました。現在の作業ディレクトリの .bedrock-engineer/agents/ を確認してください。',
+    failedToSaveShared: '共有ファイルとして保存できませんでした'
   }
 }

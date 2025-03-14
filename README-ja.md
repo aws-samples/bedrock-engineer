@@ -16,7 +16,7 @@ Bedrock Engineer はネイティブアプリです。アプリをダウンロー
 
 MacOS:
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.1.3.dmg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.4.1.dmg)
 
 <details>
 <summary>Tips for Installation</summary>
@@ -35,6 +35,10 @@ MacOS:
 1. システム環境設定を開きます
 2. プライバシーとセキュリティをクリックします
 3. 下にスクロールして、「Mac を保護するために、Bedrock Engineer がブロックされました」の横にある「とにかく開く」をクリックします。
+
+アプリケーション起動時に設定ファイルエラーが発生する場合、以下の設定ファイルを確認ください。設定ファイルを削除してアプリケーションを再起動し直しても起動できない場合、issue に起票ください。
+
+`/Users/{{username}}/Library/Application Support/bedrock-engineer/config.json`
 
 </details>
 
@@ -94,7 +98,7 @@ npm run build:linux
 
 ### エージェントをカスタマイズする
 
-右上の ⚙️ アイコンをクリックして、エージェントの設定をカスタマイズします。エージェントの名前と説明を入力し、システムプロンプトを入力します。システムプロンプトはエージェントの振る舞いを決定する重要な要素です。エージェントの目的や規制事項、役割、使用できるツールと使うタイミングを明確にしておくことで、より適切な回答を得ることができます。
+エージェントの設定をカスタマイズします。エージェントの名前と説明を入力し、システムプロンプトを入力します。システムプロンプトはエージェントの振る舞いを決定する重要な要素です。エージェントの目的や規制事項、役割、使用できるツールと使うタイミングを明確にしておくことで、より適切な回答を得ることができます。
 
 ![custom-agents](./assets/custom-agents.png)
 
@@ -169,13 +173,17 @@ npm run build:linux
 - Tailwind.css
 - Material UI（Reactモードのみ）
 
-### デザインシステムのデータソースに接続する
+### Agentic-RAG 機能
 
 Amazon Bedrock の Knowledge Base に接続することで、任意のデザインシステム、プロジェクトソースコード、Webサイトのスタイルなどを参照してウェブサイトを生成できます。
 
 事前に Knowledge Base にソースコードとクロールしたWebページを保存する必要があります。Knowledge Base にソースコードを登録する際は、[gpt-repositoy-loader](https://github.com/mpoon/gpt-repository-loader) などの方法を使用してLLMが簡単に理解できる形式に変換することをお勧めします。Figma のデザインファイルは HTML, CSS の形式にエクスポートしたものを Knowledge Base に登録することで参照可能になります。
 
 画面下部の「Connect」ボタンをクリックし、ナレッジベースIDを入力してください。
+
+### ウェブ検索エージェント機能
+
+Website Generator には、ウェブ検索機能を活用したコード生成エージェントが統合されています。この機能により、最新のライブラリ情報、デザイントレンド、コーディングベストプラクティスを参照しながら、より洗練されたウェブサイトを生成できます。検索機能を使用するには、画面下部の「Search」ボタンをクリックして有効化してください。
 
 ## Step Functions Generator
 

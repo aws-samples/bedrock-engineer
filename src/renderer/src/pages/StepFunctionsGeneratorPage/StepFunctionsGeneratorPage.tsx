@@ -117,7 +117,7 @@ function StepFunctionsGeneratorPage() {
 
       <div className="grid grid-cols-2 gap-2">
         {/* LEFT */}
-        <div className="border h-[80vh] flex flex-col resize-x bg-white rounded-md dark:bg-gray-800 dark:border-black">
+        <div className="border h-[75vh] flex flex-col resize-x bg-white rounded-md dark:bg-gray-800 dark:border-black">
           <div className="border-b p-1">
             <h1 className="text-xs italic dark:text-gray-200">Editor</h1>
           </div>
@@ -125,7 +125,7 @@ function StepFunctionsGeneratorPage() {
         </div>
 
         {/* RIGHT */}
-        <div className="border h-[80vh] flex flex-col resize-x bg-white rounded-md dark:bg-gray-800 dark:border-black">
+        <div className="border h-[75vh] flex flex-col resize-x bg-white rounded-md dark:bg-gray-800 dark:border-black">
           <div className="border-b p-1 flex justify-between">
             <h1 className="text-xs italic dark:text-gray-200">Visualizer</h1>
           </div>
@@ -138,26 +138,44 @@ function StepFunctionsGeneratorPage() {
       </div>
 
       {/* Buttom Input Field Block */}
-      <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3">
+      <div className="flex gap-2 fixed bottom-0 left-[5rem] right-5 bottom-3">
         <div className="relative w-full">
-          <div className="flex gap-2 justify-between">
-            <div>
-              {examples.map((e, index) => {
-                return (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.2 }}
-                    key={e.title}
-                    className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700 "
-                    onClick={() => {
-                      setUserInput(e.value)
-                    }}
-                  >
-                    {e.title}
-                  </motion.button>
-                )
-              })}
+          <div className="flex gap-2 justify-between mb-4">
+            <div className="overflow-x-auto flex-grow max-w-[100%]">
+              <div className="flex flex-nowrap gap-2 min-w-0 whitespace-nowrap">
+                {examples.map((e, index) => {
+                  return (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.2 }}
+                      key={e.title}
+                      className="
+                      cursor-pointer
+                      rounded-full
+                      border
+                      p-2
+                      text-xs
+                      text-gray-700
+                      dark:text-gray-200
+                      hover:border-gray-400
+                      hover:bg-gray-100
+                      dark:hover:bg-gray-700
+                      dark:hover:border-gray-500
+                      transition-colors
+                      duration-200
+                      whitespace-nowrap
+                      flex-shrink-0
+                    "
+                      onClick={() => {
+                        setUserInput(e.value)
+                      }}
+                    >
+                      {e.title}
+                    </motion.button>
+                  )
+                })}
+              </div>
             </div>
           </div>
 
@@ -171,24 +189,6 @@ function StepFunctionsGeneratorPage() {
             setIsComposing={setIsComposing}
             sendMsgKey={sendMsgKey}
           />
-          {/* <textarea
-            onCompositionStart={() => setIsComposing(true)}
-            onCompositionEnd={() => setIsComposing(false)}
-            className={`block w-full p-4 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 mt-2 dark:text-white dark:bg-gray-800`}
-            placeholder={t('What kind of step functions will you create?')}
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={onkeydown}
-            required
-            disabled={loading}
-            rows={3}
-          />
-          <button
-            onClick={() => handleSubmit(userInput, messages)}
-            className="absolute end-2.5 bottom-2.5 rounded-lg hover:bg-gray-200 px-2 py-2 dark:hover:bg-gray-700 dark:text-white"
-          >
-            <FiSend className="text-xl" />
-          </button> */}
         </div>
       </div>
     </div>

@@ -72,10 +72,10 @@ export class ChatSessionManager {
     }
   }
 
-  private writeSessionFile(sessionId: string, session: ChatSession): void {
+  private async writeSessionFile(sessionId: string, session: ChatSession): Promise<void> {
     const filePath = this.getSessionFilePath(sessionId)
     try {
-      fs.writeFileSync(filePath, JSON.stringify(session, null, 2))
+      await fs.promises.writeFile(filePath, JSON.stringify(session, null, 2))
     } catch (error) {
       console.error(`Error writing session file ${sessionId}:`, error)
     }
@@ -100,7 +100,7 @@ export class ChatSessionManager {
     })
   }
 
-  createSession(agentId: string, modelId: string, systemPrompt?: string): string {
+  async createSession(agentId: string, modelId: string, systemPrompt?: string): Promise<string> {
     const id = `session_${Date.now()}`
     const session: ChatSession = {
       id,
@@ -113,20 +113,20 @@ export class ChatSessionManager {
       systemPrompt
     }
 
-    this.writeSessionFile(id, session)
+    await this.writeSessionFile(id, session)
     this.updateMetadata(id, session)
     this.updateRecentSessions(id)
     return id
   }
 
-  addMessage(sessionId: string, message: ChatMessage): void {
+  async addMessage(sessionId: string, message: ChatMessage): Promise<void> {
     const session = this.readSessionFile(sessionId)
     if (!session) return
 
     session.messages.push(message)
     session.updatedAt = Date.now()
 
-    this.writeSessionFile(sessionId, session)
+    await this.writeSessionFile(sessionId, session)
     this.updateMetadata(sessionId, session)
     this.updateRecentSessions(sessionId)
   }
@@ -135,14 +135,14 @@ export class ChatSessionManager {
     return this.readSessionFile(sessionId)
   }
 
-  updateSessionTitle(sessionId: string, title: string): void {
+  async updateSessionTitle(sessionId: string, title: string): Promise<void> {
     const session = this.readSessionFile(sessionId)
     if (!session) return
 
     session.title = title
     session.updatedAt = Date.now()
 
-    this.writeSessionFile(sessionId, session)
+    await this.writeSessionFile(sessionId, session)
     this.updateMetadata(sessionId, session)
   }
 
@@ -228,7 +228,11 @@ export class ChatSessionManager {
     return this.metadataStore.get('activeSessionId')
   }
 
-  updateMessageContent(sessionId: string, messageIndex: number, updatedMessage: ChatMessage): void {
+  async updateMessageContent(
+    sessionId: string,
+    messageIndex: number,
+    updatedMessage: ChatMessage
+  ): Promise<void> {
     const session = this.readSessionFile(sessionId)
     if (!session) return
 
@@ -243,11 +247,11 @@ export class ChatSessionManager {
     session.updatedAt = Date.now()
 
     // ファイルとメタデータを更新
-    this.writeSessionFile(sessionId, session)
+    await this.writeSessionFile(sessionId, session)
     this.updateMetadata(sessionId, session)
   }
 
-  deleteMessage(sessionId: string, messageIndex: number): void {
+  async deleteMessage(sessionId: string, messageIndex: number): Promise<void> {
     const session = this.readSessionFile(sessionId)
     if (!session) return
 
@@ -262,7 +266,7 @@ export class ChatSessionManager {
     session.updatedAt = Date.now()
 
     // ファイルとメタデータを更新
-    this.writeSessionFile(sessionId, session)
+    await this.writeSessionFile(sessionId, session)
     this.updateMetadata(sessionId, session)
   }
 }

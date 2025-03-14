@@ -30,14 +30,14 @@ export const RecommendChanges: React.FC<RecommendChangesProps> = ({
   }
 
   return (
-    <div>
+    <div className="flex flex-nowrap gap-2 min-w-0 whitespace-nowrap">
       {recommendations?.map((recommendation, index) => (
         <motion.button
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: index * 0.2 }}
           key={recommendation.title}
-          className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-600"
+          className="cursor-pointer rounded-full border p-2 text-xs hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:hover:border-gray-600 whitespace-nowrap flex-shrink-0"
           onClick={() => onSelect(recommendation.value)}
         >
           {recommendation.title}

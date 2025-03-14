@@ -1,10 +1,5 @@
+import { BedrockAgent } from '@/types/agent'
 import { memo, useState } from 'react'
-
-export interface BedrockAgent {
-  agentId: string
-  aliasId: string
-  description: string
-}
 
 interface BedrockAgentSettingFormProps {
   bedrockAgents: BedrockAgent[]

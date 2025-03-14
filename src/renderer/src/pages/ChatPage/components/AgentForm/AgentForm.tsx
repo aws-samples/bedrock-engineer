@@ -6,13 +6,18 @@ import { useAgentForm } from './useAgentForm'
 import { BasicSection } from './BasicSection'
 import { SystemPromptSection } from './SystemPromptSection'
 import { ScenariosSection } from './ScenariosSection'
+import { TagsSection } from './TagsSection'
 import { useAgentGenerator } from '../../hooks/useAgentGenerator'
 import { useScenarioGenerator } from '../../hooks/useScenarioGenerator'
 import toast from 'react-hot-toast'
+import { FiSave } from 'react-icons/fi'
+import { useAgentFilter } from '../AgentList'
 
 export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel }) => {
   const { t } = useTranslation()
-  const { projectPath, allowedCommands, knowledgeBases, bedrockAgents } = useSetting()
+  const { projectPath, allowedCommands, knowledgeBases, bedrockAgents, agents } = useSetting()
+  const { availableTags } = useAgentFilter(agents)
+
   const { formData, updateField, handleSubmit } = useAgentForm(agent, onSave)
   const { generateAgentSystemPrompt, generatedAgentSystemPrompt, isGenerating } =
     useAgentGenerator()
@@ -57,6 +62,8 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
       <BasicSection
         name={formData.name}
         description={formData.description}
+        icon={formData.icon}
+        iconColor={formData.iconColor}
         onChange={(field, value) => updateField(field, value)}
       />
 
@@ -83,7 +90,13 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
         onAutoGenerate={handleGenerateScenarios}
       />
 
-      <div className="flex justify-end space-x-2">
+      <TagsSection
+        tags={formData.tags || []}
+        availableTags={availableTags}
+        onChange={(tags) => updateField('tags', tags)}
+      />
+
+      <div className="flex justify-end pt-4 pb-4 space-x-2">
         <button
           type="button"
           onClick={onCancel}
@@ -95,11 +108,45 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700 border border-transparent
-            rounded-md shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2
-            focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
+          disabled={isGenerating || isGeneratingScenarios}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-md shadow-sm focus:outline-none focus:ring-2
+            focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 transition-all duration-200
+            ${
+              isGenerating || isGeneratingScenarios
+                ? 'text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 cursor-not-allowed opacity-70'
+                : 'text-white bg-blue-600 dark:bg-blue-700 border-transparent hover:bg-blue-700 dark:hover:bg-blue-600'
+            }`}
         >
-          {t('save')}
+          {isGenerating || isGeneratingScenarios ? (
+            <>
+              <svg
+                className="w-4 h-4 mr-1 animate-spin"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+              <p>{t('generating')}...</p>
+            </>
+          ) : (
+            <>
+              <FiSave />
+              <p>{t('save')}</p>
+            </>
+          )}
         </button>
       </div>
     </form>

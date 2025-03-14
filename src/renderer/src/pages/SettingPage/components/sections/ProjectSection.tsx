@@ -18,7 +18,7 @@ export const ProjectSection: React.FC<ProjectSectionProps> = ({
     <SettingSection title={t('Project Setting')}>
       <label
         onClick={onSelectDirectory}
-        className="block text-md font-medium text-gray-900 dark:text-white 
+        className="block text-md font-medium text-gray-900 dark:text-white
           cursor-pointer hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
       >
         <div className="flex gap-2 items-center">

@@ -1,6 +1,6 @@
 import { describe, test, beforeAll, expect } from '@jest/globals'
 import { BedrockService } from '../index'
-import type { Store } from '../types'
+import type { ServiceContext } from '../types'
 import { writeFile } from 'fs/promises'
 import { join } from 'path'
 
@@ -8,7 +8,7 @@ import { join } from 'path'
 const INTEGRATION_TEST = process.env.INTEGRATION_TEST === 'true'
 
 // Create a mock store for testing
-function createMockStore(initialState: Record<string, any> = {}): Store {
+function createMockStore(initialState: Record<string, any> = {}): ServiceContext['store'] {
   const store = {
     state: { ...initialState },
     get(key: string) {

@@ -1,18 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
-import { Agent, KnowledgeBase, Scenario, SendMsgKey, ToolState } from 'src/types/agent-chat'
+import { KnowledgeBase, Scenario, SendMsgKey, ToolState } from 'src/types/agent-chat'
 import { listModels } from '@renderer/lib/api'
 import { CustomAgent } from '@/types/agent-chat'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
-import { BedrockAgent } from '../pages/ChatPage/modals/useToolSettingModal/BedrockAgentSettingForm'
 import { replacePlaceholders } from '@renderer/pages/ChatPage/utils/placeholder'
 import { useTranslation } from 'react-i18next'
-import {
-  SOFTWARE_AGENT_SYSTEM_PROMPT,
-  CODE_BUDDY_SYSTEM_PROMPT,
-  PRODUCT_DESIGNER_SYSTEM_PROMPT
-} from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
-import { InferenceParameters, LLM, BEDROCK_SUPPORTED_REGIONS } from '@/types/llm'
-import SoundService, { SoundType } from '@renderer/services/SoundService'
+import SoundService from '@renderer/services/SoundService'
+import { DEFAULT_AGENTS } from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
+import { InferenceParameters, LLM, BEDROCK_SUPPORTED_REGIONS, ThinkingMode } from '@/types/llm'
+import type { AwsCredentialIdentity } from '@smithy/types'
+import { BedrockAgent } from '@/types/agent'
+import { SoundType } from '@/types/sound'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -96,15 +94,39 @@ export interface SettingsContextType {
   sendMsgKey: SendMsgKey
   updateSendMsgKey: (key: SendMsgKey) => void
 
+  // Agent Chat Settings
+  contextLength: number
+  updateContextLength: (length: number) => void
+
+  // Notification Settings
+  notification: boolean
+  setNotification: (enabled: boolean) => void
+
   // LLM Settings
   currentLLM: LLM
   updateLLM: (selectedModel: LLM) => void
   availableModels: LLM[]
   llmError: any
 
+  // Thinking Mode Settings
+  thinkingMode?: ThinkingMode
+  updateThinkingMode: (mode: ThinkingMode) => void
+
   // Inference Parameters
   inferenceParams: InferenceParameters
   updateInferenceParams: (params: Partial<InferenceParameters>) => void
+
+  // Bedrock Settings
+  bedrockSettings: {
+    enableRegionFailover: boolean
+    availableFailoverRegions: string[]
+  }
+  updateBedrockSettings: (
+    settings: Partial<{
+      enableRegionFailover: boolean
+      availableFailoverRegions: string[]
+    }>
+  ) => void
 
   // userDataPath (Electorn store directory)
   userDataPath: string
@@ -126,10 +148,14 @@ export interface SettingsContextType {
   setAwsAccessKeyId: (accessKeyId: string) => void
   awsSecretAccessKey: string
   setAwsSecretAccessKey: (secretAccessKey: string) => void
+  awsSessionToken: string
+  setAwsSessionToken: (sessionToken: string) => void
 
   // Custom Agents Settings
   customAgents: CustomAgent[]
   saveCustomAgents: (agents: CustomAgent[]) => void
+  sharedAgents: CustomAgent[]
+  loadSharedAgents: () => Promise<void>
 
   // Selected Agent Settings
   selectedAgentId: string
@@ -162,6 +188,10 @@ export interface SettingsContextType {
   setSoundType: (soundType: SoundType) => void
   soundEnabled: boolean
   setSoundEnabled: (enabled: boolean) => void
+
+  // Ignore Files Settings
+  ignoreFiles: string[]
+  setIgnoreFiles: (files: string[]) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -170,20 +200,37 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Advanced Settings
   const [sendMsgKey, setSendMsgKey] = useState<SendMsgKey>('Enter')
 
+  // Agent Chat Settings
+  const [contextLength, setContextLength] = useState<number>(60)
+
+  // Notification Settings
+  const [notification, setStateNotification] = useState<boolean>(true)
+
   // LLM Settings
   const [llmError, setLLMError] = useState<any>()
   const defaultModel = {
     modelId: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
     modelName: 'Claude 3.5 Sonnet v2',
     toolUse: true,
-    regions: BEDROCK_SUPPORTED_REGIONS
+    regions: BEDROCK_SUPPORTED_REGIONS,
+    supportsThinking: false
   }
   const [currentLLM, setCurrentLLM] = useState<LLM>(defaultModel)
   const [availableModels, setAvailableModels] = useState<LLM[]>([])
   const [inferenceParams, setInferenceParams] =
     useState<InferenceParameters>(DEFAULT_INFERENCE_PARAMS)
 
-  const userDataPath = window.store.get('userDataPath')
+  const [thinkingMode, setThinkingMode] = useState<ThinkingMode>()
+
+  const [bedrockSettings, setBedrockSettings] = useState<{
+    enableRegionFailover: boolean
+    availableFailoverRegions: string[]
+  }>({
+    enableRegionFailover: false,
+    availableFailoverRegions: []
+  })
+
+  const userDataPath = window.store.get('userDataPath') || ''
 
   // Project Settings
   const [projectPath, setProjectPath] = useState<string>('')
@@ -195,9 +242,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [awsRegion, setStateAwsRegion] = useState<string>('')
   const [awsAccessKeyId, setStateAwsAccessKeyId] = useState<string>('')
   const [awsSecretAccessKey, setStateAwsSecretAccessKey] = useState<string>('')
+  const [awsSessionToken, setStateAwsSessionToken] = useState<string>('')
 
   // Custom Agents Settings
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([])
+  const [sharedAgents, setSharedAgents] = useState<CustomAgent[]>([])
 
   // Selected Agent Settings
   const [selectedAgentId, setStateSelectedAgentId] = useState<string>('softwareAgent')
@@ -242,11 +291,25 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     initSound()
   }, [soundType, soundEnabled])
 
+  // Ignore Files Settings
+  const [ignoreFiles, setStateIgnoreFiles] = useState<string[]>([
+    '.git',
+    '.vscode',
+    'node_modules',
+    '.github'
+  ])
+
   // Initialize all settings
   useEffect(() => {
     // Load Advanced Settings
     const advancedSetting = window.store.get('advancedSetting')
     setSendMsgKey(advancedSetting?.keybinding?.sendMsgKey)
+
+    // Load Notification Settings
+    const notificationSetting = window.store.get('notification')
+    if (notificationSetting !== undefined) {
+      setStateNotification(notificationSetting)
+    }
 
     // Load LLM Settings
     const storedLLM = window.store.get('llm')
@@ -258,6 +321,24 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const storedInferenceParams = window.store.get('inferenceParams')
     if (storedInferenceParams) {
       setInferenceParams(storedInferenceParams)
+    }
+
+    // Load thinking mode
+    const thinkingMode = window.store.get('thinkingMode')
+    if (thinkingMode) {
+      setThinkingMode(thinkingMode)
+    }
+
+    // Load Thinking Mode Settings
+    const storedThinkingMode = window.store.get('thinkingMode')
+    if (storedThinkingMode) {
+      setThinkingMode(storedThinkingMode)
+    }
+
+    // Load Bedrock Settings
+    const storedBedrockSettings = window.store.get('bedrockSettings')
+    if (storedBedrockSettings) {
+      setBedrockSettings(storedBedrockSettings)
     }
 
     // Load Project Settings
@@ -278,6 +359,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setStateAwsRegion(awsConfig.region || '')
       setStateAwsAccessKeyId(awsConfig.accessKeyId || '')
       setStateAwsSecretAccessKey(awsConfig.secretAccessKey || '')
+      setStateAwsSessionToken(awsConfig.sessionToken || '')
     }
 
     // Load Custom Agents
@@ -357,6 +439,33 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setStateSoundType(soundSettings.type || SoundType.SND01)
       setStateSoundEnabled(soundSettings.enabled !== undefined ? soundSettings.enabled : true)
     }
+
+    // Load Ignore Files Settings および Context Length
+    const agentChatConfig = window.store.get('agentChatConfig') || {}
+
+    // ignoreFiles の設定
+    if (agentChatConfig?.ignoreFiles) {
+      setStateIgnoreFiles(agentChatConfig.ignoreFiles)
+    } else {
+      // 初期値を設定
+      const initialIgnoreFiles = ['.git', '.vscode', 'node_modules', '.github']
+      setStateIgnoreFiles(initialIgnoreFiles)
+      agentChatConfig.ignoreFiles = initialIgnoreFiles
+    }
+
+    // contextLength の設定
+    const defaultContextLength = 60
+
+    // agentChatConfig に contextLength が未設定の場合はデフォルト値を設定
+    if (agentChatConfig.contextLength === undefined) {
+      agentChatConfig.contextLength = defaultContextLength
+    }
+
+    // contextLength の状態を更新
+    setContextLength(agentChatConfig.contextLength || defaultContextLength)
+
+    // 設定を保存
+    window.store.set('agentChatConfig', agentChatConfig)
   }, [])
 
   useEffect(() => {
@@ -368,17 +477,46 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [awsRegion, awsAccessKeyId, awsSecretAccessKey])
 
+  // Load shared agents when component mounts or project path changes
   useEffect(() => {
-    if (currentLLM && currentLLM.toolUse === false) {
-      // currentLLM が ToolUse をサポートしないモデルだった場合ツールを全て disabled にする
-      const updatedTools = window.tools.map((tool) => ({ ...tool, enabled: false }))
-      setStateTools(updatedTools)
-      window.store.set('tools', updatedTools)
+    // Load shared agents right away
+    loadSharedAgents()
+  }, [projectPath])
+
+  // Function to load shared agents from project directory
+  const loadSharedAgents = async () => {
+    try {
+      const { agents, error } = await window.file.readSharedAgents()
+      if (error) {
+        console.error('Error loading shared agents:', error)
+      } else {
+        setSharedAgents(agents || [])
+      }
+    } catch (error) {
+      console.error('Failed to load shared agents:', error)
     }
-    if (currentLLM && currentLLM.toolUse === true) {
-      const updatedTools = window.tools.map((tool) => ({ ...tool, enabled: true }))
-      setStateTools(updatedTools)
-      window.store.set('tools', updatedTools)
+  }
+
+  useEffect(() => {
+    if (currentLLM) {
+      // Update tools based on toolUse support
+      if (currentLLM.toolUse === false) {
+        // currentLLM が ToolUse をサポートしないモデルだった場合ツールを全て disabled にする
+        const updatedTools = window.tools.map((tool) => ({ ...tool, enabled: false }))
+        setStateTools(updatedTools)
+        window.store.set('tools', updatedTools)
+      } else if (currentLLM.toolUse === true) {
+        const updatedTools = window.tools.map((tool) => ({ ...tool, enabled: true }))
+        setStateTools(updatedTools)
+        window.store.set('tools', updatedTools)
+      }
+
+      // Update maxTokens based on model's maxTokensLimit
+      if (currentLLM.maxTokensLimit) {
+        const updatedParams = { ...inferenceParams, maxTokens: currentLLM.maxTokensLimit }
+        setInferenceParams(updatedParams)
+        window.store.set('inferenceParams', updatedParams)
+      }
     }
   }, [currentLLM])
 
@@ -390,11 +528,30 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
   }
 
+  const updateContextLength = (length: number) => {
+    setContextLength(length)
+    const agentChatConfig = window.store.get('agentChatConfig') || {}
+    window.store.set('agentChatConfig', {
+      ...agentChatConfig,
+      contextLength: length
+    })
+  }
+
   const fetchModels = async () => {
     try {
       const models = await listModels()
       if (models) {
-        setAvailableModels(models as LLM[])
+        // Add thinking mode support to Claude 3.7 Sonnet
+        const enhancedModels = (models as LLM[]).map((model) => {
+          if (model.modelId.includes('anthropic.claude-3-7-sonnet')) {
+            return {
+              ...model,
+              supportsThinking: true
+            }
+          }
+          return model
+        })
+        setAvailableModels(enhancedModels)
       }
     } catch (e: any) {
       console.log(e)
@@ -414,6 +571,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.store.set('inferenceParams', updatedParams)
   }
 
+  const updateThinkingMode = (mode: ThinkingMode) => {
+    setThinkingMode(mode)
+    window.store.set('thinkingMode', mode)
+  }
+
+  const updateBedrockSettings = (settings: Partial<typeof bedrockSettings>) => {
+    const updatedSettings = { ...bedrockSettings, ...settings }
+    setBedrockSettings(updatedSettings)
+    window.store.set('bedrockSettings', updatedSettings)
+  }
+
   const selectDirectory = async () => {
     const path = await window.file.handleFolderOpen()
     if (path) {
@@ -431,24 +599,60 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const setAwsRegion = (region: string) => {
     setStateAwsRegion(region)
-    saveAwsConfig(region, awsAccessKeyId, awsSecretAccessKey)
+    const credentials: AwsCredentialIdentity = {
+      accessKeyId: awsAccessKeyId,
+      secretAccessKey: awsSecretAccessKey,
+      sessionToken: !awsSessionToken ? undefined : awsSessionToken
+    }
+    saveAwsConfig(credentials, region)
+
+    // availableFailoverRegions をリセット
+    setBedrockSettings({
+      ...bedrockSettings,
+      availableFailoverRegions: []
+    })
+    window.store.set('bedrockSettings', {
+      ...bedrockSettings,
+      availableFailoverRegions: [...BEDROCK_SUPPORTED_REGIONS]
+    })
   }
 
   const setAwsAccessKeyId = (accessKeyId: string) => {
     setStateAwsAccessKeyId(accessKeyId)
-    saveAwsConfig(awsRegion, accessKeyId, awsSecretAccessKey)
+    const credentials: AwsCredentialIdentity = {
+      accessKeyId,
+      secretAccessKey: awsSecretAccessKey,
+      sessionToken: !awsSessionToken ? undefined : awsSessionToken
+    }
+    saveAwsConfig(credentials, awsRegion)
   }
 
   const setAwsSecretAccessKey = (secretAccessKey: string) => {
     setStateAwsSecretAccessKey(secretAccessKey)
-    saveAwsConfig(awsRegion, awsAccessKeyId, secretAccessKey)
+    const credentials: AwsCredentialIdentity = {
+      accessKeyId: awsAccessKeyId,
+      secretAccessKey,
+      sessionToken: !awsSessionToken ? undefined : awsSessionToken
+    }
+    saveAwsConfig(credentials, awsRegion)
   }
 
-  const saveAwsConfig = (region: string, accessKeyId: string, secretAccessKey: string) => {
+  const setAwsSessionToken = (sessionToken: string) => {
+    setStateAwsSessionToken(sessionToken)
+    const credentials: AwsCredentialIdentity = {
+      accessKeyId: awsAccessKeyId,
+      secretAccessKey: awsSecretAccessKey,
+      sessionToken: !sessionToken ? undefined : sessionToken
+    }
+    saveAwsConfig(credentials, awsRegion)
+  }
+
+  const saveAwsConfig = (credentials: AwsCredentialIdentity, region: string) => {
     window.store.set('aws', {
-      region,
-      accessKeyId,
-      secretAccessKey
+      accessKeyId: credentials.accessKeyId,
+      secretAccessKey: credentials.secretAccessKey,
+      sessionToken: credentials.sessionToken,
+      region
     })
   }
 
@@ -463,61 +667,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }
 
   const { t, i18n } = useTranslation()
-  // エージェントの基本定義を取得
-  const getBaseAgents = useCallback((): Agent[] => {
-    return [
-      {
-        name: 'Software Developer',
-        id: 'softwareAgent',
-        description: t('softwareAgent.description'),
-        system: SOFTWARE_AGENT_SYSTEM_PROMPT,
-        scenarios: [
-          { title: 'What is Amazon Bedrock', content: '' },
-          { title: 'Organizing folders', content: '' },
-          { title: 'Simple website', content: '' },
-          { title: 'Simple Web API', content: '' },
-          { title: 'CDK Project', content: '' },
-          { title: 'Understanding the source code', content: '' },
-          { title: 'Refactoring', content: '' },
-          { title: 'Testcode', content: '' }
-        ]
-      },
-      {
-        name: 'Programming Mentor',
-        id: 'codeBuddy',
-        description: t('codeBuddy.description'),
-        system: CODE_BUDDY_SYSTEM_PROMPT,
-        scenarios: [
-          { title: 'Learning JavaScript Basics', content: '' },
-          { title: 'Understanding Functions', content: '' },
-          { title: 'DOM Manipulation', content: '' },
-          { title: 'Debugging JavaScript', content: '' },
-          { title: 'Building a Simple Web App', content: '' },
-          { title: 'Learning Python', content: '' },
-          { title: 'Object-Oriented Programming', content: '' },
-          { title: 'Data Visualization with Python', content: '' }
-        ]
-      },
-      {
-        name: 'Product Designer',
-        id: 'productDesigner',
-        description: t('productDesigner.description'),
-        system: PRODUCT_DESIGNER_SYSTEM_PROMPT,
-        scenarios: [
-          { title: 'Wireframing a Mobile App', content: '' },
-          { title: 'Designing a Landing Page', content: '' },
-          { title: 'Improving User Experience', content: '' },
-          { title: 'Creating a Design System', content: '' },
-          { title: 'Accessibility Evaluation', content: '' },
-          { title: 'Prototyping an Interface', content: '' },
-          { title: 'Design Handoff', content: '' },
-          { title: 'Design Trend Research', content: '' }
-        ]
-      }
-    ]
-  }, [t])
 
-  const getLocalizedBaseAgents = useCallback((): CustomAgent[] => {
+  const getBaseAgents = useCallback((): CustomAgent[] => {
     // シナリオをローカライズする関数
     const localizeScenarios = useCallback(
       (scenarios: Scenario[]): Scenario[] => {
@@ -536,10 +687,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // ローカライズされたエージェントを生成
     const localizedAgents = useMemo(() => {
-      const baseAgents = getBaseAgents()
-      return baseAgents.map((agent) => ({
+      return DEFAULT_AGENTS.map((agent) => ({
         ...agent,
         name: agent.name,
+        description: t(agent.description),
         system: replacePlaceholders(agent.system, {
           projectPath: projectPath || t('no project path'),
           allowedCommands: allowedCommands,
@@ -548,15 +699,48 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }),
         scenarios: localizeScenarios(agent.scenarios)
       }))
-    }, [getBaseAgents, i18n.language, t, replacePlaceholders, localizeScenarios])
+    }, [i18n.language, t, replacePlaceholders, localizeScenarios])
 
     return localizedAgents
   }, [t, projectPath, allowedCommands, knowledgeBases, bedrockAgents])
 
-  const baseAgents = getLocalizedBaseAgents()
+  const baseAgents = getBaseAgents()
+  // Make sure there are no duplicate IDs between agents from different sources
   const allAgents = useMemo(() => {
-    return [...baseAgents, ...customAgents]
-  }, [baseAgents, customAgents])
+    // Create a mapping of IDs to count occurrences
+    const idCounts = new Map<string, number>()
+
+    // First pass - count all IDs
+    ;[...baseAgents, ...customAgents, ...sharedAgents].forEach((agent) => {
+      if (agent.id) {
+        idCounts.set(agent.id, (idCounts.get(agent.id) || 0) + 1)
+      }
+    })
+
+    // Clone and fix duplicate IDs by adding a suffix
+    const result = [
+      ...baseAgents,
+      ...customAgents,
+      // Apply special handling for shared agents which may have duplicates
+      ...sharedAgents.map((agent) => {
+        // If this ID is unique or already has 'shared-' prefix, keep it as is
+        if (
+          (agent.id && idCounts.get(agent.id) === 1) ||
+          (agent.id && agent.id.startsWith('shared-'))
+        ) {
+          return agent
+        }
+
+        // Otherwise, generate a new ID with timestamp to make it unique
+        return {
+          ...agent,
+          id: `shared-${agent.id || ''}-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`
+        }
+      })
+    ]
+
+    return result
+  }, [baseAgents, customAgents, sharedAgents])
   const currentAgent = allAgents.find((a) => a.id === selectedAgentId)
   const systemPrompt = currentAgent?.system
     ? replacePlaceholders(currentAgent?.system, {
@@ -624,11 +808,32 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       enabled
     })
   }
+  const setIgnoreFiles = useCallback((files: string[]) => {
+    setStateIgnoreFiles(files)
+    const agentChatConfig = window.store.get('agentChatConfig') || {}
+    window.store.set('agentChatConfig', {
+      ...agentChatConfig,
+      ignoreFiles: files
+    })
+  }, [])
+
+  const setNotification = useCallback((enabled: boolean) => {
+    setStateNotification(enabled)
+    window.store.set('notification', enabled)
+  }, [])
 
   const value = {
     // Advanced Settings
     sendMsgKey,
     updateSendMsgKey,
+
+    // Agent Chat Settings
+    contextLength,
+    updateContextLength,
+
+    // Notification Settings
+    notification,
+    setNotification,
 
     // LLM Settings
     currentLLM,
@@ -636,9 +841,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     availableModels,
     llmError,
 
+    // Thinking Mode Settings
+    thinkingMode,
+    updateThinkingMode,
+
     // Inference Parameters
     inferenceParams,
     updateInferenceParams,
+
+    // Bedrock Settings
+    bedrockSettings,
+    updateBedrockSettings,
 
     // userDataPath (Electron store directory)
     userDataPath,
@@ -660,10 +873,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setAwsAccessKeyId,
     awsSecretAccessKey,
     setAwsSecretAccessKey,
+    awsSessionToken,
+    setAwsSessionToken,
 
     // Custom Agents Settings
     customAgents,
     saveCustomAgents,
+    sharedAgents,
+    loadSharedAgents,
 
     // Selected Agent Settings
     selectedAgentId,
@@ -694,7 +911,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     soundType,
     setSoundType,
     soundEnabled,
-    setSoundEnabled
+    setSoundEnabled,
+
+    // Ignore Files Settings
+    ignoreFiles,
+    setIgnoreFiles
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

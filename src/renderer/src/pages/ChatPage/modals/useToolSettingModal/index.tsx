@@ -4,10 +4,11 @@ import { ToolName } from '@/types/tools'
 import { toolIcons } from '../../components/Tool/ToolIcons'
 import { KnowledgeBaseSettingForm } from './KnowledgeBaseSettingForm'
 import { CommandForm } from './CommandForm'
-import { BedrockAgent, BedrockAgentSettingForm } from './BedrockAgentSettingForm'
+import { BedrockAgentSettingForm } from './BedrockAgentSettingForm'
 import { Modal } from 'flowbite-react'
 import { memo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { BedrockAgent } from '@/types/agent'
 
 export interface CommandConfig {
   pattern: string

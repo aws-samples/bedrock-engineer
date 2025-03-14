@@ -11,10 +11,17 @@ import { MdErrorOutline } from 'react-icons/md'
 import { FiTrash2, FiCopy } from 'react-icons/fi'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
+import { ReasoningContent } from '../CodeBlocks/Reasoning/ReasoningContent'
+
+// 拡張されたMessageタイプ
+type ExtendedMessage = Message & {
+  status?: 'idle' | 'streaming' | 'complete' | 'error'
+}
 
 type ChatMessageProps = {
-  message: Message
+  message: ExtendedMessage
   onDeleteMessage?: () => void
+  reasoning: boolean
 }
 
 // Helper function to convert various image data formats to data URL
@@ -50,7 +57,11 @@ function convertImageToDataUrl(imageData: any, format: string = 'png'): string {
   return ''
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDeleteMessage }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({
+  message,
+  onDeleteMessage,
+  reasoning
+}) => {
   const { t } = useTranslation()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const avatarRef = useRef<HTMLDivElement>(null)
@@ -157,6 +168,14 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onDeleteMessa
             return (
               <div key={index} className="relative">
                 <CodeRenderer text={c.text} />
+              </div>
+            )
+          } else if ('reasoningContent' in c) {
+            const isLoading =
+              reasoning && !!message.content?.length && message.content[1].text === ''
+            return (
+              <div key={index} className="relative">
+                <ReasoningContent content={c.reasoningContent} isLoading={isLoading} />
               </div>
             )
           } else if ('toolUse' in c) {

@@ -293,7 +293,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
             ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
             : 'rgb(243 244 246 / var(--tw-bg-opacity))',
           border: 'none',
-          height: '100%',
+          height: '85%',
           zIndex: '0'
         }}
       >
@@ -327,15 +327,17 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       </SandpackLayout>
 
       {/* Buttom Input Field Block */}
-      <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3 z-10">
+      <div className="flex gap-2 fixed bottom-0 left-[5rem] right-5 bottom-3 z-10">
         <div className="relative w-full">
           <div className="flex gap-2 justify-between pb-2">
-            <RecommendChanges
-              loading={recommendLoading}
-              recommendations={recommendChanges}
-              onSelect={setUserInput}
-              loadingText={t('addRecommend')}
-            />
+            <div className="overflow-x-auto flex-grow max-w-[70%]">
+              <RecommendChanges
+                loading={recommendLoading}
+                recommendations={recommendChanges}
+                onSelect={setUserInput}
+                loadingText={t('addRecommend')}
+              />
+            </div>
 
             <div className="flex gap-3 items-center">
               <DeepSearchButton

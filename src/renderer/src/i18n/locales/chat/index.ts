@@ -26,6 +26,13 @@ export const chatPage = {
           sending: 'Sending...'
         }
       },
+      ignoreFiles: {
+        title: 'Ignore Files',
+        description:
+          'The files and folders listed below will not be read by various tools. Enter each file and folder on a new line.',
+        placeholder: 'or other files...',
+        save: 'Save'
+      },
       confirmClearChat: 'Are you sure you want to clear the chat?'
     }
   },
@@ -49,6 +56,13 @@ export const chatPage = {
           sendMessage: 'メッセージを送信',
           sending: '送信中...'
         }
+      },
+      ignoreFiles: {
+        title: '無視ファイル設定',
+        description:
+          '以下に記載されたファイルやフォルダは、各種ツールによる読み込みから除外されます。各ファイルやフォルダを1行ずつ入力してください。',
+        placeholder: 'その他のファイル...',
+        save: '保存'
       },
       confirmClearChat: 'チャットをクリアしてもよろしいですか？'
     }

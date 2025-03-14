@@ -1,9 +1,9 @@
 import { CustomAgent, KnowledgeBase } from '@/types/agent-chat'
 import { CommandConfig } from '../../modals/useToolSettingModal'
-import { BedrockAgent } from '../../modals/useToolSettingModal/BedrockAgentSettingForm'
+import { BedrockAgent } from '@/types/agent'
 
 export interface AgentFormProps {
-  agent?: CustomAgent
+  agent: CustomAgent
   onSave: (agent: CustomAgent) => void
   onCancel: () => void
 }
@@ -11,7 +11,12 @@ export interface AgentFormProps {
 export interface BasicSectionProps {
   name: string
   description: string
-  onChange: (field: 'name' | 'description', value: string) => void
+  icon?: string
+  iconColor?: string
+  onChange: (
+    field: 'name' | 'description' | 'icon' | 'iconColor',
+    value: string | undefined
+  ) => void
 }
 
 export interface SystemPromptSectionProps {

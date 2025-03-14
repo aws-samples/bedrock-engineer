@@ -8,7 +8,12 @@ interface SettingSectionProps {
   children: React.ReactNode
 }
 
-export const SettingSection: React.FC<SettingSectionProps> = ({ title, description, icon: Icon, children }) => {
+export const SettingSection: React.FC<SettingSectionProps> = ({
+  title,
+  description,
+  icon: Icon,
+  children
+}) => {
   return (
     <section className="flex flex-col gap-2">
       <div>

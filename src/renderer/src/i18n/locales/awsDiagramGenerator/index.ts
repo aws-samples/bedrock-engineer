@@ -24,7 +24,15 @@ export const awsDiagramGenerator = {
       'Create an EKS-based containerized application architecture with load balancing and auto-scaling',
     hybridConnectivityTitle: 'Hybrid Network',
     hybridConnectivityValue:
-      'Design a hybrid connectivity architecture between on-premises and AWS using Direct Connect and VPN'
+      'Design a hybrid connectivity architecture between on-premises and AWS using Direct Connect and VPN',
+
+    // New diagram types
+    sequenceDiagramTitle: 'Sequence Diagram',
+    sequenceDiagramValue:
+      'Create a sequence diagram showing the interaction between a user, frontend, API service, and database during a user registration and authentication flow',
+    userStoryMapTitle: 'User Story Map',
+    userStoryMapValue:
+      'Design a user story map for an e-commerce mobile app showing the customer journey from product discovery to purchase completion and order tracking'
   },
   ja: {
     // Page title and components
@@ -51,6 +59,14 @@ export const awsDiagramGenerator = {
       'ロードバランシングと自動スケーリングを備えたEKSベースのコンテナ化アプリケーションアーキテクチャを作成する',
     hybridConnectivityTitle: 'ハイブリッドネットワーク',
     hybridConnectivityValue:
-      'Direct ConnectとVPNを使用したオンプレミスとAWS間のハイブリッド接続アーキテクチャを設計する'
+      'Direct ConnectとVPNを使用したオンプレミスとAWS間のハイブリッド接続アーキテクチャを設計する',
+
+    // New diagram types
+    sequenceDiagramTitle: 'シーケンス図',
+    sequenceDiagramValue:
+      'ユーザー登録と認証フローにおけるユーザー、フロントエンド、APIサービス、データベース間の相互作用を示すシーケンス図を作成する',
+    userStoryMapTitle: 'ユーザーストーリーマップ',
+    userStoryMapValue:
+      '商品発見から購入完了、注文追跡までの顧客の旅を示すEコマースモバイルアプリのためのユーザーストーリーマップを設計する'
   }
 }

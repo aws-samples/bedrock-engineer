@@ -6,8 +6,8 @@ import {
   LanguageSection,
   AgentChatSection,
   AWSSection,
-  BedrockSection,
-  AdvancedSection
+  AdvancedSection,
+  NotificationSection
 } from './components/sections'
 import { SoundSection } from './components/sections/SoundSection'
 import { ConfigDirSection } from './components/sections/ConfigDirSection'
@@ -23,6 +23,8 @@ export const SettingPage: React.FC = () => {
     availableModels,
     sendMsgKey,
     updateSendMsgKey,
+    contextLength,
+    updateContextLength,
     tavilySearchApiKey,
     setTavilySearchApiKey,
     awsRegion,
@@ -31,12 +33,16 @@ export const SettingPage: React.FC = () => {
     setAwsAccessKeyId,
     awsSecretAccessKey,
     setAwsSecretAccessKey,
+    awsSessionToken,
+    setAwsSessionToken,
     inferenceParams,
     updateInferenceParams,
     soundType,
     setSoundType,
     soundEnabled,
-    setSoundEnabled
+    setSoundEnabled,
+    bedrockSettings,
+    updateBedrockSettings
   } = useSetting()
 
   const handleChangeLLM = (modelId: string) => {
@@ -69,23 +75,26 @@ export const SettingPage: React.FC = () => {
       <AgentChatSection
         tavilySearchApiKey={tavilySearchApiKey}
         onUpdateTavilySearchApiKey={setTavilySearchApiKey}
+        contextLength={contextLength}
+        onUpdateContextLength={updateContextLength}
       />
 
       <AWSSection
         awsRegion={awsRegion}
         awsAccessKeyId={awsAccessKeyId}
         awsSecretAccessKey={awsSecretAccessKey}
+        awsSessionToken={awsSessionToken}
         onUpdateRegion={setAwsRegion}
         onUpdateAccessKeyId={setAwsAccessKeyId}
         onUpdateSecretAccessKey={setAwsSecretAccessKey}
-      />
-
-      <BedrockSection
+        onUpdateSessionToken={setAwsSessionToken}
         currentLLM={currentLLM}
         availableModels={availableModels}
         inferenceParams={inferenceParams}
+        bedrockSettings={bedrockSettings}
         onUpdateLLM={handleChangeLLM}
         onUpdateInferenceParams={updateInferenceParams}
+        onUpdateBedrockSettings={updateBedrockSettings}
       />
 
       <SoundSection
@@ -96,6 +105,8 @@ export const SettingPage: React.FC = () => {
       />
 
       <AdvancedSection sendMsgKey={sendMsgKey} onUpdateSendMsgKey={updateSendMsgKey} />
+
+      <NotificationSection />
     </div>
   )
 }

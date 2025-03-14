@@ -14,7 +14,22 @@ export const messages = {
     'agent settings': 'Agent Settings',
     'system prompt caption': 'System prompt defines how the agent behaves and responds.',
     'tool setting': 'Tool Settings',
-    'ignore file settings': 'Ignore File Settings'
+    'ignore file settings': 'Ignore File Settings',
+    'Thought process': 'Thought Process',
+    thinking: 'Thinking...',
+    'Stop generation': 'Stop generation',
+    'Clear chat': 'Clear chat',
+    'Generation stopped': 'Generation stopped',
+    confirmClearChat: 'Are you sure you want to clear the chat?',
+    'Are you sure you want to delete this message?':
+      'Are you sure you want to delete this message?',
+    'Message copied to clipboard': 'Message copied to clipboard',
+    'Message deleted successfully': 'Message deleted successfully',
+    'Failed to copy message': 'Failed to copy message',
+    'Click for options': 'Click for options',
+    'Copy to clipboard': 'Copy to clipboard',
+    'Delete message': 'Delete message',
+    'Toggle chat history': 'Toggle chat history'
   },
   ja: {
     'request error':
@@ -30,6 +45,20 @@ export const messages = {
     'agent settings': 'エージェント設定',
     'system prompt caption': 'システムプロンプトは、エージェントの振る舞いや応答方法を定義します。',
     'tool setting': 'ツール設定',
-    'ignore file settings': '除外ファイル設定'
+    'ignore file settings': '除外ファイル設定',
+    'Thought process': '思考プロセス',
+    thinking: '思考中...',
+    'Stop generation': '生成を停止',
+    'Clear chat': 'チャットをクリア',
+    'Generation stopped': '生成を停止しました',
+    confirmClearChat: 'チャットをクリアしてもよろしいですか？',
+    'Are you sure you want to delete this message?': 'このメッセージを削除してもよろしいですか？',
+    'Message copied to clipboard': 'メッセージをクリップボードにコピーしました',
+    'Message deleted successfully': 'メッセージを削除しました',
+    'Failed to copy message': 'メッセージのコピーに失敗しました',
+    'Click for options': 'オプションを表示',
+    'Copy to clipboard': 'クリップボードにコピー',
+    'Delete message': 'メッセージを削除',
+    'Toggle chat history': 'チャット履歴の表示/非表示'
   }
 }

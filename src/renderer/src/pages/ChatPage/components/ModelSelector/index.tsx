@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { LLM } from '@/types/llm'
 import { LuBrainCircuit } from 'react-icons/lu'
 import { useSettings } from '@renderer/contexts/SettingsContext'
+import { FiChevronDown } from 'react-icons/fi'
 
 type ModelSelectorProps = {
   openable: boolean
@@ -55,11 +56,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
   }
 
   return (
-    <div className="justify-start flex items-center gap-2 relative" ref={dropdownRef}>
-      <div className="relative w-full">
+    <div className="justify-start flex items-center relative" ref={dropdownRef}>
+      <div className="relative">
         {isOpen && (
           <div
-            className="absolute z-10 w-full bottom-full mb-1 bg-white dark:bg-gray-900 rounded-lg shadow-lg
+            className="absolute z-20 w-80 bottom-full mb-1 bg-white dark:bg-gray-900 rounded-lg shadow-lg
             border border-gray-200 dark:border-gray-700 py-2 px-2 max-h-[40vh] overflow-y-auto"
           >
             {availableModels.map((model: LLM) => {
@@ -99,15 +100,14 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
         <button
           type="button"
           onClick={() => (openable ? setIsOpen(!isOpen) : undefined)}
-          className="w-[380px] flex items-center gap-2 px-1 py-0 text-sm bg-gray-100 dark:bg-gray-900
-            dark:text-gray-300 rounded-md hover:text-gray-500 dark:hover:text-gray-400
-            transition-colors"
+          className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 rounded-md transition-colors"
         >
-          <span className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5">
             <span className={getModelColor(currentLLM.modelId).icon}>
               {getModelIcon(currentLLM.modelId)}
             </span>
-            <span className="flex-1 text-left">{currentLLM.modelName}</span>
+            <span className="text-left whitespace-nowrap">{currentLLM.modelName}</span>
+            <FiChevronDown className="text-gray-400 dark:text-gray-500" size={16} />
           </span>
         </button>
       </div>

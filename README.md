@@ -16,7 +16,7 @@ Bedrock Engineer is a native app, you can download the app or build the source c
 
 MacOS:
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.1.3.dmg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.4.1.dmg)
 
 <details>
 <summary>Tips for Installation</summary>
@@ -35,6 +35,11 @@ If you see "'Bedrock Engineer' can't be opened because Apple cannot check it for
 1. Open System Preferences
 2. Click Privacy & Security
 3. Scroll down and click "Open Anyway" next to "Bedrock Engineer was blocked to protect your Mac."
+
+If a configuration file error occurs when starting the application, please check the following configuration files. If you cannot start the application even after deleting the configuration files and restarting it, please file an issue.
+
+`/Users/{{username}}/Library/Application Support/bedrock-engineer/config.json`
+
 </details>
 
 ### Build
@@ -93,7 +98,7 @@ Choose an agent from the menu in the top left. By default, it includes a Softwar
 
 ### Customize Agents
 
-Click the ⚙️ icon in the top right to customize agent settings. Enter the agent's name, description, and system prompt. The system prompt is a crucial element that determines the agent's behavior. By clearly defining the agent's purpose, regulations, role, and when to use available tools, you can obtain more appropriate responses.
+Enter the agent's name, description, and system prompt. The system prompt is a crucial element that determines the agent's behavior. By clearly defining the agent's purpose, regulations, role, and when to use available tools, you can obtain more appropriate responses.
 
 ![custom-agents](./assets/custom-agents.png)
 
@@ -167,13 +172,17 @@ The following styles are also supported as presets:
 - Tailwind.css
 - Material UI (React mode only)
 
-### Connect to Design System Data Source
+### Agentic-RAG (Connect to Design System Data Source)
 
 By connecting to Amazon Bedrock's Knowledge Base, you can generate websites referencing any design system, project source code, or website styles.
 
 You need to store source code and crawled web pages in the knowledge base in advance. When registering source code in the knowledge base, it is recommended to convert it into a format that LLM can easily understand using methods such as [gpt-repository-loader](https://github.com/mpoon/gpt-repository-loader). Figma design files can be referenced by registering HTML and CSS exported versions to the Knowledge Base.
 
 Click the "Connect" button at the bottom of the screen and enter your knowledge base ID.
+
+### Web Search Agent
+
+Website Generator integrates a code generation agent that utilizes web search capabilities. This feature allows you to generate more sophisticated websites by referencing the latest library information, design trends, and coding best practices. To use the search functionality, click the "Search" button at the bottom of the screen to enable it.
 
 ## Step Functions Generator
 

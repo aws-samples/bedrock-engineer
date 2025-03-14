@@ -7,7 +7,7 @@ import SettingPage from './pages/SettingPage/SettingPage'
 import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
 import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorPage'
 import ChatPage from './pages/ChatPage/ChatPage'
-import AwsDiagramGeneratorPage from './pages/AwsDiagramGeneratorPage/AwsDiagramGeneratorPage'
+import DiagramGeneratorPage from './pages/DiagramGeneratorPage/DiagramGeneratorPage'
 
 export const routes = [
   {
@@ -43,7 +43,7 @@ export const routes = [
     href: '/diagram-generator',
     icon: BsLayoutWtf,
     position: 'top',
-    element: <AwsDiagramGeneratorPage />
+    element: <DiagramGeneratorPage />
   },
   {
     name: 'Setting',

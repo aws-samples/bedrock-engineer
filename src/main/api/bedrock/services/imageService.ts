@@ -111,15 +111,17 @@ export class ImageService {
   ]
 
   constructor(private context: ServiceContext) {
-    const { region, accessKeyId, secretAccessKey } = this.context.store.get('aws')
-    if (!accessKeyId || !secretAccessKey) {
+    const { accessKeyId, secretAccessKey, sessionToken, region } = this.context.store.get('aws')
+
+    if (!accessKeyId || !secretAccessKey || !region) {
       console.warn('AWS credentials not configured')
     }
 
     this.runtimeClient = new BedrockRuntimeClient({
       credentials: {
         accessKeyId,
-        secretAccessKey
+        secretAccessKey,
+        sessionToken
       },
       region
     })

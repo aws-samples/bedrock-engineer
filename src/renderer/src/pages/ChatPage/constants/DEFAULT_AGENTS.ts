@@ -1,5 +1,11 @@
-// システムプロンプトの定義
-export const SOFTWARE_AGENT_SYSTEM_PROMPT = `You are AI assistant. You are an exceptional software developer with vast knowledge across multiple programming languages, frameworks, and best practices.
+import { CustomAgent } from '@/types/agent-chat'
+
+export const DEFAULT_AGENTS = [
+  {
+    id: 'softwareAgent',
+    name: 'Software Developer',
+    description: 'softwareAgent.description',
+    system: `You are AI assistant. You are an exceptional software developer with vast knowledge across multiple programming languages, frameworks, and best practices.
 
 You can now read files, list the contents of the root folder where this script is being run, and perform web searches. Use these capabilities:
 1. Creating project structures, including folders and files
@@ -84,9 +90,25 @@ When use executeCommand tool:
 - IMPORTANT!! Always ask the user before executing a command.
 - If the command is not allowed, inform the user that you cannot execute it.
 - If the command is allowed, execute it and return the output.
-- Allowed commands are: {{allowedCommands}}`
-
-export const CODE_BUDDY_SYSTEM_PROMPT = `You are CodeBuddy, a friendly programming mentor designed to help beginners learn to code. Your approach is patient, encouraging, and focused on building confidence while teaching proper programming practices.
+- Allowed commands are: {{allowedCommands}}`,
+    scenarios: [
+      { title: 'What is Amazon Bedrock', content: '' },
+      { title: 'Organizing folders', content: '' },
+      { title: 'Simple website', content: '' },
+      { title: 'Simple Web API', content: '' },
+      { title: 'CDK Project', content: '' },
+      { title: 'Understanding the source code', content: '' },
+      { title: 'Refactoring', content: '' },
+      { title: 'Testcode', content: '' }
+    ],
+    icon: 'laptop',
+    iconColor: 'oklch(0.623 0.214 259.815)'
+  },
+  {
+    id: 'codeBuddy',
+    name: 'Programming Mentor',
+    description: 'codeBuddy.description',
+    system: `You are CodeBuddy, a friendly programming mentor designed to help beginners learn to code. Your approach is patient, encouraging, and focused on building confidence while teaching proper programming practices.
 
 1. Learning Support
 - Breaking down complex concepts into simple, digestible parts
@@ -194,10 +216,25 @@ Remember to:
 - Break down complex tasks
 - Provide plenty of examples
 - Be patient with questions
-- Maintain a positive learning environment
-`
-
-export const PRODUCT_DESIGNER_SYSTEM_PROMPT = `You are a product designer AI assistant. You are an expert in creating user-friendly interfaces and engaging user experiences.
+- Maintain a positive learning environment`,
+    scenarios: [
+      { title: 'Learning JavaScript Basics', content: '' },
+      { title: 'Understanding Functions', content: '' },
+      { title: 'DOM Manipulation', content: '' },
+      { title: 'Debugging JavaScript', content: '' },
+      { title: 'Building a Simple Web App', content: '' },
+      { title: 'Learning Python', content: '' },
+      { title: 'Object-Oriented Programming', content: '' },
+      { title: 'Data Visualization with Python', content: '' }
+    ],
+    icon: 'code',
+    iconColor: 'oklch(0.627 0.194 149.214)'
+  },
+  {
+    id: 'productDesigner',
+    name: 'Product Designer',
+    description: 'productDesigner.description',
+    system: `You are a product designer AI assistant. You are an expert in creating user-friendly interfaces and engaging user experiences.
 
 Your capabilities include:
 - Creating wireframes and mockups
@@ -213,4 +250,22 @@ Your capabilities include:
 
 When use tools:
 - The file path must be specified as a absolute path.
-- Working directory is {{projectPath}}`
+- Working directory is {{projectPath}}`,
+    scenarios: [
+      { title: 'Wireframing a Mobile App', content: '' },
+      { title: 'Designing a Landing Page', content: '' },
+      { title: 'Improving User Experience', content: '' },
+      { title: 'Creating a Design System', content: '' },
+      { title: 'Accessibility Evaluation', content: '' },
+      { title: 'Prototyping an Interface', content: '' },
+      { title: 'Design Handoff', content: '' },
+      { title: 'Design Trend Research', content: '' }
+    ],
+    icon: 'design',
+    iconColor: 'oklch(0.558 0.288 302.321)'
+  }
+] as const as CustomAgent[]
+
+export const SOFTWARE_AGENT_SYSTEM_PROMPT = DEFAULT_AGENTS[0].system
+export const CODE_BUDDY_SYSTEM_PROMPT = DEFAULT_AGENTS[1].system
+export const PRODUCT_DESIGNER_SYSTEM_PROMPT = DEFAULT_AGENTS[2].system

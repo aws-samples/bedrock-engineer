@@ -4,15 +4,15 @@ import type { ServiceContext } from '../types'
 import { BedrockSupportRegion } from '../../../../types/llm'
 
 export class ModelService {
-  private static readonly CACHE_LIFETIME = 1000 * 60 * 60 // 1 hour
+  private static readonly CACHE_LIFETIME = 1000 * 60 * 5 // 5 min
   private modelCache: { [key: string]: any } = {}
 
   constructor(private context: ServiceContext) {}
 
   async listModels() {
-    const credentials = this.context.store.get('aws')
-    const { region, accessKeyId, secretAccessKey } = credentials
-    if (!region || !accessKeyId || !secretAccessKey) {
+    const { accessKeyId, secretAccessKey, sessionToken, region } = this.context.store.get('aws')
+
+    if (!accessKeyId || !secretAccessKey || !region) {
       console.warn('AWS credentials not configured')
       return []
     }
@@ -31,7 +31,12 @@ export class ModelService {
     try {
       const models = getModelsForRegion(region as BedrockSupportRegion)
 
-      const accountId = await getAccountId(credentials)
+      const accountId = await getAccountId({
+        accessKeyId,
+        secretAccessKey,
+        sessionToken,
+        region
+      })
       const promptRouterModels = accountId ? getDefaultPromptRouter(accountId, region) : []
       const result = [...models, ...promptRouterModels]
       this.modelCache[cacheKey] = [...result, { _timestamp: Date.now() } as any]

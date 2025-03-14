@@ -38,7 +38,13 @@ export const useAgentGenerator = () => {
 
   const promptTemplate = getPromptTemplate(tools)
 
-  const { messages, loading, handleSubmit } = useAgentChat(llm?.modelId, promptTemplate, [])
+  const { messages, loading, handleSubmit } = useAgentChat(
+    llm?.modelId,
+    promptTemplate,
+    [],
+    undefined,
+    { enableHistory: false }
+  )
 
   const generateAgentSystemPrompt = async (name: string, description: string) => {
     const input = `Agent Name: ${name}

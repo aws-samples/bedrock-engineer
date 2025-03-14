@@ -13,7 +13,7 @@ import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '@renderer/components/DeepSearchButton'
 import { extractDrawioXml } from './utils/xmlParser'
 
-export default function AwsDiagramGeneratorPage() {
+export default function DiagramGeneratorPage() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   const [userInput, setUserInput] = useState('')
@@ -201,11 +201,11 @@ Here is example diagramm's xml:
 
       <div className="flex-1 rounded-lg">
         {loading ? (
-          <div className="flex h-full justify-center items-center">
+          <div className="flex h-[95%] justify-center items-center flex-col">
             {executingTool === 'tavilySearch' ? <WebLoader /> : <Loader />}
           </div>
         ) : (
-          <div className="w-full h-full border border-gray-200">
+          <div className="w-full h-[95%] border border-gray-200">
             <DrawIoEmbed
               ref={drawioRef}
               xml={xml}
@@ -221,15 +221,17 @@ Here is example diagramm's xml:
         )}
       </div>
 
-      <div className="flex gap-2 fixed bottom-0 left-20 right-5 bottom-3">
+      <div className="flex gap-2 fixed bottom-0 left-[5rem] right-5 bottom-3">
         <div className="relative w-full">
           <div className="flex gap-2 justify-between pb-2">
-            <RecommendDiagrams
-              loading={recommendLoading}
-              recommendations={recommendDiagrams}
-              onSelect={setUserInput}
-              loadingText={t('addRecommend', 'Generating recommendations...')}
-            />
+            <div className="overflow-x-auto flex-grow w-full">
+              <RecommendDiagrams
+                loading={recommendLoading}
+                recommendations={recommendDiagrams}
+                onSelect={setUserInput}
+                loadingText={t('addRecommend', 'Generating recommendations...')}
+              />
+            </div>
 
             <div className="flex gap-3 items-center">
               <DeepSearchButton

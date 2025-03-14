@@ -9,7 +9,7 @@ export const useRecommendDiagrams = () => {
     i18n: { language }
   } = useTranslation()
 
-  // Default example prompts for AWS diagrams
+  // Example prompts for various diagram types
   const examplePrompts = [
     {
       title: t('serverlessArchitectureTitle', 'Serverless API'),
@@ -52,6 +52,20 @@ export const useRecommendDiagrams = () => {
         'hybridConnectivityValue',
         'Design a hybrid connectivity architecture between on-premises and AWS using Direct Connect and VPN'
       )
+    },
+    {
+      title: t('sequenceDiagramTitle', 'Sequence Diagram'),
+      value: t(
+        'sequenceDiagramValue',
+        'Create a sequence diagram showing the interaction between a user, frontend, API service, and database during a user registration and authentication flow'
+      )
+    },
+    {
+      title: t('userStoryMapTitle', 'User Story Map'),
+      value: t(
+        'userStoryMapValue',
+        'Design a user story map for an e-commerce mobile app showing the customer journey from product discovery to purchase completion and order tracking'
+      )
     }
   ]
 
@@ -68,13 +82,13 @@ export const useRecommendDiagrams = () => {
 
     setRecommendLoading(true)
 
-    const systemPrompt = `You are an AI assistant that recommends improvements and variations for AWS architecture diagrams.
+    const systemPrompt = `You are an AI assistant that recommends improvements and variations for diagrams.
 Create your answer according to the given rules and schema.
 
 <rules>
 - Answers in formats other than those described in the <schema></schema> below are strictly prohibited.
 - Please provide at least three and up to six recommended improvements or variations.
-- Focus on AWS architecture best practices, scalability, security, and cost optimization.
+- If in case of AWS, focus on AWS architecture best practices, scalability, security, and cost optimization.
 - Keep recommendations concise but descriptive.
 </rules>
 
