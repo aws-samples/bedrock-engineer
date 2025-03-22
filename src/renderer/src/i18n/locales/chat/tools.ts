@@ -175,6 +175,16 @@ export const tools = {
     'Select a tool from the list': 'リストからツールを選択してください',
     'Click on any tool to view details and configuration options':
       'ツールをクリックすると詳細と設定オプションが表示されます',
+    'Global Settings': 'グローバル設定',
+    'Agent Specific Settings': 'エージェント固有設定',
+    'Global tool settings will be used as default for all agents':
+      'グローバルツール設定はすべてのエージェントのデフォルトとして使用されます',
+    'specific tool settings': '固有のツール設定',
+    'Select an agent first to edit agent-specific settings':
+      'エージェント固有の設定を編集するには、まずエージェントを選択してください',
+    'Using Global Tool Settings': 'グローバルツール設定を使用中',
+    'This agent will use the global tool settings. To customize tools for this agent specifically, select "Agent Specific Settings" above.':
+      'このエージェントはグローバルツール設定を使用します。このエージェント固有のツールをカスタマイズするには、上の「エージェント固有設定」を選択してください。',
     // Tavily Search Settings
     'Tavily Search API Settings': 'Tavily Search API設定',
     'About Tavily Search': 'Tavily Searchについて',

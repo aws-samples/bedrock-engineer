@@ -5,13 +5,14 @@ import {
   ToolUseBlockStart,
   ImageFormat
 } from '@aws-sdk/client-bedrock-runtime'
+import { ToolState } from '@/types/agent-chat'
 import { generateMessageId } from '@/types/chat/metadata'
 import { StreamChatCompletionProps, streamChatCompletion } from '@renderer/lib/api'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { ToolState } from '@/types/agent-chat'
+
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ChatMessage } from '@/types/chat/history'
 import { ToolName } from '@/types/tools'
@@ -62,11 +63,14 @@ function removeTraces(messages) {
 export const useAgentChat = (
   modelId: string,
   systemPrompt?: string,
-  enabledTools: ToolState[] = [],
+  agentId?: string, // エージェントIDを受け取る
   sessionId?: string,
-  options?: { enableHistory?: boolean }
+  options?: {
+    enableHistory?: boolean
+    tools?: ToolState[] // 明示的なツールリストを受け取るオプション
+  }
 ) => {
-  const { enableHistory = true } = options || {} // デフォルトで履歴保存は有効
+  const { enableHistory = true, tools: explicitTools } = options || {} // デフォルトで履歴保存は有効
 
   const [messages, setMessages] = useState<IdentifiableMessage[]>([])
   const [loading, setLoading] = useState(false)
@@ -76,7 +80,21 @@ export const useAgentChat = (
   const lastAssistantMessageId = useRef<string | null>(null)
   const abortController = useRef<AbortController | null>(null)
   const { t } = useTranslation()
-  const { notification, contextLength, guardrailSettings } = useSettings()
+  const { notification, contextLength, guardrailSettings, getAgentTools } = useSettings()
+
+  // エージェントIDからツール設定を取得
+  const enabledTools = useMemo(() => {
+    // 明示的に渡されたツールがある場合はそちらを優先
+    if (explicitTools) {
+      return explicitTools.filter((tool) => tool.enabled)
+    }
+    // エージェントIDがある場合はエージェント設定から取得
+    else if (agentId) {
+      return getAgentTools(agentId).filter((tool) => tool.enabled)
+    }
+    // どちらもない場合は空の配列を返す
+    return []
+  }, [agentId, getAgentTools, explicitTools])
 
   // 通信を中断する関数
   const abortCurrentRequest = useCallback(() => {

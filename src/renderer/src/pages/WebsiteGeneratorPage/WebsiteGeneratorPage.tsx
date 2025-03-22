@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { ToggleSwitch, Tooltip } from 'flowbite-react'
 import { GrClearOption } from 'react-icons/gr'
 import prompts from '../../prompts/prompts'
@@ -35,6 +35,7 @@ import { AttachedImage, TextArea } from '../ChatPage/components/InputForm/TextAr
 import { useRecommendChanges } from './hooks/useRecommendChanges'
 import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '../../components/DeepSearchButton'
+import { ToolState } from '@/types/agent-chat'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -115,19 +116,41 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     knowledgeBases
   )
 
-  const tools = enabledTools.filter(
-    (tool) =>
-      tool.toolSpec?.name === 'retrieve' || (enableSearch && tool.toolSpec?.name === 'tavilySearch')
-  )
+  // ウェブサイト生成用のカスタムエージェントID（実際には存在しない仮想ID）
+  const websiteAgentId = 'websiteGenerator'
   const sessionId = undefined
-  const options = { enableHistory: false }
+
+  // Website Generator Agent で利用可能なツールを定義
+  const websiteAgentTools = useMemo(() => {
+    const tools: ToolState[] = []
+
+    // 検索機能が有効な場合、tavilySearch ツールを追加
+    if (enableSearch) {
+      const searchTools = enabledTools.filter((tool) => tool.toolSpec?.name === 'tavilySearch')
+      tools.push(...searchTools)
+    }
+
+    // Knowledge Base機能が有効な場合、retrieve ツールを追加
+    if (enableKnowledgeBase) {
+      const retrieveTools = enabledTools.filter((tool) => tool.toolSpec?.name === 'retrieve')
+      tools.push(...retrieveTools)
+    }
+
+    return tools
+  }, [enableSearch, enableKnowledgeBase, enabledTools])
+
+  const options = {
+    enableHistory: false,
+    tools: websiteAgentTools // 明示的にツール設定を渡す
+  }
+
   const {
     messages,
     loading,
     executingTool,
     handleSubmit,
     clearChat: initChat
-  } = useAgentChat(llm?.modelId, systemPrompt, tools, sessionId, options)
+  } = useAgentChat(llm?.modelId, systemPrompt, websiteAgentId, sessionId, options)
 
   const onSubmit = (input: string, images: AttachedImage[]) => {
     handleSubmit(input, images)

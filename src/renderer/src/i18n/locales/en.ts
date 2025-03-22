@@ -1,6 +1,12 @@
 import { chatPage } from './chat'
 import { awsDiagramGenerator } from './awsDiagramGenerator'
-import { iamPolicy, notificationSettings, bedrockSettings, agentSettings } from './settings'
+import {
+  iamPolicy,
+  notificationSettings,
+  bedrockSettings,
+  agentSettings,
+  agentToolsSettings
+} from './settings'
 import { thinkingMode } from './thinkingMode'
 
 const HomePage = {
@@ -165,6 +171,7 @@ const en = {
   ...notificationSettings.en,
   ...bedrockSettings.en,
   ...agentSettings.en,
+  ...agentToolsSettings.en,
   ...awsDiagramGenerator.en,
   ...thinkingMode.en
 }

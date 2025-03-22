@@ -1,4 +1,4 @@
-import { CustomAgent, KnowledgeBase } from '@/types/agent-chat'
+import { CustomAgent, KnowledgeBase, ToolState, AgentCategory } from '@/types/agent-chat'
 import { CommandConfig } from '../../modals/useToolSettingModal'
 import { BedrockAgent } from '@/types/agent'
 
@@ -40,4 +40,12 @@ export interface ScenariosSectionProps {
   onChange: (scenarios: Array<{ title: string; content: string }>) => void
   isGenerating: boolean
   onAutoGenerate: () => void
+}
+
+export interface ToolsSectionProps {
+  agentId: string
+  tools: ToolState[]
+  onChange: (tools: ToolState[]) => void
+  agentCategory?: AgentCategory
+  onCategoryChange?: (category: AgentCategory) => void
 }

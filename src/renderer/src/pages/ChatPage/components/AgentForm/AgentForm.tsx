@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
 import { AgentFormProps } from './types'
@@ -7,15 +7,25 @@ import { BasicSection } from './BasicSection'
 import { SystemPromptSection } from './SystemPromptSection'
 import { ScenariosSection } from './ScenariosSection'
 import { TagsSection } from './TagsSection'
+import { ToolsSection } from './ToolsSection'
 import { useAgentGenerator } from '../../hooks/useAgentGenerator'
 import { useScenarioGenerator } from '../../hooks/useScenarioGenerator'
 import toast from 'react-hot-toast'
 import { FiSave } from 'react-icons/fi'
 import { useAgentFilter } from '../AgentList'
+import { AgentCategory, ToolState } from '@/types/agent-chat'
 
 export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel }) => {
   const { t } = useTranslation()
-  const { projectPath, allowedCommands, knowledgeBases, bedrockAgents, agents } = useSetting()
+  const {
+    projectPath,
+    allowedCommands,
+    knowledgeBases,
+    bedrockAgents,
+    agents,
+    getDefaultToolsForCategory
+  } = useSetting()
+
   const { availableTags } = useAgentFilter(agents)
 
   const { formData, updateField, handleSubmit } = useAgentForm(agent, onSave)
@@ -26,6 +36,10 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
     generatedScenarios,
     isGenerating: isGeneratingScenarios
   } = useScenarioGenerator()
+
+  // エージェント用のツール設定と選択されたカテゴリを管理
+  const [agentTools, setAgentTools] = useState<ToolState[]>([])
+  const [agentCategory, setAgentCategory] = useState<AgentCategory>('all')
 
   const handleAutoGeneratePrompt = async () => {
     if (!formData.name || !formData.description) {
@@ -56,6 +70,51 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
       updateField('scenarios', generatedScenarios)
     }
   }, [generatedScenarios])
+
+  // 初期化時にエージェント固有のツールを設定
+  useEffect(() => {
+    if (agent?.id) {
+      // 既存のツール設定があれば使用
+      if (agent.tools && agent.tools.length > 0) {
+        setAgentTools(agent.tools)
+        updateField('tools', agent.tools)
+      }
+
+      // 既存カテゴリがあれば設定
+      if (agent.category) {
+        setAgentCategory(agent.category)
+      } else {
+        // それ以外の場合は ALL 設定を使用
+        const defaultTools = getDefaultToolsForCategory('all')
+        setAgentTools(defaultTools)
+        updateField('tools', defaultTools)
+        updateField('category', 'all')
+      }
+    } else {
+      // 新規エージェントの場合は ALL 設定
+      const defaultTools = getDefaultToolsForCategory('all')
+      setAgentTools(defaultTools)
+      updateField('tools', defaultTools)
+      updateField('category', 'all')
+    }
+  }, [agent, getDefaultToolsForCategory])
+
+  // ツール設定変更のハンドラ
+  const handleToolsChange = (tools: ToolState[]) => {
+    setAgentTools(tools)
+    updateField('tools', tools)
+  }
+
+  // カテゴリ変更のハンドラ
+  const handleCategoryChange = (category: AgentCategory) => {
+    setAgentCategory(category)
+    updateField('category', category)
+
+    // 選択したカテゴリに応じたツールセットを適用
+    const newTools = getDefaultToolsForCategory(category)
+    setAgentTools(newTools)
+    updateField('tools', newTools)
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -94,6 +153,13 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
         tags={formData.tags || []}
         availableTags={availableTags}
         onChange={(tags) => updateField('tags', tags)}
+      />
+
+      <ToolsSection
+        tools={agentTools}
+        onChange={handleToolsChange}
+        agentCategory={agentCategory}
+        onCategoryChange={handleCategoryChange}
       />
 
       <div className="flex justify-end pt-4 pb-4 space-x-2">

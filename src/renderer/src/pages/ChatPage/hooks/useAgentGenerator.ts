@@ -41,7 +41,7 @@ export const useAgentGenerator = () => {
   const { messages, loading, handleSubmit } = useAgentChat(
     llm?.modelId,
     promptTemplate,
-    [],
+    undefined,
     undefined,
     { enableHistory: false }
   )

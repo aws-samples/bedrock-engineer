@@ -12,7 +12,9 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
     tags: initialAgent?.tags || [],
     isCustom: true,
     icon: initialAgent?.icon || 'robot',
-    iconColor: initialAgent?.iconColor
+    iconColor: initialAgent?.iconColor,
+    tools: initialAgent?.tools || [],
+    category: initialAgent?.category || 'all'
   })
 
   const updateField = <K extends keyof CustomAgent>(field: K, value: CustomAgent[K]) => {

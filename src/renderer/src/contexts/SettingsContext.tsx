@@ -9,6 +9,8 @@ import { DEFAULT_AGENTS } from '@renderer/pages/ChatPage/constants/DEFAULT_AGENT
 import { InferenceParameters, LLM, BEDROCK_SUPPORTED_REGIONS, ThinkingMode } from '@/types/llm'
 import type { AwsCredentialIdentity } from '@smithy/types'
 import { BedrockAgent } from '@/types/agent'
+import { AgentCategory } from '@/types/agent-chat'
+import { getToolsForCategory } from '../constants/defaultToolSets'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -186,6 +188,11 @@ export interface SettingsContextType {
   tools: ToolState[]
   setTools: (tools: ToolState[]) => void
   enabledTools: ToolState[]
+
+  // エージェント固有のツール設定
+  getAgentTools: (agentId: string) => ToolState[]
+  updateAgentTools: (agentId: string, tools: ToolState[]) => void
+  getDefaultToolsForCategory: (category: string) => ToolState[]
 
   allowedCommands: CommandConfig[]
   setAllowedCommands: (commands: CommandConfig[]) => void
@@ -808,15 +815,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const enabledTavilySearch = tavilySearchApiKey.length > 0
 
-  const enabledTools = tools
-    .filter((tool) => tool.enabled)
-    .filter((tool) => {
-      if (tool.toolSpec?.name === 'tavilySearch') {
-        return enabledTavilySearch
-      }
-      return true
-    })
-
   const setKnowledgeBases = (knowledgeBases: KnowledgeBase[]) => {
     setStateKnowledgeBases(knowledgeBases)
     window.store.set('knowledgeBases', knowledgeBases)
@@ -856,6 +854,65 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setStateNotification(enabled)
     window.store.set('notification', enabled)
   }, [])
+
+  // エージェント固有のツール設定を取得する関数
+  const getAgentTools = useCallback(
+    (agentId: string): ToolState[] => {
+      // 現在選択されているエージェントを見つける
+      const agent = allAgents.find((a) => a.id === agentId)
+
+      // エージェント固有のツール設定がある場合はそれを返す
+      if (agent && agent.tools) {
+        return agent.tools
+      }
+
+      // それ以外は全てのツールセットを返す
+      return getToolsForCategory('all', tools)
+    },
+    [allAgents, tools]
+  )
+
+  // 現在選択されているエージェント用のツール設定を取得
+  const effectiveTools = useMemo(() => {
+    // 選択されているエージェントのツール設定を取得する
+    return getAgentTools(selectedAgentId)
+  }, [selectedAgentId, getAgentTools])
+
+  // 有効なツールのみをフィルタリング
+  const enabledTools = effectiveTools
+    .filter((tool) => tool.enabled)
+    .filter((tool) => {
+      if (tool.toolSpec?.name === 'tavilySearch') {
+        return enabledTavilySearch
+      }
+      return true
+    })
+
+  // effectiveToolsの宣言は getAgentTools 関数の定義後に移動しました
+
+  // enabledToolsの宣言は後に移動しました
+
+  // エージェントツール設定を更新する関数
+  const updateAgentTools = useCallback(
+    (agentId: string, updatedTools: ToolState[]) => {
+      // カスタムエージェントの場合のみ更新可能
+      const updatedAgents = customAgents.map((agent) =>
+        agent.id === agentId ? { ...agent, tools: updatedTools } : agent
+      )
+
+      setCustomAgents(updatedAgents)
+      window.store.set('customAgents', updatedAgents)
+    },
+    [customAgents]
+  )
+
+  // カテゴリーに基づいてデフォルトツール設定を返す関数
+  const getDefaultToolsForCategory = useCallback(
+    (category: string): ToolState[] => {
+      return getToolsForCategory(category as AgentCategory, tools)
+    },
+    [tools]
+  )
 
   const value = {
     // Advanced Settings
@@ -936,6 +993,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     tools,
     setTools,
     enabledTools,
+    getAgentTools,
+    updateAgentTools,
+    getDefaultToolsForCategory,
 
     knowledgeBases,
     setKnowledgeBases,

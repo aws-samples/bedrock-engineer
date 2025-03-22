@@ -46,7 +46,7 @@ export const TagsSection: React.FC<TagsSectionProps> = ({ tags, availableTags = 
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 pb-4">
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Tags {t('optional')}
       </label>

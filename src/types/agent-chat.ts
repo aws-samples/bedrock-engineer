@@ -185,9 +185,14 @@ export type AgentIcon =
   | 'store'
   | 'shop'
 
+export type AgentCategory = 'general' | 'coding' | 'design' | 'data' | 'business' | 'custom' | 'all'
+
 export type CustomAgent = Agent & {
   isCustom?: boolean
   isShared?: boolean
+  tools?: ToolState[] // エージェント固有のツール設定
+  category?: AgentCategory // エージェントのカテゴリ
+  useGlobalTools?: boolean // グローバルツール設定を使用するかのフラグ
 }
 
 export type AgentSettings = {

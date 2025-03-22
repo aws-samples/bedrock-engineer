@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { DrawIoEmbed, DrawIoEmbedRef } from 'react-drawio'
 import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
 import { TextArea } from '../ChatPage/components/InputForm/TextArea'
@@ -88,17 +88,27 @@ Here is example diagramm's xml:
 
   const systemPrompt = getSystemPrompt()
 
-  // 検索ツールを設定
-  const searchTools = enableSearch
-    ? enabledTools.filter((tool) => tool.toolSpec?.name === 'tavilySearch')
-    : []
+  // 検索ツール用のカスタムエージェントID（実際には存在しない仮想ID）
+  const diagramAgentId = 'diagramGenerator'
+
+  // Diagram Generator Agent で利用可能なツールを定義
+  // enableSearch が true の場合のみ tavilySearch ツールを有効にする
+  const diagramAgentTools = useMemo(() => {
+    if (!enableSearch) return []
+
+    // enabledTools から tavilySearch ツールのみをフィルタリング
+    return enabledTools.filter((tool) => tool.toolSpec?.name === 'tavilySearch')
+  }, [enableSearch, enabledTools])
 
   const { messages, loading, handleSubmit, executingTool } = useAgentChat(
     llm?.modelId,
     systemPrompt,
-    searchTools,
+    diagramAgentId,
     undefined,
-    { enableHistory: false }
+    {
+      enableHistory: false,
+      tools: diagramAgentTools // 明示的にツール設定を渡す
+    }
   )
 
   const onSubmit = (input: string) => {

@@ -7,9 +7,10 @@ import { CommandForm } from './CommandForm'
 import { BedrockAgentSettingForm } from './BedrockAgentSettingForm'
 import { TavilySearchSettingForm } from './TavilySearchSettingForm'
 import { Button, Modal, ToggleSwitch } from 'flowbite-react'
-import { memo, useState } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BedrockAgent } from '@/types/agent'
+import { ToolState } from '@/types/agent-chat'
 
 export interface CommandConfig {
   pattern: string
@@ -143,11 +144,18 @@ export const useToolSettingModal = () => {
   }
 }
 
+interface ToolSettingModalProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
 const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
   const { t } = useTranslation()
   const {
-    tools,
-    setTools,
+    customAgents,
+    selectedAgentId,
+    updateAgentTools,
+    getAgentTools,
     currentLLM,
     knowledgeBases,
     setKnowledgeBases,
@@ -166,21 +174,41 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
   // 選択されたツールの状態管理
   const [selectedTool, setSelectedTool] = useState<string | null>(null)
 
-  const handleToggleTool = (toolName: string) => {
-    if (!tools) return
+  // エージェントのツール設定
+  const [agentTools, setAgentTools] = useState<ToolState[]>([])
 
+  // 現在選択中のエージェント
+  const currentAgent = customAgents.find((agent) => agent.id === selectedAgentId)
+
+  // エージェントが選択されているかどうかを確認
+  const hasSelectedAgent = !!selectedAgentId && !!currentAgent
+
+  // エージェントのツール設定を読み込む
+  useEffect(() => {
+    if (selectedAgentId) {
+      const tools = getAgentTools(selectedAgentId)
+      setAgentTools(tools)
+    }
+  }, [selectedAgentId, getAgentTools])
+
+  const handleToggleTool = (toolName: string) => {
     if (!currentLLM.toolUse) {
       toast(`${currentLLM.modelName} does not support ToolUse.`)
       return
     }
 
-    const updatedTools = tools.map((tool) => {
+    if (!selectedAgentId) return
+
+    const updatedTools = agentTools.map((tool) => {
       if (tool.toolSpec?.name === toolName) {
         return { ...tool, enabled: !tool.enabled }
       }
       return tool
     })
-    setTools(updatedTools)
+    setAgentTools(updatedTools)
+
+    // エージェントの設定を更新
+    updateAgentTools(selectedAgentId, updatedTools)
   }
 
   const selectTool = (toolName: string) => {
@@ -191,7 +219,7 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
   const getToolsByCategory = () => {
     const toolsByCategory = TOOL_CATEGORIES.map((category) => {
       const toolsInCategory =
-        tools?.filter(
+        agentTools?.filter(
           (tool) => tool.toolSpec?.name && category.tools.includes(tool.toolSpec.name)
         ) || []
 
@@ -209,8 +237,21 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
   return (
     <Modal dismissible size="7xl" show={isOpen} onClose={onClose}>
       <Modal.Header className="border-b border-gray-200 dark:border-gray-700">
-        {t('Available Tools')}
+        {hasSelectedAgent ? (
+          <div className="flex items-center">
+            <span>Agent Tools: </span>
+            <span className="font-medium ml-3">{currentAgent?.name}</span>
+          </div>
+        ) : (
+          <div>
+            {t('Agent Tools')}
+            <div className="text-sm font-normal text-gray-500 mt-1">
+              {t('Select an agent first to edit tool settings')}
+            </div>
+          </div>
+        )}
       </Modal.Header>
+
       <Modal.Body className="p-0 h-[700px]">
         <div className="flex h-full w-full">
           {/* 左側サイドバー：ツールリスト - fixed height with own scrollbar */}
