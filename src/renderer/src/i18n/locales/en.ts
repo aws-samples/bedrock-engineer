@@ -162,6 +162,39 @@ base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
 }`
 }
 
+// New translations for MCP Server Settings tabs
+const AgentFormTabs = {
+  'Basic Settings': 'Basic Settings',
+  'MCP Servers': 'MCP Servers',
+  Tools: 'Tools',
+  'MCP Server Settings': 'MCP Server Settings',
+  'Configure MCP servers for this agent to use MCP tools.':
+    'Configure MCP servers for this agent to use MCP tools.',
+  'Register MCP servers first, then you can enable MCP tools in the Available Tools tab.':
+    'Register MCP servers first, then you can enable MCP tools in the Tools tab.',
+  'Add New MCP Server': 'Add New MCP Server',
+  'Edit MCP Server': 'Edit MCP Server',
+  'Server Configuration (JSON)': 'Server Configuration (JSON)',
+  'Add Server': 'Add Server',
+  'Update Server': 'Update Server',
+  'Registered MCP Servers': 'Registered MCP Servers',
+  'No MCP servers registered yet': 'No MCP servers registered yet',
+  'Required fields are missing or invalid. Check the JSON format.':
+    'Required fields are missing or invalid. Check the JSON format.',
+  'The "env" field must be an object.': 'The "env" field must be an object.',
+  'A server with this name already exists.': 'A server with this name already exists.',
+  'Invalid JSON format.': 'Invalid JSON format.',
+  'No valid server configurations found': 'No valid server configurations found',
+  'Sample Config': 'Sample Config',
+  'Export Current Config': 'Export Current Config',
+  'Use claude_desktop_config.json format with mcpServers object containing server configurations.':
+    'Use claude_desktop_config.json format with mcpServers object containing server configurations.',
+  'Invalid format: Must use claude_desktop_config.json format with mcpServers object':
+    'Invalid format: Must use claude_desktop_config.json format with mcpServers object',
+  'When editing, please include exactly one server in mcpServers':
+    'When editing, please include exactly one server in mcpServers'
+}
+
 const en = {
   ...HomePage,
   ...SettingPage,
@@ -175,7 +208,8 @@ const en = {
   ...agentToolsSettings.en,
   ...awsDiagramGenerator.en,
   ...thinkingMode.en,
-  ...agentDirectory.en
+  ...agentDirectory.en,
+  ...AgentFormTabs
 }
 
 export default en

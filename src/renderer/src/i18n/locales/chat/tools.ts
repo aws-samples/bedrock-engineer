@@ -9,6 +9,17 @@ export const tools = {
     'Select a tool from the list': 'Select a tool from the list',
     'Click on any tool to view details and configuration options':
       'Click on any tool to view details and configuration options',
+    // MCP Tool related
+    'MCP tool from Model Context Protocol server': 'MCP tool from Model Context Protocol server',
+    'MCP tools available from configured servers': 'MCP tools available from configured servers',
+    From: 'From',
+    'MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.':
+      'MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.',
+    'No MCP servers configured for this agent. Configure MCP servers in the MCP Servers tab to use MCP tools.':
+      'No MCP servers configured for this agent. Configure MCP servers in the MCP Servers tab to use MCP tools.',
+    'Configured MCP Servers': 'Configured MCP Servers',
+    Information: 'Information',
+    Warning: 'Warning',
     // Tavily Search Settings
     'Tavily Search API Settings': 'Tavily Search API Settings',
     'About Tavily Search': 'About Tavily Search',
@@ -181,6 +192,17 @@ export const tools = {
     'Select a tool from the list': 'リストからツールを選択してください',
     'Click on any tool to view details and configuration options':
       'ツールをクリックすると詳細と設定オプションが表示されます',
+    // MCP Tool related
+    'MCP tool from Model Context Protocol server': 'Model Context Protocol サーバーからのMCPツール',
+    'MCP tools available from configured servers': '設定済みサーバーからのMCPツールが利用可能',
+    From: '提供元',
+    'MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.':
+      'MCPサーバーは設定されていますが、利用可能なツールがありません。MCPサーバーが実行中で、ツールを提供していることを確認してください。',
+    'No MCP servers configured for this agent. Configure MCP servers in the MCP Servers tab to use MCP tools.':
+      'このエージェントにはMCPサーバーが設定されていません。MCPツールを使用するには、MCPサーバータブでMCPサーバーを設定してください。',
+    'Configured MCP Servers': '設定済みMCPサーバー',
+    Information: '情報',
+    Warning: '警告',
     'Global Settings': 'グローバル設定',
     'Agent Specific Settings': 'エージェント固有設定',
     'Global tool settings will be used as default for all agents':

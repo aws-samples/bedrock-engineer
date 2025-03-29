@@ -36,12 +36,45 @@ const AgentSettingsModal = React.memo(
     const { t } = useTranslation()
 
     const handleSaveAgent = (agent: CustomAgent) => {
-      const updatedAgents = editingAgent?.id
-        ? customAgents.map((a) => (a.id === agent.id ? agent : a))
-        : [...customAgents, agent]
-      saveCustomAgents(updatedAgents)
-      setEditingAgent(null)
-      onClose()
+      console.log('handleSaveAgent called with agent:', agent)
+
+      // 必須フィールドの検証
+      if (!agent.name || !agent.name.trim()) {
+        toast.error(t('Agent name is required'))
+        return
+      }
+
+      if (!agent.description || !agent.description.trim()) {
+        toast.error(t('Agent description is required'))
+        return
+      }
+
+      try {
+        // MCPサーバー情報を確認
+        console.log('MCP Servers to save:', agent.mcpServers || [])
+
+        // 最終的なエージェントデータ（MCPサーバー情報を明示的に含む）
+        const finalAgentData: CustomAgent = {
+          ...agent,
+          // mcpServersが未定義または空配列の場合は明示的に空配列を設定
+          mcpServers: agent.mcpServers || []
+        }
+
+        const updatedAgents = editingAgent?.id
+          ? customAgents.map((a) => (a.id === agent.id ? finalAgentData : a))
+          : [...customAgents, finalAgentData]
+
+        console.log('Saving agent data:', finalAgentData)
+        console.log('Updated agents list:', updatedAgents)
+
+        saveCustomAgents(updatedAgents)
+        toast.success(t('Agent saved successfully'))
+        setEditingAgent(null)
+        onClose()
+      } catch (error) {
+        console.error('Error saving agent:', error)
+        toast.error(t('Failed to save agent'))
+      }
     }
 
     const handleDeleteAgent = (id: string) => {
@@ -119,7 +152,7 @@ const AgentSettingsModal = React.memo(
           }}
         >
           <InfoPanel />
-          <div className="space-y-6 min-h-[800px]">
+          <div className="space-y-6 min-h-[1100px]">
             {editingAgent ? (
               <AgentForm
                 agent={editingAgent}

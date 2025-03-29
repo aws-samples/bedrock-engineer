@@ -1,4 +1,4 @@
-import { ToolName } from '@/types/tools'
+import { ToolName, isMcpTool } from '@/types/tools'
 import {
   FaFolderPlus,
   FaFileSignature,
@@ -11,12 +11,14 @@ import {
   FaImage,
   FaDatabase,
   FaTerminal,
-  FaBrain
+  FaBrain,
+  FaServer
 } from 'react-icons/fa'
 import { BiFace } from 'react-icons/bi'
 import { MdDifference } from 'react-icons/md'
 
-export const toolIcons: { [key in ToolName]: React.ReactElement } = {
+// 標準ツールのアイコン定義
+const standardToolIcons = {
   createFolder: <FaFolderPlus className="text-blue-500 size-6" />,
   writeToFile: <FaFileSignature className="text-green-500 size-6" />,
   readFiles: <FaFileAlt className="text-yellow-500 size-6" />,
@@ -32,3 +34,25 @@ export const toolIcons: { [key in ToolName]: React.ReactElement } = {
   applyDiffEdit: <MdDifference className="text-cyan-500 size-6" />,
   think: <FaBrain className="text-amber-500 size-6" />
 }
+
+// MCPツール用のアイコン（すべてのMCPツールで共通）
+const mcpIcon = <FaServer className="text-cyan-500 size-6" />
+
+// ツール名に応じて動的にアイコンを返すプロキシ
+export const toolIcons = new Proxy({} as { [key in ToolName]: React.ReactElement }, {
+  get: (_target, prop: string) => {
+    // 標準ツールのアイコンがあればそれを返す
+    if (prop in standardToolIcons) {
+      return standardToolIcons[prop as keyof typeof standardToolIcons]
+    }
+
+    // MCPツールの場合
+    if (isMcpTool(prop)) {
+      // すべてのMCPツールには同じアイコンを返す
+      return mcpIcon
+    }
+
+    // 未知のツールの場合もMCPアイコンを返す
+    return mcpIcon
+  }
+})

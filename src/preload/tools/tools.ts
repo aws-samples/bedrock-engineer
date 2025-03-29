@@ -1,9 +1,10 @@
 import { ToolService } from './toolService'
 import { store } from '../store'
 import { BedrockService } from '../../main/api/bedrock'
-import { ToolInput, ToolResult } from '../../types/tools'
+import { ToolInput, ToolResult, isMcpTool, getOriginalMcpToolName } from '../../types/tools'
 import { createPreloadCategoryLogger } from '../logger'
 import { CommandPatternConfig } from '../../main/api/command/types'
+import { tryExecuteMcpTool } from '../mcp'
 
 // Create logger for tools module
 const logger = createPreloadCategoryLogger('tools')
@@ -18,6 +19,34 @@ export const executeTool = async (input: ToolInput): Promise<string | ToolResult
   })
 
   try {
+    // MCPツールの場合は専用処理へ
+    if (typeof input.type === 'string' && isMcpTool(input.type)) {
+      // 現在選択されているエージェントIDを取得
+      const selectedAgentId = store.get('selectedAgentId')
+
+      // エージェント固有のMCPサーバー設定を取得
+      let mcpServers: any[] | undefined = undefined
+      if (selectedAgentId) {
+        // カスタムエージェントからMCPサーバー設定を取得
+        const customAgents = store.get('customAgents') || []
+        const currentAgent = customAgents.find((agent) => agent.id === selectedAgentId)
+        if (currentAgent && currentAgent.mcpServers && currentAgent.mcpServers.length > 0) {
+          mcpServers = currentAgent.mcpServers
+          logger.info(`Using agent-specific MCP servers for tool ${input.type}`, {
+            agentId: selectedAgentId,
+            mcpServersCount: mcpServers?.length || 0
+          })
+        } else {
+          logger.warn(
+            `Agent ${selectedAgentId} has no MCP servers configured for tool ${input.type}`
+          )
+        }
+      }
+
+      const originalToolName = getOriginalMcpToolName(input.type)
+      return tryExecuteMcpTool(originalToolName, input, mcpServers)
+    }
+
     switch (input.type) {
       case 'createFolder':
         return toolService.createFolder(input.path)
@@ -131,6 +160,13 @@ export const executeTool = async (input: ToolInput): Promise<string | ToolResult
 
       case 'think':
         return toolService.think(input.thought)
+
+      default: {
+        // 未知のツール名の場合はエラー
+        const unknownToolError = `Unknown tool type: ${input.type}`
+        logger.error(unknownToolError)
+        throw new Error(unknownToolError)
+      }
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)

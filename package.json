@@ -39,6 +39,7 @@
     "@electron-toolkit/utils": "3.0.0",
     "@headlessui/react": "^2.2.0",
     "@iconify-json/logos": "1.2.0",
+    "@modelcontextprotocol/sdk": "^1.8.0",
     "@monaco-editor/react": "4.6.0",
     "@reactour/tour": "3.7.0",
     "@tshepomgaga/aws-sfn-graph": "0.0.6",
@@ -67,7 +68,8 @@
     "remark-gfm": "4.0.0",
     "vite-plugin-svgr": "4.2.0",
     "winston": "^3.17.0",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "2.0.0",

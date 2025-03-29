@@ -1,296 +1,100 @@
-import React, { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
+import React from 'react'
 import useSetting from '@renderer/hooks/useSetting'
 import { AgentFormProps } from './types'
 import { useAgentForm } from './useAgentForm'
-import { BasicSection } from './BasicSection'
-import { SystemPromptSection } from './SystemPromptSection'
-import { ScenariosSection } from './ScenariosSection'
-import { TagsSection } from './TagsSection'
-import { ToolsSection } from './ToolsSection'
-// 古いコンポーネントのインポートを削除
-// import { CommandsSection } from './CommandsSection'
-// import { BedrockAgentsSection } from './BedrockAgentsSection'
-// import { KnowledgeBasesSection } from './KnowledgeBasesSection'
-import { useAgentGenerator } from '../../hooks/useAgentGenerator'
-import { useScenarioGenerator } from '../../hooks/useScenarioGenerator'
-import toast from 'react-hot-toast'
-import { FiSave } from 'react-icons/fi'
+import { usePromptGeneration } from './usePromptGeneration'
+import { formEventUtils } from './utils/formEventUtils'
 import { useAgentFilter } from '../AgentList'
-import { AgentCategory, ToolState } from '@/types/agent-chat'
-import { ToolName } from '@/types/tools'
 
+// 分割されたコンポーネントのインポート
+import { AgentFormTabs } from './components/AgentFormTabs'
+import { AgentFormContent } from './components/AgentFormContent'
+import { FormActionButtons } from './components/FormActionButtons'
+
+/**
+ * エージェント作成・編集フォームコンポーネント
+ * リファクタリングにより、コンポーネントを分割し責務を明確化
+ */
 export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel }) => {
-  const { t } = useTranslation()
-  const { projectPath, agents, getDefaultToolsForCategory } = useSetting()
-
+  const { projectPath, agents } = useSetting()
   const { availableTags } = useAgentFilter(agents)
 
-  const { formData, updateField, handleSubmit } = useAgentForm(agent, onSave)
-  const { generateAgentSystemPrompt, generatedAgentSystemPrompt, isGenerating } =
-    useAgentGenerator()
+  // フォーム状態管理フック
   const {
-    generateScenarios,
-    generatedScenarios,
-    isGenerating: isGeneratingScenarios
-  } = useScenarioGenerator()
+    formData,
+    activeTab,
+    agentTools,
+    agentCategory,
+    isLoadingMcpTools,
+    tempMcpTools,
+    updateField,
+    handleSubmit,
+    handleToolsChange,
+    handleCategoryChange,
+    handleTabChange,
+    fetchMcpTools
+  } = useAgentForm(agent, onSave)
 
-  // エージェント用のツール設定と選択されたカテゴリを管理
-  const [agentTools, setAgentTools] = useState<ToolState[]>([])
-  const [, setAgentToolNames] = useState<ToolName[]>([]) // 値は使用しないが、setter は必要
-  const [agentCategory, setAgentCategory] = useState<AgentCategory>('all')
+  // システムプロンプトとシナリオ更新ハンドラー
+  const handleSystemPromptGenerated = React.useCallback(
+    (prompt: string) => updateField('system', prompt),
+    [updateField]
+  )
 
-  const handleAutoGeneratePrompt = async () => {
-    if (!formData.name || !formData.description) {
-      toast.error(t('pleaseEnterNameAndDescription'))
-      return
-    }
-    await generateAgentSystemPrompt(formData.name, formData.description)
-  }
+  const handleScenariosGenerated = React.useCallback(
+    (scenarios: Array<{ title: string; content: string }>) => updateField('scenarios', scenarios),
+    [updateField]
+  )
 
-  const handleGenerateScenarios = async () => {
-    if (!formData.name || !formData.description || !formData.system) {
-      toast.error(t('inputAgentInfoError'))
-      return
-    }
-    await generateScenarios(formData.name, formData.description, formData.system)
-  }
+  // プロンプト生成フック
+  const { generateSystemPrompt, generateScenarios, isGeneratingSystem, isGeneratingScenarios } =
+    usePromptGeneration(
+      formData.name,
+      formData.description,
+      formData.system,
+      handleSystemPromptGenerated,
+      handleScenariosGenerated
+    )
 
-  // Update system prompt when generated
-  React.useEffect(() => {
-    if (generatedAgentSystemPrompt) {
-      updateField('system', generatedAgentSystemPrompt)
-    }
-  }, [generatedAgentSystemPrompt])
-
-  // Update scenarios when generated
-  React.useEffect(() => {
-    if (generatedScenarios.length > 0) {
-      updateField('scenarios', generatedScenarios)
-    }
-  }, [generatedScenarios])
-
-  // 初期化時にエージェント固有の設定を設定
-  useEffect(() => {
-    if (agent?.id) {
-      // 既存のツール設定があれば使用
-      if (agent.tools && agent.tools.length > 0) {
-        // ToolName[] から ToolState[] を生成
-        const toolStates = getDefaultToolsForCategory('all').map((toolState) => {
-          const toolName = toolState.toolSpec?.name as ToolName
-          const isEnabled = agent.tools?.includes(toolName) || false
-          return { ...toolState, enabled: isEnabled }
-        })
-
-        setAgentTools(toolStates)
-        setAgentToolNames(agent.tools)
-        updateField('tools', agent.tools)
-      }
-
-      // 既存カテゴリがあれば設定
-      if (agent.category) {
-        setAgentCategory(agent.category)
-      } else {
-        // それ以外の場合は ALL 設定を使用
-        const defaultTools = getDefaultToolsForCategory('all')
-        const defaultToolNames = defaultTools
-          .filter((tool) => tool.enabled)
-          .map((tool) => tool.toolSpec?.name as ToolName)
-          .filter(Boolean)
-
-        setAgentTools(defaultTools)
-        setAgentToolNames(defaultToolNames)
-        updateField('tools', defaultToolNames)
-        updateField('category', 'all')
-      }
-
-      // 許可コマンド設定
-      if (agent.allowedCommands) {
-        updateField('allowedCommands', agent.allowedCommands)
-      } else {
-        // デフォルトは空配列
-        updateField('allowedCommands', [])
-      }
-
-      // Bedrock Agents設定
-      if (agent.bedrockAgents) {
-        updateField('bedrockAgents', agent.bedrockAgents)
-      } else {
-        // デフォルトは空配列
-        updateField('bedrockAgents', [])
-      }
-
-      // Knowledge Bases設定
-      if (agent.knowledgeBases) {
-        updateField('knowledgeBases', agent.knowledgeBases)
-      } else {
-        // デフォルトは空配列
-        updateField('knowledgeBases', [])
-      }
-    } else {
-      // 新規エージェントの場合の初期設定
-      const defaultTools = getDefaultToolsForCategory('all')
-      const defaultToolNames = defaultTools
-        .filter((tool) => tool.enabled)
-        .map((tool) => tool.toolSpec?.name as ToolName)
-        .filter(Boolean)
-
-      setAgentTools(defaultTools)
-      setAgentToolNames(defaultToolNames)
-      updateField('tools', defaultToolNames)
-      updateField('category', 'all')
-      updateField('allowedCommands', [])
-      updateField('bedrockAgents', [])
-      updateField('knowledgeBases', [])
-    }
-  }, [agent, getDefaultToolsForCategory])
-
-  // ツール設定変更のハンドラ
-  const handleToolsChange = (tools: ToolState[]) => {
-    setAgentTools(tools)
-
-    // ToolState[] から有効なツール名のみを抽出
-    const enabledToolNames = tools
-      .filter((tool) => tool.enabled)
-      .map((tool) => tool.toolSpec?.name as ToolName)
-      .filter(Boolean)
-
-    setAgentToolNames(enabledToolNames)
-    updateField('tools', enabledToolNames)
-  }
-
-  // カテゴリ変更のハンドラ
-  const handleCategoryChange = (category: AgentCategory) => {
-    setAgentCategory(category)
-    updateField('category', category)
-
-    // 選択したカテゴリに応じたツールセットを適用
-    const newTools = getDefaultToolsForCategory(category)
-    setAgentTools(newTools)
-
-    // ToolState[] から有効なツール名のみを抽出
-    const enabledToolNames = newTools
-      .filter((tool) => tool.enabled)
-      .map((tool) => tool.toolSpec?.name as ToolName)
-      .filter(Boolean)
-
-    setAgentToolNames(enabledToolNames)
-    updateField('tools', enabledToolNames)
-  }
+  // 合成された生成状態
+  const isGenerating = isGeneratingSystem || isGeneratingScenarios
 
   return (
     <form
-      onSubmit={handleSubmit}
+      onSubmit={formEventUtils.createSubmitHandler(handleSubmit)}
       className="space-y-4"
-      onClick={(e) => {
-        // フォーム全体でクリックイベントの伝播を停止
-        e.stopPropagation()
-      }}
+      style={{ minHeight: '1100px' }}
+      onClick={formEventUtils.preventPropagation}
     >
-      <BasicSection
-        name={formData.name}
-        description={formData.description}
-        icon={formData.icon}
-        iconColor={formData.iconColor}
-        onChange={(field, value) => updateField(field, value)}
+      {/* タブ切り替えナビゲーション */}
+      <AgentFormTabs
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        onToolsTabClick={() => fetchMcpTools(formData.mcpServers)}
       />
 
-      <SystemPromptSection
-        system={formData.system}
-        name={formData.name}
-        description={formData.description}
-        onChange={(value) => updateField('system', value)}
-        onAutoGenerate={handleAutoGeneratePrompt}
-        isGenerating={isGenerating}
-        projectPath={projectPath}
-        allowedCommands={formData.allowedCommands || []}
-        knowledgeBases={formData.knowledgeBases || []}
-        bedrockAgents={formData.bedrockAgents || []}
-      />
-
-      <ScenariosSection
-        scenarios={formData.scenarios}
-        name={formData.name}
-        description={formData.description}
-        system={formData.system}
-        onChange={(scenarios) => updateField('scenarios', scenarios)}
-        isGenerating={isGeneratingScenarios}
-        onAutoGenerate={handleGenerateScenarios}
-      />
-
-      <TagsSection
-        tags={formData.tags || []}
-        availableTags={availableTags}
-        onChange={(tags) => updateField('tags', tags)}
-      />
-
-      <ToolsSection
-        tools={agentTools}
-        onChange={handleToolsChange}
+      {/* タブコンテンツ */}
+      <AgentFormContent
+        activeTab={activeTab}
+        formData={formData}
+        agentTools={agentTools}
         agentCategory={agentCategory}
-        onCategoryChange={handleCategoryChange}
-        // 統合された設定を渡す
-        knowledgeBases={formData.knowledgeBases || []}
-        onKnowledgeBasesChange={(kbs) => updateField('knowledgeBases', kbs)}
-        allowedCommands={formData.allowedCommands || []}
-        onAllowedCommandsChange={(commands) => updateField('allowedCommands', commands)}
-        bedrockAgents={formData.bedrockAgents || []}
-        onBedrockAgentsChange={(agents) => updateField('bedrockAgents', agents)}
+        updateField={updateField}
+        handleToolsChange={handleToolsChange}
+        handleCategoryChange={handleCategoryChange}
+        projectPath={projectPath}
+        isLoadingMcpTools={isLoadingMcpTools}
+        tempMcpTools={tempMcpTools}
+        handleAutoGeneratePrompt={generateSystemPrompt}
+        handleGenerateScenarios={generateScenarios}
+        isGeneratingSystem={isGeneratingSystem}
+        isGeneratingScenarios={isGeneratingScenarios}
+        availableTags={availableTags}
+        fetchMcpTools={fetchMcpTools}
       />
 
-      <div className="flex justify-end pt-4 pb-4 space-x-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800
-            border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
-        >
-          {t('cancel')}
-        </button>
-        <button
-          type="submit"
-          disabled={isGenerating || isGeneratingScenarios}
-          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-md shadow-sm focus:outline-none focus:ring-2
-            focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 transition-all duration-200
-            ${
-              isGenerating || isGeneratingScenarios
-                ? 'text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 cursor-not-allowed opacity-70'
-                : 'text-white bg-blue-600 dark:bg-blue-700 border-transparent hover:bg-blue-700 dark:hover:bg-blue-600'
-            }`}
-        >
-          {isGenerating || isGeneratingScenarios ? (
-            <>
-              <svg
-                className="w-4 h-4 mr-1 animate-spin"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <p>{t('generating')}...</p>
-            </>
-          ) : (
-            <>
-              <FiSave />
-              <p>{t('save')}</p>
-            </>
-          )}
-        </button>
-      </div>
+      {/* フォームアクションボタン */}
+      <FormActionButtons onCancel={onCancel} isGenerating={isGenerating} />
     </form>
   )
 }

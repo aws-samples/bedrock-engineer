@@ -1,5 +1,6 @@
 export const agentToolsSettings = {
   en: {
+    'Agent Tools': 'Agent Tools',
     'e.g., KB123456': 'e.g., KB123456',
     'e.g., Customer support knowledge base': 'e.g., Customer support knowledge base',
     'e.g., ls *': 'e.g., ls *',
@@ -26,6 +27,11 @@ export const agentToolsSettings = {
     'Tool Categories.AI Services Description': 'Tools that utilize AWS AI services',
     'Tool Categories.System': 'System',
     'Tool Categories.System Description': 'Tools for system interaction',
+    'Tool Categories.Thinking': 'Thinking',
+    'Tool Categories.Thinking Description':
+      'Tools for enhanced reasoning and complex problem solving',
+    'Tool Categories.MCP': 'MCP',
+    'Tool Categories.MCP Tools Description': 'Model Context Protocol Tools',
     'Tool Categories.All Configuration': 'All',
     'tools.description': 'Select the tools this agent can use.',
     'Available Tools': 'Available Tools',
@@ -101,6 +107,7 @@ export const agentToolsSettings = {
     }
   },
   ja: {
+    'Agent Tools': 'エージェントツール',
     'e.g., KB123456': '例: KB123456',
     'e.g., Customer support knowledge base': '例: カスタマーサポートのナレッジベース',
     'e.g., ls *': '例: ls *',
@@ -127,6 +134,10 @@ export const agentToolsSettings = {
     'Tool Categories.AI Services Description': 'AWS AIサービスを活用するツール',
     'Tool Categories.System': 'システム',
     'Tool Categories.System Description': 'システム連携ツール',
+    'Tool Categories.Thinking': '思考',
+    'Tool Categories.Thinking Description': '高度な推論と複雑な問題解決のためのツール',
+    'Tool Categories.MCP': 'MCP',
+    'Tool Categories.MCP Tools Description': 'Model Context Protocol ツール',
     'Tool Categories.All Configuration': '全て',
     'tools.description': 'このエージェントが使用できるツールを選択します。',
     'Available Tools': '利用可能なツール',

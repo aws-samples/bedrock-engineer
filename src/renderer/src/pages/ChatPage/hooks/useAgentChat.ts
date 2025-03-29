@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next'
 
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ChatMessage } from '@/types/chat/history'
-import { ToolName } from '@/types/tools'
+import { ToolName, isMcpTool } from '@/types/tools'
 import { notificationService } from '@renderer/services/NotificationService'
 import { limitContextLength } from '@renderer/lib/contextLength'
 import { IdentifiableMessage } from '@/types/chat/message'
@@ -80,7 +80,7 @@ export const useAgentChat = (
   const lastAssistantMessageId = useRef<string | null>(null)
   const abortController = useRef<AbortController | null>(null)
   const { t } = useTranslation()
-  const { notification, contextLength, guardrailSettings, getAgentTools } = useSettings()
+  const { notification, contextLength, guardrailSettings, getAgentTools, agents } = useSettings()
 
   // エージェントIDからツール設定を取得
   const enabledTools = useMemo(() => {
@@ -90,21 +90,41 @@ export const useAgentChat = (
     }
     // エージェントIDがある場合はエージェント設定から取得
     else if (agentId) {
+      // エージェントオブジェクトを取得（MCPサーバー設定の確認用）
+      const currentAgent = agents.find((a) => a.id === agentId)
+      const hasMcpServers = currentAgent?.mcpServers && currentAgent.mcpServers.length > 0
+
       const agentTools = getAgentTools(agentId).filter((tool) => tool.enabled)
 
-      // Tavilyツールの場合は、API Keyが設定されていることを確認
+      // 有効なツールをフィルタリング
       return agentTools.filter((tool) => {
-        if (tool.toolSpec?.name === 'tavilySearch') {
+        const toolName = tool.toolSpec?.name
+        if (!toolName) return false
+
+        // Tavilyツールの場合は、API Keyが設定されていることを確認
+        if (toolName === 'tavilySearch') {
           // API Keyが設定されていない場合は除外
           const tavilyApiKey = window.store.get('tavilySearch')?.apikey
           return !!tavilyApiKey && tavilyApiKey.length > 0
         }
+
+        // MCPツールの場合は、MCPサーバーが設定されていることを確認
+        if (isMcpTool(toolName)) {
+          // MCPサーバーが設定されていない場合は除外
+          if (!hasMcpServers) {
+            console.warn(
+              `MCP tool "${toolName}" is enabled but no MCP servers are configured. Tool will be disabled.`
+            )
+            return false
+          }
+        }
+
         return true
       })
     }
     // どちらもない場合は空の配列を返す
     return []
-  }, [agentId, getAgentTools, explicitTools])
+  }, [agentId, getAgentTools, explicitTools, agents])
 
   // 通信を中断する関数
   const abortCurrentRequest = useCallback(() => {

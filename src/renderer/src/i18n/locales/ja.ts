@@ -173,6 +173,53 @@ base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
 }`
 }
 
+// New translations for MCP Server Settings tabs
+const AgentFormTabs = {
+  'Basic Settings': '基本設定',
+  'MCP Servers': 'MCPサーバー',
+  Tools: 'ツール',
+  'MCP Server Settings': 'MCPサーバー設定',
+  'Configure MCP servers for this agent to use MCP tools.':
+    'このエージェントがMCPツールを使用するためのMCPサーバーを設定します。',
+  'Register MCP servers first, then you can enable MCP tools in the Available Tools tab.':
+    'まずMCPサーバーを登録し、その後ツールタブでMCPツールを有効にできます。',
+  'Add New MCP Server': '新しいMCPサーバーを追加',
+  'Edit MCP Server': 'MCPサーバーを編集',
+  'Server Configuration (JSON)': 'サーバー設定（JSON）',
+  'Add Server': 'サーバーを追加',
+  'Update Server': 'サーバーを更新',
+  'Registered MCP Servers': '登録済みMCPサーバー',
+  'No MCP servers registered yet': 'まだMCPサーバーが登録されていません',
+  'Required fields are missing or invalid. Check the JSON format.':
+    '必須フィールドが不足しているか無効です。JSONフォーマットを確認してください。',
+  'The "env" field must be an object.': '"env"フィールドはオブジェクト型である必要があります。',
+  'A server with this name already exists.': 'この名前のサーバーは既に存在します。',
+  'Invalid JSON format.': 'JSONフォーマットが無効です。',
+  'No valid server configurations found': '有効なサーバー設定が見つかりませんでした',
+  'Sample Config': '設定サンプル',
+  'Export Current Config': '現在の設定をエクスポート',
+  'Use claude_desktop_config.json format with mcpServers object containing server configurations.':
+    'mcpServersオブジェクトを含むclaude_desktop_config.json形式を使用してください。',
+  'Invalid format: Must use claude_desktop_config.json format with mcpServers object':
+    '無効な形式: mcpServersオブジェクトを含むclaude_desktop_config.json形式を使用してください',
+  'When editing, please include exactly one server in mcpServers':
+    '編集時には、mcpServersに正確に1つのサーバーを含めてください',
+  // MCPサーバー接続テスト関連
+  'Test Connection': '接続テスト',
+  'Test All Servers': '全サーバーをテスト',
+  'Testing...': 'テスト中...',
+  'Connection Status': '接続状態',
+  success: '成功',
+  failed: '失敗',
+  total: '合計',
+  'Clear Results': '結果をクリア',
+  'Connection Successful': '接続成功',
+  'Connection Failed': '接続失敗',
+  'tools available': 'ツールが利用可能',
+  'Startup time': '起動時間',
+  Solution: '解決策'
+}
+
 const ja = {
   ...HomePage,
   ...SettingPage,
@@ -186,7 +233,8 @@ const ja = {
   ...agentToolsSettings.ja,
   ...awsDiagramGenerator.ja,
   ...thinkingMode.ja,
-  ...agentDirectory.ja
+  ...agentDirectory.ja,
+  ...AgentFormTabs
 }
 
 export default ja

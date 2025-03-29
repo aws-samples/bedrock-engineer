@@ -33,7 +33,7 @@ ${SOFTWARE_AGENT_SYSTEM_PROMPT}
 `
 
 export const useAgentGenerator = () => {
-  const [result, setResult] = useState<string>()
+  const [result, setResult] = useState<string>('')
   const { currentLLM: llm, selectedAgentId, getAgentTools } = useSetting()
 
   // 現在選択中のエージェントのツールを取得
@@ -41,7 +41,7 @@ export const useAgentGenerator = () => {
   const promptTemplate = getPromptTemplate(agentTools)
 
   const { messages, loading, handleSubmit } = useAgentChat(
-    llm?.modelId,
+    llm?.modelId || '',
     promptTemplate,
     undefined,
     undefined,
@@ -61,7 +61,7 @@ Description: ${description}
       if (lastMessage.content) {
         // lastMessage.content の配列のなかから text フィールドを含む要素を取り出す
         const textContent = lastMessage.content.find((v) => v.text)
-        if (textContent) {
+        if (textContent && textContent.text) {
           setResult(textContent.text)
         }
       }

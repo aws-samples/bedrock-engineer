@@ -16,6 +16,34 @@ export type ToolName =
   | 'executeCommand'
   | 'applyDiffEdit'
   | 'think'
+  | string // MCPツール名を許容するために文字列型も追加
+
+/**
+ * MCPツール関連のユーティリティ関数
+ *
+ * 注意: AWS APIの制約により、ツール名には [a-zA-Z0-9_-]+ の文字のみ許可されています。
+ * そのため、MCPツールには "mcp:" ではなく "mcp_" プレフィックスを使用します。
+ */
+// MCPツール名であるかを判定する関数
+export const isMcpTool = (name: string): boolean => {
+  return name.startsWith('mcp_')
+}
+
+// MCPツール名を標準化する関数（通常のツール名をMCP識別子付きにする）
+export const normalizeMcpToolName = (name: string): string => {
+  if (isMcpTool(name)) {
+    return name
+  }
+  return `mcp_${name}`
+}
+
+// MCP識別子を除いた素のツール名を取得する関数
+export const getOriginalMcpToolName = (name: string): string => {
+  if (isMcpTool(name)) {
+    return name.substring(4) // 'mcp_'の長さ(4)以降の文字列を返す
+  }
+  return name
+}
 
 export interface ToolResult<T = any> {
   name: ToolName
@@ -148,6 +176,12 @@ export type ThinkInput = {
   thought: string
 }
 
+// MCPツールの入力型
+export type McpToolInput = {
+  type: string // MCPツール名
+  [key: string]: any // MCPツールの任意のパラメータ
+}
+
 // ディスクリミネーテッドユニオン型
 export type ToolInput =
   | CreateFolderInput
@@ -164,6 +198,7 @@ export type ToolInput =
   | ExecuteCommandInput
   | ApplyDiffEditInput
   | ThinkInput
+  | McpToolInput // MCPツール入力を追加
 
 // ツール名から入力型を取得するユーティリティ型
 export type ToolInputTypeMap = {
@@ -181,6 +216,7 @@ export type ToolInputTypeMap = {
   executeCommand: ExecuteCommandInput
   applyDiffEdit: ApplyDiffEditInput
   think: ThinkInput
+  [key: string]: any // MCPツールに対応するためのインデックスシグネチャ
 }
 
 /**
@@ -188,7 +224,7 @@ export type ToolInputTypeMap = {
  *
  * Amazon Nova understanding models currently support only a subset of JsonSchema functionality when used to define the ToolInputSchema in Converse API.
  * The top level schema must be of type Object.
- * Only three fields are supported in the top-level Object - type (must be set to ‘object’), properties, and required.
+ * Only three fields are supported in the top-level Object - type (must be set to 'object'), properties, and required.
  * https://docs.aws.amazon.com/nova/latest/userguide/tool-use-definition.html#:~:text=the%20tool%20configuration.-,Note,-Amazon%20Nova%20understanding
  */
 export const tools: Tool[] = [
