@@ -161,6 +161,24 @@ export const executeTool = async (input: ToolInput): Promise<string | ToolResult
       case 'think':
         return toolService.think(input.thought)
 
+      case 'recognizeImage': {
+        // ストアから設定されたモデルIDを取得（設定がない場合はデフォルトを使用）
+        const recognizeImageSettings = store.get('recognizeImageTool') || {}
+        const modelId =
+          typeof recognizeImageSettings === 'object' && 'modelId' in recognizeImageSettings
+            ? (recognizeImageSettings.modelId as string)
+            : 'anthropic.claude-3-sonnet-20240229-v1:0'
+
+        return toolService.recognizeImage(
+          bedrock,
+          {
+            imagePaths: input.imagePaths,
+            prompt: input.prompt
+          },
+          modelId // 設定から取得したモデルIDを直接渡す
+        )
+      }
+
       default: {
         // 未知のツール名の場合はエラー
         const unknownToolError = `Unknown tool type: ${input.type}`

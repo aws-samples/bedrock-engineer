@@ -5,6 +5,7 @@ import { TavilySearchResult } from './TavilySearch/TavilySearchResult'
 import { ExecuteCommandResult } from './ExecuteCommand/ExecuteCommandResult'
 import { GenerateImageResult } from './GenerateImage/GenerateImageResult'
 import { BedrockAgentResult } from './BedrockAgent/BedrockAgentResult'
+import { RecognizeImageResult } from './RecognizeImage/RecognizeImageResult'
 
 interface RetrieveResponse {
   success: boolean
@@ -69,6 +70,10 @@ export const JSONCodeBlock: React.FC<{ json: any }> = ({ json }) => {
         <BedrockAgentResult response={json} />
       </div>
     )
+  }
+
+  if (json.name === 'recognizeImage') {
+    return <RecognizeImageResult response={json} />
   }
 
   const jsonStr = JSON.stringify(json, null, 2)

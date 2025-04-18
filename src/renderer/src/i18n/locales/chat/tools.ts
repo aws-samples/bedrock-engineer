@@ -69,6 +69,7 @@ export const tools = {
       tavilySearch: 'Search the web for information',
       fetchWebsite: 'Fetch and analyze content from websites',
       generateImage: 'Generate images using LLMs',
+      recognizeImage: 'Analyze and describe image content using LLM vision capabilities',
       retrieve:
         'Query the Amazon Bedrock Knowledge Base to find relevant information using Retrieval-Augmented Generation (RAG).',
       invokeBedrockAgent: 'Invoke Amazon Bedrock Agent to interact with LLMs and external tools',
@@ -114,6 +115,11 @@ export const tools = {
         description:
           'Enables the AI to perform complex reasoning steps without consuming your context window. This tool allows Claude to work through difficult problems step by step, showing its thought process and reasoning in detail.',
         tip: 'Enable this when you need the AI to solve complex problems, debug difficult issues, or provide detailed explanations of its reasoning process. Only available with Claude 3.7 Sonnet.'
+      },
+      recognizeImage: {
+        description:
+          'Enables the AI to analyze and describe images. Perfect for understanding visual content, extracting text from images, or identifying objects and scenes in photographs.',
+        tip: 'Use this when you need to work with image content or want the AI to provide detailed descriptions of visual information. Supports common image formats like JPEG, PNG, GIF, and WebP.'
       },
       createFolder: {
         description:
@@ -264,6 +270,7 @@ export const tools = {
       tavilySearch: 'Web上の情報を検索',
       fetchWebsite: 'Webサイトのコンテンツを取得して分析',
       generateImage: 'LLMを使用して画像を生成',
+      recognizeImage: 'LLMの視覚機能を使用して画像を分析・説明',
       retrieve: 'Amazon Bedrock Knowledge Base へのクエリ',
       invokeBedrockAgent: 'Amazon Bedrock Agent を実行',
       executeCommand: 'ワイルドカードをサポートする許可されたコマンドを実行',
@@ -308,6 +315,11 @@ export const tools = {
         description:
           'AIがコンテキストウィンドウを消費せずに複雑な推論ステップを実行できるようにします。このツールを使用すると、Claudeは難しい問題をステップバイステップで解決し、その思考プロセスと推論を詳細に示すことができます。',
         tip: 'AIに複雑な問題の解決、難しい問題のデバッグ、または推論プロセスの詳細な説明を提供してもらいたい場合に有効にしてください。Claude 3.7 Sonnetでのみ利用可能です。'
+      },
+      recognizeImage: {
+        description:
+          'AIが画像を分析して説明できるようにします。視覚的なコンテンツの理解、画像からのテキスト抽出、写真内のオブジェクトやシーンの識別に最適です。',
+        tip: '画像コンテンツを扱う必要がある場合や、AIに視覚的情報の詳細な説明を提供してもらいたい場合に使用します。JPEG、PNG、GIF、WebPなどの一般的な画像形式をサポートしています。'
       },
       createFolder: {
         description:

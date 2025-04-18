@@ -44,6 +44,12 @@ type StoreScheme = {
   /** 思考モードの設定（Claude 3.7 Sonnet用） */
   thinkingMode?: ThinkingMode
 
+  /** 画像認識ツールの設定 */
+  recognizeImageTool?: {
+    /** 使用するモデルID */
+    modelId: string
+  }
+
   /** アプリケーションの表示言語設定（日本語または英語） */
   language: 'ja' | 'en'
 

@@ -44,6 +44,11 @@ export const agentToolsSettings = {
     'Knowledge Base Settings': 'Knowledge Base Settings',
     'Command Settings': 'Command Settings',
     'Bedrock Agent Settings': 'Bedrock Agent Settings',
+    'Recognition Model': 'Recognition Model',
+    'When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.':
+      'When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.',
+    'tool info.recognizeImage.description':
+      'The recognizeImage tool uses AI vision capabilities to analyze and describe images. It helps the AI assistant understand image content and provide relevant responses based on what appears in the image.',
     'Configure knowledge bases for the retrieve tool':
       'Configure knowledge bases for the retrieve tool',
     'Configure allowed commands for the executeCommand tool':
@@ -101,6 +106,7 @@ export const agentToolsSettings = {
       tavilySearch: 'Search the web using Tavily API',
       fetchWebsite: 'Fetch content from a specified URL',
       generateImage: 'Generate an image using AI models',
+      recognizeImage: 'Analyze and describe images using AI vision capabilities',
       retrieve: 'Retrieve information from a knowledge base',
       invokeBedrockAgent: 'Invoke an Amazon Bedrock Agent',
       executeCommand: 'Execute a command or send input to a running process'
@@ -150,6 +156,11 @@ export const agentToolsSettings = {
     'Knowledge Base Settings': 'ナレッジベース設定',
     'Command Settings': 'コマンド設定',
     'Bedrock Agent Settings': 'Bedrock Agent設定',
+    'Recognition Model': '認識モデル',
+    'When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.':
+      '画像が処理されると、AIは物体、テキスト、シーン、その他の視覚要素を識別し、内容に基づいた詳細な説明を提供します。',
+    'tool info.recognizeImage.description':
+      'recognizeImageツールはAIのビジョン機能を使用して画像を分析・説明します。AIアシスタントが画像の内容を理解し、画像に表示されているものに基づいて関連する回答を提供するのに役立ちます。',
     'Configure knowledge bases for the retrieve tool': 'retrieve ツール用のナレッジベースを設定',
     'Configure allowed commands for the executeCommand tool':
       'executeCommand ツール用の許可コマンドを設定',
@@ -206,6 +217,7 @@ export const agentToolsSettings = {
       tavilySearch: 'Tavily APIを使用してWeb検索',
       fetchWebsite: '指定したURLからコンテンツを取得',
       generateImage: 'AIモデルを使用して画像を生成',
+      recognizeImage: 'AIのビジョン機能を使用して画像を分析・説明',
       retrieve: 'ナレッジベースから情報を取得',
       invokeBedrockAgent: 'Amazon Bedrock Agentを呼び出し',
       executeCommand: 'コマンドを実行または実行中のプロセスに入力を送信'

@@ -28,7 +28,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     id: 'ai-services',
     name: 'AI Services',
     description: 'Tools that utilize AWS AI services',
-    tools: ['generateImage', 'retrieve', 'invokeBedrockAgent']
+    tools: ['generateImage', 'recognizeImage', 'retrieve', 'invokeBedrockAgent']
   },
   {
     id: 'system',

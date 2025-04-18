@@ -40,6 +40,10 @@ export interface SettingsContextType {
   notification: boolean
   setNotification: (enabled: boolean) => void
 
+  // recognizeImage Tool Settings
+  recognizeImageModel: string
+  setRecognizeImageModel: (modelId: string) => void
+
   // LLM Settings
   currentLLM: LLM
   updateLLM: (selectedModel: LLM) => void
@@ -184,6 +188,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Notification Settings
   const [notification, setStateNotification] = useState<boolean>(true)
 
+  // recognizeImage Tool Settings
+  const [recognizeImageModel, setStateRecognizeImageModel] = useState<string>(
+    'anthropic.claude-3-sonnet-20240229-v1:0'
+  )
+
   // LLM Settings
   const [llmError, setLLMError] = useState<any>()
   const defaultModel = {
@@ -269,6 +278,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const notificationSetting = window.store.get('notification')
     if (notificationSetting !== undefined) {
       setStateNotification(notificationSetting)
+    }
+
+    // Load recognizeImage Tool Settings
+    const recognizeImageSetting = window.store.get('recognizeImageTool')
+    if (recognizeImageSetting?.modelId) {
+      setStateRecognizeImageModel(recognizeImageSetting.modelId)
     }
 
     // Load LLM Settings
@@ -961,6 +976,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.store.set('notification', enabled)
   }, [])
 
+  const setRecognizeImageModel = useCallback((modelId: string) => {
+    setStateRecognizeImageModel(modelId)
+    window.store.set('recognizeImageTool', { modelId })
+  }, [])
+
   // エージェント固有のツール設定を取得する関数
   const getAgentTools = useCallback(
     (agentId: string): ToolState[] => {
@@ -1199,6 +1219,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Notification Settings
     notification,
     setNotification,
+
+    // recognizeImage Tool Settings
+    recognizeImageModel,
+    setRecognizeImageModel,
 
     // LLM Settings
     currentLLM,

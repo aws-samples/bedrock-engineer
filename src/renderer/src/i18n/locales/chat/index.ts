@@ -14,6 +14,18 @@ export const chatPage = {
     ...tools.en,
     ...guardrails.en,
     ...{
+      'Analyzed image': 'Analyzed image',
+      'Image Analysis': 'Image Analysis',
+      'Analyzed with': 'Analyzed with',
+      'Image Recognition Settings': 'Image Recognition Settings',
+      'Select which model to use for image recognition tasks':
+        'Select which model to use for image recognition tasks',
+      'Recognition Model': 'Recognition Model',
+      'Only Claude models with vision capabilities are supported':
+        'Only Claude models with vision capabilities are supported',
+      'About Image Recognition': 'About Image Recognition',
+      "Image recognition uses Claude's vision capabilities to analyze and describe images. The selected model will be used when you run the recognizeImage tool.":
+        "Image recognition uses Claude's vision capabilities to analyze and describe images. The selected model will be used when you run the recognizeImage tool.",
       textarea: {
         placeholder: 'Type message or add images ({{modifier}}+V / drop)',
         imageValidation: {
@@ -46,6 +58,18 @@ export const chatPage = {
     ...tools.ja,
     ...guardrails.ja,
     ...{
+      'Analyzed image': '解析された画像',
+      'Image Analysis': '画像解析結果',
+      'Analyzed with': '使用モデル',
+      'Image Recognition Settings': '画像認識設定',
+      'Select which model to use for image recognition tasks':
+        '画像認識タスクに使用するモデルを選択してください',
+      'Recognition Model': '認識モデル',
+      'Only Claude models with vision capabilities are supported':
+        'ビジョン機能を持つClaudeモデルのみがサポートされています',
+      'About Image Recognition': '画像認識について',
+      "Image recognition uses Claude's vision capabilities to analyze and describe images. The selected model will be used when you run the recognizeImage tool.":
+        '画像認識はClaudeのビジョン機能を使用して画像を分析・説明します。選択したモデルはrecognizeImageツールを実行する際に使用されます。',
       textarea: {
         placeholder: 'メッセージを入力、または画像を追加 ({{modifier}}+V / ドロップ)',
         imageValidation: {

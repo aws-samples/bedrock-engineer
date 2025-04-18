@@ -7,6 +7,7 @@ import { CommandForm } from './CommandForm'
 import { BedrockAgentSettingForm } from './BedrockAgentSettingForm'
 import { TavilySearchSettingForm } from './TavilySearchSettingForm'
 import { ThinkToolSettingForm } from './ThinkToolSettingForm'
+import { RecognizeImageSettingForm } from './RecognizeImageSettingForm'
 import { Button, Modal, ToggleSwitch } from 'flowbite-react'
 import { memo, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -61,7 +62,7 @@ const TOOL_CATEGORIES: ToolCategory[] = [
     id: 'ai-services',
     name: 'AI Services',
     description: 'Tools that utilize AWS AI services',
-    tools: ['generateImage', 'retrieve', 'invokeBedrockAgent']
+    tools: ['generateImage', 'recognizeImage', 'retrieve', 'invokeBedrockAgent']
   },
   {
     id: 'system',
@@ -85,7 +86,13 @@ const TOOL_CATEGORIES: ToolCategory[] = [
 ]
 
 // 詳細設定が必要なツール
-const TOOLS_WITH_SETTINGS = ['executeCommand', 'retrieve', 'invokeBedrockAgent', 'tavilySearch']
+const TOOLS_WITH_SETTINGS = [
+  'executeCommand',
+  'retrieve',
+  'invokeBedrockAgent',
+  'tavilySearch',
+  'recognizeImage'
+]
 
 interface ToolSettingModalProps {
   isOpen: boolean
@@ -386,7 +393,7 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                     />
                   </div>
                 ) : TOOLS_WITH_SETTINGS.includes(selectedTool) ? (
-                  <>
+                  <div className="w-full">
                     {selectedTool === 'retrieve' && selectedAgentId && (
                       <KnowledgeBaseSettingForm
                         knowledgeBases={getAgentKnowledgeBases(selectedAgentId)}
@@ -417,8 +424,9 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                         setTavilySearchApiKey={setTavilySearchApiKey}
                       />
                     )}
+                    {selectedTool === 'recognizeImage' && <RecognizeImageSettingForm />}
                     {selectedTool === 'think' && <ThinkToolSettingForm />}
-                  </>
+                  </div>
                 ) : (
                   <div className="prose dark:prose-invert max-w-none">
                     <p className="mb-4 text-gray-700 dark:text-gray-300 font-bold">

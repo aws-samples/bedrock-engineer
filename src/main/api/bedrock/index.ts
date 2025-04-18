@@ -2,6 +2,7 @@ import { ConverseService } from './services/converseService'
 import { ModelService } from './services/modelService'
 import { AgentService } from './services/agentService'
 import { ImageService } from './services/imageService'
+import { ImageRecognitionService } from './services/imageRecognitionService'
 import type { ServiceContext } from './types'
 import type { GenerateImageRequest, GeneratedImage } from './types/image'
 import { GuardrailService } from './services/guardrailService'
@@ -12,6 +13,7 @@ export class BedrockService {
   private modelService: ModelService
   private agentService: AgentService
   private imageService: ImageService
+  private imageRecognitionService: ImageRecognitionService
   private guardrailService: GuardrailService
 
   constructor(context: ServiceContext) {
@@ -19,6 +21,7 @@ export class BedrockService {
     this.modelService = new ModelService(context)
     this.agentService = new AgentService(context)
     this.imageService = new ImageService(context)
+    this.imageRecognitionService = new ImageRecognitionService(context)
     this.guardrailService = new GuardrailService(context)
   }
 
@@ -52,6 +55,10 @@ export class BedrockService {
 
   isImageModelSupported(modelId: string): boolean {
     return this.imageService.isModelSupported(modelId)
+  }
+
+  async recognizeImage(props: { imagePath: string; prompt?: string; modelId?: string }) {
+    return this.imageRecognitionService.recognizeImage(props)
   }
 
   async applyGuardrail(props: ApplyGuardrailRequest) {

@@ -12,7 +12,8 @@ import {
   FaDatabase,
   FaTerminal,
   FaBrain,
-  FaServer
+  FaServer,
+  FaCamera
 } from 'react-icons/fa'
 import { BiFace } from 'react-icons/bi'
 import { MdDifference } from 'react-icons/md'
@@ -28,6 +29,7 @@ const standardToolIcons = {
   tavilySearch: <FaSearch className="text-red-500 size-6" />,
   fetchWebsite: <FaGlobe className="text-teal-500 size-6" />,
   generateImage: <FaImage className="text-pink-500 size-6" />,
+  recognizeImage: <FaCamera className="text-violet-500 size-6" />,
   retrieve: <FaDatabase className="text-green-500 size-6" />,
   invokeBedrockAgent: <BiFace className="text-purple-700 size-6" />,
   executeCommand: <FaTerminal className="text-gray-500 size-6" />,
