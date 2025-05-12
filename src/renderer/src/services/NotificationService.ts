@@ -1,3 +1,5 @@
+import i18n from '../i18n/config'
+
 export class NotificationService {
   private static instance: NotificationService
 
@@ -54,7 +56,7 @@ export class NotificationService {
 
     try {
       const defaultOptions: NotificationOptions = {
-        body: 'AIからの返信が届きました',
+        body: i18n.t('notification_ai_response'),
         icon: '/icon.png', // アプリケーションのアイコンを使用
         silent: false, // 通知音を有効化
         ...options

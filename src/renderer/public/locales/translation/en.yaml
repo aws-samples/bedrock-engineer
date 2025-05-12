@@ -2,6 +2,18 @@ set your aws credential: >-
   Set up the Amazon Bedrock configuration. Enter your AWS Credentials (region,
   access key, secret access key) from the settings screen.
 Welcome to Bedrock Engineer: Welcome to Bedrock Engineer
+log_mcp_server_config_changed: 'MCP server configuration changed:'
+log_tools_tab_mcp_server_changed: MCP server change detected while tools tab is active - refreshing tools
+log_server_zero_clear_tools: Server count is 0, clearing tools
+log_other_tab_mcp_server_changed: MCP server change detected in other tab - will fetch on tab switch
+log_tool_info: 'Tool information:'
+log_tool_count: items
+log_tool_not_set: not set
+log_warning_no_tools: 'Warning: No tools configured'
+log_apply_default_tools: 'Applying default tools:'
+log_save_with_modified_form_data: Saving with modified form data
+fetching_tools_from_mcp_server: Fetching tools from MCP server...
+notification_ai_response: You have received a response from AI
 This is AI assistant of software development tasks: This is AI assistant of software development tasks
 Start by the menu on the left or: Start by the menu on the left or
 Setting: Setting
@@ -309,10 +321,12 @@ Click on any tool to view details and configuration options: Click on any tool t
 MCP tool from Model Context Protocol server: MCP tool from Model Context Protocol server
 MCP tools available from configured servers: MCP tools available from configured servers
 From: From
-MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.: >-
+MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.:
+  >-
   MCP servers are configured, but no tools are available. Make sure MCP servers
   are running and providing tools.
-No MCP servers configured for this agent. Configure MCP servers in the MCP Servers tab to use MCP tools.: >-
+No MCP servers configured for this agent. Configure MCP servers in the MCP Servers tab to use MCP tools.:
+  >-
   No MCP servers configured for this agent. Configure MCP servers in the MCP
   Servers tab to use MCP tools.
 Configured MCP Servers: Configured MCP Servers
@@ -321,7 +335,8 @@ Warning: Warning
 Tavily Search API Settings: Tavily Search API Settings
 About Tavily Search: About Tavily Search
 You need a Tavily Search API key to use this feature. Get your API key at: You need a Tavily Search API key to use this feature. Get your API key at
-Tavily Search allows the AI assistant to search the web for current information, providing better responses to queries about recent events, technical documentation, or other information that may not be in its training data.: >-
+Tavily Search allows the AI assistant to search the web for current information, providing better responses to queries about recent events, technical documentation, or other information that may not be in its training data.:
+  >-
   Tavily Search allows the AI assistant to search the web for current
   information, providing better responses to queries about recent events,
   technical documentation, or other information that may not be in its training
@@ -567,7 +582,8 @@ Select which model to use for image recognition tasks: Select which model to use
 Recognition Model: Recognition Model
 Only Claude models with vision capabilities are supported: Only Claude models with vision capabilities are supported
 About Image Recognition: About Image Recognition
-Image recognition uses Claude's vision capabilities to analyze and describe images. The selected model will be used when you run the recognizeImage tool.: >-
+Image recognition uses Claude's vision capabilities to analyze and describe images. The selected model will be used when you run the recognizeImage tool.:
+  >-
   Image recognition uses Claude's vision capabilities to analyze and describe
   images. The selected model will be used when you run the recognizeImage tool.
 textarea:
@@ -845,7 +861,8 @@ No tools enabled. Enable tools in the Available Tools tab to configure them.: No
 Knowledge Base Settings: Knowledge Base Settings
 Command Settings: Command Settings
 Bedrock Agent Settings: Bedrock Agent Settings
-When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.: >-
+When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.:
+  >-
   When an image is processed, the AI will identify objects, text, scenes, and
   other visual elements, providing a detailed description based on the content.
 tool info.recognizeImage.description: >-
@@ -855,7 +872,8 @@ tool info.recognizeImage.description: >-
 Configure knowledge bases for the retrieve tool: Configure knowledge bases for the retrieve tool
 Configure allowed commands for the executeCommand tool: Configure allowed commands for the executeCommand tool
 Configure Bedrock Agents for the invokeBedrockAgent tool: Configure Bedrock Agents for the invokeBedrockAgent tool
-No configurable tools enabled. Enable retrieve, executeCommand, or invokeBedrockAgent tools to access their configurations.: >-
+No configurable tools enabled. Enable retrieve, executeCommand, or invokeBedrockAgent tools to access their configurations.:
+  >-
   No configurable tools enabled. Enable retrieve, executeCommand, or
   invokeBedrockAgent tools to access their configurations.
 Configure which knowledge bases this agent can access.: Configure which knowledge bases this agent can access.
@@ -994,18 +1012,21 @@ Thinking Mode Settings: Thinking Mode Settings
 Think Tool: Think Tool
 How to use: How to use
 Model Not Supported: Model Not Supported
-The current model does not support thinking mode. Please switch to Claude 3.7 Sonnet to use this feature.: >-
+The current model does not support thinking mode. Please switch to Claude 3.7 Sonnet to use this feature.:
+  >-
   The current model does not support thinking mode. Please switch to Claude 3.7
   Sonnet to use this feature.
 Higher token budgets allow for more complex reasoning but may increase response time.: >-
   Higher token budgets allow for more complex reasoning but may increase
   response time.
-The think tool provides a dedicated space for the AI to stop and think during complex tasks. It helps the AI analyze information, plan next steps, and make better decisions without changing any data or fetching new information. Especially useful for multi-step problems and policy compliance.: >-
+The think tool provides a dedicated space for the AI to stop and think during complex tasks. It helps the AI analyze information, plan next steps, and make better decisions without changing any data or fetching new information. Especially useful for multi-step problems and policy compliance.:
+  >-
   The think tool provides a dedicated space for the AI to stop and think during
   complex tasks. It helps the AI analyze information, plan next steps, and make
   better decisions without changing any data or fetching new information.
   Especially useful for multi-step problems and policy compliance.
-Especially useful for multi-step problems and policy compliance. The AI will automatically use this tool when needed for complex reasoning.: >-
+Especially useful for multi-step problems and policy compliance. The AI will automatically use this tool when needed for complex reasoning.:
+  >-
   Especially useful for multi-step problems and policy compliance. The AI will
   automatically use this tool when needed for complex reasoning.
 title: Agent Directory

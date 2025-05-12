@@ -346,7 +346,7 @@ When I describe a system, create a draw.io compatible XML diagram that represent
 
 Here is example diagramm's xml:
 <mxfile host="Electron" modified="2024-04-26T02:57:38.411Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.5 Chrome/114.0.5735.243 Electron/25.3.1 Safari/537.36" etag="CPq7MrTHzLtlZ4ReLAo3" version="21.6.5" type="device">
-  <diagram name="ページ1" id="x">
+  <diagram name="page1" id="x">
     <mxGraphModel dx="1194" dy="824" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />

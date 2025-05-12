@@ -110,23 +110,23 @@ export const AgentFormContent: React.FC<{
             <McpServerSection
               mcpServers={formData.mcpServers || []}
               onChange={async (servers) => {
-                console.log('MCPサーバー設定変更:', servers.length, 'servers')
+                console.log(t('log_mcp_server_config_changed'), servers.length, 'servers')
                 updateField('mcpServers', servers)
 
                 // サーバー設定変更後、タイマーを使用して状態更新の競合を避ける
                 // 現在のタブがツールタブの場合のみ再取得を行う
                 if (activeTab === ('tools' as AgentFormTabId)) {
-                  console.log('ツールタブ表示中にMCPサーバー変更を検出 - ツールを再取得します')
+                  console.log(t('log_tools_tab_mcp_server_changed'))
                   setTimeout(async () => {
                     // 最新のサーバー情報でツールを直接取得
                     if (servers.length > 0) {
                       await fetchMcpTools(servers)
                     } else {
-                      console.log('サーバーが0件になったため、ツールをクリア')
+                      console.log(t('log_server_zero_clear_tools'))
                     }
                   }, 50) // 少し長めの遅延を設定
                 } else {
-                  console.log('ツールタブ以外でのMCPサーバー変更 - タブ切替時に取得します')
+                  console.log(t('log_other_tab_mcp_server_changed'))
                 }
               }}
             />

@@ -2,6 +2,18 @@ set your aws credential: >-
   Bedrock に接続する設定をします。設定画面から AWS
   Credentials（リージョン、アクセスキー、シークレットアクセスキー）を入力してください。
 Welcome to Bedrock Engineer: Bedrock Engineer にようこそ
+log_mcp_server_config_changed: 'MCPサーバー設定変更:'
+log_tools_tab_mcp_server_changed: ツールタブ表示中にMCPサーバー変更を検出 - ツールを再取得します
+log_server_zero_clear_tools: サーバーが0件になったため、ツールをクリア
+log_other_tab_mcp_server_changed: ツールタブ以外でのMCPサーバー変更 - タブ切替時に取得します
+log_tool_info: 'ツール情報:'
+log_tool_count: 件
+log_tool_not_set: 未設定
+log_warning_no_tools: '警告: ツールが設定されていません'
+log_apply_default_tools: 'デフォルトツールを適用:'
+log_save_with_modified_form_data: 修正したフォームデータで保存
+fetching_tools_from_mcp_server: MCPサーバーからツールを取得中...
+notification_ai_response: AIからの返信が届きました
 This is AI assistant of software development tasks: 私は、ソフトウェア開発タスクに特化したAIアシスタントです
 Start by the menu on the left or: 左のメニューから開始するか、次のショートカットが利用できます
 Setting: 設定
@@ -265,7 +277,8 @@ This agent will use the global tool settings. To customize tools for this agent 
 Tavily Search API Settings: Tavily Search API設定
 About Tavily Search: Tavily Searchについて
 You need a Tavily Search API key to use this feature. Get your API key at: この機能を使用するにはTavily Search APIキーが必要です。APIキーの取得は
-Tavily Search allows the AI assistant to search the web for current information, providing better responses to queries about recent events, technical documentation, or other information that may not be in its training data.: >-
+Tavily Search allows the AI assistant to search the web for current information, providing better responses to queries about recent events, technical documentation, or other information that may not be in its training data.:
+  >-
   Tavily
   SearchはAIアシスタントがWeb上の最新情報を検索できるようにし、最近のイベント、技術文書、またはトレーニングデータに含まれていない可能性のある情報に関する質問に対して、より良い回答を提供します。
 Save: 保存
@@ -670,7 +683,8 @@ tool info.recognizeImage.description: >-
 Configure knowledge bases for the retrieve tool: retrieve ツール用のナレッジベースを設定
 Configure allowed commands for the executeCommand tool: executeCommand ツール用の許可コマンドを設定
 Configure Bedrock Agents for the invokeBedrockAgent tool: invokeBedrockAgent ツール用の Bedrock Agent を設定
-No configurable tools enabled. Enable retrieve, executeCommand, or invokeBedrockAgent tools to access their configurations.: >-
+No configurable tools enabled. Enable retrieve, executeCommand, or invokeBedrockAgent tools to access their configurations.:
+  >-
   設定可能なツールが有効になっていません。retrieve、executeCommand、または invokeBedrockAgent
   ツールを有効にして設定にアクセスしてください。
 Configure which knowledge bases this agent can access.: このエージェントがアクセスできるナレッジベースを設定します。
@@ -789,7 +803,8 @@ How to use: 使い方
 Model Not Supported: モデル非対応
 The current model does not support thinking mode. Please switch to Claude 3.7 Sonnet to use this feature.: 現在のモデルは拡張思考モードをサポートしていません。この機能を使用するにはClaude 3.7 Sonnetに切り替えてください。
 Higher token budgets allow for more complex reasoning but may increase response time.: トークン予算を増やすとより複雑な推論が可能になりますが、応答時間が長くなる場合があります。
-The think tool provides a dedicated space for the AI to stop and think during complex tasks. It helps the AI analyze information, plan next steps, and make better decisions without changing any data or fetching new information. Especially useful for multi-step problems and policy compliance.: >-
+The think tool provides a dedicated space for the AI to stop and think during complex tasks. It helps the AI analyze information, plan next steps, and make better decisions without changing any data or fetching new information. Especially useful for multi-step problems and policy compliance.:
+  >-
   思考ツールは、AIが複雑なタスク中に立ち止まって考えるための専用スペースを提供します。データを変更したり新しい情報を取得したりせずに、情報を分析し、次のステップを計画し、より良い決定を下すのに役立ちます。特に複数ステップの問題やポリシー遵守に有効です。
 Especially useful for multi-step problems and policy compliance. The AI will automatically use this tool when needed for complex reasoning.: 特に複数ステップの問題やポリシー遵守に有効です。AIは複雑な推論が必要な場合、自動的にこのツールを使用します。
 title: Agent Directory

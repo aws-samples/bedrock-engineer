@@ -48,7 +48,7 @@ export const ToolCategorySection: React.FC<ToolCategorySectionProps> = ({
             <div className="p-3 mt-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md">
               <div className="flex items-center">
                 <div className="w-5 h-5 mr-2 border-t-2 border-r-2 border-blue-500 rounded-full animate-spin"></div>
-                <span className="font-medium">{t('MCPサーバーからツールを取得中...')}</span>
+                <span className="font-medium">{t('fetching_tools_from_mcp_server')}</span>
               </div>
             </div>
           ) : category.hasMcpServers === false ? (

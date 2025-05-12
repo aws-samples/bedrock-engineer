@@ -17,7 +17,7 @@ export const LanguageSection: React.FC<LanguageSectionProps> = ({
 
   const languageOptions = [
     { value: 'en', label: 'English' },
-    { value: 'ja', label: '日本語' }
+    { value: 'ja', label: '日本語' } // eslint-disable-line i18nhelper/no-jp-string
   ]
 
   return (

@@ -12,8 +12,10 @@ files:
 asarUnpack:
   - resources/**
 extraResources:
-  - from: "src/renderer/src/assets/directory-agents"
-    to: "directory-agents"
+  - from: 'src/renderer/src/assets/directory-agents'
+    to: 'directory-agents'
+  - from: 'src/renderer/public/locales'
+    to: 'locales'
 win:
   executableName: Bedrock Engineer
 nsis:

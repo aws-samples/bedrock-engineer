@@ -147,7 +147,7 @@ export class ImageRecognitionService {
         }
       ],
       system:
-        'あなたは画像認識を行うアシスタントです。提供された画像を詳細に分析し、説明してください。'
+        'You are an image recognition assistant. Please analyze and describe the provided image in detail.'
     }
 
     imageLogger.info('Calling Bedrock for image recognition with Claude', {

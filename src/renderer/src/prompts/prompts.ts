@@ -77,35 +77,35 @@ The value property should contain the suggested content. The suggested content h
 ]
 </schema>
 
-<example-ja>
+<example>
 [
   {
-    "title": "画像を追加",
-    "content": "ユーザーがわかりやすく見るために、ウェブサイトに画像を追加してください。"
+    "title": "Add images",
+    "content": "Please add images to the website to make it easier for users to understand."
   },
   {
-    "title": "ナビゲーションを簡素化",
-    "content": "メニュー構造を簡素化し、重要なリンクを強調してください。サブメニューを使用せず、平坦な構造を目指し、検索機能を追加してください。"
+    "title": "Simplify navigation",
+    "content": "Simplify the menu structure and emphasize important links. Avoid submenus, aim for a flat structure, and add search functionality."
   },
   {
-    "title": "構造の整理と図解",
-    "content": "〇〇機能の処理に関して、図解して説明をしてください。"
+    "title": "Organize structure",
+    "content": "Please provide a diagram and explanation about the XX feature process."
   }
 ]
-</example-ja>
+</example>
 
-<example-ja-2>
+<example-2>
 [
   {
-    "title": "A) HTMLの改善",
-    "content": "A) HTMLの改善\n以下観点を留意して実装を進めてください。\nセマンティックHTML要素の追加\nアクセシビリティの改善\n文字コードの修正"
+    "title": "A) Improve HTML",
+    "content": "A) Improve HTML\nPlease implement with the following considerations:\nAdd semantic HTML elements\nImprove accessibility\nFix character encoding"
   },
   {
-    "title": "B) CSSの改善",
-    "content": "B) CSSの改善\n以下観点を留意して実装を進めてください。\nメディアクエリの整理\nCSS変数の拡充\nアニメーション関連の分離"
+    "title": "B) Improve CSS",
+    "content": "B) Improve CSS\nPlease implement with the following considerations:\nOrganize media queries\nExpand CSS variables\nSeparate animation-related code"
   }
 ]
-</example-ja-2>
+</example-2>
 
 !IMPORTANT: JSON keys should not be in languages other than English.
 !IMPORTANT: Respond in the following languages: ${language}.

@@ -22,5 +22,15 @@ module.exports = {
     'react/prop-types': 'off',
     'no-control-regex': 0,
     'i18nhelper/no-jp-string': 'warn'
-  }
+  },
+  overrides: [
+    {
+      // テストファイルに対するルールの上書き
+      files: ['**/*.test.ts', '**/*.test.tsx', '**/tests/**/*', '**/__tests__/**/*'],
+      rules: {
+        // テストファイルでは日本語文字列の検出を無効化
+        'i18nhelper/no-jp-string': 'off'
+      }
+    }
+  ]
 }

@@ -12,6 +12,7 @@ import { ToolName, isMcpTool } from '@/types/tools'
 import useSetting from '@renderer/hooks/useSetting'
 import { BedrockAgent } from '@/types/agent'
 import { CommandConfig } from '../../modals/useToolSettingModal'
+import { useTranslation } from 'react-i18next'
 
 /**
  * エージェントフォームの状態管理と主要機能を担当するカスタムフック
@@ -20,6 +21,7 @@ import { CommandConfig } from '../../modals/useToolSettingModal'
 type AgentFormTabId = 'basic' | 'mcp-servers' | 'tools'
 
 export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: CustomAgent) => void) => {
+  const { t } = useTranslation()
   // 基本フォームデータの状態
   const [formData, setFormData] = useState<CustomAgent>({
     id: initialAgent?.id || `custom_agent_${nanoid(8)}`,
@@ -301,13 +303,13 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
       e.preventDefault()
       console.log('Form submitted with data:', formData)
       console.log(
-        'ツール情報:',
-        formData.tools ? `${formData.tools.length}件` : '未設定',
+        t('log_tool_info'),
+        formData.tools ? `${formData.tools.length}${t('log_tool_count')}` : t('log_tool_not_set'),
         formData.tools
       )
 
       if (formData.tools && formData.tools.length === 0) {
-        console.warn('警告: ツールが設定されていません')
+        console.warn(t('log_warning_no_tools'))
         // ここで対処: ツールが設定されていない場合はデフォルトツール設定を適用
         const defaultTools = getDefaultToolsForCategory('all')
         const defaultToolNames = defaultTools
@@ -321,10 +323,10 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
           tools: defaultToolNames
         }
 
-        console.log('デフォルトツールを適用:', updatedFormData.tools)
+        console.log(t('log_apply_default_tools'), updatedFormData.tools)
 
         if (onSave) {
-          console.log('修正したフォームデータで保存')
+          console.log(t('log_save_with_modified_form_data'))
           onSave(updatedFormData)
         }
       } else if (onSave) {
