@@ -1,0 +1,1082 @@
+set your aws credential: >-
+  Set up the Amazon Bedrock configuration. Enter your AWS Credentials (region,
+  access key, secret access key) from the settings screen.
+Welcome to Bedrock Engineer: Welcome to Bedrock Engineer
+This is AI assistant of software development tasks: This is AI assistant of software development tasks
+Start by the menu on the left or: Start by the menu on the left or
+Setting: Setting
+Config Directory: Config Directory
+Config Directory Description: This is the directory where the application settings are stored.
+Project Setting: Project Setting
+Agent Chat: Agent Chat
+Tavily Search API Key: Tavily Search API Key
+tavilySearchApiKeyPlaceholder: tvly-xxxxxxxxxxxxxxx
+tavilySearchUrl: https://tavily.com/
+Learn more about Tavily Search, go to: Learn more about Tavily Search, go to
+Context Length (number of messages to include in API requests): Context Length (number of messages to include in API requests)
+minContextLength: '1'
+contextLengthPlaceholder: '10'
+Limiting context length reduces token usage but may affect conversation continuity: >-
+  Limiting context length reduces token usage but may affect conversation
+  continuity
+Amazon Bedrock: Amazon Bedrock
+LLM (Large Language Model): LLM (Large Language Model)
+Inference Parameters: Inference Parameters
+Max Tokens: Max Tokens
+Temperature: Temperature
+topP: topP
+Advanced Setting: Advanced Setting
+When writing a message, press: When writing a message, press
+to: to
+Send the message: Send the message
+Start a new line (use: Start a new line (use
+to send): to send)
+Invalid model: Invalid model
+What kind of step functions will you create?: What kind of step functions will you create?
+Order processing workflow: Order processing workflow
+7 types of State: 7 types of State
+Nested Workflow: Nested Workflow
+User registration process: User registration process
+Distributed Map to process CSV in S3: Distributed Map to process CSV in S3
+Create order processing workflow: Create order processing workflow
+Please implement a workflow that combines the following seven types: Please implement a workflow that combines the following seven types
+Create Nested Workflow example: Create Nested Workflow example
+Implement the workflow for user registration processing: Implement the workflow for user registration processing
+Use the distributed map to repeat the row of the CSV file generated in S3: >-
+  Use the distributed map to repeat the row of the CSV file generated in S3
+
+  Each line has orders and shipping information.
+
+  The distributed map processor repeats the batch of these rows and uses the
+  Lambda function to detect the delayed order.
+
+  After that, send a message to the SQS queue for each delayed order.
+additionalInstruction: Additional Instruction
+additionalInstructionInfo: >-
+  Optional instructions to guide the system prompt generation. These will be
+  included when auto-generating the system prompt.
+additionalInstructionPlaceholder: Enter additional instructions for system prompt generation...
+active: Active
+icon: Icon
+iconDescription: Select an icon that represents the agent's role
+iconColor: Icon Color
+reset: Reset
+searchIcons: Search icons...
+iconCategory:
+  general: General
+  lifestyle: Lifestyle & Home
+  health: Health & Medical
+  education: Education & Learning
+  travel: Travel & Hobbies
+  food: Food & Cooking
+  shopping: Shopping & Finance
+  development: Development
+  cloud: Cloud & Infrastructure
+  devops: DevOps
+  security: Security
+  monitoring: Monitoring & Analytics
+tagsDescription: >-
+  You can set tags as identifiers to make it easier to search for agents in the
+  list.
+remove: Remove
+enterTag: Enter Tag
+addTag: Add
+availableTags: Available Tags
+autoSelect: Auto Select
+What is Amazon Bedrock: What is Amazon Bedrock
+What is Amazon Bedrock description: >-
+  Search for the latest information about Amazon Bedrock and summarize what it
+  can do in a concise manner.
+nameDescription: >-
+  Enter the display name of the agent (e.g., Programming Tutor, Technical
+  Document Writer)
+descriptionDescription: Briefly describe the role and characteristics of this agent.
+systemPrompt: System Prompt
+systemPromptPlaceholder: >-
+  Example: For this project ({{projectPath}}), I will provide support with the
+  following approach:
+
+  - Understanding the project structure and providing appropriate advice
+
+  - Suggestions for improving code quality
+
+  - Guidance based on best practices
+systemPromptDescription: >-
+  Define how the agent should behave and respond. Describe in detail what role
+  it should play and how it should respond.
+placeholders: 'Available Placeholders:'
+projectPathPlaceholder: Current project directory path
+allowedCommandsPlaceholder: Allowed commands
+knowledgeBasesPlaceholder: A list of Knowledge Base IDs and descriptions to use for the search
+bedrockAgentsPlaceholder: A list of Bedrock Agents identifier (agentId and aliasId) and description
+scenariosDescription: >-
+  Register commonly used interaction patterns as scenarios. Enter the title and
+  specific content of the scenario.
+scenarioTitle: Scenario title
+scenarioTitlePlaceholder: e.g., Python Basic Lesson
+scenarioContent: Scenario content
+scenarioContentPlaceholder: e.g., Explain the basic syntax of Python
+addNewAgent: Add New Agent
+preview: Preview
+hidePreview: Hide Preview
+showPreview: Show Preview
+previewResult: 'Placeholder replacement result:'
+copy: Copy
+save: Save
+cancel: Cancel
+optional: (Optional)
+namePlaceholder: e.g., Programming Mentor
+descriptionPlaceholder: e.g., AI mentor teaching programming from basics to advanced
+noProjectPath: (Project path is not set)
+customAgents: Custom Agents
+editAgent: Edit Agent
+deleteAgent: Delete Agent
+systemPromptInfo: >-
+  Enter the system prompt that defines the agent's behavior.Describe in detail
+  what role it should play and how it should respond.
+softwareAgent.description: >-
+  This AI assistant understands software project structures and creates files
+  and folders.
+codeBuddy.description: >-
+  This AI mentor helps you with programming tasks and provides learning
+  guidance.
+productDesigner.description: This AI designer helps you with product design and UX/UI tasks.
+pleaseEnterNameAndDescription: Please enter the agent name and description
+generating: Generating...
+generateSystemPrompt: Generate system prompt
+autoGenerateScinario: Auto-generate Scenario
+inputAgentInfoError: Input Agent's name, description, system promopt.
+datePlaceholder: Today e.g., 2022-01-01
+searchAgents: Search for agents...
+noDescription: No description provided
+edit: Edit
+duplicate: Duplicate
+delete: Delete
+more: More options
+inputSystemPrompt: 'Input System Prompt:'
+shared: Shared
+saveAsShared: Save as Shared File
+agentSavedAsShared: Agent saved as a shared file successfully
+failedToSaveShared: Failed to save agent as shared file
+Simple website: Simple website
+Simple website description: Create a cool website for an IT company using HTML, CSS, and JavaScript.
+Organizing folders: Organizing folders
+Organizing folders description: >-
+  Extract only the png files contained in the {{projectPath}} folder and copy
+  them to the {{projectPath}}/images folder.
+Simple Web API: Simple Web API
+Simple Web API description: Create a simple REST API using Node.js and Express with basic CRUD operations.
+CDK Project: CDK Project
+CDK Project description: >-
+  Create an AWS CDK project that deploys a Lambda function with an API Gateway
+  endpoint.
+Understanding the source code: Understanding the source code
+Understanding the source code description: >-
+  Analyze the source code of {{projectPath}} and explain, with illustrations,
+  its structure and functionality.
+Refactoring: Refactoring
+Refactoring description: >-
+  Please analyze the code in {{projectPath}} and suggest improvements or
+  refactoring opportunities.
+Testcode: Write test code
+Testcode description: Please help me write test cases for the code in {{projectPath}}.
+Learning JavaScript Basics: Learning JavaScript Basics
+Learning JavaScript Basics description: >-
+  Please explain the basics of JavaScript (variables, data types, operators,
+  control flow) with examples for a complete beginner.
+Understanding Functions: Understanding Functions
+Understanding Functions description: >-
+  Help me understand how functions work in JavaScript, including function
+  declarations, expressions, parameters, and return values.
+DOM Manipulation: DOM Manipulation
+DOM Manipulation description: >-
+  Explain how to manipulate the Document Object Model (DOM) using JavaScript,
+  including selecting elements, modifying content, and handling events.
+Debugging JavaScript: Debugging JavaScript
+Debugging JavaScript description: >-
+  I am having trouble with a piece of JavaScript code. Can you help me debug it
+  and explain the errors?
+Building a Simple Web App: Building a Simple Web App
+Building a Simple Web App description: >-
+  Guide me through the process of building a simple web application using HTML,
+  CSS, and JavaScript, step-by-step.
+Learning Python: Learning Python
+Learning Python description: >-
+  I am new to Python. Can you provide a gentle introduction to the language,
+  covering basic syntax, data types, and control structures?
+Object-Oriented Programming: Object-Oriented Programming
+Object-Oriented Programming description: >-
+  Explain the concepts of object-oriented programming (OOP) using Python,
+  including classes, objects, inheritance, and polymorphism.
+Data Visualization with Python: Data Visualization with Python
+Data Visualization with Python description: >-
+  Help me learn how to create basic data visualizations (e.g., line plots,
+  scatter plots, bar charts) using Python libraries like Matplotlib or Plotly.
+Wireframing a Mobile App: Wireframing a Mobile App
+Wireframing a Mobile App description: >-
+  Create low-fidelity wireframes for a new mobile app that helps users track
+  their daily water intake.
+Designing a Landing Page: Designing a Landing Page
+Designing a Landing Page description: >-
+  Design a modern and visually appealing landing page for a SaaS product,
+  following best practices for conversion optimization.
+Improving User Experience: Improving User Experience
+Improving User Experience description: >-
+  Analyze the user experience of an existing e-commerce website and provide
+  recommendations for improvements.
+Creating a Design System: Creating a Design System
+Creating a Design System description: >-
+  Develop a comprehensive design system for a large enterprise application,
+  including components, patterns, and design tokens.
+Accessibility Evaluation: Accessibility Evaluation
+Accessibility Evaluation description: >-
+  Review the user interface of a web application and identify areas where
+  accessibility can be improved for users with disabilities.
+Prototyping an Interface: Prototyping an Interface
+Prototyping an Interface description: >-
+  Create an interactive prototype for a new feature in a project management
+  tool, focusing on usability and intuitive interactions.
+Design Handoff: Design Handoff
+Design Handoff description: >-
+  Prepare design specifications and assets for a new feature, ensuring a smooth
+  handoff to the development team.
+Design Trend Research: Design Trend Research
+Design Trend Research description: >-
+  Investigate the latest design trends and provide recommendations on how to
+  incorporate them into an upcoming product redesign.
+request error: >-
+  An error occurred while communicating with Bedrock. Please wait a moment and
+  try again.
+system prompt: SYSTEM PROMPT
+agent description: >-
+  This AI agent understands software project structures and creates files and
+  folders.
+no project path: Project path is not set
+loading: Loading...
+select project: Select Project
+send message: Send Message
+tool settings: Tool Settings
+agent chat: Agent Chat
+agent settings: Agent Settings
+system prompt caption: System prompt defines how the agent behaves and responds.
+tool setting: Tool Settings
+ignore file settings: Ignore File Settings
+Thought process: Thought Process
+thinking: Thinking...
+Stop generation: Stop generation
+Clear chat: Clear chat
+Generation stopped: Generation stopped
+confirmClearChat: Are you sure you want to clear the chat?
+Are you sure you want to delete this message?: Are you sure you want to delete this message?
+Message copied to clipboard: Message copied to clipboard
+Message deleted successfully: Message deleted successfully
+Failed to copy message: Failed to copy message
+Click for options: Click for options
+Copy to clipboard: Copy to clipboard
+Delete message: Delete message
+Toggle chat history: Toggle chat history
+Cache Usage: Cache Usage
+Cache Read: Read from Cache
+Cache Write: Write to Cache
+Cache hit detected!: Cache hit detected!
+New cache created: New cache created
+'Cache hit: {{percent}}% of tokens from cache': 'Cache hit: {{percent}}% of tokens from cache'
+Token Usage: Token Usage
+Cost: Cost
+Session Cost: Session Cost
+No metadata available: No metadata available
+Performance: Performance
+Latency: Latency
+Input: Input
+Output: Output
+Total: Total
+Trace: Trace
+Performance Config: Performance Config
+Chat History: Chat History
+Edit title: Edit title
+Delete: Delete
+No chat history: No chat history
+Generate title: Geneate title
+Generate All Titles: Generate All Titles
+Delete All: Delete All
+Available Tools: Available Tools
+Choose the tools: Choose the tools you want to enable for the AI assistant
+Tool Details: Tool Details
+Example: Example
+Tip: Tip
+Select a tool from the list: Select a tool from the list
+Click on any tool to view details and configuration options: Click on any tool to view details and configuration options
+MCP tool from Model Context Protocol server: MCP tool from Model Context Protocol server
+MCP tools available from configured servers: MCP tools available from configured servers
+From: From
+MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.: >-
+  MCP servers are configured, but no tools are available. Make sure MCP servers
+  are running and providing tools.
+No MCP servers configured for this agent. Configure MCP servers in the MCP Servers tab to use MCP tools.: >-
+  No MCP servers configured for this agent. Configure MCP servers in the MCP
+  Servers tab to use MCP tools.
+Configured MCP Servers: Configured MCP Servers
+Information: Information
+Warning: Warning
+Tavily Search API Settings: Tavily Search API Settings
+About Tavily Search: About Tavily Search
+You need a Tavily Search API key to use this feature. Get your API key at: You need a Tavily Search API key to use this feature. Get your API key at
+Tavily Search allows the AI assistant to search the web for current information, providing better responses to queries about recent events, technical documentation, or other information that may not be in its training data.: >-
+  Tavily Search allows the AI assistant to search the web for current
+  information, providing better responses to queries about recent events,
+  technical documentation, or other information that may not be in its training
+  data.
+Save: Save
+Cancel: Cancel
+Agent ID: Agent ID
+Alias ID: Alias ID
+Command Shell: Command Shell
+Command Shell Settings: Command Shell Settings
+Command Pattern: Command Pattern
+Add Command: Add Command
+Allowed Command Patterns: Allowed Command Patterns
+No command patterns registered yet: No command patterns registered yet
+Select which shell to use when executing commands: Select which shell to use when executing commands
+Add New Command Pattern: Add New Command Pattern
+Use * as a wildcard (e.g., "npm *" allows all npm commands): Use * as a wildcard (e.g., "npm *" allows all npm commands)
+Description: Description
+Add Knowledge Base: Add Knowledge Base
+Knowledge Base ID: Knowledge Base ID
+Registered Knowledge Bases: Registered Knowledge Bases
+No knowledge bases registered yet: No knowledge bases registered yet
+Tool Categories:
+  File System: File System
+  Web & Search: Web & Search
+  AI Services: AI Services
+  System: System
+  File System Description: Tools for managing files and directories
+  Web & Search Description: Tools for interacting with web resources
+  AI Services Description: Tools that utilize AWS AI services
+  System Description: Tools for system interaction
+tool descriptions:
+  createFolder: Create new directories in your project
+  writeToFile: Write or update file contents
+  readFile: Read contents from a file
+  readFiles: Read contents from multiple files
+  listFiles: View directory structure
+  moveFile: Move files between locations
+  copyFile: Create file duplicates
+  tavilySearch: Search the web for information
+  fetchWebsite: Fetch and analyze content from websites
+  generateImage: Generate images using LLMs
+  recognizeImage: Analyze and describe image content using LLM vision capabilities
+  retrieve: >-
+    Query the Amazon Bedrock Knowledge Base to find relevant information using
+    Retrieval-Augmented Generation (RAG).
+  invokeBedrockAgent: Invoke Amazon Bedrock Agent to interact with LLMs and external tools
+  executeCommand: Execute allowed commands with support for wildcards
+  applyDiffEdit: Apply partial updates to existing files with granular control
+  think: Enable AI to perform complex step-by-step reasoning
+tool info:
+  retrieve:
+    description: >-
+      The retrieve tool allows the AI assistant to search and retrieve
+      information from your Amazon Bedrock Knowledge Bases.
+    about title: About Knowledge Bases
+    about description: >-
+      Amazon Bedrock Knowledge Bases lets you connect your enterprise data with
+      foundation models, allowing the AI to provide answers based on your own
+      documents and information sources.
+  invokeBedrockAgent:
+    description: >-
+      The invokeBedrockAgent tool allows the AI assistant to interact with your
+      custom Amazon Bedrock Agents to perform specialized tasks.
+    about title: About Bedrock Agents
+    about description: >-
+      Amazon Bedrock Agents let you build AI agents that can retrieve
+      information from your data sources, reason over the data, and take actions
+      to complete tasks. Agents can connect to your systems and APIs to perform
+      actions like booking travel, processing orders, or querying databases.
+  tavilySearch:
+    description: >-
+      Tavily Search enables the AI assistant to search the web for current
+      information, providing better responses to queries about recent events,
+      technical documentation, or other information that may not be in its
+      training data.
+    about title: About Tavily Search API
+    about description: >-
+      Tavily provides an AI search API specifically optimized for LLMs, allowing
+      agents to search the web for up-to-date information. The API returns
+      relevant information from across the web that your AI assistant can use to
+      enhance its responses.
+  executeCommand:
+    description: >-
+      The executeCommand tool allows the AI assistant to run system commands on
+      your local machine. This is powerful but requires careful configuration
+      for security.
+    warning title: Security Considerations
+    warning description: >-
+      Only allow specific command patterns that you trust. Use wildcards
+      carefully (e.g., "ls *" to allow listing directories). Never allow
+      unrestricted command execution as this could pose security risks to your
+      system.
+    example title: Example Usage
+    example description: >-
+      Common useful patterns include "ls *" (list directories), "npm *" (run npm
+      commands), "aws *" (AWS CLI commands), or "curl *" (make HTTP requests).
+      The AI will only be allowed to run commands that match these patterns.
+tool usage:
+  think:
+    description: >-
+      Enables the AI to perform complex reasoning steps without consuming your
+      context window. This tool allows Claude to work through difficult problems
+      step by step, showing its thought process and reasoning in detail.
+    tip: >-
+      Enable this when you need the AI to solve complex problems, debug
+      difficult issues, or provide detailed explanations of its reasoning
+      process. Only available with Claude 3.7 Sonnet.
+  recognizeImage:
+    description: >-
+      Enables the AI to analyze and describe images. Perfect for understanding
+      visual content, extracting text from images, or identifying objects and
+      scenes in photographs.
+    tip: >-
+      Use this when you need to work with image content or want the AI to
+      provide detailed descriptions of visual information. Supports common image
+      formats like JPEG, PNG, GIF, and WebP.
+  createFolder:
+    description: >-
+      Enables the AI to set up project structures automatically. Perfect for
+      starting new projects, creating template directories, or organizing your
+      workspace without manual folder creation.
+    tip: >-
+      Use this when you want the AI to create standardized project structures or
+      scaffold applications.
+  writeToFile:
+    description: >-
+      Allows the AI to generate and save code, documentation, or any text
+      content directly to files. Ideal for code generation, configuration setup,
+      and documentation tasks.
+    tip: >-
+      Enable this when you need the AI to create or update files with generated
+      content. Great for initializing projects, creating boilerplate code, or
+      writing documentation.
+  readFiles:
+    description: >-
+      Gives the AI the ability to analyze your project files. Essential for code
+      review, debugging, understanding existing codebases, or getting help with
+      complex file structures.
+    tip: >-
+      Enable this tool when you want the AI to understand your existing code or
+      documents to provide contextual assistance or suggestions for
+      improvements.
+  listFiles:
+    description: >-
+      Helps the AI understand your project structure by seeing all files and
+      directories. Perfect for project analysis, dependency mapping, or getting
+      a high-level overview of complex projects.
+    tip: >-
+      Use this when you want the AI to help with project organization,
+      architecture review, or understanding complex directory structures without
+      showing specific file contents. When implementing file-based processing
+      with most AI agents (except coding agents), it is recommended to have the
+      agent run this listFiles tool first.
+  moveFile:
+    description: >-
+      Enables the AI to reorganize your project files. Ideal for code
+      refactoring, project restructuring, or file organization tasks that would
+      otherwise require manual file moving.
+    tip: >-
+      Enable this when you need help restructuring projects or implementing
+      architectural changes that require moving files between directories.
+  copyFile:
+    description: >-
+      Lets the AI duplicate existing files. Useful for creating backups before
+      edits, generating template variations, or setting up test fixtures based
+      on existing files.
+    tip: >-
+      Use this when you want the AI to make safe copies before risky changes or
+      to duplicate configuration files with minor variations.
+  applyDiffEdit:
+    description: >-
+      Allows the AI to make precise changes to specific parts of files without
+      affecting the rest. Perfect for targeted code changes, refactoring, or
+      adding features to existing code.
+    tip: >-
+      Enable this for precise code edits, refactoring operations, or when you
+      want to make minimal changes to working code. Safer than full file
+      replacements and helps save tokens.
+  tavilySearch:
+    description: >-
+      Enables the AI to search the web for current information. Essential for
+      research tasks, troubleshooting with up-to-date solutions, or gathering
+      information about recent developments.
+    tip: >-
+      Use this when you need the AI to incorporate the latest information in its
+      responses or validate information against current sources. Especially
+      valuable for technical questions.
+  fetchWebsite:
+    description: >-
+      Allows the AI to retrieve and analyze specific web content. Perfect for
+      extracting data from websites, analyzing documentation, or working with
+      online resources as part of your workflow.
+    tip: >-
+      Enable this when you need the AI to work with specific online resources,
+      documentation sites, or web-based data that would be valuable for your
+      current task.
+  generateImage:
+    description: >-
+      Lets the AI create custom images based on your descriptions. Ideal for
+      design mockups, UI elements, conceptual illustrations, storyboards,
+      product images, marketing content, or visualizing ideas without needing
+      design skills. Available models include Stability AI and Amazon Titan
+      image generators.
+    tip: >-
+      Use this when you need visual elements for your project, want to quickly
+      prototype UI designs, or need to visualize concepts before implementation.
+  retrieve:
+    description: >-
+      Allows the AI to tap into your organization's knowledge bases. Essential
+      for accessing company-specific information, documentation, or specialized
+      knowledge that isn't widely available online. Requires data to be
+      pre-stored in the Knowledge Base.
+    tip: >-
+      Enable this to give the AI access to your specialized knowledge bases,
+      company documentation, or domain-specific information to get more
+      relevant, context-aware responses.
+  invokeBedrockAgent:
+    description: >-
+      Connects the AI with specialized Bedrock Agents to perform complex tasks
+      like data analysis, code interpretation, or domain-specific operations
+      beyond normal chat capabilities. Requires agents to be pre-configured in
+      Amazon Bedrock.
+    tip: >-
+      Use this when you need specialized capabilities like code execution, data
+      analysis, or domain-specific knowledge that requires a dedicated agent
+      with specific tools.
+  executeCommand:
+    description: >-
+      Lets the AI run system commands to automate development tasks. Perfect for
+      build operations, testing, deployment tasks, or any workflow that would
+      typically require command line usage.
+    tip: >-
+      Enable this when you want the AI to help with DevOps tasks, run tests,
+      build projects, or automate repetitive command-line operations. Only
+      pre-approved command patterns are permitted.
+guardrail.intervention: Guardrail Intervation
+Analyzed image: Analyzed image
+Image Analysis: Image Analysis
+Analyzed with: Analyzed with
+Image Recognition Settings: Image Recognition Settings
+Select which model to use for image recognition tasks: Select which model to use for image recognition tasks
+Recognition Model: Recognition Model
+Only Claude models with vision capabilities are supported: Only Claude models with vision capabilities are supported
+About Image Recognition: About Image Recognition
+Image recognition uses Claude's vision capabilities to analyze and describe images. The selected model will be used when you run the recognizeImage tool.: >-
+  Image recognition uses Claude's vision capabilities to analyze and describe
+  images. The selected model will be used when you run the recognizeImage tool.
+textarea:
+  placeholder: Type message or add images ({{modifier}}+V / drop)
+  imageValidation:
+    tooLarge: 'Image is too large (max: 3.75MB)'
+    dimensionTooLarge: 'Image dimensions are too large (max: 8000px)'
+    tooManyImages: Maximum 20 images allowed
+    unsupportedFormat: 'Unsupported image format: {{format}}'
+  aria:
+    removeImage: Remove image
+    sendMessage: Send message
+    sending: Sending...
+ignoreFiles:
+  title: Ignore Files
+  description: >-
+    The files and folders listed below will not be read by various tools. Enter
+    each file and folder on a new line.
+  placeholder: or other files...
+  save: Save
+addRecommend: Considering additional recommended features
+ecSiteTitle: EC site for plants
+ecSiteValue: >-
+  Create the basic structure and layout of an e-commerce website that
+  specializes in potted plants, with the following conditions:
+
+  <Conditions>
+
+  - The layout likes Amazon.com.
+
+  - The name of the e-commerce website is "Green Village".
+
+  - Use a green color theme.
+
+  - Following the previous output, add a section that displays the plants in
+  card format.
+
+  - Following the previous output, create a function to add to the shopping
+  cart.
+
+  - Following the previous output, create a function to check what is currently
+  in the shopping cart and calculate the total amount.
+
+  </Conditions>
+ecSiteAdminTitle: EC site management
+ecSiteAdminValue: >-
+  Please create an administration screen for an e-commerce site that specializes
+  in houseplants, with the following conditions.
+
+  <Conditions>
+
+  - The name of the e-commerce site is "Green Village".
+
+  - Use a green color theme.
+
+  - There is a table that displays the most recent orders, and you can manage
+  the status of orders, etc.
+
+  - Display dummy data
+
+  </Conditions>
+
+  Following the previous output, add a sidebar navigation
+healthFitnessSiteTitle: Health & Fitness site
+healthFitnessSiteValue: >
+  Create the basic structure and layout of a health and fitness website, with
+  the following conditions:
+
+  <Conditions>
+
+  - The layout likes Amazon.com.
+
+  - The name of the website is "FitLife".
+
+  - Use a red color theme.
+
+  - Following the previous output, add a section that displays the health and
+  fitness blogs.
+
+  - Following the previous output, create a function to search for health and
+  fitness content based on keywords.
+
+  - Following the previous output, create a function to add comments to the
+  blog.
+
+  </Conditions>
+drawingGraphTitle: Drawing Graph
+drawingGraphValue: |-
+  Please visualize the following as a graph on your website.
+  Purchase data CSV file
+  customer_id,product_id,purchase_date,purchase_amount
+  C001,P001,2023-04-01,50.00
+  C002,P002,2023-04-02,75.00
+  C003,P003,2023-04-03,100.00
+  C001,P002,2023-04-04,60.00
+  C002,P001, 2023-04-05,40.00
+  C003,P003,2023-04-06,90.00
+  C001,P001,2023-04-07,30.00
+  C002,P002,2023-04-08,80.00
+  C003,P001,2023-04-09,45.00
+  C001,P003,2023-04-10,120.00
+  This CSV file contains the following information:
+  - 'customer_id': Customer ID
+  - 'product_id': Product ID
+  - 'purchase_date': Purchase date
+  - 'purchase_amount': Purchase amount
+todoAppTitle: To-do app
+todoAppValue: Create a simple to-do app website
+codeTransformTitle: Code Transform
+codeTransformValue: >-
+  Transform the following code:
+
+  using Android.App;
+
+  using Android.OS;
+
+  using Android.Support.V7.App;
+
+  using Android.Runtime;
+
+  using Android.Widget;
+
+  using System.Data.SQLite;
+
+  using System;
+
+  using Xamarin.Essentials;
+
+  using System.Linq;
+
+  namespace App2
+
+  {
+
+  [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher
+  = true)]
+
+  public class MainActivity : AppCompatActivity
+
+  {
+
+  protected override void OnCreate(Bundle savedInstanceState)
+
+  {
+
+  base.OnCreate(savedInstanceState);
+
+  Xamarin.Essentials.Platform.Init(this, savedInstanceState);
+
+  SetContentView(Resource.Layout.activity_main);
+
+  EditText input1 = FindViewById<EditText>(Resource.Id.Input1);
+
+  EditText input2 = FindViewById<EditText>(Resource.Id.Input2);
+
+  TextView total = FindViewById<TextView>(Resource.Id.Total);
+
+  Button totalButton = FindViewById<Button>(Resource.Id.TotalButton);
+
+  totalButton.Click += (sender, e) =>
+
+  {
+
+  total.Text = (int.Parse(input1.Text) +
+  int.Parse(input2.Text)).ToString("#,0");
+
+  }
+
+  }
+
+  public override void OnRequestPermissionsResult(int requestCode, string[]
+  permissions,
+
+  [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
+
+  {
+
+  Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode,
+  permissions, grantResults);
+
+  base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+
+  }
+
+  }
+
+  }
+Standard permissions including streaming responses: Standard permissions for APIs used by Bedrock Engineer
+Close: Close
+Use Recommended Policy for full feature access: Use Recommended Policy for full feature access
+Copy: Copy
+For more information about IAM policies for Amazon Bedrock, visit the: For more information about IAM policies for Amazon Bedrock, visit the
+Amazon Bedrock documentation: Amazon Bedrock documentation
+notification:
+  title: Notification Settings
+  description: Configure desktop notifications for chat responses
+  enable: Enable desktop notifications
+  messages:
+    chatComplete:
+      title: Task Complete 🎉
+      body: AI response has arrived
+Use AWS Profile: Use AWS Profile
+Use credentials from ~/.aws: Use credentials from ~/.aws
+AWS Profile Name: AWS Profile Name
+Enable Region Failover on ThrottlingException: Enable Region Failover on ThrottlingException
+Failover Regions: Failover Regions
+Select regions to be used as failover targets when ThrottlingException occurs: >-
+  Select the failover destination region to be used when ThrottlingException
+  occurs. If multiple failover destination regions are selected, they will be
+  selected randomly. Please enable model access in the Amazon Bedrock management
+  console.
+Add a failover region: Add a failover region
+Amazon Bedrock Guardrails: Amazon Bedrock Guardrails
+Enable Guardrails: Enable Guardrails
+When enabled, guardrails will be applied to all model interactions to filter harmful content.: >-
+  When enabled, guardrails will be applied to all model interactions to filter
+  harmful content.
+Guardrail Identifier: Guardrail Identifier
+The ID of the guardrail you want to use: The ID of the guardrail you want to use
+Guardrail Version: Guardrail Version
+The version of the guardrail (DRAFT or a version number): The version of the guardrail (DRAFT or a version number)
+Enabled: Enabled
+Disabled: Disabled
+agentSettings.infoTitle: How to use custom agents and shared agents
+agentSettings.description: >-
+  Create and customize AI agents to assist with specific tasks. You can edit
+  existing agents or create new ones with customized system prompts,
+  capabilities, and appearance.
+agentSettings.sharedAgentsDescription: >-
+  To share agents across projects, use the "Save as Shared File" option. Shared
+  agents can be stored in your project directories and will be automatically
+  loaded when you open that project. Shared agent configuration files are stored
+  under .bedrock-engineer/agents/.
+Basic Agent Settings: Basic Agent Settings
+Agent Tools: Agent Tools
+e.g., KB123456: e.g., KB123456
+e.g., Customer support knowledge base: e.g., Customer support knowledge base
+e.g., ls *: e.g., ls *
+e.g., List directory contents: e.g., List directory contents
+e.g., AGENT123456: e.g., AGENT123456
+e.g., ALIAS123456: e.g., ALIAS123456
+e.g., Code interpreter agent: e.g., Code interpreter agent
+'ID:': 'ID:'
+'Agent ID:': 'Agent ID:'
+'Alias ID:': 'Alias ID:'
+tools.category: Preset Category
+No tools in this category: No tools in this category
+Tool Categories.General Purpose: General Purpose
+Tool Categories.Software Development: Software Development
+Tool Categories.Design & Creative: Design & Creative
+Tool Categories.Data Analysis: Data Analysis
+Tool Categories.Business & Productivity: Business & Productivity
+Tool Categories.Custom Configuration: Custom Configuration
+Tool Categories.File System: File System
+Tool Categories.File System Description: Tools for managing files and directories
+Tool Categories.Web & Search: Web & Search
+Tool Categories.Web & Search Description: Tools for interacting with web resources
+Tool Categories.AI Services: AI Services
+Tool Categories.AI Services Description: Tools that utilize AWS AI services
+Tool Categories.System: System
+Tool Categories.System Description: Tools for system interaction
+Tool Categories.Thinking: Thinking
+Tool Categories.Thinking Description: Tools for enhanced reasoning and complex problem solving
+Tool Categories.MCP: MCP
+Tool Categories.MCP Description: Model Context Protocol Tools
+Tool Categories.All Configuration: All
+tools.description: Select the tools this agent can use.
+Tool Detail Settings: Tool Detail Settings
+Configure settings for enabled tools: Configure settings for enabled tools
+Tool Detail Settings Description: >-
+  In this tab, you can configure advanced settings for specific tools. Settings
+  are available for Knowledge Base retrieval, command execution, and Bedrock
+  Agent invocation when these tools are enabled.
+No tools enabled. Enable tools in the Available Tools tab to configure them.: No tools enabled. Enable tools in the Available Tools tab to configure them.
+Knowledge Base Settings: Knowledge Base Settings
+Command Settings: Command Settings
+Bedrock Agent Settings: Bedrock Agent Settings
+When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.: >-
+  When an image is processed, the AI will identify objects, text, scenes, and
+  other visual elements, providing a detailed description based on the content.
+tool info.recognizeImage.description: >-
+  The recognizeImage tool uses AI vision capabilities to analyze and describe
+  images. It helps the AI assistant understand image content and provide
+  relevant responses based on what appears in the image.
+Configure knowledge bases for the retrieve tool: Configure knowledge bases for the retrieve tool
+Configure allowed commands for the executeCommand tool: Configure allowed commands for the executeCommand tool
+Configure Bedrock Agents for the invokeBedrockAgent tool: Configure Bedrock Agents for the invokeBedrockAgent tool
+No configurable tools enabled. Enable retrieve, executeCommand, or invokeBedrockAgent tools to access their configurations.: >-
+  No configurable tools enabled. Enable retrieve, executeCommand, or
+  invokeBedrockAgent tools to access their configurations.
+Configure which knowledge bases this agent can access.: Configure which knowledge bases this agent can access.
+Add New Knowledge Base: Add New Knowledge Base
+Available Knowledge Bases: Available Knowledge Bases
+Edit: Edit
+Edit knowledge base: Edit knowledge base
+Remove: Remove
+Remove knowledge base: Remove knowledge base
+Configure which system commands the agent is allowed to execute.: Configure which system commands the agent is allowed to execute.
+Security Warning: Security Warning
+Only allow commands that you trust this agent to execute. Use wildcards (*) to define patterns.: >-
+  Only allow commands that you trust this agent to execute. Use wildcards (*) to
+  define patterns.
+Current Command Patterns: Current Command Patterns
+Edit command: Edit command
+Remove command: Remove command
+Configure which Bedrock Agents this agent can access.: Configure which Bedrock Agents this agent can access.
+Add New Bedrock Agent: Add New Bedrock Agent
+Add Agent: Add Agent
+Available Bedrock Agents: Available Bedrock Agents
+No Bedrock Agents registered yet: No Bedrock Agents registered yet
+Edit agent: Edit agent
+Remove agent: Remove agent
+descriptions:
+  createFolder: Create a new folder at the specified path
+  writeToFile: Write content to an existing file
+  readFiles: Read the content of multiple files
+  listFiles: List the entire directory structure
+  moveFile: Move a file from one location to another
+  copyFile: Copy a file from one location to another
+  applyDiffEdit: Apply a diff edit to a file
+  tavilySearch: Search the web using Tavily API
+  fetchWebsite: Fetch content from a specified URL
+  generateImage: Generate an image using AI models
+  recognizeImage: Analyze and describe images using AI vision capabilities
+  retrieve: Retrieve information from a knowledge base
+  invokeBedrockAgent: Invoke an Amazon Bedrock Agent
+  executeCommand: Execute a command or send input to a running process
+Enable Prompt Cache: Enable Prompt Cache
+Prompt Cache reduces token usage by caching parts of the conversation: Prompt Cache reduces token usage by caching parts of the conversation
+Token Usage Analytics: Token Usage Analytics
+Session Summary: Session Summary
+Cost Analysis: Cost Analysis
+Total Tokens: Total Tokens
+Total Cost: Total Cost
+Model: Model
+Messages: Messages
+Input Tokens: Input Tokens
+Output Tokens: Output Tokens
+Cache Read Tokens: Cache Read Tokens
+Cache Write Tokens: Cache Write Tokens
+Input Cost: Input Cost
+Output Cost: Output Cost
+Cache Read Cost: Cache Read Cost
+Cache Write Cost: Cache Write Cost
+No token usage data available: No token usage data available
+No cost data available: No cost data available
+'Note: Token usage and cost calculations are estimates based on the available metadata.': >-
+  Note: Token usage and cost calculations are estimates based on the available
+  metadata.
+View Token Analytics: View Token Analytics
+Summary: Summary
+Time Series Analysis: Time Series Analysis
+Token Usage Over Time: Token Usage Over Time
+Cost Analysis Over Time: Cost Analysis Over Time
+No time series data available: No time series data available
+Token Usage Trend: Token Usage Trend
+Cost Trend: Cost Trend
+Cumulative Usage: Cumulative Usage
+Average Tokens per Message: Average Tokens per Message
+Average Cost per Message: Average Cost per Message
+Token Usage Efficiency: Token Usage Efficiency
+Cache Efficiency: Cache Efficiency
+Saved approximately {{amount}} by using prompt cache: Saved approximately {{amount}} by using prompt cache
+settings.lightModel.title: Light Processing Model
+settings.lightModel.description: >-
+  Select a model to use for lighter tasks like generating chat titles and
+  recommendations.
+settings.lightModel.useMain: Use Main Conversation Model
+settings.lightModel.info: Using smaller models for these tasks can reduce cost and latency.
+awsDiagramGenerator: AWS Diagram Generator
+generatingRecommendations: Generating recommendations...
+awsLibraries: AWS Libraries
+serverlessArchitectureTitle: Serverless API
+serverlessArchitectureValue: >-
+  Create a serverless architecture with API Gateway, Lambda, and DynamoDB for a
+  RESTful API
+microservicesTitle: Microservices
+microservicesValue: >-
+  Design a microservices architecture using ECS, API Gateway, and DynamoDB with
+  service discovery
+webHostingTitle: Website Hosting
+webHostingValue: >-
+  Create a scalable web hosting architecture with S3, CloudFront, Route 53, and
+  WAF
+dataLakeTitle: Data Lake
+dataLakeValue: >-
+  Design a data lake architecture using S3, Glue, Athena, and QuickSight for
+  analytics
+containerizedAppTitle: Containerized App
+containerizedAppValue: >-
+  Create an EKS-based containerized application architecture with load balancing
+  and auto-scaling
+hybridConnectivityTitle: Hybrid Network
+hybridConnectivityValue: >-
+  Design a hybrid connectivity architecture between on-premises and AWS using
+  Direct Connect and VPN
+sequenceDiagramTitle: Sequence Diagram
+sequenceDiagramValue: >-
+  Create a sequence diagram showing the interaction between a user, frontend,
+  API service, and database during a user registration and authentication flow
+userStoryMapTitle: User Story Map
+userStoryMapValue: >-
+  Design a user story map for an e-commerce mobile app showing the customer
+  journey from product discovery to purchase completion and order tracking
+Thinking Mode: Thinking Mode
+Enable Thinking Mode: Enable Thinking Mode
+Thinking Budget: Thinking Budget
+None (0 tokens): None (0 tokens)
+Quick (1K tokens): Quick (1K tokens)
+Normal (4K tokens): Normal (4K tokens)
+Deep (16K tokens): Deep (16K tokens)
+Deeper (32K tokens): Deeper (32K tokens)
+Thinking mode allows Claude to work through complex problems step by step.: Thinking mode allows Claude to work through complex problems step by step.
+Available only with Claude 3.7 Sonnet.: Available only with Claude 3.7 Sonnet.
+thinkingMode.none: None (0 tokens)
+thinkingMode.quick: Quick (1K tokens)
+thinkingMode.normal: Normal (4K tokens)
+thinkingMode.deep: Deep (16K tokens)
+thinkingMode.deeper: Deeper (32K tokens)
+thinkingMode.title: Thinking Mode Budget
+think.tool: Think Tool
+think.tool.description: The Think Tool helps with complex step-by-step reasoning.
+Thinking Mode Settings: Thinking Mode Settings
+Think Tool: Think Tool
+How to use: How to use
+Model Not Supported: Model Not Supported
+The current model does not support thinking mode. Please switch to Claude 3.7 Sonnet to use this feature.: >-
+  The current model does not support thinking mode. Please switch to Claude 3.7
+  Sonnet to use this feature.
+Higher token budgets allow for more complex reasoning but may increase response time.: >-
+  Higher token budgets allow for more complex reasoning but may increase
+  response time.
+The think tool provides a dedicated space for the AI to stop and think during complex tasks. It helps the AI analyze information, plan next steps, and make better decisions without changing any data or fetching new information. Especially useful for multi-step problems and policy compliance.: >-
+  The think tool provides a dedicated space for the AI to stop and think during
+  complex tasks. It helps the AI analyze information, plan next steps, and make
+  better decisions without changing any data or fetching new information.
+  Especially useful for multi-step problems and policy compliance.
+Especially useful for multi-step problems and policy compliance. The AI will automatically use this tool when needed for complex reasoning.: >-
+  Especially useful for multi-step problems and policy compliance. The AI will
+  automatically use this tool when needed for complex reasoning.
+title: Agent Directory
+description: Browse and add pre-configured agents to your collection
+addAgent: Add Agent
+viewDetails: View Details
+authorLabel: Author
+systemPromptLabel: System Prompt
+toolsLabel: Tools
+mcpServersLabel: MCP Servers
+close: Close
+scenariosLabel: Scenario
+addToMyAgents: Add to My Agents
+agentAddedSuccess: Added Successfully
+agentAddedError: Error Adding Agent
+loadingAgents: Loading agents...
+noAgentsFound: No agents found
+retryButton: Retry
+contributor:
+  tooltip: Become a contributor
+  title: Become an Agent Directory Contributor
+  subtitle: Share your custom agents with the community
+  steps: 'How to contribute:'
+  step1: Export your custom agent as a shared file
+  step2: 'Save the YAML file to this directory:'
+  step3: 'Add your GitHub username as the author (recommended):'
+  step4: Submit a Pull Request or open a GitHub issue with the YAML file attached
+  submitOptions: Submission Options
+  prOption: Via Pull Request
+  prDescription: >-
+    Fork the repository, add your agent file, and submit a pull request (for
+    developers)
+  viewRepo: View Repository
+  issueOption: Via GitHub Issue
+  issueDescription: Use our pre-filled issue template to submit your agent (easiest method)
+  createIssue: Create Issue with Template
+  githubIssue: Submit via GitHub Issue
+  copied: Copied!
+  copy: Copy
+Basic Settings: Basic Settings
+MCP Servers: MCP Servers
+Tools: Tools
+MCP Server Settings: MCP Server Settings
+Configure MCP servers for this agent to use MCP tools.: Configure MCP servers for this agent to use MCP tools.
+Register MCP servers first, then you can enable MCP tools in the Available Tools tab.: Register MCP servers first, then you can enable MCP tools in the Tools tab.
+Add New MCP Server: Add New MCP Server
+Edit MCP Server: Edit MCP Server
+Server Configuration (JSON): Server Configuration (JSON)
+Add Server: Add Server
+Update Server: Update Server
+Registered MCP Servers: Registered MCP Servers
+No MCP servers registered yet: No MCP servers registered yet
+Required fields are missing or invalid. Check the JSON format.: Required fields are missing or invalid. Check the JSON format.
+The "env" field must be an object.: The "env" field must be an object.
+A server with this name already exists.: A server with this name already exists.
+Invalid JSON format.: Invalid JSON format.
+No valid server configurations found: No valid server configurations found
+Sample Config: Sample Config
+Export Current Config: Export Current Config
+Use claude_desktop_config.json format with mcpServers object containing server configurations.: >-
+  Use claude_desktop_config.json format with mcpServers object containing server
+  configurations.
+'Invalid format: Must use claude_desktop_config.json format with mcpServers object': >-
+  Invalid format: Must use claude_desktop_config.json format with mcpServers
+  object
+When editing, please include exactly one server in mcpServers: When editing, please include exactly one server in mcpServers
+Plan mode - Read-only tools enabled: Plan mode - Read-only tools enabled
+Act mode - All tools enabled: Act mode - All tools enabled
+Plan mode - Read-only tools enabled (⌘+Shift+A): Plan mode - Read-only tools enabled (⌘+Shift+A)
+Plan mode - Read-only tools enabled (Ctrl+Shift+A): Plan mode - Read-only tools enabled (Ctrl+Shift+A)
+Act mode - All tools enabled (⌘+Shift+A): Act mode - All tools enabled (⌘+Shift+A)
+Act mode - All tools enabled (Ctrl+Shift+A): Act mode - All tools enabled (Ctrl+Shift+A)
+Switched to Plan mode: Switched to Plan mode
+Switched to Act mode: Switched to Act mode

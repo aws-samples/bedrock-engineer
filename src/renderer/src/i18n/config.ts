@@ -1,25 +1,23 @@
 import i18n from 'i18next'
+import HttpBackend from 'i18next-http-backend'
 import { initReactI18next } from 'react-i18next'
-import en from './locales/en'
-import ja from './locales/ja'
+import yaml from 'js-yaml'
 
-const defaultLaunguage = window.store.get('language') ?? navigator.language
+const defaultLanguage = window.store.get('language') ?? navigator.language
 
-const resources = {
-  en: {
-    translation: en
-  },
-  ja: {
-    translation: ja
-  }
-}
-
-i18n.use(initReactI18next).init({
-  resources,
-  lng: defaultLaunguage,
-  interpolation: {
-    escapeValue: false
-  }
-})
+i18n
+  .use(HttpBackend)
+  .use(initReactI18next)
+  .init({
+    backend: {
+      loadPath: '/locales/translation/{{lng}}.yaml',
+      parse: (data: string) => yaml.load(data)
+    },
+    fallbackLng: 'en',
+    lng: defaultLanguage,
+    interpolation: {
+      escapeValue: false
+    }
+  })
 
 export default i18n

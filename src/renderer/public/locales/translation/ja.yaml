@@ -1,0 +1,873 @@
+set your aws credential: >-
+  Bedrock に接続する設定をします。設定画面から AWS
+  Credentials（リージョン、アクセスキー、シークレットアクセスキー）を入力してください。
+Welcome to Bedrock Engineer: Bedrock Engineer にようこそ
+This is AI assistant of software development tasks: 私は、ソフトウェア開発タスクに特化したAIアシスタントです
+Start by the menu on the left or: 左のメニューから開始するか、次のショートカットが利用できます
+Setting: 設定
+Config Directory: アプリの設定
+Config Directory Description: アプリの設定が保存されるディレクトリです。
+Project Setting: プロジェクト設定
+Agent Chat: エージェントチャット
+Tavily Search API Key: Tavily 検索 API キー
+tavilySearchApiKeyPlaceholder: tvly-xxxxxxxxxxxxxxx
+tavilySearchUrl: https://tavily.com/
+Learn more about Tavily Search, go to: Tavily Searchについて詳しく知るには、こちらをご覧ください
+Context Length (number of messages to include in API requests): コンテキスト長（APIリクエストに含めるメッセージ数）
+minContextLength: '1'
+contextLengthPlaceholder: '10'
+Limiting context length reduces token usage but may affect conversation continuity: コンテキスト長を制限するとトークン使用量は減りますが、会話の連続性に影響する可能性があります
+Amazon Bedrock: Amazon Bedrock
+LLM (Large Language Model): LLM（大規模言語モデル）
+Inference Parameters: 推論パラメータ
+Max Tokens: 最大トークン数
+Temperature: 温度
+topP: トップP
+Advanced Setting: 詳細設定
+When writing a message, press: メッセージを書いているとき、
+to: を押すと
+Send the message: メッセージを送信
+Start a new line (use: 改行（
+to send): で送信）
+Invalid model: 無効なモデル
+What kind of step functions will you create?: どのようなステップ関数を作成しますか？
+Order processing workflow: 注文処理ワークフロー
+7 types of State: 7つの状態タイプ
+Nested Workflow: ネストされたワークフロー
+User registration process: ユーザー登録プロセス
+Distributed Map to process CSV in S3: S3のCSVを処理する分散マップ
+Create order processing workflow: 注文処理ワークフローを作成する
+Please implement a workflow that combines the following seven types: 以下の7つのタイプを組み合わせたワークフローを実装してください
+Create Nested Workflow example: ネストされたワークフローの例を作成する
+Implement the workflow for user registration processing: |
+  ユーザー登録処理のワークフローを実装する
+
+  まず、Lambda を使って入力内容を確認します。
+  次に、入力内容に問題がなければ、情報を DynamoDB に保存します。
+  最後に、メールを送信します。メールの送信は Amazon SNS を使用します。
+  Lambda の入力内容が失敗した場合、DynamoDB は情報を保存せず、ユーザーにメールで通知します。
+  DynamoDB または SNS を使用する場合は、Lambda を使用せず、AWS ネイティブ統合を検討してください。
+Use the distributed map to repeat the row of the CSV file generated in S3: |-
+  S3で生成されたCSVファイルの行を繰り返すために分散マップを使用する
+  各行には注文と配送情報があります。
+  分散マッププロセッサはこれらの行のバッチを繰り返し、Lambda 関数を使用して注文を検出します。
+  その後、注文ごとに SQS キューにメッセージを送信します。
+additionalInstruction: システムプロンプト生成のための追加の指示を入力する
+additionalInstructionInfo: >-
+  システムプロンプト生成をガイドするための指示を入力してください。システムプロンプト自動生成時に考慮されます。MCPサーバーやツールの設定状態も考慮した最適なプロンプトを提案します。MCPサーバーを利用する際には先に
+  MCP サーバーの登録をした後で再度システムプロンプトの自動生成を実行してください。
+additionalInstructionPlaceholder: システムプロンプト生成のための追加指示を入力...
+active: アクティブ
+icon: アイコン
+iconDescription: エージェントの役割を表すアイコンを選択してください
+iconColor: アイコンの色
+reset: リセット
+searchIcons: アイコンを検索...
+iconCategory:
+  general: 一般
+  lifestyle: ライフスタイル & ホーム
+  health: 健康 & 医療
+  education: 教育 & 学習
+  travel: 旅行 & 趣味
+  food: 食事 & 料理
+  shopping: ショッピング & 金融
+  development: 開発
+  cloud: クラウド & インフラ
+  devops: DevOps
+  security: セキュリティ
+  monitoring: モニタリング & 分析
+tagsDescription: エージェント一覧から検索しやすくする識別子としてタグを設定できます。
+remove: 削除する
+enterTag: タグを入力
+addTag: 追加
+availableTags: 利用可能なタグ
+autoSelect: 自動選択
+What is Amazon Bedrock: Amazon Bedrock とは
+What is Amazon Bedrock description: Amazon Bedrock に関する最新情報を検索して、何ができるか簡潔にまとめてください。
+nameDescription: エージェントの表示名を入力してください（例：プログラミング講師、技術ドキュメント作成者）
+descriptionDescription: このエージェントの役割や特徴を簡潔に説明してください。
+systemPrompt: システムプロンプト
+systemPromptPlaceholder: |-
+  例: このプロジェクト（{{projectPath}}）について分析を行い、以下の方針でサポートを行います：
+  - プロジェクトの構造を理解し、適切なアドバイスを提供
+  - コードの品質向上のための提案
+  - ベストプラクティスに基づいたガイダンス
+systemPromptDescription: エージェントの振る舞いを定義するシステムプロンプトを入力してください。どのような役割を果たし、どのように応答するべきかを詳細に記述します。
+placeholders: '利用可能なプレースホルダー:'
+projectPathPlaceholder: 現在のプロジェクトディレクトリのパス
+allowedCommandsPlaceholder: 許可されたコマンド
+knowledgeBasesPlaceholder: 検索に使用する Knowledge Base の ID と説明のリスト
+bedrockAgentsPlaceholder: Bedrock Agent ID、Alias ID、説明のリスト
+scenariosDescription: よく使用するやり取りのパターンをシナリオとして登録できます。シナリオのタイトルと具体的な内容を入力してください。
+scenarioTitle: シナリオのタイトル
+scenarioTitlePlaceholder: '例: Python基礎レッスン'
+scenarioContent: シナリオの内容
+scenarioContentPlaceholder: '例: Pythonの基本文法について説明してください'
+addNewAgent: 新規エージェント追加
+preview: プレビュー
+hidePreview: プレビューを隠す
+showPreview: プレビューを表示
+previewResult: 'プレースホルダーを置換した結果:'
+copy: コピー
+save: 保存
+cancel: キャンセル
+optional: （オプション）
+namePlaceholder: '例: プログラミングメンター'
+descriptionPlaceholder: '例: プログラミングの基礎から応用までを教えるAIメンター'
+noProjectPath: （プロジェクトパスが設定されていません）
+customAgents: カスタムエージェント
+editAgent: エージェントを編集
+deleteAgent: エージェントを削除
+systemPromptInfo: >-
+  エージェントの振る舞いを定義するシステムプロンプトを入力してください。どのような役割を果たし、どのように応答するべきかを詳細に記述します。作業するプロジェクトのディレクトリパスを明確に指示することを推奨します。
+softwareAgent.description: ソフトウェアプロジェクトの構造を理解し、ファイルやフォルダを作成します。
+codeBuddy.description: 初心者に優しいプログラミングメンターとして、プログラミングタスクのサポートと学習ガイダンスを提供します。
+productDesigner.description: ユーザーインターフェースとUXの専門家として、魅力的で使いやすいデザインを提案します。
+pleaseEnterNameAndDescription: エージェント名と説明を入力してください
+generating: 生成中...
+generateSystemPrompt: System Prompt を自動生成する
+autoGenerateScinario: Scenarios を自動生成する
+inputAgentInfoError: エージェント情報（名前、説明、システムプロンプト）を入力してください
+datePlaceholder: 本日日付 （例：2022-01-01）
+searchAgents: エージェントを検索...
+noDescription: 説明なし
+edit: 編集する
+duplicate: 複製する
+delete: 削除する
+more: その他のオプション
+inputSystemPrompt: 'システムプロンプトを入力:'
+shared: 共有
+saveAsShared: 共有ファイルとして保存
+agentSavedAsShared: エージェントが共有ファイルとして正常に保存されました。現在の作業ディレクトリの .bedrock-engineer/agents/ を確認してください。
+failedToSaveShared: 共有ファイルとして保存できませんでした
+Simple website: シンプルなウェブサイト
+Simple website description: HTML、CSS、JavaScriptを使用してIT企業向けのクールなウェブサイトを作成してください。
+Organizing folders: フォルダの整理
+Organizing folders description: '{{projectPath}}フォルダに含まれるpngファイルのみを抽出し、{{projectPath}}/images フォルダにコピーしてください。'
+Simple Web API: シンプルなAPI
+Simple Web API description: Node.jsとExpressを使用して、基本的なCRUD操作を備えたシンプルなREST APIを作成してください。
+CDK Project: CDKプロジェクト
+CDK Project description: Lambda関数とAPI Gatewayエンドポイントをデプロイするための新しいAWS CDKプロジェクトを作成してください。
+Understanding the source code: ソースコードの理解
+Understanding the source code description: '{{projectPath}}のソースコードを分析し、その構造と機能を図解を含めて説明してください。'
+Refactoring: リファクタリング
+Refactoring description: '{{projectPath}}のコードを分析し、改善やリファクタリングの機会を提案してください。'
+Testcode: テストコード
+Testcode description: '{{projectPath}}のコードに対するテストケースの作成を手伝ってください。'
+Learning JavaScript Basics: JavaScript基礎学習
+Learning JavaScript Basics description: 完全な初心者向けに、JavaScriptの基礎（変数、データ型、演算子、制御フロー）を例を交えて学習を支援してください。
+Understanding Functions: 関数の理解
+Understanding Functions description: JavaScript の関数（関数宣言、式、パラメータ、戻り値）の仕組みを理解する手助けをしてください。
+DOM Manipulation: DOM操作
+DOM Manipulation description: >-
+  JavaScriptを使用したDOM（Document Object
+  Model）の操作方法（要素の選択、コンテンツの変更、イベントの処理）について学習を支援してください。
+Debugging JavaScript: JavaScriptのデバッグ
+Debugging JavaScript description: JavaScriptコードにトラブルがあります。デバッグを手伝い、エラーについて説明してください。
+Building a Simple Web App: シンプルなウェブアプリ開発
+Building a Simple Web App description: HTML、CSS、JavaScriptを使用したシンプルなWebアプリケーションの構築プロセスを段階的に説明しながら穴埋め問題を出してください。
+Learning Python: Python学習
+Learning Python description: Pythonの初心者です。基本的な文法、データ型、制御構造を含む、言語の優しい入門を提供してください。
+Object-Oriented Programming: オブジェクト指向プログラミング
+Object-Oriented Programming description: Pythonを使用したオブジェクト指向プログラミング（OOP）の概念（クラス、オブジェクト、継承、ポリモーフィズム）を説明してください。
+Data Visualization with Python: Pythonでデータ可視化
+Data Visualization with Python description: >-
+  MatplotlibやPlotlyなどのPythonライブラリを使用した基本的なデータ可視化（折れ線グラフ、散布図、棒グラフなど）の作成方法を学ばせてください。
+Wireframing a Mobile App: モバイルアプリのワイヤーフレーム
+Wireframing a Mobile App description: 毎日の水分摂取量を記録するための新しいモバイルアプリの低忠実度ワイヤーフレームを作成してください。
+Designing a Landing Page: ランディングページのデザイン
+Designing a Landing Page description: コンバージョン最適化のベストプラクティスに従って、SaaS製品のモダンで視覚的に魅力的なランディングページをデザインしてください。
+Improving User Experience: ユーザー体験の改善
+Improving User Experience description: 既存のECサイトのユーザー体験を分析し、改善のための提案を行ってください。
+Creating a Design System: デザインシステムの作成
+Creating a Design System description: コンポーネント、パターン、デザイントークンを含む、大規模エンタープライズアプリケーション向けの包括的なデザインシステムを開発してください。
+Accessibility Evaluation: アクセシビリティ評価
+Accessibility Evaluation description: Webアプリケーションのユーザーインターフェースをレビューし、障害を持つユーザーのためにアクセシビリティを改善できる箇所を特定してください。
+Prototyping an Interface: インターフェースのプロトタイピング
+Prototyping an Interface description: プロジェクト管理ツールの新機能のために、使いやすさと直感的な操作に重点を置いたインタラクティブなプロトタイプを作成してください。
+Design Handoff: デザインの引き渡し
+Design Handoff description: 新機能のデザイン仕様とアセットを準備し、開発チームへのスムーズな引き渡しを確保してください。
+Design Trend Research: デザイントレンド調査
+Design Trend Research description: 最新のデザイントレンドを調査し、今後の製品リデザインにどのように取り入れるかの提案を行ってください。
+request error: Bedrock との通信でエラーが発生しました。しばらく待ってからもう一度お試しください。
+system prompt: システムプロンプト
+agent description: ソフトウェアプロジェクトの構造を理解し、ファイルとフォルダーを作成します
+no project path: プロジェクトパスが設定されていません
+loading: 読み込み中...
+select project: プロジェクトを選択
+send message: メッセージを送信
+tool settings: ツール設定
+agent chat: エージェントチャット
+agent settings: エージェント設定
+system prompt caption: システムプロンプトは、エージェントの振る舞いや応答方法を定義します。
+tool setting: ツール設定
+ignore file settings: 除外ファイル設定
+Thought process: 思考プロセス
+thinking: 思考中...
+Stop generation: 生成を停止
+Clear chat: チャットをクリア
+Generation stopped: 生成を停止しました
+confirmClearChat: チャットをクリアしてもよろしいですか？
+Are you sure you want to delete this message?: このメッセージを削除してもよろしいですか？
+Message copied to clipboard: メッセージをクリップボードにコピーしました
+Message deleted successfully: メッセージを削除しました
+Failed to copy message: メッセージのコピーに失敗しました
+Click for options: オプションを表示
+Copy to clipboard: クリップボードにコピー
+Delete message: メッセージを削除
+Toggle chat history: チャット履歴の表示/非表示
+Cache Usage: キャッシュ使用状況
+Cache Read: キャッシュから読取
+Cache Write: キャッシュへ書込
+Cache hit detected!: キャッシュヒットを検出!
+New cache created: 新しいキャッシュを作成
+'Cache hit: {{percent}}% of tokens from cache': 'キャッシュヒット: トークンの{{percent}}%がキャッシュから取得されました'
+Token Usage: トークン使用量
+Cost: コスト
+Session Cost: セッションコスト
+No metadata available: メタデータがありません
+Performance: パフォーマンス
+Latency: レイテンシ
+Input: 入力
+Output: 出力
+Total: 合計
+Trace: トレース
+Performance Config: パフォーマンス設定
+Chat History: チャット履歴
+Edit title: 名前を変更する
+Delete: 削除する
+No chat history: チャット履歴はありません
+Generate title: 名前を生成する
+Generate All Titles: 全ての名前を生成する
+Delete All: 全て削除する
+Available Tools: 利用可能なツール
+Choose the tools: AIアシスタントで使用するツールを選択してください
+Tool Details: ツールの詳細
+Example: 使用例
+Tip: ヒント
+Select a tool from the list: リストからツールを選択してください
+Click on any tool to view details and configuration options: ツールをクリックすると詳細と設定オプションが表示されます
+MCP tool from Model Context Protocol server: Model Context Protocol サーバーからのMCPツール
+MCP tools available from configured servers: 設定済みサーバーからのMCPツールが利用可能
+From: 提供元
+MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.: MCPサーバーは設定されていますが、利用可能なツールがありません。MCPサーバーが実行中で、ツールを提供していることを確認してください。
+No MCP servers configured for this agent. Configure MCP servers in the MCP Servers tab to use MCP tools.: このエージェントにはMCPサーバーが設定されていません。MCPツールを使用するには、MCPサーバータブでMCPサーバーを設定してください。
+Configured MCP Servers: 設定済みMCPサーバー
+Information: 情報
+Warning: 警告
+Global Settings: グローバル設定
+Agent Specific Settings: エージェント固有設定
+Global tool settings will be used as default for all agents: グローバルツール設定はすべてのエージェントのデフォルトとして使用されます
+specific tool settings: 固有のツール設定
+Select an agent first to edit agent-specific settings: エージェント固有の設定を編集するには、まずエージェントを選択してください
+Using Global Tool Settings: グローバルツール設定を使用中
+This agent will use the global tool settings. To customize tools for this agent specifically, select "Agent Specific Settings" above.: このエージェントはグローバルツール設定を使用します。このエージェント固有のツールをカスタマイズするには、上の「エージェント固有設定」を選択してください。
+Tavily Search API Settings: Tavily Search API設定
+About Tavily Search: Tavily Searchについて
+You need a Tavily Search API key to use this feature. Get your API key at: この機能を使用するにはTavily Search APIキーが必要です。APIキーの取得は
+Tavily Search allows the AI assistant to search the web for current information, providing better responses to queries about recent events, technical documentation, or other information that may not be in its training data.: >-
+  Tavily
+  SearchはAIアシスタントがWeb上の最新情報を検索できるようにし、最近のイベント、技術文書、またはトレーニングデータに含まれていない可能性のある情報に関する質問に対して、より良い回答を提供します。
+Save: 保存
+Cancel: キャンセル
+Agent ID: エージェントID
+Alias ID: エイリアスID
+Command Shell: コマンドシェル
+Command Shell Settings: コマンドシェル設定
+Command Pattern: コマンドパターン
+Add Command: コマンドを追加
+Allowed Command Patterns: 許可されたコマンドパターン
+No command patterns registered yet: まだコマンドパターンが登録されていません
+Select which shell to use when executing commands: コマンド実行時に使用するシェルを選択してください
+Add New Command Pattern: 新しいコマンドパターンを追加
+Use * as a wildcard (e.g., "npm *" allows all npm commands): 'ワイルドカード * を使用できます（例: "npm *" はすべての npm コマンドを許可）'
+Description: 説明
+Add Knowledge Base: ナレッジベースを追加
+Knowledge Base ID: ナレッジベースID
+Registered Knowledge Bases: 登録済みナレッジベース
+No knowledge bases registered yet: まだナレッジベースが登録されていません
+Tool Categories:
+  File System: ファイルシステム
+  Web & Search: ウェブ＆検索
+  AI Services: AIサービス
+  System: システム
+  Thinking: 思考
+  File System Description: ファイルやディレクトリを管理するツール
+  Web & Search Description: ウェブリソースを操作するツール
+  AI Services Description: AWS AIサービスを利用するツール
+  System Description: システムと連携するツール
+  Thinking Description: 拡張された推論と複雑な問題解決のためのツール
+tool descriptions:
+  createFolder: プロジェクトに新しいディレクトリを作成
+  writeToFile: ファイルの内容を作成または更新
+  readFile: ファイルの内容を読み取り
+  readFiles: 複数ファイルの内容を読み取り
+  listFiles: ディレクトリ構造を表示
+  moveFile: ファイルを別の場所に移動
+  copyFile: ファイルの複製を作成
+  tavilySearch: Web上の情報を検索
+  fetchWebsite: Webサイトのコンテンツを取得して分析
+  generateImage: LLMを使用して画像を生成
+  recognizeImage: LLMの視覚機能を使用して画像を分析・説明
+  retrieve: Amazon Bedrock Knowledge Base へのクエリ
+  invokeBedrockAgent: Amazon Bedrock Agent を実行
+  executeCommand: ワイルドカードをサポートする許可されたコマンドを実行
+  applyDiffEdit: ファイルに対して部分的な更新を適用
+  think: AIが複雑なステップバイステップの思考を実行
+tool info:
+  retrieve:
+    description: retrieve ツールを使用すると、AIアシスタントはAmazon Bedrock Knowledge Basesから情報を検索して取得できます。
+    about title: ナレッジベースについて
+    about description: >-
+      Amazon Bedrock Knowledge
+      Basesを使用すると、企業データを基盤モデルに接続し、AIが独自のドキュメントや情報源に基づいた回答を提供できるようになります。
+  invokeBedrockAgent:
+    description: >-
+      invokeBedrockAgent ツールを使用すると、AIアシスタントはカスタムAmazon Bedrock
+      Agentと連携して、専門的なタスクを実行できます。
+    about title: Bedrock Agentsについて
+    about description: >-
+      Amazon Bedrock
+      Agentsを使用すると、データソースから情報を取得し、データを処理し、タスクを完了するためのアクションを実行するAIエージェントを構築できます。エージェントはシステムやAPIに接続して、旅行の予約、注文の処理、データベースのクエリなどのアクションを実行できます。
+  tavilySearch:
+    description: >-
+      Tavily
+      SearchはAIアシスタントがWeb上の最新情報を検索できるようにし、最近のイベント、技術文書、またはトレーニングデータに含まれていない可能性のある情報に関する質問に対して、より良い回答を提供します。
+    about title: Tavily Search APIについて
+    about description: >-
+      TavilyはLLM向けに特化したAI検索APIを提供しており、エージェントが最新情報をWeb上で検索できるようにします。このAPIはWeb全体から関連情報を返し、AIアシスタントはその情報を利用して回答の質を向上させることができます。
+  executeCommand:
+    description: >-
+      executeCommand
+      ツールを使用すると、AIアシスタントがローカルマシンでシステムコマンドを実行できるようになります。これは強力な機能ですが、セキュリティのための注意深い設定が必要です。
+    warning title: セキュリティ面での配慮
+    warning description: >-
+      信頼できる特定のコマンドパターンのみを許可してください。ワイルドカードは慎重に使用してください（例：ディレクトリ一覧表示を許可するための「ls
+      *」）。無制限のコマンド実行を許可すると、システムにセキュリティリスクが生じる可能性があります。
+    example title: 使用例
+    example description: >-
+      一般的に役立つパターンには「ls *」（ディレクトリ一覧表示）、「npm *」（npmコマンド実行）、「aws *」（AWS
+      CLIコマンド）、「curl *」（HTTPリクエスト作成）などがあります。AIはこれらのパターンにマッチするコマンドのみを実行できます。
+tool usage:
+  think:
+    description: >-
+      AIがコンテキストウィンドウを消費せずに複雑な推論ステップを実行できるようにします。このツールを使用すると、Claudeは難しい問題をステップバイステップで解決し、その思考プロセスと推論を詳細に示すことができます。
+    tip: >-
+      AIに複雑な問題の解決、難しい問題のデバッグ、または推論プロセスの詳細な説明を提供してもらいたい場合に有効にしてください。Claude 3.7
+      Sonnetでのみ利用可能です。
+  recognizeImage:
+    description: AIが画像を分析して説明できるようにします。視覚的なコンテンツの理解、画像からのテキスト抽出、写真内のオブジェクトやシーンの識別に最適です。
+    tip: >-
+      画像コンテンツを扱う必要がある場合や、AIに視覚的情報の詳細な説明を提供してもらいたい場合に使用します。JPEG、PNG、GIF、WebPなどの一般的な画像形式をサポートしています。
+  createFolder:
+    description: >-
+      AIが自動的にプロジェクト構造をセットアップできるようにします。新規プロジェクトの開始、テンプレートディレクトリの作成、手動でフォルダを作成することなくワークスペースを整理するのに最適です。
+    tip: 標準化されたプロジェクト構造の作成やアプリケーションのスキャフォールディングをAIに行わせたい場合に有効にしてください。
+  writeToFile:
+    description: >-
+      AIがコード、ドキュメント、またはテキストコンテンツを生成してファイルに直接保存できるようにします。コード生成、設定ファイルのセットアップ、ドキュメント作成タスクに理想的です。
+    tip: >-
+      AIに生成したコンテンツでファイルを作成または更新させたい場合に有効にしてください。プロジェクトの初期化、ボイラープレートコードの作成、ドキュメント作成などに最適です。
+  readFiles:
+    description: AIがプロジェクトファイルを分析できるようにします。コードレビュー、デバッグ、既存のコードベースの理解、複雑なファイル構造の解析に不可欠です。
+    tip: AIに既存のコードやドキュメントを理解させ、文脈に沿ったアシスタンスや改善提案を得たい場合にこのツールを有効にしてください。
+  listFiles:
+    description: >-
+      AIがすべてのファイルとディレクトリを見ることでプロジェクト構造を理解できるようにします。プロジェクト分析、依存関係のマッピング、複雑なプロジェクトの概要把握に最適です。
+    tip: >-
+      AIにプロジェクトの整理、アーキテクチャレビュー、または特定のファイル内容を表示せずに複雑なディレクトリ構造を理解させたい場合に使用します。コーディングエージェント以外のほとんどのAIエージェントの実装においてファイルベースな処理を行う場合はまず最初にこの
+      listFiles ツールを実行させることを推奨します。
+  moveFile:
+    description: AIにプロジェクトファイルの再編成を可能にします。コードリファクタリング、プロジェクトの再構築、手動でのファイル移動が必要な作業の自動化に最適です。
+    tip: プロジェクトの再構築やディレクトリ間でファイルを移動する必要のあるアーキテクチャ変更の実装を支援してもらいたい場合に有効にしてください。
+  copyFile:
+    description: >-
+      AIに既存ファイルの複製を作成させることができます。編集前のバックアップ作成、テンプレートバリエーションの生成、既存ファイルに基づくテストフィクスチャの設定に役立ちます。
+    tip: リスクの高い変更前にAIにバックアップを作成させたい場合や、設定ファイルを微妙に変更してバリエーションを作りたい場合に使用します。
+  applyDiffEdit:
+    description: >-
+      AIがファイルの他の部分に影響を与えることなく、特定の部分に正確な変更を加えることを可能にします。ピンポイントのコード変更、リファクタリング、既存コードへの機能追加に最適です。
+    tip: >-
+      精密なコード編集、リファクタリング作業、または動作中のコードに最小限の変更を加えたい場合に有効にしてください。ファイル全体の置き換えよりも安全でトークン数を節約する効果があります。
+  tavilySearch:
+    description: AIがWeb上で最新情報を検索できるようにします。調査タスク、最新の解決策によるトラブルシューティング、最新の開発動向に関する情報収集に不可欠です。
+    tip: AIにレスポンスに最新情報を取り入れさせたい場合や、情報を最新の情報源で検証する必要がある場合に使用します。特に技術的な質問に対して価値があります。
+  fetchWebsite:
+    description: >-
+      AIが特定のWeb上のコンテンツを取得・分析できるようにします。ウェブサイトからのデータ抽出、ドキュメントの分析、オンラインリソースをワークフローの一部として活用するのに最適です。
+    tip: >-
+      特定のオンラインリソース、ドキュメントサイト、または現在のタスクに価値があるウェブベースのデータをAIに操作させる必要がある場合に有効にしてください。
+  generateImage:
+    description: >-
+      AIがあなたの説明に基づいてカスタム画像を作成できるようにします。デザインモックアップ、UI要素、概念図、紙芝居、商品画像、マーケティングコンテンツなど、幅広い用途に活用できます。Stability
+      AIやAmazon Titan画像生成モデルなどが利用可能です。
+    tip: >-
+      プロジェクトの視覚的要素が必要な場合、UIデザインを素早くプロトタイプ化したい場合、または実装前にコンセプトを視覚化する必要がある場合に使用してください。
+  retrieve:
+    description: >-
+      AIが組織のナレッジベースにアクセスできるようにします。企業固有の情報、社内ドキュメント、オンラインでは広く入手できない専門知識へのアクセスに不可欠です。Knowledge
+      Base に事前にデータを保存しておく必要があります。
+    tip: AIに専門のナレッジベース、社内ドキュメント、特定分野の情報へのアクセスを与え、より関連性が高く、文脈を考慮した回答を得るために有効にしてください。
+  invokeBedrockAgent:
+    description: >-
+      AIを専門のBedrock
+      Agentsと接続し、データ分析、コード解釈、通常のチャット機能を超えるドメイン固有の操作など、複雑なタスクを実行できるようにします。Amazon
+      Bedrockで事前にエージェントを設定しておく必要があります。
+    tip: コード実行、データ分析、特定のツールを持つ専用エージェントが必要なドメイン固有の知識など、特殊な機能が必要な場合に使用してください。
+  executeCommand:
+    description: >-
+      AIにシステムコマンドを実行させて開発タスクを自動化できるようにします。ビルド操作、テスト、デプロイタスク、またはコマンドラインを使用する一般的なワークフローに最適です。
+    tip: >-
+      AIにDevOpsタスク、テスト実行、プロジェクトのビルド、または繰り返しのコマンドライン操作の自動化を支援させたい場合に有効にしてください。セキュリティのため、事前に承認されたコマンドパターンのみが許可されています。
+guardrail.intervention: Guardrail による介入を検出しました
+Analyzed image: 解析された画像
+Image Analysis: 画像解析結果
+Analyzed with: 使用モデル
+Image Recognition Settings: 画像認識設定
+Select which model to use for image recognition tasks: 画像認識タスクに使用するモデルを選択してください
+Recognition Model: 認識モデル
+Only Claude models with vision capabilities are supported: ビジョン機能を持つClaudeモデルのみがサポートされています
+About Image Recognition: 画像認識について
+Image recognition uses Claude's vision capabilities to analyze and describe images. The selected model will be used when you run the recognizeImage tool.: 画像認識はClaudeのビジョン機能を使用して画像を分析・説明します。選択したモデルはrecognizeImageツールを実行する際に使用されます。
+textarea:
+  placeholder: メッセージを入力、または画像を追加 ({{modifier}}+V / ドロップ)
+  imageValidation:
+    tooLarge: '画像が大きすぎます (上限: 3.75MB)'
+    dimensionTooLarge: '画像サイズが大きすぎます (上限: 8000px)'
+    tooManyImages: 画像は最大20枚までです
+    unsupportedFormat: '未対応の画像形式です: {{format}}'
+  aria:
+    removeImage: 画像を削除
+    sendMessage: メッセージを送信
+    sending: 送信中...
+ignoreFiles:
+  title: 無視ファイル設定
+  description: 以下に記載されたファイルやフォルダは、各種ツールによる読み込みから除外されます。各ファイルやフォルダを1行ずつ入力してください。
+  placeholder: その他のファイル...
+  save: 保存
+addRecommend: 追加機能を検討中
+ecSiteTitle: 観葉植物のECサイト
+ecSiteValue: |
+  次の条件で、鉢植えの植物に特化した EC ウェブサイトの基本構造とレイアウトを作成してください。
+  <Conditions>
+  - レイアウトは Amazon.com のようなものにする。
+  - EC ウェブサイトの名前は "Green Village" とする。
+  - グリーンの配色テーマを使用する。
+  - 植物をカード形式で表示するセクションを追加する。
+  - ショッピングカートに追加する機能を作成する。
+  - 現在のショッピングカートの中身を確認し、合計金額を計算する機能を作成する。
+  </Conditions>
+ecSiteAdminTitle: ECサイトの管理画面
+ecSiteAdminValue: |-
+  以下の条件で、観葉植物を専門に取り扱うECサイトの管理画面を作ってください。
+  <条件>
+  - EC サイトの名前は「Green Village」です。
+  - グリーン系のカラーテーマにしてください。
+  - 直近の注文を表示するテーブルがあり、発注などのステータスを管理できます
+  - ダミーデータを表示してください
+  </条件>
+  前の出力に続けて、サイドバーナビゲーションを追加してください
+healthFitnessSiteTitle: フィットネスサイト
+healthFitnessSiteValue: |
+  次の条件で、健康とフィットネスのウェブサイトの基本構造とレイアウトを作成してください。
+  <Conditions>
+  - レイアウトは Amazon.com のようなものにする。
+  - ウェブサイトの名前は "FitLife" とする。
+  - 赤い配色テーマを使用する。
+  - 健康とフィットネスのブログを表示するセクションを追加する。
+  - キーワードで健康とフィットネスのコンテンツを検索する機能を作成する。
+  - ブログにコメントを追加する機能を作成する。
+  - 記事にはサムネイル画像をつける
+  </Conditions>
+drawingGraphTitle: グラフの描画
+drawingGraphValue: |-
+  ウェブサイト上で、次のデータをグラフで可視化してください。
+  購入データCSVファイル
+  customer_id,product_id,purchase_date,purchase_amount
+  C001,P001,2023-04-01,50.00
+  C002,P002,2023-04-02,75.00
+  C003,P003,2023-04-03,100.00
+  C001,P002,2023-04-04,60.00
+  C002,P001,2023-04-05,40.00
+  C003,P003,2023-04-06,90.00
+  C001,P001,2023-04-07,30.00
+  C002,P002,2023-04-08,80.00
+  C003,P001,2023-04-09,45.00
+  C001,P003,2023-04-10,120.00
+
+  このCSVファイルには以下の情報が含まれています。
+  - 'customer_id': 顧客 ID
+  - 'product_id': 製品 ID
+  - 'purchase_date': 購入日
+  - 'purchase_amount': 購入金額
+todoAppTitle: Todoアプリ
+todoAppValue: シンプルな Todo アプリのウェブサイトを作成してください。
+codeTransformTitle: コード変換
+codeTransformValue: >-
+  以下のコードを変換してください。
+
+
+  using Android.App;
+
+  using Android.OS;
+
+  using Android.Support.V7.App;
+
+  using Android.Runtime;
+
+  using Android.Widget;
+
+  using System.Data.SQLite;
+
+  using System;
+
+  using Xamarin.Essentials;
+
+  using System.Linq;
+
+  namespace App2
+
+  {
+
+  [Activity(Label = "@string/app_name", Theme = "@style/AppTheme", MainLauncher
+  = true)]
+
+  public class MainActivity : AppCompatActivity
+
+  {
+
+  protected override void OnCreate(Bundle savedInstanceState)
+
+  {
+
+  base.OnCreate(savedInstanceState);
+
+  Xamarin.Essentials.Platform.Init(this, savedInstanceState);
+
+  SetContentView(Resource.Layout.activity_main);
+
+  EditText input1 = FindViewById<EditText>(Resource.Id.Input1);
+
+  EditText input2 = FindViewById<EditText>(Resource.Id.Input2);
+
+  TextView total = FindViewById<TextView>(Resource.Id.Total);
+
+  Button totalButton = FindViewById<Button>(Resource.Id.TotalButton);
+
+  totalButton.Click += (sender, e) =>
+
+  {
+
+  total.Text = (int.Parse(input1.Text) +
+  int.Parse(input2.Text)).ToString("#,0");
+
+  }
+
+  }
+
+  public override void OnRequestPermissionsResult(int requestCode, string[]
+  permissions,
+
+  [GeneratedEnum] Android.Content.PM.Permission[] grantResults)
+
+  {
+
+  Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode,
+  permissions, grantResults);
+
+  base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+
+  }
+
+  }
+
+  }
+Standard permissions including streaming responses: Bedrock Engineer で使用している API の標準的なアクセス許可
+Close: 閉じる
+Use Recommended Policy for full feature access: すべての機能にアクセスするには推奨ポリシーを使用
+Copy: コピー
+For more information about IAM policies for Amazon Bedrock, visit the: Amazon Bedrock の IAM ポリシーの詳細については、以下を参照してください。
+Amazon Bedrock documentation: Amazon Bedrock のドキュメント
+notification:
+  title: 通知設定
+  description: チャットの応答に関するデスクトップ通知を設定します
+  enable: デスクトップ通知を有効にする
+  messages:
+    chatComplete:
+      title: タスクが完了しました 🎉
+      body: AIからの返信が届きました
+Use AWS Profile: AWS プロファイルを使用する
+Use credentials from ~/.aws: ~/.aws から認証情報を使用します
+AWS Profile Name: AWS プロファイル名
+Enable Region Failover on ThrottlingException: ThrottlingException 発生時に Region Failover を有効にする
+Failover Regions: Failover Regions
+Select regions to be used as failover targets when ThrottlingException occurs: >-
+  ThrottlingException
+  発生時に使用するフェイルオーバー先のリージョンを選択してください。フェイルオーバー先のリージョンが複数選択されている場合、ランダムに採用されます。Amazon
+  Bedrock のマネジメントコンソールにてモデルアクセスの有効化を行ってください。
+Add a failover region: Failover Region を追加
+Amazon Bedrock Guardrails: Amazon Bedrock ガードレール
+Enable Guardrails: ガードレールを有効にする
+When enabled, guardrails will be applied to all model interactions to filter harmful content.: 有効にすると、すべてのモデル操作にガードレールが適用され、有害なコンテンツがフィルタリングされます。
+Guardrail Identifier: ガードレールID
+The ID of the guardrail you want to use: 使用するガードレールのID
+Guardrail Version: ガードレールバージョン
+The version of the guardrail (DRAFT or a version number): ガードレールのバージョン（DRAFTまたはバージョン番号）
+Enabled: 有効
+Disabled: 無効
+agentSettings.infoTitle: カスタムエージェントと共有エージェントの使い方
+agentSettings.description: >-
+  AIエージェントを作成・カスタマイズして、特定のタスクをサポートできます。既存のエージェントを編集したり、カスタマイズされたシステムプロンプト、機能を持つ新しいエージェントを作成したりできます。
+agentSettings.sharedAgentsDescription: >-
+  プロジェクト間でエージェントを共有するには、「共有ファイルとして保存」オプションを使用します。共有エージェントはプロジェクトディレクトリに保存でき、そのプロジェクトを開くと自動的に読み込まれます。共有エージェントの設定ファイルは
+  .bedrock-engineer/agents/ に保存されます。
+Basic Agent Settings: 基本設定
+Agent Tools: エージェントツール
+e.g., KB123456: '例: KB123456'
+e.g., Customer support knowledge base: '例: カスタマーサポートのナレッジベース'
+e.g., ls *: '例: ls *'
+e.g., List directory contents: '例: ディレクトリ内容を一覧表示'
+e.g., AGENT123456: '例: AGENT123456'
+e.g., ALIAS123456: '例: ALIAS123456'
+e.g., Code interpreter agent: '例: コードインタープリターエージェント'
+'ID:': 'ID:'
+'Agent ID:': 'エージェントID:'
+'Alias ID:': 'エイリアスID:'
+tools.category: プリセットされたカテゴリから選ぶ
+No tools in this category: このカテゴリにツールはありません
+Tool Categories.General Purpose: 一般目的
+Tool Categories.Software Development: ソフトウェア開発
+Tool Categories.Design & Creative: デザイン＆クリエイティブ
+Tool Categories.Data Analysis: データ分析
+Tool Categories.Business & Productivity: ビジネス＆生産性
+Tool Categories.Custom Configuration: カスタム設定
+Tool Categories.File System: ファイルシステム
+Tool Categories.File System Description: ファイルとディレクトリを管理するツール
+Tool Categories.Web & Search: Web＆検索
+Tool Categories.Web & Search Description: Webリソースとの連携ツール
+Tool Categories.AI Services: AIサービス
+Tool Categories.AI Services Description: AWS AIサービスを活用するツール
+Tool Categories.System: システム
+Tool Categories.System Description: システム連携ツール
+Tool Categories.Thinking: 思考
+Tool Categories.Thinking Description: 拡張された推論と複雑な問題解決のためのツール
+Tool Categories.MCP: MCP
+Tool Categories.MCP Description: Model Context Protocol ツール
+Tool Categories.All Configuration: 全て
+tools.description: このエージェントが使用できるツールを選択します。
+Tool Detail Settings: ツールの詳細設定
+Configure settings for enabled tools: 有効なツールの設定を構成する
+Tool Detail Settings Description: >-
+  このタブでは、特定のツールの詳細設定を行えます。ナレッジベース検索、コマンド実行、Bedrock
+  Agentの呼び出しなど、これらのツールが有効になっている場合に設定が可能です。
+No tools enabled. Enable tools in the Available Tools tab to configure them.: ツールが有効化されていません。「利用可能なツール」タブでツールを有効にして設定してください。
+Knowledge Base Settings: ナレッジベース設定
+Command Settings: コマンド設定
+Bedrock Agent Settings: Bedrock Agent設定
+When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.: 画像が処理されると、AIは物体、テキスト、シーン、その他の視覚要素を識別し、内容に基づいた詳細な説明を提供します。
+tool info.recognizeImage.description: >-
+  recognizeImageツールはAIのビジョン機能を使用して画像を分析・説明します。AIアシスタントが画像の内容を理解し、画像に表示されているものに基づいて関連する回答を提供するのに役立ちます。
+Configure knowledge bases for the retrieve tool: retrieve ツール用のナレッジベースを設定
+Configure allowed commands for the executeCommand tool: executeCommand ツール用の許可コマンドを設定
+Configure Bedrock Agents for the invokeBedrockAgent tool: invokeBedrockAgent ツール用の Bedrock Agent を設定
+No configurable tools enabled. Enable retrieve, executeCommand, or invokeBedrockAgent tools to access their configurations.: >-
+  設定可能なツールが有効になっていません。retrieve、executeCommand、または invokeBedrockAgent
+  ツールを有効にして設定にアクセスしてください。
+Configure which knowledge bases this agent can access.: このエージェントがアクセスできるナレッジベースを設定します。
+Add New Knowledge Base: 新しいナレッジベースを追加
+Available Knowledge Bases: 利用可能なナレッジベース
+Edit: 編集
+Edit knowledge base: ナレッジベースを編集
+Remove: 削除
+Remove knowledge base: ナレッジベースを削除
+Configure which system commands the agent is allowed to execute.: このエージェントが実行を許可されたシステムコマンドを設定します。
+Security Warning: セキュリティ警告
+Only allow commands that you trust this agent to execute. Use wildcards (*) to define patterns.: 信頼できるコマンドのみを許可してください。ワイルドカード(*)を使用してパターンを定義できます。
+Current Command Patterns: 現在のコマンドパターン
+Edit command: コマンドを編集
+Remove command: コマンドを削除
+Configure which Bedrock Agents this agent can access.: このエージェントがアクセスできる Bedrock Agent を設定します。
+Add New Bedrock Agent: 新しい Bedrock Agent を追加
+Add Agent: エージェントを追加
+Available Bedrock Agents: 利用可能な Bedrock Agent
+No Bedrock Agents registered yet: まだ Bedrock Agent が登録されていません
+Edit agent: エージェントを編集
+Remove agent: エージェントを削除
+descriptions:
+  createFolder: 指定したパスに新しいフォルダを作成
+  writeToFile: 既存のファイルにコンテンツを書き込み
+  readFiles: 複数ファイルの内容を読み取り
+  listFiles: ディレクトリ構造を一覧表示
+  moveFile: ファイルを別の場所に移動
+  copyFile: ファイルを別の場所にコピー
+  applyDiffEdit: ファイルに差分編集を適用
+  tavilySearch: Tavily APIを使用してWeb検索
+  fetchWebsite: 指定したURLからコンテンツを取得
+  generateImage: AIモデルを使用して画像を生成
+  recognizeImage: AIのビジョン機能を使用して画像を分析・説明
+  retrieve: ナレッジベースから情報を取得
+  invokeBedrockAgent: Amazon Bedrock Agentを呼び出し
+  executeCommand: コマンドを実行または実行中のプロセスに入力を送信
+Enable Prompt Cache: プロンプトキャッシュを有効にする
+Prompt Cache reduces token usage by caching parts of the conversation: プロンプトキャッシュは会話の一部をキャッシュすることでトークン使用量を削減します
+Token Usage Analytics: トークン使用量分析
+Session Summary: セッション概要
+Cost Analysis: コスト分析
+Total Tokens: 合計トークン数
+Total Cost: 合計コスト
+Model: モデル
+Messages: メッセージ数
+Input Tokens: 入力トークン
+Output Tokens: 出力トークン
+Cache Read Tokens: キャッシュ読取トークン
+Cache Write Tokens: キャッシュ書込トークン
+Input Cost: 入力コスト
+Output Cost: 出力コスト
+Cache Read Cost: キャッシュ読取コスト
+Cache Write Cost: キャッシュ書込コスト
+No token usage data available: トークン使用量データがありません
+No cost data available: コストデータがありません
+'Note: Token usage and cost calculations are estimates based on the available metadata.': '注: トークン使用量とコスト計算は利用可能なメタデータに基づく推定値です。'
+View Token Analytics: トークン分析を表示
+Summary: 概要
+Time Series Analysis: 時系列分析
+Token Usage Over Time: 時間経過によるトークン使用量
+Cost Analysis Over Time: 時間経過によるコスト分析
+No time series data available: 時系列データがありません
+Token Usage Trend: トークン使用量の推移
+Cost Trend: コスト推移
+Cumulative Usage: 累積使用量
+Average Tokens per Message: メッセージあたりの平均トークン数
+Average Cost per Message: メッセージあたりの平均コスト
+Token Usage Efficiency: トークン使用効率
+Cache Efficiency: キャッシュ効率
+Saved approximately {{amount}} by using prompt cache: プロンプトキャッシュを利用したことで約 {{amount}} 削減しました
+settings.lightModel.title: 軽量処理用モデル
+settings.lightModel.description: チャットタイトル生成などの軽微な処理に使用するモデルを選択します。
+settings.lightModel.useMain: メイン会話モデルを使用
+settings.lightModel.info: これらのタスクに小さなモデルを使用すると、コストとレイテンシを削減できます。
+awsDiagramGenerator: AWS ダイアグラムジェネレーター
+generatingRecommendations: レコメンデーションを生成中...
+awsLibraries: AWSライブラリ
+serverlessArchitectureTitle: Serverless API
+serverlessArchitectureValue: API Gateway、Lambda、DynamoDBを使用したRESTful APIのサーバーレスアーキテクチャを作成する
+microservicesTitle: マイクロサービス
+microservicesValue: ECS、API Gateway、DynamoDBを使用したサービスディスカバリー付きのマイクロサービスアーキテクチャを設計する
+webHostingTitle: Website Hosting
+webHostingValue: S3、CloudFront、Route 53、WAFを使用したスケーラブルなWebホスティングアーキテクチャを作成する
+dataLakeTitle: データレイク
+dataLakeValue: S3、Glue、Athena、QuickSightを使用した分析用のデータレイクアーキテクチャを設計する
+containerizedAppTitle: コンテナアプリ
+containerizedAppValue: ロードバランシングと自動スケーリングを備えたEKSベースのコンテナ化アプリケーションアーキテクチャを作成する
+hybridConnectivityTitle: ハイブリッドネットワーク
+hybridConnectivityValue: Direct ConnectとVPNを使用したオンプレミスとAWS間のハイブリッド接続アーキテクチャを設計する
+sequenceDiagramTitle: シーケンス図
+sequenceDiagramValue: ユーザー登録と認証フローにおけるユーザー、フロントエンド、APIサービス、データベース間の相互作用を示すシーケンス図を作成する
+userStoryMapTitle: ユーザーストーリーマップ
+userStoryMapValue: 商品発見から購入完了、注文追跡までの顧客の旅を示すEコマースモバイルアプリのためのユーザーストーリーマップを設計する
+Thinking Mode: 拡張思考モード
+Enable Thinking Mode: 拡張思考モードを有効化
+Thinking Budget: 思考トークン予算
+None (0 tokens): 拡張思考なし (0 トークン)
+Quick (1K tokens): クイック (1K トークン)
+Normal (4K tokens): 通常 (4K トークン)
+Deep (16K tokens): 深い思考 (16K トークン)
+Deeper (32K tokens): より深い思考 (32K トークン)
+The think tool gives the AI a dedicated space to reason through complex problems during a conversation, without changing data or fetching new information.: 思考ツールは、AIが会話中に複雑な問題を推論するための専用スペースを提供し、データを変更したり新しい情報を取得したりすることなく思考できます。
+Available only with Claude 3.7 Sonnet.: Claude 3.7 Sonnetのみで利用可能です。
+thinkingMode.none: 拡張思考なし (0 トークン)
+thinkingMode.quick: クイック (1K トークン)
+thinkingMode.normal: 通常 (4K トークン)
+thinkingMode.deep: 深い思考 (16K トークン)
+thinkingMode.deeper: より深い思考 (32K トークン)
+thinkingMode.title: 思考モード予算
+think.tool: 思考ツール
+think.tool.description: 思考ツールは複雑な問題をステップバイステップで解決するのに役立ちます
+Thinking Mode Settings: 拡張思考モード設定
+Think Tool: 思考ツール
+How to use: 使い方
+Model Not Supported: モデル非対応
+The current model does not support thinking mode. Please switch to Claude 3.7 Sonnet to use this feature.: 現在のモデルは拡張思考モードをサポートしていません。この機能を使用するにはClaude 3.7 Sonnetに切り替えてください。
+Higher token budgets allow for more complex reasoning but may increase response time.: トークン予算を増やすとより複雑な推論が可能になりますが、応答時間が長くなる場合があります。
+The think tool provides a dedicated space for the AI to stop and think during complex tasks. It helps the AI analyze information, plan next steps, and make better decisions without changing any data or fetching new information. Especially useful for multi-step problems and policy compliance.: >-
+  思考ツールは、AIが複雑なタスク中に立ち止まって考えるための専用スペースを提供します。データを変更したり新しい情報を取得したりせずに、情報を分析し、次のステップを計画し、より良い決定を下すのに役立ちます。特に複数ステップの問題やポリシー遵守に有効です。
+Especially useful for multi-step problems and policy compliance. The AI will automatically use this tool when needed for complex reasoning.: 特に複数ステップの問題やポリシー遵守に有効です。AIは複雑な推論が必要な場合、自動的にこのツールを使用します。
+title: Agent Directory
+description: コントリビューターによって作成されたエージェントを閲覧し、コレクションに追加できます
+addAgent: 追加する
+viewDetails: 詳細を見る
+authorLabel: 作成者
+systemPromptLabel: System Prompt
+toolsLabel: Tools
+mcpServersLabel: MCPサーバー
+close: 閉じる
+scenariosLabel: Scenario
+addToMyAgents: マイエージェントに追加
+agentAddedSuccess: 追加しました
+agentAddedError: 追加エラー
+loadingAgents: エージェントを読み込み中...
+noAgentsFound: エージェントが見つかりませんでした
+retryButton: 再試行
+contributor:
+  tooltip: コントリビューターになる
+  title: Agent Directory のコントリビューターになる
+  subtitle: あなたのカスタムエージェントをコミュニティと共有しましょう
+  steps: 'コントリビュート方法:'
+  step1: カスタムエージェントを共有ファイルとしてエクスポートする
+  step2: 'YAMLファイルをこのディレクトリに保存する:'
+  step3: '作者としてGitHubのユーザー名を追加する（推奨）:'
+  step4: プルリクエストを送信するか、YAMLファイルを添付してGitHub Issueを開く
+  submitOptions: 送信オプション
+  prOption: プルリクエストで送信（開発者向け）
+  prDescription: リポジトリをフォークし、エージェントファイルを追加して、プルリクエストを送信します。
+  viewRepo: リポジトリを表示
+  issueOption: GitHub Issueで送信（簡単な方法）
+  issueDescription: 事前入力されたIssueテンプレートを使用してエージェントを送信します。リポジトリ管理者が YAML ファイルを作成してコードベースに取り込みます。
+  createIssue: テンプレートでIssueを作成
+  githubIssue: GitHub Issueで送信する
+  copied: コピーしました！
+  copy: コピー
+Basic Settings: 基本設定
+MCP Servers: MCPサーバー
+Tools: ツール
+MCP Server Settings: MCPサーバー設定
+Configure MCP servers for this agent to use MCP tools.: このエージェントがMCPツールを使用するためのMCPサーバーを設定します。
+Register MCP servers first, then you can enable MCP tools in the Available Tools tab.: まずMCPサーバーを登録し、その後ツールタブでMCPツールを有効にできます。
+Add New MCP Server: 新しいMCPサーバーを追加
+Edit MCP Server: MCPサーバーを編集
+Server Configuration (JSON): サーバー設定（JSON）
+Add Server: サーバーを追加
+Update Server: サーバーを更新
+Registered MCP Servers: 登録済みMCPサーバー
+No MCP servers registered yet: まだMCPサーバーが登録されていません
+Required fields are missing or invalid. Check the JSON format.: 必須フィールドが不足しているか無効です。JSONフォーマットを確認してください。
+The "env" field must be an object.: '"env"フィールドはオブジェクト型である必要があります。'
+A server with this name already exists.: この名前のサーバーは既に存在します。
+Invalid JSON format.: JSONフォーマットが無効です。
+No valid server configurations found: 有効なサーバー設定が見つかりませんでした
+Sample Config: 設定サンプル
+Export Current Config: 現在の設定をエクスポート
+Use claude_desktop_config.json format with mcpServers object containing server configurations.: mcpServersオブジェクトを含むclaude_desktop_config.json形式を使用してください。
+'Invalid format: Must use claude_desktop_config.json format with mcpServers object': '無効な形式: mcpServersオブジェクトを含むclaude_desktop_config.json形式を使用してください'
+When editing, please include exactly one server in mcpServers: 編集時には、mcpServersに正確に1つのサーバーを含めてください
+Test Connection: 接続テスト
+Test All Servers: 全サーバーをテスト
+Testing...: テスト中...
+Connection Status: 接続状態
+success: 成功
+failed: 失敗
+total: 合計
+Clear Results: 結果をクリア
+Connection Successful: 接続成功
+Connection Failed: 接続失敗
+tools available: ツールが利用可能
+Startup time: 起動時間
+Solution: 解決策
+Plan mode - Read-only tools enabled: プランモード - 読み取り専用ツールのみ有効
+Act mode - All tools enabled: アクトモード - すべてのツールが有効
+Plan mode - Read-only tools enabled (⌘+Shift+A): プランモード - 読み取り専用ツールのみ有効 (⌘+Shift+A)
+Plan mode - Read-only tools enabled (Ctrl+Shift+A): プランモード - 読み取り専用ツールのみ有効 (Ctrl+Shift+A)
+Act mode - All tools enabled (⌘+Shift+A): アクトモード - すべてのツールが有効 (⌘+Shift+A)
+Act mode - All tools enabled (Ctrl+Shift+A): アクトモード - すべてのツールが有効 (Ctrl+Shift+A)
+Switched to Plan mode: プランモードに切り替えました
+Switched to Act mode: アクトモードに切り替えました

@@ -25,7 +25,8 @@
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "electron-vite build && electron-builder --mac --universal",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:linux": "electron-vite build && electron-builder --linux",
+    "migrate-i18n-to-yaml": "ts-node -P ./tsconfig.scripts.json scripts/migrate-translations-to-yaml.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock": "^3.782.0",
@@ -53,6 +54,8 @@
     "flowbite-react": "0.10.1",
     "framer-motion": "11.3.29",
     "i18next": "23.15.0",
+    "i18next-http-backend": "^3.0.2",
+    "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
     "lottie-react": "2.4.0",
     "mermaid": "11.1.1",
@@ -95,6 +98,7 @@
     "electron-builder": "24.13.3",
     "electron-vite": "3.1.0",
     "eslint": "8.57.0",
+    "eslint-plugin-i18nhelper": "file:packages/eslint-plugin-i18nhelper",
     "eslint-plugin-react": "7.34.3",
     "jest": "29.7.0",
     "postcss": "8.4.41",
@@ -103,6 +107,7 @@
     "react-dom": "18.3.1",
     "tailwindcss": "3.4.10",
     "ts-jest": "29.2.4",
+    "ts-node": "^10.9.2",
     "typescript": "5.5.2",
     "vite": "^6.3.4"
   },

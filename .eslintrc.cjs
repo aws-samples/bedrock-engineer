@@ -6,6 +6,7 @@ module.exports = {
     '@electron-toolkit/eslint-config-ts/recommended',
     '@electron-toolkit/eslint-config-prettier'
   ],
+  plugins: ['i18nhelper'],
   settings: {
     react: {
       version: 'detect' // React のバージョンを自動検出
@@ -19,6 +20,7 @@ module.exports = {
       { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
     ],
     'react/prop-types': 'off',
-    'no-control-regex': 0
+    'no-control-regex': 0,
+    'i18nhelper/no-jp-string': 'warn'
   }
 }

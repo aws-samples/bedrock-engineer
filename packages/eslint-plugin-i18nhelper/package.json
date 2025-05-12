@@ -1,0 +1,27 @@
+{
+  "name": "eslint-plugin-i18nhelper",
+  "version": "1.0.0",
+  "description": "ESLint plugin to detect Japanese strings in code",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "i18n"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "eslint": ">=8.0.0",
+    "@typescript-eslint/utils": ">=4.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/utils": "5.59.11",
+    "eslint": "8.42.0",
+    "typescript": "5.0.4"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["*", "./src/*"]
+    }
+  },
+  "include": ["scripts/**/*"],
+  "ts-node": {
+    "transpileOnly": true
+  }
+}
