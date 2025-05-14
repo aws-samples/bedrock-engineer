@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/aws-samples-bedrock-engineer-badge.png)](https://mseep.ai/app/aws-samples-bedrock-engineer)
+
 Language: [English](./README.md) / [Japanese](./README-ja.md)
 
 > [!IMPORTANT]
