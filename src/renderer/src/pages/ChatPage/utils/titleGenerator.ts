@@ -41,7 +41,8 @@ export async function generateSessionTitle(
       modelId: modelId ?? 'anthropic.claude-3-haiku-20240307-v1:0',
       system,
       inferenceConfig: {
-        maxTokens: 4096,
+        // Claude 3.7 Sonnetの場合、thinking.budget_tokensより大きい値を設定
+        maxTokens: modelId?.includes('claude-3-7-sonnet') ? 32768 : 4096,
         temperature: 0.5
       },
       messages: [
