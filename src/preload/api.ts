@@ -1,6 +1,6 @@
 import { Message, ToolConfiguration, ApplyGuardrailRequest } from '@aws-sdk/client-bedrock-runtime'
 import { ipcRenderer } from 'electron'
-import { executeTool } from './tools/tools'
+import { executeTool } from './tools'
 import { store } from './store'
 import { BedrockService } from '../main/api/bedrock'
 import { getMcpToolSpecs, testMcpServerConnection, testAllMcpServerConnections } from './mcp'
