@@ -58,13 +58,6 @@ export const SpeakPage: React.FC = () => {
     isConnected && (status === 'ready' || status === 'connected') && !isRecording
   const canStopRecording = isRecording
 
-  // // Show chat when there are messages
-  // useEffect(() => {
-  //   if (chat.history.length > 0 && !showChat) {
-  //     setShowChat(true)
-  //   }
-  // }, [chat.history.length, showChat])
-
   if (showChat) {
     // Show full chat interface when needed
     return (
