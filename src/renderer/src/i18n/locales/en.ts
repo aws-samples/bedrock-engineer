@@ -310,7 +310,32 @@ const en = {
   ...thinkingMode.en,
   ...agentDirectory.en,
   ...AgentFormTabs,
-  ...planActMode.en
+  ...planActMode.en,
+  // ApplyDiffEdit UI translations
+  'File Diff': 'File Diff',
+  'Original text copied to clipboard': 'Original text copied to clipboard',
+  'Updated text copied to clipboard': 'Updated text copied to clipboard',
+  'Failed to copy text': 'Failed to copy text',
+  'File path copied to clipboard': 'File path copied to clipboard',
+  'Failed to copy file path': 'Failed to copy file path',
+  Original: 'Original',
+  Updated: 'Updated',
+  Changed: 'Changed',
+  lines: 'lines',
+  'Copy Original': 'Copy Original',
+  'Copy Updated': 'Copy Updated',
+  Collapse: 'Collapse',
+  Expand: 'Expand',
+  'Diff Edit Failed': 'Diff Edit Failed',
+  'An error occurred while applying the diff': 'An error occurred while applying the diff',
+  'No Diff Data': 'No Diff Data',
+  'The diff operation completed but no result data is available':
+    'The diff operation completed but no result data is available',
+  'Diff Applied Successfully': 'Diff Applied Successfully',
+  'Change Summary': 'Change Summary',
+  Lines: 'Lines',
+  Characters: 'Characters',
+  'File Path': 'File Path'
 }
 
 export default en

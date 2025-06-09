@@ -336,7 +336,32 @@ const ja = {
   ...thinkingMode.ja,
   ...agentDirectory.ja,
   ...AgentFormTabs,
-  ...planActMode.ja
+  ...planActMode.ja,
+  // ApplyDiffEdit UI translations
+  'File Diff': 'ファイル差分',
+  'Original text copied to clipboard': '元のテキストをクリップボードにコピーしました',
+  'Updated text copied to clipboard': '更新されたテキストをクリップボードにコピーしました',
+  'Failed to copy text': 'テキストのコピーに失敗しました',
+  'File path copied to clipboard': 'ファイルパスをクリップボードにコピーしました',
+  'Failed to copy file path': 'ファイルパスのコピーに失敗しました',
+  Original: '変更前',
+  Updated: '変更後',
+  Changed: '変更',
+  lines: '行',
+  'Copy Original': '変更前をコピー',
+  'Copy Updated': '変更後をコピー',
+  Collapse: '折りたたむ',
+  Expand: '展開',
+  'Diff Edit Failed': '差分編集に失敗',
+  'An error occurred while applying the diff': '差分の適用中にエラーが発生しました',
+  'No Diff Data': '差分データがありません',
+  'The diff operation completed but no result data is available':
+    '差分操作は完了しましたが、結果データが利用できません',
+  'Diff Applied Successfully': '差分の適用が完了しました',
+  'Change Summary': '変更サマリー',
+  Lines: '行数',
+  Characters: '文字数',
+  'File Path': 'ファイルパス'
 }
 
 export default ja

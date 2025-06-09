@@ -8,6 +8,7 @@ import { BedrockAgentResult } from './BedrockAgent/BedrockAgentResult'
 import { RecognizeImageResult } from './RecognizeImage/RecognizeImageResult'
 import { CodeInterpreterResult } from './CodeInterpreter/CodeInterpreterResult'
 import { AsyncTaskCard, AsyncTaskInfo } from '../CodeInterpreter/AsyncTaskCard'
+import { ApplyDiffEditResult } from './ApplyDiffEdit/ApplyDiffEditResult'
 
 interface RetrieveResponse {
   success: boolean
@@ -129,6 +130,10 @@ export const JSONCodeBlock: React.FC<{ json: any }> = ({ json }) => {
         <CodeInterpreterResult response={json} />
       </div>
     )
+  }
+
+  if (json.name === 'applyDiffEdit') {
+    return <ApplyDiffEditResult result={json} />
   }
 
   const jsonStr = JSON.stringify(json, null, 2)
