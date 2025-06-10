@@ -9,6 +9,7 @@ import { Accordion } from 'flowbite-react'
 import { JSONCodeBlock } from '../CodeBlocks/JSONCodeBlock'
 import { TextCodeBlock } from '../CodeBlocks/TextCodeBlock'
 import { TaskListCard } from '../CodeInterpreter/TaskListCard'
+import { ErrorResult } from '../CodeBlocks/ErrorResult'
 import CodeRenderer from '../Code/CodeRenderer'
 import { toolIcons } from '../Tool/ToolIcons'
 import { FaCheck } from 'react-icons/fa'
@@ -251,8 +252,20 @@ export const ChatMessage = memo(function ChatMessage({
                         if ('text' in content) {
                           return <TextCodeBlock key={index} text={content.text ?? ''} />
                         } else if ('json' in content) {
-                          // Check if this is a TaskListResult from CodeInterpreter
                           const json = content.json
+
+                          // Check if this is a structured error result from BaseTool
+                          if (
+                            json &&
+                            typeof json === 'object' &&
+                            'success' in json &&
+                            'name' in json &&
+                            json.success === false
+                          ) {
+                            return <ErrorResult key={index} result={json as any} />
+                          }
+
+                          // Check if this is a TaskListResult from CodeInterpreter
                           if (
                             json &&
                             typeof json === 'object' &&
@@ -263,6 +276,7 @@ export const ChatMessage = memo(function ChatMessage({
                           ) {
                             return <TaskListCard key={index} result={json as any} />
                           }
+
                           return <JSONCodeBlock key={index} json={content.json} />
                         } else {
                           throw new Error('Invalid tool result content')

@@ -8,11 +8,7 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult, ListDirectoryOptions } from '../../base/types'
 import { ExecutionError } from '../../base/errors'
-import {
-  filterByLineRange,
-  getLineRangeInfo,
-  validateLineRange
-} from '../../../lib/line-range-utils'
+import { filterByLineRange, validateLineRange } from '../../../lib/line-range-utils'
 import GitignoreLikeMatcher from '../../../lib/gitignore-like-matcher'
 import { ToolResult } from '../../../../types/tools'
 
@@ -184,8 +180,6 @@ export class ListFilesTool extends BaseTool<ListFilesInput, ListFilesResult> {
 
       // Generate line range info (if specified)
       const lines = fileTree.split('\n')
-      const lineInfo = getLineRangeInfo(lines.length, options?.lines)
-      const finalStructure = `Directory Structure${lineInfo}:\n\n${filteredContent}`
 
       this.logger.info(`Directory structure listed successfully`, {
         dirPath,
@@ -199,7 +193,7 @@ export class ListFilesTool extends BaseTool<ListFilesInput, ListFilesResult> {
         message: `Successfully listed directory structure for: ${dirPath}`,
         result: {
           path: dirPath,
-          structure: finalStructure,
+          structure: filteredContent,
           totalLines: options?.lines ? undefined : lines.length,
           maxDepth: maxDepth === -1 ? undefined : maxDepth,
           ignorePatterns: ignoreFiles?.length || 0

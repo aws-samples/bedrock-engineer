@@ -9,6 +9,15 @@ import { RecognizeImageResult } from './RecognizeImage/RecognizeImageResult'
 import { CodeInterpreterResult } from './CodeInterpreter/CodeInterpreterResult'
 import { AsyncTaskCard, AsyncTaskInfo } from '../CodeInterpreter/AsyncTaskCard'
 import { ApplyDiffEditResult } from './ApplyDiffEdit/ApplyDiffEditResult'
+import {
+  CreateFolderResult,
+  WriteToFileResult,
+  ReadFilesResult,
+  ListFilesResult,
+  MoveFileResult,
+  CopyFileResult
+} from './FileSystemTools'
+import { FetchWebsiteResult } from './WebTools'
 
 interface RetrieveResponse {
   success: boolean
@@ -134,6 +143,36 @@ export const JSONCodeBlock: React.FC<{ json: any }> = ({ json }) => {
 
   if (json.name === 'applyDiffEdit') {
     return <ApplyDiffEditResult result={json} />
+  }
+
+  // File System Tools
+  if (json.name === 'createFolder') {
+    return <CreateFolderResult result={json} />
+  }
+
+  if (json.name === 'writeToFile') {
+    return <WriteToFileResult result={json} />
+  }
+
+  if (json.name === 'readFiles') {
+    return <ReadFilesResult result={json} />
+  }
+
+  if (json.name === 'listFiles') {
+    return <ListFilesResult result={json} />
+  }
+
+  if (json.name === 'moveFile') {
+    return <MoveFileResult result={json} />
+  }
+
+  if (json.name === 'copyFile') {
+    return <CopyFileResult result={json} />
+  }
+
+  // Web Tools
+  if (json.name === 'fetchWebsite') {
+    return <FetchWebsiteResult result={json} />
   }
 
   const jsonStr = JSON.stringify(json, null, 2)

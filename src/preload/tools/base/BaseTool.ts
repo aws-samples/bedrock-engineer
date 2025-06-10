@@ -110,12 +110,27 @@ export abstract class BaseTool<TInput extends ToolInput = ToolInput, TResult = T
   protected handleError(error: unknown): Error {
     const toolError = wrapError(error, this.name)
 
-    // Return the error response string if needed
+    // Return the error response string if needed (legacy behavior)
     if (this.shouldReturnErrorAsString()) {
       return new Error(toolError.toResponse())
     }
 
-    return toolError
+    // Create structured error result instead of throwing
+    const errorResult: ToolResult = {
+      success: false,
+      name: this.name,
+      message: 'Tool execution failed',
+      error: toolError.message,
+      result: {
+        errorType: toolError.constructor.name,
+        errorMessage: toolError.message,
+        toolName: this.name,
+        metadata: toolError.metadata || {}
+      }
+    }
+
+    // Return as JSON string to maintain compatibility with current error handling
+    return new Error(JSON.stringify(errorResult))
   }
 
   /**
@@ -136,7 +151,7 @@ export abstract class BaseTool<TInput extends ToolInput = ToolInput, TResult = T
    * Can be overridden by subclasses
    */
   protected shouldReturnErrorAsString(): boolean {
-    return true
+    return false
   }
 
   /**

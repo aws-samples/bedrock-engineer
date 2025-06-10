@@ -6,12 +6,7 @@ import * as fs from 'fs/promises'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult, ReadFileOptions } from '../../base/types'
-import { ExecutionError } from '../../base/errors'
-import {
-  filterByLineRange,
-  getLineRangeInfo,
-  validateLineRange
-} from '../../../lib/line-range-utils'
+import { filterByLineRange, validateLineRange, LineRange } from '../../../lib/line-range-utils'
 import { ToolResult } from '../../../../types/tools'
 
 /**
@@ -24,15 +19,37 @@ interface ReadFilesInput {
 }
 
 /**
+ * Individual file read result
+ */
+interface FileReadResult {
+  path: string
+  content?: string
+  error?: string
+  lines?: number
+  size?: number
+  encoding?: string
+  lineRange?: LineRange
+}
+
+/**
+ * Summary of read operation
+ */
+interface ReadFilesSummary {
+  totalFiles: number
+  successfulFiles: number
+  failedFiles: number
+  totalLines?: number
+  totalSize?: number
+}
+
+/**
  * Result type for ReadFilesTool
  */
 interface ReadFilesResult extends ToolResult {
   name: 'readFiles'
   result: {
-    paths: string[]
-    content: string
-    totalFiles: number
-    totalLines?: number
+    files: FileReadResult[]
+    summary: ReadFilesSummary
   }
 }
 
@@ -147,113 +164,92 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, ReadFilesResult> {
       hasLineRange: !!options?.lines
     })
 
-    let content: string
-    let totalLines: number | undefined
+    const files: FileReadResult[] = []
+    let successfulFiles = 0
+    let failedFiles = 0
+    let totalLines = 0
+    let totalSize = 0
 
-    // Single file handling
-    if (paths.length === 1) {
-      content = await this.readSingleFile(paths[0], options)
-    } else {
-      // Multiple files handling
-      content = await this.readMultipleFiles(paths, options)
-    }
-
-    // Count lines if not filtered by line range
-    if (!options?.lines) {
-      totalLines = content.split('\n').length
-    }
-
-    return {
-      success: true,
-      name: 'readFiles',
-      message: `Successfully read ${paths.length} file(s)`,
-      result: {
-        paths,
-        content,
-        totalFiles: paths.length,
-        totalLines
-      }
-    }
-  }
-
-  /**
-   * Read a single file with optional line range filtering
-   */
-  private async readSingleFile(filePath: string, options?: ReadFileOptions): Promise<string> {
-    this.logger.debug(`Reading single file: ${filePath}`)
-
-    try {
-      const content = await fs.readFile(filePath, options?.encoding || 'utf-8')
-
-      this.logger.debug(`File read successfully: ${filePath}`, {
-        contentLength: content.length
-      })
-
-      return this.formatFileContent(filePath, content, options)
-    } catch (error) {
-      this.logger.error(`Error reading file: ${filePath}`, {
-        error: error instanceof Error ? error.message : String(error)
-      })
-
-      throw new ExecutionError(
-        `Error reading file ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
-        this.name,
-        error instanceof Error ? error : undefined
-      )
-    }
-  }
-
-  /**
-   * Read multiple files
-   */
-  private async readMultipleFiles(paths: string[], options?: ReadFileOptions): Promise<string> {
-    this.logger.debug(`Reading multiple files: ${paths.length} files`)
-
-    const fileContents: string[] = []
-
-    // Read each file
+    // Read each file individually
     for (const filePath of paths) {
       try {
         this.logger.verbose(`Reading file: ${filePath}`)
         const content = await fs.readFile(filePath, options?.encoding || 'utf-8')
-        const formattedContent = this.formatFileContent(filePath, content, options)
-        fileContents.push(formattedContent)
+        const formattedContent = this.formatFileContent(content, options)
+        const lines = formattedContent.split('\n').length
+
+        files.push({
+          path: filePath,
+          content: formattedContent,
+          lines,
+          size: content.length,
+          encoding: options?.encoding || 'utf-8',
+          lineRange: options?.lines
+        })
+
+        successfulFiles++
+        totalLines += lines
+        totalSize += content.length
 
         this.logger.verbose(`File read successfully: ${filePath}`, {
-          contentLength: content.length
+          contentLength: content.length,
+          lines
         })
       } catch (error) {
         this.logger.error(`Error reading file: ${filePath}`, {
           error: error instanceof Error ? error.message : String(error)
         })
-        fileContents.push(
-          `## Error reading file: ${filePath}\nError: ${
-            error instanceof Error ? error.message : String(error)
-          }`
-        )
+
+        files.push({
+          path: filePath,
+          error: error instanceof Error ? error.message : String(error)
+        })
+
+        failedFiles++
       }
     }
 
-    // Combine content
-    const combinedContent = fileContents.join('\n\n')
-    this.logger.info(`Read ${paths.length} files successfully`)
+    const summary: ReadFilesSummary = {
+      totalFiles: paths.length,
+      successfulFiles,
+      failedFiles,
+      totalLines: successfulFiles > 0 ? totalLines : undefined,
+      totalSize: successfulFiles > 0 ? totalSize : undefined
+    }
 
-    return combinedContent
+    this.logger.info(`Read operation completed`, {
+      totalFiles: paths.length,
+      successfulFiles,
+      failedFiles
+    })
+
+    return {
+      success: successfulFiles > 0,
+      name: 'readFiles',
+      message:
+        failedFiles === 0
+          ? `Successfully read ${successfulFiles} file(s)`
+          : `Read ${successfulFiles} file(s) successfully, ${failedFiles} file(s) failed`,
+      result: {
+        files,
+        summary
+      }
+    }
   }
 
   /**
    * Format file content with header and line range filtering
    */
-  private formatFileContent(filePath: string, content: string, options?: ReadFileOptions): string {
+  private formatFileContent(content: string, options?: ReadFileOptions): string {
     // Apply line range filtering
     const filteredContent = filterByLineRange(content, options?.lines)
 
-    // Generate line range info for header
-    const lines = content.split('\n')
-    const lineInfo = getLineRangeInfo(lines.length, options?.lines)
-    const header = `File: ${filePath}${lineInfo}\n${'='.repeat(filePath.length + lineInfo.length + 6)}\n`
+    // // Generate line range info for header
+    // const lines = content.split('\n')
+    // const lineInfo = getLineRangeInfo(lines.length, options?.lines)
+    // const header = `File: ${filePath}${lineInfo}\n${'='.repeat(filePath.length + lineInfo.length + 6)}\n`
 
-    return header + filteredContent
+    return filteredContent
   }
 
   /**

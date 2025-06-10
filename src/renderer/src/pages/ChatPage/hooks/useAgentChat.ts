@@ -808,10 +808,27 @@ export const useAgentChat = (
             toolResults.push(resultContentBlock)
           } catch (e: any) {
             console.error(e)
+
+            // Try to parse error as JSON (structured error from BaseTool)
+            let errorContent
+            try {
+              const parsedError = JSON.parse(e.message)
+              if (parsedError && typeof parsedError === 'object' && 'success' in parsedError) {
+                // Structured error from BaseTool
+                errorContent = [{ json: parsedError }]
+              } else {
+                // Plain JSON but not ToolResult format
+                errorContent = [{ text: e.toString() }]
+              }
+            } catch (parseError) {
+              // Not JSON, treat as plain text error
+              errorContent = [{ text: e.toString() }]
+            }
+
             toolResults.push({
               toolResult: {
                 toolUseId: toolUse.toolUseId,
-                content: [{ text: e.toString() }],
+                content: errorContent,
                 status: 'error'
               }
             })
