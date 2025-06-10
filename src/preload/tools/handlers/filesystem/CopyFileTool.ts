@@ -8,6 +8,7 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
 import { ExecutionError } from '../../base/errors'
+import { ToolResult } from '../../../../types/tools'
 
 /**
  * Input type for CopyFileTool
@@ -19,9 +20,20 @@ interface CopyFileInput {
 }
 
 /**
+ * Result type for CopyFileTool
+ */
+interface CopyFileResult extends ToolResult {
+  name: 'copyFile'
+  result: {
+    source: string
+    destination: string
+  }
+}
+
+/**
  * Tool for copying files
  */
-export class CopyFileTool extends BaseTool<CopyFileInput, string> {
+export class CopyFileTool extends BaseTool<CopyFileInput, CopyFileResult> {
   static readonly toolName = 'copyFile'
   static readonly toolDescription =
     'Copy a file from one location to another. Use this when you need to duplicate a file in the project structure.'
@@ -90,7 +102,7 @@ export class CopyFileTool extends BaseTool<CopyFileInput, string> {
   /**
    * Execute the tool
    */
-  protected async executeInternal(input: CopyFileInput): Promise<string> {
+  protected async executeInternal(input: CopyFileInput): Promise<CopyFileResult> {
     const { source, destination } = input
 
     this.logger.debug(`Copying file from ${source} to ${destination}`)
@@ -108,7 +120,15 @@ export class CopyFileTool extends BaseTool<CopyFileInput, string> {
         destination
       })
 
-      return `File copied: ${source} to ${destination}`
+      return {
+        success: true,
+        name: 'copyFile',
+        message: `File copied: ${source} to ${destination}`,
+        result: {
+          source,
+          destination
+        }
+      }
     } catch (error) {
       this.logger.error(`Failed to copy file`, {
         source,

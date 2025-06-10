@@ -8,6 +8,7 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
 import { ExecutionError } from '../../base/errors'
+import { ToolResult } from '../../../../types/tools'
 
 /**
  * Input type for WriteToFileTool
@@ -19,9 +20,21 @@ interface WriteToFileInput {
 }
 
 /**
+ * Result type for WriteToFileTool
+ */
+interface WriteToFileResult extends ToolResult {
+  name: 'writeToFile'
+  result: {
+    path: string
+    contentLength: number
+    content: string
+  }
+}
+
+/**
  * Tool for writing content to files
  */
-export class WriteToFileTool extends BaseTool<WriteToFileInput, string> {
+export class WriteToFileTool extends BaseTool<WriteToFileInput, WriteToFileResult> {
   static readonly toolName = 'writeToFile'
   static readonly toolDescription =
     'Write content to an existing file at the specified path. Use this when you need to add or update content in an existing file.'
@@ -90,7 +103,7 @@ export class WriteToFileTool extends BaseTool<WriteToFileInput, string> {
   /**
    * Execute the tool
    */
-  protected async executeInternal(input: WriteToFileInput): Promise<string> {
+  protected async executeInternal(input: WriteToFileInput): Promise<WriteToFileResult> {
     const { path: filePath, content } = input
 
     this.logger.debug(`Writing to file: ${filePath}`, {
@@ -109,8 +122,16 @@ export class WriteToFileTool extends BaseTool<WriteToFileInput, string> {
         contentLength: content.length
       })
 
-      // Return the content as well for compatibility with the old implementation
-      return `Content written to file: ${filePath}\n\n${content}`
+      return {
+        success: true,
+        name: 'writeToFile',
+        message: `Content written to file: ${filePath}`,
+        result: {
+          path: filePath,
+          contentLength: content.length,
+          content
+        }
+      }
     } catch (error) {
       this.logger.error(`Failed to write to file: ${filePath}`, {
         error: error instanceof Error ? error.message : String(error)

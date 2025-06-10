@@ -12,6 +12,7 @@ import {
   getLineRangeInfo,
   validateLineRange
 } from '../../../lib/line-range-utils'
+import { ToolResult } from '../../../../types/tools'
 
 /**
  * Input type for ReadFilesTool
@@ -23,9 +24,22 @@ interface ReadFilesInput {
 }
 
 /**
+ * Result type for ReadFilesTool
+ */
+interface ReadFilesResult extends ToolResult {
+  name: 'readFiles'
+  result: {
+    paths: string[]
+    content: string
+    totalFiles: number
+    totalLines?: number
+  }
+}
+
+/**
  * Tool for reading file contents with line range support
  */
-export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
+export class ReadFilesTool extends BaseTool<ReadFilesInput, ReadFilesResult> {
   static readonly toolName = 'readFiles'
   static readonly toolDescription =
     'Read the content of multiple files at the specified paths with line range filtering support. For Excel files, the content is converted to CSV format.'
@@ -125,7 +139,7 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
   /**
    * Execute the tool
    */
-  protected async executeInternal(input: ReadFilesInput): Promise<string> {
+  protected async executeInternal(input: ReadFilesInput): Promise<ReadFilesResult> {
     const { paths, options } = input
 
     this.logger.debug(`Reading files`, {
@@ -133,13 +147,33 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
       hasLineRange: !!options?.lines
     })
 
+    let content: string
+    let totalLines: number | undefined
+
     // Single file handling
     if (paths.length === 1) {
-      return this.readSingleFile(paths[0], options)
+      content = await this.readSingleFile(paths[0], options)
+    } else {
+      // Multiple files handling
+      content = await this.readMultipleFiles(paths, options)
     }
 
-    // Multiple files handling
-    return this.readMultipleFiles(paths, options)
+    // Count lines if not filtered by line range
+    if (!options?.lines) {
+      totalLines = content.split('\n').length
+    }
+
+    return {
+      success: true,
+      name: 'readFiles',
+      message: `Successfully read ${paths.length} file(s)`,
+      result: {
+        paths,
+        content,
+        totalFiles: paths.length,
+        totalLines
+      }
+    }
   }
 
   /**

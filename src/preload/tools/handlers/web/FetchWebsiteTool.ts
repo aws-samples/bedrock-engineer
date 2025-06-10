@@ -12,6 +12,7 @@ import {
   getLineRangeInfo,
   validateLineRange
 } from '../../../lib/line-range-utils'
+import { ToolResult } from '../../../../types/tools'
 
 /**
  * Input type for FetchWebsiteTool
@@ -23,9 +24,24 @@ interface FetchWebsiteInput {
 }
 
 /**
+ * Result type for FetchWebsiteTool
+ */
+interface FetchWebsiteResult extends ToolResult {
+  name: 'fetchWebsite'
+  result: {
+    url: string
+    content: string
+    statusCode?: number
+    contentType?: string
+    totalLines?: number
+    cleaning?: boolean
+  }
+}
+
+/**
  * Tool for fetching website content with line range support
  */
-export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
+export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, FetchWebsiteResult> {
   static readonly toolName = 'fetchWebsite'
   static readonly toolDescription = `Fetch content from a specified URL with line range filtering support. If the cleaning option is true, extracts plain text content from HTML by removing markup and unnecessary elements. Default is false.`
 
@@ -138,7 +154,7 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
   /**
    * Execute the tool
    */
-  protected async executeInternal(input: FetchWebsiteInput): Promise<string> {
+  protected async executeInternal(input: FetchWebsiteInput): Promise<FetchWebsiteResult> {
     const { url, options } = input
     const { cleaning, lines, ...requestOptions } = options || {}
 
@@ -184,6 +200,7 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
       const totalLines = rawContent.split('\n').length
       const lineInfo = getLineRangeInfo(totalLines, lines)
       const header = `Website Content: ${url}${lineInfo}\n${'='.repeat(url.length + lineInfo.length + 18)}\n`
+      const finalContent = header + filteredContent
 
       this.logger.info(`Website content retrieved successfully`, {
         url,
@@ -192,7 +209,19 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
         contentLength: filteredContent.length
       })
 
-      return header + filteredContent
+      return {
+        success: true,
+        name: 'fetchWebsite',
+        message: `Successfully fetched content from: ${url}`,
+        result: {
+          url,
+          content: finalContent,
+          statusCode: response.status,
+          contentType: response.headers['content-type'],
+          totalLines: lines ? undefined : totalLines,
+          cleaning
+        }
+      }
     } catch (error) {
       this.logger.error(`Error fetching website: ${url}`, {
         error: error instanceof Error ? error.message : String(error),

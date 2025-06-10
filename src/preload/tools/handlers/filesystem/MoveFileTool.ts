@@ -8,6 +8,7 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
 import { ExecutionError } from '../../base/errors'
+import { ToolResult } from '../../../../types/tools'
 
 /**
  * Input type for MoveFileTool
@@ -19,9 +20,20 @@ interface MoveFileInput {
 }
 
 /**
+ * Result type for MoveFileTool
+ */
+interface MoveFileResult extends ToolResult {
+  name: 'moveFile'
+  result: {
+    source: string
+    destination: string
+  }
+}
+
+/**
  * Tool for moving files
  */
-export class MoveFileTool extends BaseTool<MoveFileInput, string> {
+export class MoveFileTool extends BaseTool<MoveFileInput, MoveFileResult> {
   static readonly toolName = 'moveFile'
   static readonly toolDescription =
     'Move a file from one location to another. Use this when you need to organize files in the project structure.'
@@ -90,7 +102,7 @@ export class MoveFileTool extends BaseTool<MoveFileInput, string> {
   /**
    * Execute the tool
    */
-  protected async executeInternal(input: MoveFileInput): Promise<string> {
+  protected async executeInternal(input: MoveFileInput): Promise<MoveFileResult> {
     const { source, destination } = input
 
     this.logger.debug(`Moving file from ${source} to ${destination}`)
@@ -108,7 +120,15 @@ export class MoveFileTool extends BaseTool<MoveFileInput, string> {
         destination
       })
 
-      return `File moved: ${source} to ${destination}`
+      return {
+        success: true,
+        name: 'moveFile',
+        message: `File moved: ${source} to ${destination}`,
+        result: {
+          source,
+          destination
+        }
+      }
     } catch (error) {
       this.logger.error(`Failed to move file`, {
         source,

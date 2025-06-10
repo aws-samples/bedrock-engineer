@@ -14,6 +14,7 @@ import {
   validateLineRange
 } from '../../../lib/line-range-utils'
 import GitignoreLikeMatcher from '../../../lib/gitignore-like-matcher'
+import { ToolResult } from '../../../../types/tools'
 
 /**
  * Input type for ListFilesTool
@@ -25,9 +26,23 @@ interface ListFilesInput {
 }
 
 /**
+ * Result type for ListFilesTool
+ */
+interface ListFilesResult extends ToolResult {
+  name: 'listFiles'
+  result: {
+    path: string
+    structure: string
+    totalLines?: number
+    maxDepth?: number
+    ignorePatterns?: number
+  }
+}
+
+/**
  * Tool for listing files and directories with line range support
  */
-export class ListFilesTool extends BaseTool<ListFilesInput, string> {
+export class ListFilesTool extends BaseTool<ListFilesInput, ListFilesResult> {
   static readonly toolName = 'listFiles'
   static readonly toolDescription =
     'List the entire directory structure, including all subdirectories and files, in a hierarchical format with line range filtering support. Use maxDepth to limit directory depth and lines to filter output.'
@@ -141,7 +156,7 @@ export class ListFilesTool extends BaseTool<ListFilesInput, string> {
   /**
    * Execute the tool
    */
-  protected async executeInternal(input: ListFilesInput): Promise<string> {
+  protected async executeInternal(input: ListFilesInput): Promise<ListFilesResult> {
     const { path: dirPath, options } = input
 
     // Get default ignoreFiles from store if not provided
@@ -170,6 +185,7 @@ export class ListFilesTool extends BaseTool<ListFilesInput, string> {
       // Generate line range info (if specified)
       const lines = fileTree.split('\n')
       const lineInfo = getLineRangeInfo(lines.length, options?.lines)
+      const finalStructure = `Directory Structure${lineInfo}:\n\n${filteredContent}`
 
       this.logger.info(`Directory structure listed successfully`, {
         dirPath,
@@ -177,7 +193,18 @@ export class ListFilesTool extends BaseTool<ListFilesInput, string> {
         hasLineRange: !!options?.lines
       })
 
-      return `Directory Structure${lineInfo}:\n\n${filteredContent}`
+      return {
+        success: true,
+        name: 'listFiles',
+        message: `Successfully listed directory structure for: ${dirPath}`,
+        result: {
+          path: dirPath,
+          structure: finalStructure,
+          totalLines: options?.lines ? undefined : lines.length,
+          maxDepth: maxDepth === -1 ? undefined : maxDepth,
+          ignorePatterns: ignoreFiles?.length || 0
+        }
+      }
     } catch (error) {
       this.logger.error(`Error listing directory structure: ${dirPath}`, {
         error: error instanceof Error ? error.message : String(error)

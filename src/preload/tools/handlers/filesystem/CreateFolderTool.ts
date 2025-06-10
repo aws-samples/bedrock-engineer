@@ -7,6 +7,7 @@ import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
 import { ExecutionError } from '../../base/errors'
+import { ToolResult } from '../../../../types/tools'
 
 /**
  * Input type for CreateFolderTool
@@ -17,9 +18,19 @@ interface CreateFolderInput {
 }
 
 /**
+ * Result type for CreateFolderTool
+ */
+interface CreateFolderResult extends ToolResult {
+  name: 'createFolder'
+  result: {
+    path: string
+  }
+}
+
+/**
  * Tool for creating folders
  */
-export class CreateFolderTool extends BaseTool<CreateFolderInput, string> {
+export class CreateFolderTool extends BaseTool<CreateFolderInput, CreateFolderResult> {
   static readonly toolName = 'createFolder'
   static readonly toolDescription =
     'Create a new folder at the specified path. Use this when you need to create a new directory in the project structure.'
@@ -76,7 +87,7 @@ export class CreateFolderTool extends BaseTool<CreateFolderInput, string> {
   /**
    * Execute the tool
    */
-  protected async executeInternal(input: CreateFolderInput): Promise<string> {
+  protected async executeInternal(input: CreateFolderInput): Promise<CreateFolderResult> {
     const { path } = input
 
     this.logger.debug(`Creating folder: ${path}`)
@@ -86,7 +97,15 @@ export class CreateFolderTool extends BaseTool<CreateFolderInput, string> {
       await fs.mkdir(path, { recursive: true })
 
       this.logger.info(`Folder created successfully: ${path}`)
-      return `Folder created: ${path}`
+
+      return {
+        success: true,
+        name: 'createFolder',
+        message: `Folder created: ${path}`,
+        result: {
+          path
+        }
+      }
     } catch (error) {
       this.logger.error(`Failed to create folder: ${path}`, {
         error: error instanceof Error ? error.message : String(error)

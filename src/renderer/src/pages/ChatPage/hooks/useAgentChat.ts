@@ -712,15 +712,24 @@ export const useAgentChat = (
 
             // ツール実行結果用のContentBlockを作成
             let resultContentBlock: ContentBlock
-            if (Object.prototype.hasOwnProperty.call(toolResult, 'name')) {
+
+            // ToolResult形式かどうかをチェック
+            if (
+              typeof toolResult === 'object' &&
+              toolResult !== null &&
+              'success' in toolResult &&
+              'name' in toolResult
+            ) {
+              // 新しいToolResult形式の場合
               resultContentBlock = {
                 toolResult: {
                   toolUseId: toolUse.toolUseId,
                   content: [{ json: toolResult as any }],
-                  status: 'success'
+                  status: toolResult.success ? 'success' : 'error'
                 }
               }
             } else {
+              // 従来の文字列形式（後方互換性のため残す）
               resultContentBlock = {
                 toolResult: {
                   toolUseId: toolUse.toolUseId,
