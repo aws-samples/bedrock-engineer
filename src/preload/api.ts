@@ -8,6 +8,7 @@ import { McpServerConfig } from '../types/agent-chat'
 import { getImageGenerationModelsForRegion } from '../main/api/bedrock/models'
 import { BedrockSupportRegion } from '../types/llm'
 import { CodeInterpreterTool } from './tools/handlers/interpreter/CodeInterpreterTool'
+import { bluetoothAPI } from './api/bluetooth'
 import { ToolMetadataCollector } from './tools/registry'
 import {
   getSystemPromptDescriptions,
@@ -111,6 +112,7 @@ export const api = {
       return ipcRenderer.invoke('camera:save-captured-image', request)
     }
   },
+  bluetooth: bluetoothAPI,
   tools: {
     getToolSpecs: () => {
       return ToolMetadataCollector.getToolSpecs()

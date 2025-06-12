@@ -15,6 +15,7 @@ import { FlowSettingForm } from './FlowSettingForm'
 import { CodeInterpreterSettingForm } from './CodeInterpreterSettingForm'
 import { ScreenCaptureSettingForm } from './ScreenCaptureSettingForm'
 import { CameraCaptureSettingForm } from './CameraCaptureSettingForm'
+import { BluetoothDeviceSettingForm } from './BluetoothDeviceSettingForm'
 import { Button, Modal, ToggleSwitch } from 'flowbite-react'
 import { memo, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -50,7 +51,8 @@ const TOOLS_WITH_SETTINGS = [
   'invokeFlow',
   'codeInterpreter',
   'screenCapture',
-  'cameraCapture'
+  'cameraCapture',
+  'bluetoothDevice'
 ]
 
 interface ToolSettingModalProps {
@@ -548,6 +550,7 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                     {selectedTool === 'codeInterpreter' && <CodeInterpreterSettingForm />}
                     {selectedTool === 'screenCapture' && <ScreenCaptureSettingForm />}
                     {selectedTool === 'cameraCapture' && <CameraCaptureSettingForm />}
+                    {selectedTool === 'bluetoothDevice' && <BluetoothDeviceSettingForm />}
                   </div>
                 ) : (
                   <div className="prose dark:prose-invert max-w-none">

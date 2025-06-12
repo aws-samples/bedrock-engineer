@@ -20,7 +20,8 @@ import {
   FaPlay,
   FaClock,
   FaDownload,
-  FaDesktop
+  FaDesktop,
+  FaBluetooth
 } from 'react-icons/fa'
 import { BiFace } from 'react-icons/bi'
 import { MdDifference } from 'react-icons/md'
@@ -48,7 +49,8 @@ const standardToolIcons = {
   invokeFlow: <FaProjectDiagram className="text-blue-600 size-6" />,
   codeInterpreter: <FaCode className="text-green-600 size-6" />,
   screenCapture: <FaDesktop className="text-slate-500 size-6" />,
-  cameraCapture: <FaVideo className="text-blue-500 size-6" />
+  cameraCapture: <FaVideo className="text-blue-500 size-6" />,
+  bluetoothDevice: <FaBluetooth className="text-blue-600 size-6" />
 }
 
 // MCPツール用のアイコン（すべてのMCPツールで共通）

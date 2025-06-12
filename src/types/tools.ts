@@ -25,6 +25,7 @@ export type BuiltInToolName =
   | 'mcp_adapter'
   | 'screenCapture'
   | 'cameraCapture'
+  | 'bluetoothDevice'
 
 // MCPツール名の型安全な定義
 export type McpToolName = `mcp_${string}`
@@ -56,7 +57,8 @@ const BUILT_IN_TOOLS: readonly BuiltInToolName[] = [
   'codeInterpreter',
   'mcp_adapter',
   'screenCapture',
-  'cameraCapture'
+  'cameraCapture',
+  'bluetoothDevice'
 ] as const
 
 // 組み込みツール名であるかを判定する型ガード

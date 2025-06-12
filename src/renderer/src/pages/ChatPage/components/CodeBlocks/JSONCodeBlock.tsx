@@ -9,6 +9,7 @@ import { RecognizeImageResult } from './RecognizeImage/RecognizeImageResult'
 import { CodeInterpreterResult } from './CodeInterpreter/CodeInterpreterResult'
 import { ScreenCaptureResult } from './ScreenCapture/ScreenCaptureResult'
 import { CameraCaptureResult } from './CameraCapture/CameraCaptureResult'
+import { BluetoothDeviceResult } from './BluetoothDevice/BluetoothDeviceResult'
 import { AsyncTaskCard, AsyncTaskInfo } from '../CodeInterpreter/AsyncTaskCard'
 
 interface RetrieveResponse {
@@ -131,6 +132,10 @@ export const JSONCodeBlock: React.FC<{ json: any }> = ({ json }) => {
 
   if (json.name === 'cameraCapture') {
     return <CameraCaptureResult response={json} />
+  }
+
+  if (json.name === 'bluetoothDevice') {
+    return <BluetoothDeviceResult response={json} />
   }
 
   if (json.name === 'codeInterpreter') {

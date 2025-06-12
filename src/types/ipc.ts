@@ -285,6 +285,101 @@ export interface IPCChannelDefinitions {
       }
     }
   }
+
+  // Bluetooth関連
+  'bluetooth:scan-devices': {
+    params: {
+      duration?: number
+      serviceUuids?: string[]
+      allowDuplicates?: boolean
+    }
+    result: {
+      devices: Array<{
+        id: string
+        name: string
+        address: string
+        rssi: number
+        connectable: boolean
+        paired: boolean
+        serviceUUIDs?: string[]
+        manufacturerData?: {
+          id: number
+          data: Buffer
+        }
+      }>
+    }
+  }
+
+  'bluetooth:connect-device': {
+    params: string
+    result: {
+      success: boolean
+    }
+  }
+
+  'bluetooth:disconnect-device': {
+    params: string
+    result: {
+      success: boolean
+    }
+  }
+
+  'bluetooth:get-services': {
+    params: string
+    result: {
+      services: Array<{
+        uuid: string
+        name?: string
+        isPrimary: boolean
+        deviceId: string
+      }>
+    }
+  }
+
+  'bluetooth:get-characteristics': {
+    params: [string, string]
+    result: {
+      characteristics: Array<{
+        uuid: string
+        name?: string
+        serviceUuid: string
+        properties: {
+          read: boolean
+          write: boolean
+          writeWithoutResponse: boolean
+          notify: boolean
+          indicate: boolean
+        }
+        value?: Buffer
+        descriptors?: Array<{
+          uuid: string
+          name?: string
+          value?: Buffer
+        }>
+      }>
+    }
+  }
+
+  'bluetooth:read-characteristic': {
+    params: [string, string, string]
+    result: {
+      value: string
+    }
+  }
+
+  'bluetooth:write-characteristic': {
+    params: [string, string, string, string, boolean?]
+    result: {
+      success: boolean
+    }
+  }
+
+  'bluetooth:is-available': {
+    params: void
+    result: {
+      available: boolean
+    }
+  }
 }
 
 // 型ヘルパー
