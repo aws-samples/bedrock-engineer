@@ -15,6 +15,7 @@ import { createMcpTools } from './handlers/mcp'
 import { createBedrockTools } from './handlers/bedrock'
 import { createCodeInterpreterTools } from './handlers/interpreter'
 import { createCameraTools } from './handlers/camera'
+import { createCameraTools } from './handlers/camera'
 
 // Global instances
 let toolRegistry: ToolRegistry | null = null

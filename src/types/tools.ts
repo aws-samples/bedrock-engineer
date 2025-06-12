@@ -254,6 +254,15 @@ export type RecognizeImageInput = {
   prompt?: string
 }
 
+// cameraCapture ツールの入力型
+export type CameraCaptureInput = {
+  type: 'cameraCapture'
+  deviceId?: string // カメラデバイスID（空の場合はデフォルトカメラ）
+  width?: number // 希望する幅（ピクセル）
+  height?: number // 希望する高さ（ピクセル）
+  recognizePrompt?: string // 画像認識用のプロンプト（空の場合はキャプチャのみ）
+}
+
 // screenCapture ツールの入力型
 export type ScreenCaptureInput = {
   type: 'screenCapture'
