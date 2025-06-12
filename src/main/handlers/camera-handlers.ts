@@ -42,8 +42,16 @@ interface PermissionCheckResult {
   message: string
 }
 
+// 戻り値の型定義
+interface CaptureResult {
+  imageBuffer: Buffer;
+  width: number;
+  height: number;
+  deviceId?: string;
+}
+
 // 隠しBrowserWindowを使用してカメラにアクセスするヘルパー関数
-async function captureFromCamera(options: CameraCaptureOptions): Promise<Buffer> {
+async function captureFromCamera(options: CameraCaptureOptions): Promise<CaptureResult> {
   return new Promise((resolve, reject) => {
     try {
       // 隠しウィンドウを作成
@@ -54,8 +62,6 @@ async function captureFromCamera(options: CameraCaptureOptions): Promise<Buffer>
         webPreferences: {
           nodeIntegration: true,
           contextIsolation: false,
-          // セキュリティ上の理由からカメラ使用時のみ有効にする
-          enableRemoteModule: false,
           // メディアアクセスを許可
           webSecurity: true
         }
@@ -158,7 +164,7 @@ async function captureFromCamera(options: CameraCaptureOptions): Promise<Buffer>
             width: result.width,
             height: result.height,
             deviceId: result.deviceId
-          })
+          } as CaptureResult)
         } catch (error) {
           reject(error)
         }
@@ -282,6 +288,9 @@ export const cameraHandlers = {
       // カメラからキャプチャ
       const captureResult = await captureFromCamera(options)
 
+      // キャプチャ結果を取り出す
+      const { imageBuffer, width, height, deviceId } = captureResult
+      
       // 出力パスの決定（一時ディレクトリ内の専用サブディレクトリを使用）
       const timestamp = Date.now()
       const format = options.format || 'png'
@@ -300,7 +309,7 @@ export const cameraHandlers = {
       const outputPath = options.outputPath || path.join(tempBasePath, filename)
 
       // 画像を保存
-      await writeFile(outputPath, captureResult.imageBuffer)
+      await writeFile(outputPath, imageBuffer)
 
       // 古い一時ファイルをクリーンアップ（24時間以上前のファイル）
       try {
@@ -331,8 +340,8 @@ export const cameraHandlers = {
 
       log.info('Camera capture completed successfully', {
         path: outputPath,
-        width: captureResult.width,
-        height: captureResult.height,
+        width,
+        height,
         format,
         fileSize: stats.size
       })
@@ -341,12 +350,12 @@ export const cameraHandlers = {
         success: true,
         filePath: outputPath,
         metadata: {
-          width: captureResult.width,
-          height: captureResult.height,
+          width,
+          height,
           format,
           fileSize: stats.size,
           timestamp: new Date().toISOString(),
-          deviceId: captureResult.deviceId
+          deviceId
         }
       }
     } catch (error) {
