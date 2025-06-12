@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Label, Select, Spinner } from 'flowbite-react'
 import { useSettings } from '@renderer/contexts/SettingsContext'
-import { ipc } from '@renderer/utils/ipc'
+import { ipc } from '@renderer/lib/api'
 
 interface CameraDevice {
   deviceId: string
