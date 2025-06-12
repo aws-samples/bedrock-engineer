@@ -220,6 +220,74 @@ export interface IPCChannelDefinitions {
     }
     result: void
   }
+
+  // 画面キャプチャ関連
+  'screen:capture': {
+    params: {
+      format?: 'png' | 'jpeg'
+      quality?: number
+      outputPath?: string
+    }
+    result: {
+      success: boolean
+      filePath: string
+      metadata: {
+        width: number
+        height: number
+        format: string
+        fileSize: number
+        timestamp: string
+      }
+    }
+  }
+  'screen:check-permissions': {
+    params: void
+    result: {
+      hasPermission: boolean
+      platform: string
+      message: string
+    }
+  }
+
+  // カメラキャプチャ関連
+  'camera:list-devices': {
+    params: void
+    result: Array<{
+      deviceId: string
+      label: string
+      isDefault: boolean
+    }>
+  }
+  'camera:capture': {
+    params: {
+      deviceId?: string
+      width?: number
+      height?: number
+      format?: 'png' | 'jpeg'
+      quality?: number
+      outputPath?: string
+    }
+    result: {
+      success: boolean
+      filePath: string
+      metadata: {
+        width: number
+        height: number
+        format: string
+        fileSize: number
+        timestamp: string
+        deviceId?: string
+      }
+    }
+  }
+  'camera:check-permissions': {
+    params: void
+    result: {
+      hasPermission: boolean
+      platform: string
+      message: string
+    }
+  }
 }
 
 // 型ヘルパー
