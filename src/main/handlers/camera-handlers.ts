@@ -44,7 +44,7 @@ interface PermissionCheckResult {
 
 // 隠しBrowserWindowを使用してカメラにアクセスするヘルパー関数
 async function captureFromCamera(options: CameraCaptureOptions): Promise<Buffer> {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     try {
       // 隠しウィンドウを作成
       const window = new BrowserWindow({
@@ -133,47 +133,47 @@ async function captureFromCamera(options: CameraCaptureOptions): Promise<Buffer>
         </script>
       </body>
       </html>
-      `;
+      `
 
       // 一時HTMLファイルを作成
-      const tmpHtmlPath = path.join(os.tmpdir(), `camera-capture-${Date.now()}.html`);
-      fs.writeFileSync(tmpHtmlPath, htmlContent);
+      const tmpHtmlPath = path.join(os.tmpdir(), `camera-capture-${Date.now()}.html`)
+      fs.writeFileSync(tmpHtmlPath, htmlContent)
 
       // IPC通信の設定
       window.webContents.ipc.handle('camera-capture-result', (_event, result) => {
         try {
           // Base64データをバッファに変換
-          const base64Data = result.dataUrl.replace(/^data:image\/(png|jpeg);base64,/, '');
-          const imageBuffer = Buffer.from(base64Data, 'base64');
-          
+          const base64Data = result.dataUrl.replace(/^data:image\/(png|jpeg);base64,/, '')
+          const imageBuffer = Buffer.from(base64Data, 'base64')
+
           // 一時HTMLファイルを削除
-          fs.unlinkSync(tmpHtmlPath);
-          
+          fs.unlinkSync(tmpHtmlPath)
+
           // ウィンドウを閉じる
-          window.destroy();
-          
+          window.destroy()
+
           // 結果を返す
           resolve({
             imageBuffer,
             width: result.width,
             height: result.height,
             deviceId: result.deviceId
-          });
+          })
         } catch (error) {
-          reject(error);
+          reject(error)
         }
-      });
+      })
 
       window.webContents.ipc.handle('camera-capture-error', (_event, errorMessage) => {
         // 一時HTMLファイルを削除
-        fs.unlinkSync(tmpHtmlPath);
-        
+        fs.unlinkSync(tmpHtmlPath)
+
         // ウィンドウを閉じる
-        window.destroy();
-        
+        window.destroy()
+
         // エラーを返す
-        reject(new Error(errorMessage));
-      });
+        reject(new Error(errorMessage))
+      })
 
       // プリロード設定
       window.webContents.on('did-finish-load', () => {
@@ -182,23 +182,22 @@ async function captureFromCamera(options: CameraCaptureOptions): Promise<Buffer>
             sendCapturedImage: (data) => window.ipcRenderer.invoke('camera-capture-result', data),
             sendCaptureError: (error) => window.ipcRenderer.invoke('camera-capture-error', error)
           };
-        `);
-      });
+        `)
+      })
 
       // HTMLファイルをロード
-      await window.loadFile(tmpHtmlPath);
-
+      await window.loadFile(tmpHtmlPath)
     } catch (error) {
-      reject(error);
+      reject(error)
     }
-  });
+  })
 }
 
 export const cameraHandlers = {
   // カメラデバイス一覧取得
   'camera:list-devices': async (_event: IpcMainInvokeEvent): Promise<CameraDeviceInfo[]> => {
     try {
-      log.info('Getting camera device list');
+      log.info('Getting camera device list')
 
       // 専用のBrowserWindowを作成してデバイス一覧を取得
       const window = new BrowserWindow({
@@ -209,18 +208,18 @@ export const cameraHandlers = {
           nodeIntegration: true,
           contextIsolation: false
         }
-      });
+      })
 
       return new Promise((resolve, reject) => {
         window.webContents.ipc.handle('camera-devices-result', (_event, devices) => {
-          window.destroy();
-          resolve(devices);
-        });
+          window.destroy()
+          resolve(devices)
+        })
 
         window.webContents.ipc.handle('camera-devices-error', (_event, errorMessage) => {
-          window.destroy();
-          reject(new Error(errorMessage));
-        });
+          window.destroy()
+          reject(new Error(errorMessage))
+        })
 
         // プリロード設定
         window.webContents.on('did-finish-load', () => {
@@ -245,16 +244,16 @@ export const cameraHandlers = {
               .catch(error => {
                 window.electronAPI.sendError(error.toString());
               });
-          `);
-        });
+          `)
+        })
 
-        window.loadURL('data:text/html,<html><body>Camera Device Detection</body></html>');
-      });
+        window.loadURL('data:text/html,<html><body>Camera Device Detection</body></html>')
+      })
     } catch (error) {
       log.error('Failed to list camera devices', {
         error: error instanceof Error ? error.message : String(error)
-      });
-      throw error;
+      })
+      throw error
     }
   },
 
@@ -265,70 +264,70 @@ export const cameraHandlers = {
   ): Promise<CameraCaptureResult> => {
     try {
       // アクセスを記録
-      const now = new Date().toISOString();
+      const now = new Date().toISOString()
       log.info(`[PRIVACY_LOG] Camera access at ${now}`, {
         timestamp: now,
         action: 'camera_capture',
         deviceId: options.deviceId ? 'specific' : 'default',
         format: options.format || 'png',
         quality: options.quality
-      });
-      
+      })
+
       log.info('Starting camera capture', {
         deviceId: options.deviceId || 'default',
         format: options.format || 'png',
         quality: options.quality
-      });
+      })
 
       // カメラからキャプチャ
-      const captureResult = await captureFromCamera(options);
+      const captureResult = await captureFromCamera(options)
 
       // 出力パスの決定（一時ディレクトリ内の専用サブディレクトリを使用）
-      const timestamp = Date.now();
-      const format = options.format || 'png';
-      const filename = `camera_capture_${timestamp}.${format}`;
-      
+      const timestamp = Date.now()
+      const format = options.format || 'png'
+      const filename = `camera_capture_${timestamp}.${format}`
+
       // 一時ディレクトリ内に専用サブフォルダを作成（存在確認）
-      const tempBasePath = path.join(os.tmpdir(), 'bedrock-engineer-camera-captures');
+      const tempBasePath = path.join(os.tmpdir(), 'bedrock-engineer-camera-captures')
       try {
         if (!fs.existsSync(tempBasePath)) {
-          fs.mkdirSync(tempBasePath, { recursive: true });
+          fs.mkdirSync(tempBasePath, { recursive: true })
         }
       } catch (err) {
-        log.warn('Failed to create temp directory, using OS temp dir', { error: err });
+        log.warn('Failed to create temp directory, using OS temp dir', { error: err })
       }
-      
-      const outputPath = options.outputPath || path.join(tempBasePath, filename);
+
+      const outputPath = options.outputPath || path.join(tempBasePath, filename)
 
       // 画像を保存
-      await writeFile(outputPath, captureResult.imageBuffer);
-      
+      await writeFile(outputPath, captureResult.imageBuffer)
+
       // 古い一時ファイルをクリーンアップ（24時間以上前のファイル）
       try {
         if (fs.existsSync(tempBasePath)) {
-          const files = fs.readdirSync(tempBasePath);
-          const now = Date.now();
-          const ONE_DAY = 24 * 60 * 60 * 1000; // 24時間（ミリ秒）
-          
+          const files = fs.readdirSync(tempBasePath)
+          const now = Date.now()
+          const ONE_DAY = 24 * 60 * 60 * 1000 // 24時間（ミリ秒）
+
           for (const file of files) {
-            if (!file.startsWith('camera_capture_')) continue;
-            
-            const filePath = path.join(tempBasePath, file);
-            const stats = fs.statSync(filePath);
-            const fileAge = now - stats.mtimeMs;
-            
+            if (!file.startsWith('camera_capture_')) continue
+
+            const filePath = path.join(tempBasePath, file)
+            const stats = fs.statSync(filePath)
+            const fileAge = now - stats.mtimeMs
+
             if (fileAge > ONE_DAY) {
-              fs.unlinkSync(filePath);
-              log.debug('Cleaned up old temporary camera capture file', { file });
+              fs.unlinkSync(filePath)
+              log.debug('Cleaned up old temporary camera capture file', { file })
             }
           }
         }
       } catch (cleanupErr) {
-        log.warn('Failed to cleanup old temporary files', { error: cleanupErr });
+        log.warn('Failed to cleanup old temporary files', { error: cleanupErr })
       }
 
       // ファイル情報の取得
-      const stats = await stat(outputPath);
+      const stats = await stat(outputPath)
 
       log.info('Camera capture completed successfully', {
         path: outputPath,
@@ -336,7 +335,7 @@ export const cameraHandlers = {
         height: captureResult.height,
         format,
         fileSize: stats.size
-      });
+      })
 
       return {
         success: true,
@@ -349,19 +348,21 @@ export const cameraHandlers = {
           timestamp: new Date().toISOString(),
           deviceId: captureResult.deviceId
         }
-      };
+      }
     } catch (error) {
       log.error('Failed to capture from camera', {
         error: error instanceof Error ? error.message : String(error)
-      });
-      throw error;
+      })
+      throw error
     }
   },
 
   // カメラ権限確認
-  'camera:check-permissions': async (_event: IpcMainInvokeEvent): Promise<PermissionCheckResult> => {
+  'camera:check-permissions': async (
+    _event: IpcMainInvokeEvent
+  ): Promise<PermissionCheckResult> => {
     try {
-      log.debug('Checking camera permissions');
+      log.debug('Checking camera permissions')
 
       // 専用のウィンドウで権限確認
       const window = new BrowserWindow({
@@ -372,22 +373,22 @@ export const cameraHandlers = {
           nodeIntegration: true,
           contextIsolation: false
         }
-      });
+      })
 
       return new Promise((resolve, reject) => {
         window.webContents.ipc.handle('camera-permission-result', (_event, result) => {
-          window.destroy();
+          window.destroy()
           resolve({
             hasPermission: result.hasPermission,
             platform: process.platform,
             message: result.message
-          });
-        });
+          })
+        })
 
         window.webContents.ipc.handle('camera-permission-error', (_event, errorMessage) => {
-          window.destroy();
-          reject(new Error(errorMessage));
-        });
+          window.destroy()
+          reject(new Error(errorMessage))
+        })
 
         // プリロード設定
         window.webContents.on('did-finish-load', () => {
@@ -412,20 +413,20 @@ export const cameraHandlers = {
                   message: error.toString()
                 });
               });
-          `);
-        });
+          `)
+        })
 
-        window.loadURL('data:text/html,<html><body>Camera Permission Check</body></html>');
-      });
+        window.loadURL('data:text/html,<html><body>Camera Permission Check</body></html>')
+      })
     } catch (error) {
       log.error('Camera permission check failed', {
         error: error instanceof Error ? error.message : String(error)
-      });
+      })
       return {
         hasPermission: false,
         platform: process.platform,
         message: error instanceof Error ? error.message : 'Permission check failed'
-      };
+      }
     }
   }
-} as const;
+} as const

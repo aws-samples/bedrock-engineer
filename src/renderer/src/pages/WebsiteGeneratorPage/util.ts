@@ -48,7 +48,7 @@ export const extractCodeBlock = (text: string): string[] => {
 export const extractCode = (messages: Message[]): string => {
   const lastText =
     messages[messages.length - 1]?.role === 'assistant'
-      ? messages[messages.length - 1]?.content
+      ? (messages[messages.length - 1]?.content
           ?.map((i) => {
             return i.text
           })
@@ -66,7 +66,7 @@ export const extractCode = (messages: Message[]): string => {
             }
             return acc
           }, [])
-          .join('\n') ?? ''
+          .join('\n') ?? '')
       : ''
 
   const codeBlocks = extractCodeBlock(lastText)

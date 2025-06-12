@@ -101,9 +101,6 @@ system: >-
   When answering questions or implementing solutions, draw upon your extensive knowledge in these areas while following
   all the guidelines above to deliver exceptional front-end code.
 
-
-
-
 scenarios:
   - title: Create a responsive navbar with dropdown menu
     content: >-

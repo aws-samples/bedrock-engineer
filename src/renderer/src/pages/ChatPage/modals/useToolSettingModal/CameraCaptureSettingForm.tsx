@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Label, Select, Button, Spinner } from 'flowbite-react'
+import { Label, Select, Spinner } from 'flowbite-react'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 import { ipc } from '@renderer/utils/ipc'
 
@@ -13,9 +13,10 @@ interface CameraDevice {
 export const CameraCaptureSettingForm: React.FC = () => {
   const { t } = useTranslation()
   const { recognizeImageModel, setRecognizeImageModel, availableModels } = useSettings()
-  
+
   const [cameraDevices, setCameraDevices] = useState<CameraDevice[]>([])
-  const [defaultCamera, setDefaultCamera] = useState<string>('')
+  // defaultCameraは変数として残しますが、_プレフィックスを付けて未使用変数として明示します
+  const [_defaultCamera, setDefaultCamera] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(true)
   const [permissionError, setPermissionError] = useState<string>('')
 
@@ -24,7 +25,7 @@ export const CameraCaptureSettingForm: React.FC = () => {
     const fetchCameraDevices = async () => {
       try {
         setLoading(true)
-        
+
         // 権限確認
         const permissionCheck = await ipc('camera:check-permissions', undefined)
         if (!permissionCheck.hasPermission) {
@@ -33,13 +34,13 @@ export const CameraCaptureSettingForm: React.FC = () => {
           setLoading(false)
           return
         }
-        
+
         // デバイス一覧取得
         const devices = await ipc('camera:list-devices', undefined)
         setCameraDevices(devices || [])
-        
+
         // デフォルトカメラの設定
-        const defaultDevice = devices.find(device => device.isDefault)
+        const defaultDevice = devices.find((device) => device.isDefault)
         if (defaultDevice) {
           setDefaultCamera(defaultDevice.deviceId)
         }
@@ -79,9 +80,7 @@ export const CameraCaptureSettingForm: React.FC = () => {
 
       {/* 設定フォーム */}
       <div className="flex flex-col gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-md mb-6 w-full">
-        <h4 className="font-medium text-sm mb-2 dark:text-gray-200">
-          {t('Camera Settings')}
-        </h4>
+        <h4 className="font-medium text-sm mb-2 dark:text-gray-200">{t('Camera Settings')}</h4>
 
         {/* カメラデバイス一覧 */}
         {loading ? (
@@ -220,7 +219,12 @@ export const CameraCaptureSettingForm: React.FC = () => {
           <ul className="text-sm text-gray-700 dark:text-gray-200 space-y-1">
             <li>• {t('Camera capture is typically very fast (< 1 second)')}</li>
             <li>• {t('AI analysis may take 5-15 seconds depending on image complexity')}</li>
-            <li>• {t('Higher resolution images provide better analysis results but take longer to process')}</li>
+            <li>
+              •{' '}
+              {t(
+                'Higher resolution images provide better analysis results but take longer to process'
+              )}
+            </li>
             <li>• {t('Ensure proper lighting for best results with text recognition')}</li>
             <li>• {t('Network latency affects AI analysis response time')}</li>
           </ul>

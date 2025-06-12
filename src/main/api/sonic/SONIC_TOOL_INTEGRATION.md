@@ -28,12 +28,14 @@ This document describes the integration of Bedrock Engineer's tool system with N
 **Purpose**: Manages tool execution requests between main process and frontend via Socket.io
 
 **Key Features**:
+
 - Request/response mapping with timeout handling
 - Socket connection management
 - Error handling and logging
 - Statistics tracking
 
 **Methods**:
+
 - `executeToolViaSocket()`: Execute a tool via Socket.io communication
 - `registerSocketHandlers()`: Register event handlers for tool execution
 - `getStatistics()`: Get execution statistics
@@ -44,12 +46,14 @@ This document describes the integration of Bedrock Engineer's tool system with N
 **Purpose**: Modified to support both legacy hardcoded tools and new preload tool system
 
 **Key Features**:
+
 - Fallback mechanism (new tools → legacy tools)
 - Tool name mapping from Nova Sonic format to preload format
 - Special handling for different tool types
 - Detailed logging for debugging
 
 **Methods**:
+
 - `setToolExecutor()`: Set the tool executor instance
 - `convertToToolInput()`: Convert Nova Sonic tool format to preload format
 - `processToolUse()`: Main tool processing with fallback
@@ -60,6 +64,7 @@ This document describes the integration of Bedrock Engineer's tool system with N
 **Purpose**: Receives tool execution requests via Socket.io and executes them using preload APIs
 
 **Key Features**:
+
 - Automatic tool execution on request
 - Error handling and response formatting
 - Integration with existing Socket.io connection
@@ -68,26 +73,26 @@ This document describes the integration of Bedrock Engineer's tool system with N
 
 Nova Sonic tools are mapped to preload tools as follows:
 
-| Nova Sonic Tool | Preload Tool | Description |
-|----------------|--------------|-------------|
-| `getdateandtimetool` | `think` | Date/time information via thinking |
-| `getweathertool` | `fetchWebsite` | Weather data via API call |
-| `websearchtool` | `tavilySearch` | Web search functionality |
-| `createfoldertool` | `createFolder` | File system operations |
-| `readfilestool` | `readFiles` | File reading |
-| `writetofiletool` | `writeToFile` | File writing |
-| `listfilestool` | `listFiles` | Directory listing |
-| `movefiletool` | `moveFile` | File moving |
-| `copyfiletool` | `copyFile` | File copying |
-| `applydiffedittool` | `applyDiffEdit` | Code editing |
-| `generateimagetool` | `generateImage` | Image generation |
-| `recognizeimagetool` | `recognizeImage` | Image recognition |
-| `executecommandtool` | `executeCommand` | System commands |
-| `retrievetool` | `retrieve` | Knowledge base queries |
-| `invokebedrockagenttool` | `invokeBedrockAgent` | AI agent invocation |
-| `invokeflowtool` | `invokeFlow` | Workflow execution |
-| `codeinterpretertool` | `codeInterpreter` | Code execution |
-| `thinktool` | `think` | AI reasoning |
+| Nova Sonic Tool          | Preload Tool         | Description                        |
+| ------------------------ | -------------------- | ---------------------------------- |
+| `getdateandtimetool`     | `think`              | Date/time information via thinking |
+| `getweathertool`         | `fetchWebsite`       | Weather data via API call          |
+| `websearchtool`          | `tavilySearch`       | Web search functionality           |
+| `createfoldertool`       | `createFolder`       | File system operations             |
+| `readfilestool`          | `readFiles`          | File reading                       |
+| `writetofiletool`        | `writeToFile`        | File writing                       |
+| `listfilestool`          | `listFiles`          | Directory listing                  |
+| `movefiletool`           | `moveFile`           | File moving                        |
+| `copyfiletool`           | `copyFile`           | File copying                       |
+| `applydiffedittool`      | `applyDiffEdit`      | Code editing                       |
+| `generateimagetool`      | `generateImage`      | Image generation                   |
+| `recognizeimagetool`     | `recognizeImage`     | Image recognition                  |
+| `executecommandtool`     | `executeCommand`     | System commands                    |
+| `retrievetool`           | `retrieve`           | Knowledge base queries             |
+| `invokebedrockagenttool` | `invokeBedrockAgent` | AI agent invocation                |
+| `invokeflowtool`         | `invokeFlow`         | Workflow execution                 |
+| `codeinterpretertool`    | `codeInterpreter`    | Code execution                     |
+| `thinktool`              | `think`              | AI reasoning                       |
 
 ## Usage Example
 
@@ -160,6 +165,7 @@ All components use structured logging with categories:
 Enable debug logging by setting appropriate log levels in the logger configuration.
 
 Key log messages to watch:
+
 - "Executing tool via socket"
 - "Tool executed successfully via Socket.io"
 - "Falling back to legacy tool implementation"

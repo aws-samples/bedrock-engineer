@@ -59,7 +59,8 @@ export class CameraCaptureTool extends BaseTool<CameraCaptureInput, CameraCaptur
         properties: {
           deviceId: {
             type: 'string',
-            description: 'Optional device ID to specify which camera to use. If not provided, the default camera will be used.'
+            description:
+              'Optional device ID to specify which camera to use. If not provided, the default camera will be used.'
           },
           width: {
             type: 'number',
@@ -110,7 +111,7 @@ export class CameraCaptureTool extends BaseTool<CameraCaptureInput, CameraCaptur
       height: input.height,
       willAnalyze: hasRecognizePrompt
     })
-    
+
     this.logger.info('Starting camera capture', {
       hasDeviceId: !!input.deviceId,
       width: input.width,
@@ -169,10 +170,10 @@ export class CameraCaptureTool extends BaseTool<CameraCaptureInput, CameraCaptur
           const recognizeImageSetting = this.storeManager.get('recognizeImageTool')
           const modelId =
             recognizeImageSetting?.modelId || 'anthropic.claude-3-5-sonnet-20241022-v2:0'
-          
+
           // カメラキャプチャに最適化した分析プロンプトの拡張
           let enhancedPrompt = input.recognizePrompt || ''
-          
+
           // ユーザープロンプトが詳細でない場合は補助的なプロンプトを追加
           if (enhancedPrompt.length < 50) {
             enhancedPrompt = `${enhancedPrompt}\n\n以下の観点で詳しく分析してください：

@@ -1,10 +1,9 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: "[FEATURE REQUEST] "
+title: '[FEATURE REQUEST] '
 labels: ''
 assignees: ''
-
 ---
 
 ## Is your feature request related to a problem? / この機能リクエストは何か問題に関連していますか？

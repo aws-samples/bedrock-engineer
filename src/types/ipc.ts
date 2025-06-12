@@ -248,7 +248,7 @@ export interface IPCChannelDefinitions {
       message: string
     }
   }
-  
+
   // カメラキャプチャ関連
   'camera:list-devices': {
     params: void
