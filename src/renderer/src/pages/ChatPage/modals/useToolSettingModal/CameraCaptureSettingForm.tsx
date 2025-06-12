@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Label, Select, Spinner } from 'flowbite-react'
 import { useSettings } from '@renderer/contexts/SettingsContext'
-import { ipc } from '@renderer/lib/api'
 
 interface CameraDevice {
   deviceId: string
@@ -25,29 +24,20 @@ export const CameraCaptureSettingForm: React.FC = () => {
     const fetchCameraDevices = async () => {
       try {
         setLoading(true)
-
-        // 権限確認
-        const permissionCheck = await ipc('camera:check-permissions', undefined)
-        if (!permissionCheck.hasPermission) {
-          setPermissionError(permissionCheck.message)
-          setCameraDevices([])
-          setLoading(false)
-          return
-        }
-
-        // デバイス一覧取得
-        const devices = await ipc('camera:list-devices', undefined)
-        setCameraDevices(devices || [])
-
-        // デフォルトカメラの設定
-        const defaultDevice = devices.find((device) => device.isDefault)
-        if (defaultDevice) {
-          setDefaultCamera(defaultDevice.deviceId)
-        }
+        
+        // カメラ情報は実際のツール使用時にメインプロセスで取得されるため、
+        // UI表示用にはダミーデータを使用します
+        const dummyDevices = [
+          { deviceId: 'default', label: t('Default Camera'), isDefault: true },
+          { deviceId: 'external', label: t('External Camera (if connected)'), isDefault: false }
+        ]
+        
+        setCameraDevices(dummyDevices)
+        setDefaultCamera(dummyDevices[0].deviceId)
       } catch (error) {
-        console.error('Failed to fetch camera devices', error)
+        console.error('Failed to prepare camera devices info', error)
         setCameraDevices([])
-        setPermissionError(t('Failed to access camera. Please check your camera permissions.'))
+        setPermissionError(t('Failed to initialize camera device selection.'))
       } finally {
         setLoading(false)
       }
