@@ -186,7 +186,7 @@ async function captureFromCamera(options: CameraCaptureOptions): Promise<Buffer>
       })
 
       // HTMLファイルをロード
-      await window.loadFile(tmpHtmlPath)
+      window.loadFile(tmpHtmlPath)
     } catch (error) {
       reject(error)
     }
