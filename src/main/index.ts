@@ -20,6 +20,7 @@ import { windowHandlers } from './handlers/window-handlers'
 import { agentHandlers } from './handlers/agent-handlers'
 import { utilHandlers } from './handlers/util-handlers'
 import { screenHandlers } from './handlers/screen-handlers'
+import { cameraHandlers } from './handlers/camera-handlers'
 // 動的インポートを使用してfix-pathパッケージを読み込む
 import('fix-path')
   .then((fixPathModule) => {
@@ -267,6 +268,7 @@ app.whenReady().then(async () => {
   registerIpcHandlers(agentHandlers, { loggerCategory: 'agents:ipc' })
   registerIpcHandlers(utilHandlers, { loggerCategory: 'utils:ipc' })
   registerIpcHandlers(screenHandlers, { loggerCategory: 'screen:ipc' })
+  registerIpcHandlers(cameraHandlers, { loggerCategory: 'camera:ipc' })
 
   // ログハンドラーの登録
   registerLogHandler()

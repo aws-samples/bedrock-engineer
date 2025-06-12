@@ -46,7 +46,8 @@ const standardToolIcons = {
   think: <FaBrain className="text-amber-500 size-6" />,
   invokeFlow: <FaProjectDiagram className="text-blue-600 size-6" />,
   codeInterpreter: <FaCode className="text-green-600 size-6" />,
-  screenCapture: <FaDesktop className="text-slate-500 size-6" />
+  screenCapture: <FaDesktop className="text-slate-500 size-6" />,
+  cameraCapture: <FaCamera className="text-blue-500 size-6" />
 }
 
 // MCPツール用のアイコン（すべてのMCPツールで共通）

@@ -18,6 +18,7 @@ export type BuiltInToolName =
   | 'invokeBedrockAgent'
   | 'executeCommand'
   | 'applyDiffEdit'
+  | 'cameraCapture'
   | 'think'
   | 'recognizeImage'
   | 'invokeFlow'
@@ -54,7 +55,8 @@ const BUILT_IN_TOOLS: readonly BuiltInToolName[] = [
   'invokeFlow',
   'codeInterpreter',
   'mcp_adapter',
-  'screenCapture'
+  'screenCapture',
+  'cameraCapture'
 ] as const
 
 // 組み込みツール名であるかを判定する型ガード
@@ -258,6 +260,15 @@ export type ScreenCaptureInput = {
   recognizePrompt?: string // 画像認識用のプロンプト（空の場合はキャプチャのみ）
 }
 
+// cameraCapture ツールの入力型
+export type CameraCaptureInput = {
+  type: 'cameraCapture'
+  deviceId?: string // カメラデバイスID（空の場合はデフォルトカメラ）
+  width?: number // 希望する幅（ピクセル）
+  height?: number // 希望する高さ（ピクセル）
+  recognizePrompt?: string // 画像認識用のプロンプト（空の場合はキャプチャのみ）
+}
+
 // codeInterpreter ツールの入力型（操作別にディスクリミネーテッドユニオン化）
 export type CodeInterpreterInput =
   | CodeInterpreterExecuteInput
@@ -337,6 +348,7 @@ export type ToolInput =
   | ApplyDiffEditInput
   | ThinkInput
   | ScreenCaptureInput
+  | CameraCaptureInput
   | InvokeFlowInput
   | CodeInterpreterInput
   | McpToolInput // MCPツール入力を追加
@@ -362,6 +374,7 @@ export type ToolInputTypeMap = {
   applyDiffEdit: ApplyDiffEditInput
   think: ThinkInput
   screenCapture: ScreenCaptureInput
+  cameraCapture: CameraCaptureInput
   invokeFlow: InvokeFlowInput
   codeInterpreter: CodeInterpreterInput
   [key: string]: any // MCPツールに対応するためのインデックスシグネチャ
