@@ -1,0 +1,115 @@
+name: Tag Based Release Workflow
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  prepare-release:
+    name: Prepare Release Branch and PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      
+      - name: Extract version from tag
+        id: extract-version
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          VERSION=${TAG_NAME#v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+          echo "BRANCH_NAME=release/$TAG_NAME" >> $GITHUB_ENV
+          echo "Extracted version: $VERSION from tag: $TAG_NAME"
+      
+      - name: Create release branch
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git checkout -b ${{ env.BRANCH_NAME }}
+          echo "Created branch: ${{ env.BRANCH_NAME }}"
+      
+      - name: Update package.json version
+        run: |
+          # Update package.json version
+          npm version ${{ env.VERSION }} --no-git-tag-version
+          echo "Updated package.json to version ${{ env.VERSION }}"
+      
+      - name: Update README files
+        run: |
+          # Function to update version references in README files
+          update_readme() {
+            local file=$1
+            local new_version=$2
+            
+            # Look for existing version patterns and update them
+            # Pattern: v1.X.Y or v1.X.X
+            sed -i -E "s/v1\.[0-9]+\.[0-9]+/v$new_version/g" $file
+            
+            echo "Updated versions in $file"
+          }
+          
+          # Update both README files
+          update_readme README.md ${{ env.VERSION }}
+          update_readme README-ja.md ${{ env.VERSION }}
+      
+      - name: Commit changes
+        run: |
+          git add package.json README.md README-ja.md
+          git commit -m "chore: update version to ${{ env.VERSION }}"
+          git push origin ${{ env.BRANCH_NAME }}
+          echo "Pushed changes to branch: ${{ env.BRANCH_NAME }}"
+          
+      # 既存のdraft-release.ymlを直接呼び出して実行
+      - name: Trigger draft release workflow
+        run: |
+          # リリースブランチをプッシュした後、ドラフトリリースワークフローが起動するのを待つ
+          echo "リリースブランチがプッシュされました。ドラフトリリースワークフローが起動されます。"
+          # 30秒待って、ワークフローがGitHubに登録されるのを確認
+          sleep 30
+          
+      # PRの作成
+      - name: Create Pull Request
+        id: create-pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: prepare release v${{ env.VERSION }}"
+          branch: ${{ env.BRANCH_NAME }}
+          base: main
+          title: "リリース v${{ env.VERSION }}"
+          body: |
+            ## リリース v${{ env.VERSION }} の準備
+            
+            このPRは `${{ env.TAG_NAME }}` タグがプッシュされたことをトリガーに自動生成されました。
+            
+            ### 変更内容
+            - package.json のバージョンを `${{ env.VERSION }}` に更新
+            - README.md と README-ja.md のバージョン参照を更新
+            - リリースブランチの作成により、ドラフトリリースワークフローが自動的に起動されます
+            
+            ### 次のステップ
+            1. このPRのレビューと承認をお願いします
+            2. [Actionsタブ](https://github.com/aws-samples/bedrock-engineer/actions)でワークフローの完了を確認してください
+            3. [Releasesページ](https://github.com/aws-samples/bedrock-engineer/releases)でドラフトリリースを確認してください
+            4. ビルド成果物のチェックが完了したらマージしてください
+            5. マージするとリリースが自動的に公開されます
+          
+          labels: "release"
+          draft: false
+      
+      - name: Output PR URL
+        run: |
+          echo "Pull Request created: ${{ steps.create-pr.outputs.pull-request-url }}"
