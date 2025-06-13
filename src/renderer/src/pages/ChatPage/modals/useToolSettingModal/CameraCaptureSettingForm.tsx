@@ -367,7 +367,7 @@ export const CameraCaptureSettingForm: React.FC = () => {
                       <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
                         <div className="text-center">
                           <div className="text-2xl mb-1">📷</div>
-                          <div className="text-xs">Preview not available</div>
+                          <div className="text-xs">{t('Preview not available')}</div>
                         </div>
                       </div>
                     ) : camera.thumbnail ? (
@@ -381,7 +381,7 @@ export const CameraCaptureSettingForm: React.FC = () => {
                       <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500">
                         <div className="text-center">
                           <div className="text-2xl mb-1">📹</div>
-                          <div className="text-xs">Live Preview</div>
+                          <div className="text-xs">{t('Live Preview')}</div>
                         </div>
                       </div>
                     )}
