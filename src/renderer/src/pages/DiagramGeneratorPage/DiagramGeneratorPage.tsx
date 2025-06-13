@@ -11,9 +11,12 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '@renderer/components/DeepSearchButton'
-import { extractDrawioXml } from './utils/xmlParser'
+import { extractDrawioXml, extractDiagramContent } from './utils/xmlParser'
 import { DIAGRAM_GENERATOR_SYSTEM_PROMPT } from '../ChatPage/constants/DEFAULT_AGENTS'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
+import { DiagramExplanationView } from './components/DiagramExplanationView'
+import { MdOutlineArticle } from 'react-icons/md'
+import { Tooltip } from 'flowbite-react'
 
 export default function DiagramGeneratorPage() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -28,7 +31,11 @@ export default function DiagramGeneratorPage() {
   const [enableSearch, setEnableSearch] = useState(false)
 
   // 履歴管理用の状態
-  const [diagramHistory, setDiagramHistory] = useState<{ xml: string; prompt: string }[]>([])
+  const [diagramHistory, setDiagramHistory] = useState<{ xml: string; explanation: string; prompt: string }[]>([])
+  // 説明文の表示・非表示を切り替えるためのフラグ
+  const [showExplanation, setShowExplanation] = useState(true)
+  // 説明文を保持する状態
+  const [diagramExplanation, setDiagramExplanation] = useState<string>('')
   const [selectedHistoryIndex, setSelectedHistoryIndex] = useState<number | null>(null)
 
   const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
@@ -56,6 +63,12 @@ export default function DiagramGeneratorPage() {
         ''
       )
     }
+    
+    // XMLのみ出力する指示を修正し、説明付きで出力するよう変更
+    basePrompt = basePrompt.replace(
+      "* Please output only the XML content without any explanation or markdown formatting.",
+      "* Please output the XML content for the diagram followed by a clear explanation of the architecture."
+    )
 
     return basePrompt
   }
@@ -108,15 +121,19 @@ export default function DiagramGeneratorPage() {
       const rawContent = lastAssistantMessage.content
         .map((c) => ('text' in c ? c.text : ''))
         .join('')
-      // XMLパーサーを使用して有効なDrawIO XMLだけを抽出
-      const xml = extractDrawioXml(rawContent) || rawContent
+      
+      // XMLと説明文を分離するパーサーを使用
+      const { xml, explanation } = extractDiagramContent(rawContent)
+      const validXml = xml || rawContent
 
-      if (xml) {
+      if (validXml) {
         try {
-          drawioRef.current.load({ xml })
-          setXml(xml)
+          drawioRef.current.load({ xml: validXml })
+          setXml(validXml)
+          // 説明文を設定
+          setDiagramExplanation(explanation)
           // Generate new recommendations based on the current diagram
-          getRecommendDiagrams(xml)
+          getRecommendDiagrams(validXml)
 
           // 履歴に追加
           if (lastUserMessage?.content) {
@@ -124,7 +141,7 @@ export default function DiagramGeneratorPage() {
               .map((c) => ('text' in c ? c.text : ''))
               .join('')
             setDiagramHistory((prev) => {
-              const newHistory = [...prev, { xml, prompt: userPrompt }]
+              const newHistory = [...prev, { xml: validXml, explanation, prompt: userPrompt }]
               // 最大10つまで保持
               return newHistory.slice(-10)
             })
@@ -146,6 +163,7 @@ export default function DiagramGeneratorPage() {
         try {
           drawioRef.current.load({ xml: historyItem.xml })
           setXml(historyItem.xml)
+          setDiagramExplanation(historyItem.explanation)
           setUserInput(historyItem.prompt)
           setSelectedHistoryIndex(index)
         } catch (error) {
@@ -153,6 +171,11 @@ export default function DiagramGeneratorPage() {
         }
       }
     }
+  }
+  
+  // 説明文表示の切り替え
+  const toggleExplanationView = () => {
+    setShowExplanation(!showExplanation)
   }
 
   return (
@@ -193,18 +216,43 @@ export default function DiagramGeneratorPage() {
             </LoaderWithReasoning>
           </div>
         ) : (
-          <div className="w-full h-[95%] border border-gray-200">
-            <DrawIoEmbed
-              ref={drawioRef}
-              xml={xml}
-              configuration={{
-                defaultLibraries: 'aws4;aws3;aws3d'
-              }}
-              urlParameters={{
-                dark: isDark,
-                lang: language
-              }}
-            />
+          <div 
+            className="w-full h-[95%] flex"
+            style={{
+              display: 'flex',
+              gap: '1rem',
+              backgroundColor: isDark
+                ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
+                : 'rgb(243 244 246 / var(--tw-bg-opacity))',
+              border: 'none',
+              height: '100%'
+            }}
+          >
+            {/* 図の表示エリア - 左側 */}
+            <div className={`border border-gray-200 rounded-lg ${showExplanation ? 'w-2/3' : 'w-full'}`}>
+              <DrawIoEmbed
+                ref={drawioRef}
+                xml={xml}
+                configuration={{
+                  defaultLibraries: 'aws4;aws3;aws3d'
+                }}
+                urlParameters={{
+                  dark: isDark,
+                  lang: language
+                }}
+              />
+            </div>
+            
+            {/* 説明文の表示エリア - 右側 */}
+            {showExplanation && diagramExplanation && (
+              <div className="w-1/3">
+                <DiagramExplanationView 
+                  explanation={diagramExplanation} 
+                  isVisible={showExplanation}
+                  onClose={toggleExplanationView}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -226,6 +274,18 @@ export default function DiagramGeneratorPage() {
                 enableDeepSearch={enableSearch}
                 handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
               />
+              
+              {/* 説明文表示切り替えボタン */}
+              <Tooltip content={showExplanation ? "説明文を非表示" : "説明文を表示"} placement="bottom" animation="duration-500">
+                <button
+                  className={`cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                    showExplanation ? 'bg-gray-200 dark:bg-gray-700' : ''
+                  }`}
+                  onClick={toggleExplanationView}
+                >
+                  <MdOutlineArticle className="text-xl" />
+                </button>
+              </Tooltip>
             </div>
           </div>
 

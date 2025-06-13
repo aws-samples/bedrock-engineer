@@ -45,3 +45,38 @@ export const extractDrawioXml = (content: string): string => {
 
   return ''
 }
+/**
+ * AIの出力からDrawIO XMLと説明テキストを抽出する関数
+ * XMLと説明文を分離して返す
+ * 
+ * @param content アシスタントの回答テキスト
+ * @returns XMLと説明文を含むオブジェクト
+ */
+export const extractDiagramContent = (content: string): { xml: string; explanation: string } => {
+  if (!content) return { xml: '', explanation: '' }
+  
+  // DrawIO XMLを抽出
+  const xml = extractDrawioXml(content)
+  
+  if (!xml) {
+    return { xml: '', explanation: content.trim() }
+  }
+  
+  // XMLを説明文から除外する
+  let explanation = content
+  
+  // 直接XMLタグが含まれている場合
+  if (content.includes(xml)) {
+    explanation = content.replace(xml, '').trim()
+  } else {
+    // コードブロック内にXMLがある場合
+    const xmlCodeBlockRegex = /```(?:xml)?[\s\S]*?```/i
+    const codeBlockMatch = content.match(xmlCodeBlockRegex)
+    
+    if (codeBlockMatch && codeBlockMatch[0]) {
+      explanation = content.replace(codeBlockMatch[0], '').trim()
+    }
+  }
+  
+  return { xml, explanation }
+}
