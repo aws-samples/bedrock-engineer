@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '@renderer/components/DeepSearchButton'
-import { extractDrawioXml, extractDiagramContent } from './utils/xmlParser'
+import { extractDiagramContent } from './utils/xmlParser'
 import { DIAGRAM_GENERATOR_SYSTEM_PROMPT } from '../ChatPage/constants/DEFAULT_AGENTS'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
 import { DiagramExplanationView } from './components/DiagramExplanationView'
@@ -31,7 +31,9 @@ export default function DiagramGeneratorPage() {
   const [enableSearch, setEnableSearch] = useState(false)
 
   // 履歴管理用の状態
-  const [diagramHistory, setDiagramHistory] = useState<{ xml: string; explanation: string; prompt: string }[]>([])
+  const [diagramHistory, setDiagramHistory] = useState<
+    { xml: string; explanation: string; prompt: string }[]
+  >([])
   // 説明文の表示・非表示を切り替えるためのフラグ
   const [showExplanation, setShowExplanation] = useState(true)
   // 説明文を保持する状態
@@ -63,11 +65,11 @@ export default function DiagramGeneratorPage() {
         ''
       )
     }
-    
+
     // XMLのみ出力する指示を修正し、説明付きで出力するよう変更
     basePrompt = basePrompt.replace(
-      "* Please output only the XML content without any explanation or markdown formatting.",
-      "* Please output the XML content for the diagram followed by a clear explanation of the architecture."
+      '* Please output only the XML content without any explanation or markdown formatting.',
+      '* Please output the XML content for the diagram followed by a clear explanation of the architecture.'
     )
 
     return basePrompt
@@ -121,7 +123,7 @@ export default function DiagramGeneratorPage() {
       const rawContent = lastAssistantMessage.content
         .map((c) => ('text' in c ? c.text : ''))
         .join('')
-      
+
       // XMLと説明文を分離するパーサーを使用
       const { xml, explanation } = extractDiagramContent(rawContent)
       const validXml = xml || rawContent
@@ -172,7 +174,7 @@ export default function DiagramGeneratorPage() {
       }
     }
   }
-  
+
   // 説明文表示の切り替え
   const toggleExplanationView = () => {
     setShowExplanation(!showExplanation)
@@ -216,7 +218,7 @@ export default function DiagramGeneratorPage() {
             </LoaderWithReasoning>
           </div>
         ) : (
-          <div 
+          <div
             className="w-full h-[95%] flex"
             style={{
               display: 'flex',
@@ -229,7 +231,11 @@ export default function DiagramGeneratorPage() {
             }}
           >
             {/* 図の表示エリア - 左側 */}
-            <div className={`border border-gray-200 rounded-lg ${showExplanation ? 'w-2/3' : 'w-full'}`}>
+            <div
+              className={`border border-gray-200 rounded-lg ${
+                showExplanation ? 'w-2/3' : 'w-full'
+              }`}
+            >
               <DrawIoEmbed
                 ref={drawioRef}
                 xml={xml}
@@ -242,12 +248,12 @@ export default function DiagramGeneratorPage() {
                 }}
               />
             </div>
-            
+
             {/* 説明文の表示エリア - 右側 */}
             {showExplanation && diagramExplanation && (
               <div className="w-1/3">
-                <DiagramExplanationView 
-                  explanation={diagramExplanation} 
+                <DiagramExplanationView
+                  explanation={diagramExplanation}
                   isVisible={showExplanation}
                   onClose={toggleExplanationView}
                 />
@@ -274,9 +280,13 @@ export default function DiagramGeneratorPage() {
                 enableDeepSearch={enableSearch}
                 handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
               />
-              
+
               {/* 説明文表示切り替えボタン */}
-              <Tooltip content={showExplanation ? "説明文を非表示" : "説明文を表示"} placement="bottom" animation="duration-500">
+              <Tooltip
+                content={showExplanation ? '説明文を非表示' : '説明文を表示'}
+                placement="bottom"
+                animation="duration-500"
+              >
                 <button
                   className={`cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                     showExplanation ? 'bg-gray-200 dark:bg-gray-700' : ''
