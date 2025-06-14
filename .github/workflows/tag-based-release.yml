@@ -1,5 +1,10 @@
 name: Tag Based Release Workflow
 
+# トップレベルのパーミッション設定（全ジョブに適用）
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   push:
     tags:
@@ -9,9 +14,6 @@ jobs:
   prepare-release:
     name: Prepare Release Branch and PR
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     
     steps:
       - name: Check out Git repository
