@@ -164,7 +164,15 @@ jobs:
           fi
           
           git commit -m "chore: update version to ${{ env.VERSION }}"
-          git push origin ${{ env.BRANCH_NAME }}
+          
+          # リモートブランチが存在するか確認し、存在する場合は強制プッシュ
+          git ls-remote --heads origin ${{ env.BRANCH_NAME }} | grep ${{ env.BRANCH_NAME }} > /dev/null
+          if [ $? -eq 0 ]; then
+            echo "ブランチ ${{ env.BRANCH_NAME }} がすでに存在します。強制プッシュします。"
+            git push --force origin ${{ env.BRANCH_NAME }}
+          else
+            git push origin ${{ env.BRANCH_NAME }}
+          fi
           
           if [ $? -ne 0 ]; then
             echo "::error::Failed to push branch ${{ env.BRANCH_NAME }}"
