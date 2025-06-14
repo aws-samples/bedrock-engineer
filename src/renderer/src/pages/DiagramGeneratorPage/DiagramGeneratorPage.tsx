@@ -11,7 +11,12 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '@renderer/components/DeepSearchButton'
-import { extractDiagramContent } from './utils/xmlParser'
+import {
+  extractDiagramContent,
+  filterXmlFromStreamingContent,
+  containsXmlTags,
+  isXmlComplete
+} from './utils/xmlParser'
 import { DIAGRAM_GENERATOR_SYSTEM_PROMPT } from '../ChatPage/constants/DEFAULT_AGENTS'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
 import { DiagramExplanationView } from './components/DiagramExplanationView'
@@ -38,6 +43,8 @@ export default function DiagramGeneratorPage() {
   const [showExplanation, setShowExplanation] = useState(true)
   // 説明文を保持する状態
   const [diagramExplanation, setDiagramExplanation] = useState<string>('')
+  // ストリーミング中の説明文を保持する状態
+  const [streamingExplanation, setStreamingExplanation] = useState<string>('')
   const [selectedHistoryIndex, setSelectedHistoryIndex] = useState<number | null>(null)
 
   const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
@@ -65,12 +72,6 @@ export default function DiagramGeneratorPage() {
         ''
       )
     }
-
-    // XMLのみ出力する指示を修正し、説明付きで出力するよう変更
-    basePrompt = basePrompt.replace(
-      '* Please output only the XML content without any explanation or markdown formatting.',
-      '* Please output the XML content for the diagram followed by a clear explanation of the architecture.'
-    )
 
     return basePrompt
   }
@@ -113,6 +114,40 @@ export default function DiagramGeneratorPage() {
   useEffect(() => {
     // systemPromptは関数から取得するため、enableSearchが変更されたときに再レンダリングされる
   }, [enableSearch])
+
+  // ストリーミング中の説明文を抽出・更新
+  useEffect(() => {
+    if (loading && messages.length > 0) {
+      const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').pop()
+      if (lastAssistantMessage?.content) {
+        const currentText = lastAssistantMessage.content
+          .map((c) => ('text' in c ? c.text : ''))
+          .join('')
+
+        // ストリーミング中の部分的なテキストを設定
+        setStreamingExplanation(currentText)
+      }
+    } else if (!loading) {
+      // ローディングが終了したらストリーミング状態をクリア
+      setStreamingExplanation('')
+    }
+  }, [messages, loading])
+
+  // XML生成状態を判定
+  const isXmlGenerating = useMemo(() => {
+    if (loading && streamingExplanation) {
+      return containsXmlTags(streamingExplanation) && !isXmlComplete(streamingExplanation)
+    }
+    return false
+  }, [loading, streamingExplanation])
+
+  // XMLタグを除去した説明文
+  const filteredExplanation = useMemo(() => {
+    if (loading && streamingExplanation) {
+      return filterXmlFromStreamingContent(streamingExplanation)
+    }
+    return streamingExplanation
+  }, [loading, streamingExplanation])
 
   // 最後のアシスタントメッセージから XML を取得して draw.io に設定
   useEffect(() => {
@@ -211,31 +246,29 @@ export default function DiagramGeneratorPage() {
       </div>
 
       <div className="flex-1 rounded-lg">
-        {loading ? (
-          <div className="flex h-[95%] justify-center items-center flex-col">
-            <LoaderWithReasoning reasoningText={latestReasoningText}>
-              {executingTool === 'tavilySearch' ? <WebLoader /> : <Loader />}
-            </LoaderWithReasoning>
-          </div>
-        ) : (
+        <div
+          className="w-full h-[95%] flex"
+          style={{
+            display: 'flex',
+            gap: '1rem',
+            backgroundColor: isDark
+              ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
+              : 'rgb(243 244 246 / var(--tw-bg-opacity))',
+            border: 'none',
+            height: '100%'
+          }}
+        >
+          {/* 図の表示エリア - 左側 */}
           <div
-            className="w-full h-[95%] flex"
-            style={{
-              display: 'flex',
-              gap: '1rem',
-              backgroundColor: isDark
-                ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
-                : 'rgb(243 244 246 / var(--tw-bg-opacity))',
-              border: 'none',
-              height: '100%'
-            }}
+            className={`border border-gray-200 rounded-lg ${showExplanation ? 'w-2/3' : 'w-full'}`}
           >
-            {/* 図の表示エリア - 左側 */}
-            <div
-              className={`border border-gray-200 rounded-lg ${
-                showExplanation ? 'w-2/3' : 'w-full'
-              }`}
-            >
+            {(loading && !xml) || isXmlGenerating ? (
+              <div className="flex h-full justify-center items-center flex-col">
+                <LoaderWithReasoning reasoningText={latestReasoningText}>
+                  {executingTool === 'tavilySearch' ? <WebLoader /> : <Loader />}
+                </LoaderWithReasoning>
+              </div>
+            ) : (
               <DrawIoEmbed
                 ref={drawioRef}
                 xml={xml}
@@ -247,20 +280,25 @@ export default function DiagramGeneratorPage() {
                   lang: language
                 }}
               />
-            </div>
-
-            {/* 説明文の表示エリア - 右側 */}
-            {showExplanation && diagramExplanation && (
-              <div className="w-1/3">
-                <DiagramExplanationView
-                  explanation={diagramExplanation}
-                  isVisible={showExplanation}
-                  onClose={toggleExplanationView}
-                />
-              </div>
             )}
           </div>
-        )}
+
+          {/* 説明文の表示エリア - 右側 */}
+          {showExplanation && (
+            <div className="w-1/3">
+              <DiagramExplanationView
+                explanation={
+                  loading && filteredExplanation
+                    ? filteredExplanation
+                    : diagramExplanation || 'ダイアグラムの説明がここに表示されます。'
+                }
+                isStreaming={loading && filteredExplanation.length > 0}
+                isVisible={showExplanation}
+                onClose={toggleExplanationView}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-2 fixed bottom-0 left-[5rem] right-5 bottom-3">

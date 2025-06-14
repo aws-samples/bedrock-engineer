@@ -80,3 +80,59 @@ export const extractDiagramContent = (content: string): { xml: string; explanati
 
   return { xml, explanation }
 }
+
+/**
+ * ストリーミング中のテキストからXMLタグを除外する関数
+ * XMLタグやコードブロックを除去して、純粋な説明文のみを返す
+ *
+ * @param content ストリーミング中のテキスト
+ * @returns XMLタグを除去したテキスト
+ */
+export const filterXmlFromStreamingContent = (content: string): string => {
+  if (!content) return ''
+
+  let filteredContent = content
+
+  // XMLコードブロックを除去
+  filteredContent = filteredContent.replace(/```(?:xml)?[\s\S]*?```/gi, '')
+
+  // 直接的なXMLタグ（<mxfile>, <mxGraphModel>など）を除去
+  filteredContent = filteredContent.replace(/<mxfile[\s\S]*?<\/mxfile>/gi, '')
+  filteredContent = filteredContent.replace(/<mxGraphModel[\s\S]*?<\/mxGraphModel>/gi, '')
+
+  // 部分的なXMLタグも除去（ストリーミング中に途切れている可能性）
+  filteredContent = filteredContent.replace(/<mxfile[\s\S]*$/gi, '')
+  filteredContent = filteredContent.replace(/<mxGraphModel[\s\S]*$/gi, '')
+  filteredContent = filteredContent.replace(/<diagram[\s\S]*$/gi, '')
+  filteredContent = filteredContent.replace(/<mxCell[\s\S]*$/gi, '')
+
+  return filteredContent.trim()
+}
+
+/**
+ * テキストにXMLタグが含まれているかを検出する関数
+ *
+ * @param content 検査するテキスト
+ * @returns XMLタグが含まれている場合true
+ */
+export const containsXmlTags = (content: string): boolean => {
+  if (!content) return false
+
+  // XMLタグの存在をチェック
+  const xmlPatterns = [/<mxfile/i, /<mxGraphModel/i, /<diagram/i, /```(?:xml)?/i]
+
+  return xmlPatterns.some((pattern) => pattern.test(content))
+}
+
+/**
+ * XML生成が完了しているかを判定する関数
+ *
+ * @param content 検査するテキスト
+ * @returns XML生成が完了している場合true
+ */
+export const isXmlComplete = (content: string): boolean => {
+  if (!content) return false
+
+  // </mxfile>タグで終了している、またはコードブロックが閉じている
+  return content.includes('</mxfile>') || /```[\s\S]*?```/.test(content)
+}

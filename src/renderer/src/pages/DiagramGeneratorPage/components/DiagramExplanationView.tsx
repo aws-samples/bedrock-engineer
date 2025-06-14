@@ -2,10 +2,12 @@ import { memo } from 'react'
 import { AiOutlineCloseCircle } from 'react-icons/ai'
 import { MdOutlineContentCopy } from 'react-icons/md'
 import { toast } from 'react-hot-toast'
+import MD from '@renderer/components/Markdown/MD'
 
 type DiagramExplanationViewProps = {
   explanation: string
   isVisible: boolean
+  isStreaming?: boolean
   onClose: () => void
 }
 
@@ -17,6 +19,7 @@ type DiagramExplanationViewProps = {
 const DiagramExplanationViewComponent = ({
   explanation,
   isVisible,
+  isStreaming = false,
   onClose
 }: DiagramExplanationViewProps) => {
   if (!isVisible || !explanation) {
@@ -52,8 +55,18 @@ const DiagramExplanationViewComponent = ({
       </div>
 
       {/* コンテンツ部分 */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        <div className="prose prose-sm dark:prose-invert max-w-none">{explanation}</div>
+      <div className="flex-1 p-4 overflow-y-auto text-gray-900 dark:text-white">
+        <MD>{explanation}</MD>
+        {isStreaming && (
+          <div className="flex items-center gap-2 mt-2 text-gray-500 dark:text-gray-400">
+            <div className="flex space-x-1">
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+            </div>
+            <span className="text-sm">生成中...</span>
+          </div>
+        )}
       </div>
     </div>
   )

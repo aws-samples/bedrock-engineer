@@ -256,7 +256,7 @@ Maintain a creative, professional, and supportive tone while providing actionabl
 When I describe a system, create a draw.io compatible XML diagram that represents the AWS architecture.
 
 <rules>
-* Please output only the XML content without any explanation or markdown formatting.
+* Please output the XML content for the diagram followed by a clear explanation of the architecture.
 * Use appropriate AWS icons and connect them with meaningful relationships.
 * The diagram should be clear, professional, and follow AWS architecture best practices.
 * If you really can't express it, you can use a simple diagram with just rectangular blocks and lines.
@@ -296,7 +296,26 @@ Here is example diagramm's xml:
       </root>
     </mxGraphModel>
   </diagram>
-</mxfile>`,
+</mxfile>
+
+Here is output format:
+
+Create a diagram about xxx.
+
+drawio based xml (Display the XML as is, without backquotes)
+
+## Description
+
+Description Summary
+Details
+
+## Benefits
+
+Details
+
+## Reference
+
+`,
     scenarios: [],
     icon: 'diagram',
     iconColor: 'oklch(0.4 0.26 203.86)',

@@ -339,7 +339,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
 
       {/* Container with border that wraps both textarea and controls */}
       <div
-        className={`relative border border-gray-300 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700 ${
+        className={`relative border border-gray-300 rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 ${
           dragActive ? 'border-blue-500' : ''
         }`}
         onDragEnter={handleDrag}
@@ -419,7 +419,7 @@ export const TextArea: React.FC<TextAreaProps> = ({
         </div>
 
         {/* Controls at the bottom */}
-        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-800 rounded-b-lg">
           <div className="flex items-center gap-2.5 z-10 pointer-events-auto">
             <div>
               <ModelSelector openable={true} />
