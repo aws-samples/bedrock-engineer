@@ -45,69 +45,82 @@ jobs:
       
       - name: Update package.json version
         run: |
-          # jqがインストールされているか確認し、なければインストール
-          if ! command -v jq &> /dev/null; then
-            echo "jq could not be found, installing..."
-            apt-get update && apt-get install -y jq || true
-          fi
+          # Node.js と npm は GitHub Actions環境にプリインストールされているため、
+          # npm コマンドを最優先で使用する
 
-          # 複数の方法でpackage.jsonを更新（冗長性のため）
-          echo "Updating package.json version to ${{ env.VERSION }}..."
+          echo "Updating package.json and package-lock.json to version ${{ env.VERSION }}..."
           
-          # 方法1: jqを使用（利用可能な場合）
-          if command -v jq &> /dev/null; then
-            echo "Using jq to update version..."
-            jq ".version = \"${{ env.VERSION }}\"" package.json > package.json.tmp
-            if [ -s package.json.tmp ]; then  # ファイルが存在し、サイズが0より大きいか確認
-              mv package.json.tmp package.json
-              echo "Successfully updated package.json using jq"
-            else
-              echo "jq update failed, output file is empty or does not exist"
-              rm -f package.json.tmp  # 一時ファイルを削除
-            fi
-          else
-            echo "jq not available, skipping this method"
-          fi
+          # 既存のpackage.jsonのバックアップを作成
+          cp package.json package.json.backup
+          cp package-lock.json package-lock.json.backup
           
-          # 方法2: sedを使用（バックアップ手段として）
-          echo "Using sed to update version..."
-          sed -i -E "s/\"version\": \"[0-9]+\.[0-9]+\.[0-9]+\"/\"version\": \"${{ env.VERSION }}\"/g" package.json
-          echo "Updated package.json using sed"
-          
-          # 方法3: npmコマンドを使用（バックアップの2つ目の手段として）
+          # 方法1: npm version コマンドで更新（最も確実な方法）
           echo "Using npm to update version..."
-          npm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version || true
-          echo "Attempted to update package.json using npm"
+          npm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
           
-          # 確認
-          NEW_VERSION=$(grep -o "\"version\": *\"[0-9]\+\.[0-9]\+\.[0-9]\+\"" package.json | cut -d'"' -f4)
-          echo "New version in package.json: $NEW_VERSION"
-          
-          # package-lock.json も更新する
-          echo "Updating package-lock.json..."
-          
-          # 方法1: jqを使用
-          if command -v jq &> /dev/null; then
-            echo "Using jq to update package-lock.json..."
-            jq ".version = \"${{ env.VERSION }}\" | .packages.\"\".version = \"${{ env.VERSION }}\"" package-lock.json > package-lock.json.tmp
-            if [ -s package-lock.json.tmp ]; then
-              mv package-lock.json.tmp package-lock.json
-              echo "Successfully updated package-lock.json using jq"
+          # バージョン更新の確認
+          UPDATED_VERSION=$(node -p "require('./package.json').version")
+          if [ "$UPDATED_VERSION" = "${{ env.VERSION }}" ]; then
+            echo "✓ Successfully updated package.json to version $UPDATED_VERSION using npm"
+          else
+            echo "⚠️ npm update failed, restoring backup and trying alternative method"
+            cp package.json.backup package.json
+            cp package-lock.json.backup package-lock.json
+            
+            # 方法2: Node.jsのファイル編集スクリプトを使用
+            echo "Using Node.js to update version..."
+            node -e "
+              const fs = require('fs');
+              
+              // package.json の更新
+              const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+              packageJson.version = '${{ env.VERSION }}';
+              fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
+              
+              // package-lock.json の更新
+              try {
+                const packageLockJson = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+                packageLockJson.version = '${{ env.VERSION }}';
+                if (packageLockJson.packages && packageLockJson.packages['']) {
+                  packageLockJson.packages[''].version = '${{ env.VERSION }}';
+                }
+                fs.writeFileSync('package-lock.json', JSON.stringify(packageLockJson, null, 2));
+              } catch (e) {
+                console.error('Error updating package-lock.json:', e);
+              }
+            "
+            
+            # 再度確認
+            UPDATED_VERSION=$(node -p "require('./package.json').version")
+            if [ "$UPDATED_VERSION" = "${{ env.VERSION }}" ]; then
+              echo "✓ Successfully updated package.json to version $UPDATED_VERSION using Node.js"
             else
-              echo "jq update failed for package-lock.json, output file is empty or does not exist"
-              rm -f package-lock.json.tmp
+              echo "⚠️ Node.js update failed too, trying direct file edit"
+              
+              # 方法3: 単純なファイル置換
+              cp package.json.backup package.json
+              cp package-lock.json.backup package-lock.json
+              
+              # package.jsonの更新 (シンプルな文字列置換)
+              echo "Using direct string replacement..."
+              sed -i "s/\"version\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"version\": \"${{ env.VERSION }}\"/g" package.json
+              sed -i "s/\"version\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"version\": \"${{ env.VERSION }}\"/g" package-lock.json
+              
+              # package-lock.jsonの「packages」セクション内のバージョンも更新
+              sed -i '0,/"name": "bedrock-engineer",\n  "version": "[0-9]*\.[0-9]*\.[0-9]*"/s//"name": "bedrock-engineer",\n  "version": "${{ env.VERSION }}"/' package-lock.json
             fi
           fi
           
-          # 方法2: sedを使用
-          echo "Using sed to update package-lock.json..."
-          sed -i -E "0,/\"version\": \"[0-9]+\.[0-9]+\.[0-9]+\"/s//\"version\": \"${{ env.VERSION }}\"/" package-lock.json
-          sed -i -E "0,/\"name\": \"bedrock-engineer\",\n  \"version\": \"[0-9]+\.[0-9]+\.[0-9]+\"/s//\"name\": \"bedrock-engineer\",\n  \"version\": \"${{ env.VERSION }}\"/" package-lock.json
-          echo "Updated package-lock.json using sed"
+          # 最終確認と出力
+          echo "==== VERIFICATION ===="
+          echo "package.json version:"
+          grep -A1 '"version"' package.json
           
-          # 確認
-          echo "New version in package-lock.json:"
-          grep -n -A1 "\"name\": \"bedrock-engineer\"" package-lock.json | head -3
+          echo "package-lock.json version:"
+          grep -A1 '"version"' package-lock.json | head -2
+          
+          # バックアップファイルの削除
+          rm -f package.json.backup package-lock.json.backup
       
       - name: Update README files
         run: |
