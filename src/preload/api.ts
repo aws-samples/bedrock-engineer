@@ -98,6 +98,44 @@ export const api = {
       return ipcRenderer.invoke('screen:list-available-windows')
     }
   },
+  camera: {
+    saveCapturedImage: async (request: {
+      base64Data: string
+      deviceId: string
+      deviceName: string
+      width: number
+      height: number
+      format: string
+      outputPath?: string
+    }) => {
+      return ipcRenderer.invoke('camera:save-captured-image', request)
+    },
+    showPreviewWindow: async (options?: {
+      size?: 'small' | 'medium' | 'large'
+      opacity?: number
+      position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+      cameraIds?: string[]
+      layout?: 'cascade' | 'grid' | 'single'
+    }) => {
+      return ipcRenderer.invoke('camera:show-preview-window', options)
+    },
+    hidePreviewWindow: async () => {
+      return ipcRenderer.invoke('camera:hide-preview-window')
+    },
+    closePreviewWindow: async (deviceId: string) => {
+      return ipcRenderer.invoke('camera:close-preview-window', deviceId)
+    },
+    updatePreviewSettings: async (options: {
+      size?: 'small' | 'medium' | 'large'
+      opacity?: number
+      position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+    }) => {
+      return ipcRenderer.invoke('camera:update-preview-settings', options)
+    },
+    getPreviewStatus: async () => {
+      return ipcRenderer.invoke('camera:get-preview-status')
+    }
+  },
   tools: {
     getToolSpecs: () => {
       return ToolMetadataCollector.getToolSpecs()

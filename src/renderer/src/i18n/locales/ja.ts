@@ -346,7 +346,9 @@ const AgentFormTabs = {
 const CodeBlock = {
   Source: 'ソース',
   Preview: 'プレビュー',
-  'Toggle View': 'ビューを切り替え'
+  'Toggle View': 'ビューを切り替え',
+  'Camera Capture': 'カメラキャプチャ',
+  'Camera Device': 'カメラデバイス'
 }
 
 const ja = {

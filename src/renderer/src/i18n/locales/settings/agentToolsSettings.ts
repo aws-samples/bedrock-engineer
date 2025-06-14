@@ -160,6 +160,85 @@ export const agentToolsSettings = {
     'MCP Tool Info': 'MCP Tool Info',
     'MCP tools are provided by Model Context Protocol servers. Click the JSON button above to view the full tool specification.':
       'MCP tools are provided by Model Context Protocol servers. Click the JSON button above to view the full tool specification.',
+    // CameraCapture tool specific translations
+    'tool info.cameraCapture.description':
+      'The cameraCapture tool captures images from PC camera and saves them as image files. When a recognition prompt is provided, the captured image will be automatically analyzed with AI to extract text content, identify objects, and provide detailed visual descriptions for analysis and documentation purposes.',
+    'AI Image Analysis Settings': 'AI Image Analysis Settings',
+    'AI Model for Image Analysis': 'AI Model for Image Analysis',
+    'Image Quality': 'Image Quality',
+    'Low (640x480)': 'Low (640x480)',
+    'Medium (1280x720)': 'Medium (1280x720)',
+    'High (1920x1080)': 'High (1920x1080)',
+    'How to Use': 'How to Use',
+    'Camera capture only': 'Camera capture only',
+    'Use without any prompt to capture camera image only':
+      'Use without any prompt to capture camera image only',
+    'Camera capture + AI analysis': 'Camera capture + AI analysis',
+    'Provide a recognition prompt to automatically analyze the captured image':
+      'Provide a recognition prompt to automatically analyze the captured image',
+    'Example prompts': 'Example prompts',
+    '"Describe what you see in this image", "Read any text in this photo", "Identify objects in the camera view"':
+      '"Describe what you see in this image", "Read any text in this photo", "Identify objects in the camera view"',
+    'Platform Requirements': 'Platform Requirements',
+    'Camera access permission required in System Preferences > Security & Privacy > Privacy > Camera':
+      'Camera access permission required in System Preferences > Security & Privacy > Privacy > Camera',
+    'Camera access permission required in Windows Settings > Privacy > Camera':
+      'Camera access permission required in Windows Settings > Privacy > Camera',
+    'Camera Access Permissions': 'Camera Access Permissions',
+    Refresh: 'Refresh',
+    'Select which cameras this agent is allowed to access for image capture. Only selected cameras can be used for photography.':
+      'Select which cameras this agent is allowed to access for image capture. Only selected cameras can be used for photography.',
+    'Loading camera devices...': 'Loading camera devices...',
+    'No cameras available. Click refresh to try again.':
+      'No cameras available. Click refresh to try again.',
+    'Preview not available': 'Preview not available',
+    'Live Preview': 'Live Preview',
+    '{{count}} camera(s) allowed': '{{count}} camera(s) allowed',
+    'Usage Tips': 'Usage Tips',
+    'If no cameras are selected, the agent can use the default camera':
+      'If no cameras are selected, the agent can use the default camera',
+    'Camera permissions are checked each time before capture':
+      'Camera permissions are checked each time before capture',
+    'Use the refresh button to update the list of available cameras':
+      'Use the refresh button to update the list of available cameras',
+    'Live preview may not be available for all camera devices':
+      'Live preview may not be available for all camera devices',
+    'Camera Preview Window': 'Camera Preview Window',
+    'Display a live camera preview window on your screen. This allows you to see what the camera captures in real-time without taking photos.':
+      'Display a live camera preview window on your screen. This allows you to see what the camera captures in real-time without taking photos.',
+    'Preview Window Size': 'Preview Window Size',
+    'Small (200×150)': 'Small (200×150)',
+    'Medium (320×240)': 'Medium (320×240)',
+    'Large (480×360)': 'Large (480×360)',
+    'Preview Window Position': 'Preview Window Position',
+    'Bottom Right': 'Bottom Right',
+    'Bottom Left': 'Bottom Left',
+    'Top Right': 'Top Right',
+    'Top Left': 'Top Left',
+    'Window Opacity': 'Window Opacity',
+    'Preview Window Active': 'Preview Window Active',
+    'Preview Window Inactive': 'Preview Window Inactive',
+    'The camera preview window is currently displayed on your screen.':
+      'The camera preview window is currently displayed on your screen.',
+    'Enable the toggle above to show the camera preview window.':
+      'Enable the toggle above to show the camera preview window.',
+    'Preview Window Features': 'Preview Window Features',
+    'Always on top - stays visible above other windows':
+      'Always on top - stays visible above other windows',
+    'Draggable - can be moved around the screen': 'Draggable - can be moved around the screen',
+    'Live camera feed - shows real-time video from your camera':
+      'Live camera feed - shows real-time video from your camera',
+    'Hover controls - settings and close buttons appear on mouse hover':
+      'Hover controls - settings and close buttons appear on mouse hover',
+    'Automatic positioning - remembers your preferred screen location':
+      'Automatic positioning - remembers your preferred screen location',
+    'Preview window requires camera permission': 'Preview window requires camera permission',
+    'Only one preview window can be active at a time':
+      'Only one preview window can be active at a time',
+    'Settings changes apply immediately to active preview':
+      'Settings changes apply immediately to active preview',
+    'Close the preview window to free up camera resources':
+      'Close the preview window to free up camera resources',
     descriptions: {
       createFolder: 'Create a new folder at the specified path',
       writeToFile: 'Write content to an existing file',
@@ -177,7 +256,8 @@ export const agentToolsSettings = {
       invokeBedrockAgent: 'Invoke an Amazon Bedrock Agent',
       executeCommand: 'Execute a command or send input to a running process',
       invokeFlow: 'Execute an AWS Bedrock Flow to automate multi-step workflows',
-      think: 'Use enhanced reasoning for complex problem solving'
+      think: 'Use enhanced reasoning for complex problem solving',
+      cameraCapture: 'Capture images from PC camera and analyze with AI vision capabilities'
     }
   },
   ja: {
@@ -339,6 +419,85 @@ export const agentToolsSettings = {
     'MCP Tool Info': 'MCPツール情報',
     'MCP tools are provided by Model Context Protocol servers. Click the JSON button above to view the full tool specification.':
       'MCPツールはModel Context Protocolサーバーによって提供されます。完全なツール仕様を表示するには、上記のJSONボタンをクリックしてください。',
+    // CameraCapture tool specific translations
+    'tool info.cameraCapture.description':
+      'cameraCaptureツールはPCのカメラから画像をキャプチャし、画像ファイルとして保存します。認識プロンプトが提供されると、キャプチャされた画像は自動的にAIで分析され、テキスト内容の抽出、オブジェクトの識別、分析・文書化目的での詳細な視覚的説明が提供されます。',
+    'AI Image Analysis Settings': 'AI画像分析設定',
+    'AI Model for Image Analysis': '画像分析用AIモデル',
+    'Image Quality': '画像品質',
+    'Low (640x480)': '低画質 (640x480)',
+    'Medium (1280x720)': '中画質 (1280x720)',
+    'High (1920x1080)': '高画質 (1920x1080)',
+    'How to Use': '使用方法',
+    'Camera capture only': 'カメラキャプチャのみ',
+    'Use without any prompt to capture camera image only':
+      'プロンプトなしでカメラ画像のみをキャプチャ',
+    'Camera capture + AI analysis': 'カメラキャプチャ + AI分析',
+    'Provide a recognition prompt to automatically analyze the captured image':
+      '認識プロンプトを提供してキャプチャした画像を自動分析',
+    'Example prompts': 'プロンプト例',
+    '"Describe what you see in this image", "Read any text in this photo", "Identify objects in the camera view"':
+      '「この画像で何を見ているか説明して」、「この写真のテキストを読んで」、「カメラビューのオブジェクトを識別して」',
+    'Platform Requirements': 'プラットフォーム要件',
+    'Camera access permission required in System Preferences > Security & Privacy > Privacy > Camera':
+      'システム環境設定 > セキュリティとプライバシー > プライバシー > カメラでカメラアクセス許可が必要',
+    'Camera access permission required in Windows Settings > Privacy > Camera':
+      'Windows設定 > プライバシー > カメラでカメラアクセス許可が必要',
+    'Camera Access Permissions': 'カメラアクセス許可',
+    Refresh: '更新',
+    'Select which cameras this agent is allowed to access for image capture. Only selected cameras can be used for photography.':
+      'このエージェントが画像キャプチャでアクセスを許可するカメラを選択してください。選択されたカメラのみが撮影に使用できます。',
+    'Loading camera devices...': 'カメラデバイスを読み込み中...',
+    'No cameras available. Click refresh to try again.':
+      '利用可能なカメラがありません。更新をクリックして再試行してください。',
+    'Preview not available': 'プレビュー利用不可',
+    'Live Preview': 'ライブプレビュー',
+    '{{count}} camera(s) allowed': '{{count}}台のカメラが許可されています',
+    'Usage Tips': '使用のヒント',
+    'If no cameras are selected, the agent can use the default camera':
+      'カメラが選択されていない場合、エージェントはデフォルトカメラを使用できます',
+    'Camera permissions are checked each time before capture':
+      'カメラの許可はキャプチャ前に毎回確認されます',
+    'Use the refresh button to update the list of available cameras':
+      '更新ボタンを使用して利用可能なカメラリストを更新してください',
+    'Live preview may not be available for all camera devices':
+      'ライブプレビューはすべてのカメラデバイスで利用できるとは限りません',
+    'Camera Preview Window': 'カメラプレビューウィンドウ',
+    'Display a live camera preview window on your screen. This allows you to see what the camera captures in real-time without taking photos.':
+      '画面にライブカメラプレビューウィンドウを表示します。これにより、写真を撮影することなく、カメラがキャプチャしているものをリアルタイムで確認できます。',
+    'Preview Window Size': 'プレビューウィンドウサイズ',
+    'Small (200×150)': '小 (200×150)',
+    'Medium (320×240)': '中 (320×240)',
+    'Large (480×360)': '大 (480×360)',
+    'Preview Window Position': 'プレビューウィンドウ位置',
+    'Bottom Right': '右下',
+    'Bottom Left': '左下',
+    'Top Right': '右上',
+    'Top Left': '左上',
+    'Window Opacity': 'ウィンドウの透明度',
+    'Preview Window Active': 'プレビューウィンドウがアクティブ',
+    'Preview Window Inactive': 'プレビューウィンドウが非アクティブ',
+    'The camera preview window is currently displayed on your screen.':
+      'カメラプレビューウィンドウが現在画面に表示されています。',
+    'Enable the toggle above to show the camera preview window.':
+      '上記のトグルを有効にしてカメラプレビューウィンドウを表示してください。',
+    'Preview Window Features': 'プレビューウィンドウ機能',
+    'Always on top - stays visible above other windows':
+      '常に最前面 - 他のウィンドウの上に表示されます',
+    'Draggable - can be moved around the screen': 'ドラッグ可能 - 画面上で移動できます',
+    'Live camera feed - shows real-time video from your camera':
+      'ライブカメラフィード - カメラからのリアルタイム映像を表示',
+    'Hover controls - settings and close buttons appear on mouse hover':
+      'ホバーコントロール - マウスホバーで設定と閉じるボタンが表示',
+    'Automatic positioning - remembers your preferred screen location':
+      '自動位置調整 - 好みの画面位置を記憶',
+    'Preview window requires camera permission': 'プレビューウィンドウにはカメラ許可が必要',
+    'Only one preview window can be active at a time':
+      '同時にアクティブにできるプレビューウィンドウは1つのみ',
+    'Settings changes apply immediately to active preview':
+      '設定の変更はアクティブなプレビューに即座に適用されます',
+    'Close the preview window to free up camera resources':
+      'プレビューウィンドウを閉じてカメラリソースを解放してください',
     descriptions: {
       createFolder: '指定したパスに新しいフォルダを作成',
       writeToFile: '既存のファイルにコンテンツを書き込み',
@@ -356,7 +515,8 @@ export const agentToolsSettings = {
       invokeBedrockAgent: 'Amazon Bedrock Agentを呼び出し',
       executeCommand: 'コマンドを実行または実行中のプロセスに入力を送信',
       invokeFlow: 'AWS Bedrock Flowを実行して複数ステップのワークフローを自動化',
-      think: '複雑な問題解決のための高度な推論を使用'
+      think: '複雑な問題解決のための高度な推論を使用',
+      cameraCapture: 'PCカメラから画像をキャプチャしてAIビジョン機能で分析'
     }
   }
 }

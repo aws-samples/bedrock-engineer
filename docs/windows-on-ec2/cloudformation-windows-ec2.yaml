@@ -1,0 +1,264 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Windows EC2 instance with development tools (Git, Chocolatey, NVM, Node.js) pre-installed via UserData'
+
+Parameters:
+  InstanceType:
+    Description: EC2 instance type for the Windows server
+    Type: String
+    Default: t3.large
+    AllowedValues:
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+    ConstraintDescription: Must be a valid EC2 instance type
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable RDP access
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: windows-dev-keypair
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair
+
+  AllowedCidrBlock:
+    Description: CIDR block that is allowed to access the instance via RDP
+    Type: String
+    Default: 0.0.0.0/0
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+    ConstraintDescription: Must be a valid CIDR range
+
+  InstanceName:
+    Description: Name for the EC2 instance
+    Type: String
+    Default: Windows-Dev-Instance
+
+  VolumeSize:
+    Description: Size of the EBS volume in GB
+    Type: Number
+    Default: 30
+    MinValue: 20
+    MaxValue: 1000
+
+  VolumeType:
+    Description: EBS volume type
+    Type: String
+    Default: gp3
+    AllowedValues:
+      - gp2
+      - gp3
+      - io1
+      - io2
+
+  VpcId:
+    Description: VPC ID where the instance will be created (leave empty for default VPC)
+    Type: String
+    Default: ''
+
+Conditions:
+  UseCustomVpc: !Not [!Equals [!Ref VpcId, '']]
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      AMI: ami-0c2b8ca1dad447f8a # Windows Server 2022 Base
+    us-east-2:
+      AMI: ami-0f9c44e98edf38a2b # Windows Server 2022 Base
+    us-west-1:
+      AMI: ami-0ec0e125bb6c6e8ec # Windows Server 2022 Base
+    us-west-2:
+      AMI: ami-03cf127a # Windows Server 2022 Base
+    eu-west-1:
+      AMI: ami-0c2b8ca1dad447f8a # Windows Server 2022 Base
+    eu-central-1:
+      AMI: ami-0c2b8ca1dad447f8a # Windows Server 2022 Base
+    ap-southeast-1:
+      AMI: ami-0c2b8ca1dad447f8a # Windows Server 2022 Base
+    ap-northeast-1:
+      AMI: ami-0eb006f6fa753df2b # Windows Server 2022 Base
+    ap-south-1:
+      AMI: ami-0c2b8ca1dad447f8a # Windows Server 2022 Base
+
+Resources:
+  WindowsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${InstanceName}-SecurityGroup'
+      GroupDescription: Security group for Windows development instance
+      VpcId: !If [UseCustomVpc, !Ref VpcId, !Ref 'AWS::NoValue']
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: !Ref AllowedCidrBlock
+          Description: RDP access
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: !Ref AllowedCidrBlock
+          Description: Node.js development server
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref AllowedCidrBlock
+          Description: Alternative development server
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref AllowedCidrBlock
+          Description: HTTP access
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref AllowedCidrBlock
+          Description: HTTPS access
+      Tags:
+        - Key: Name
+          Value: !Sub '${InstanceName}-SecurityGroup'
+        - Key: Purpose
+          Value: Windows Development
+
+  WindowsInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', AMI]
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref WindowsSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref VolumeSize
+            VolumeType: !Ref VolumeType
+            DeleteOnTermination: true
+            Encrypted: true
+      IamInstanceProfile: !Ref WindowsInstanceProfile
+      Tags:
+        - Key: Name
+          Value: !Ref InstanceName
+        - Key: Purpose
+          Value: Windows Development
+        - Key: Environment
+          Value: Development
+        - Key: CreatedBy
+          Value: CloudFormation
+
+  WindowsInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: WindowsInstancePolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - bedrock:*
+                Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Sub '${InstanceName}-Role'
+
+  WindowsInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref WindowsInstanceRole
+
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref WindowsInstance
+      Tags:
+        - Key: Name
+          Value: !Sub '${InstanceName}-EIP'
+
+Outputs:
+  InstanceId:
+    Description: Instance ID of the Windows server
+    Value: !Ref WindowsInstance
+    Export:
+      Name: !Sub '${AWS::StackName}-InstanceId'
+
+  PublicIpAddress:
+    Description: Public IP address of the Windows server
+    Value: !Ref ElasticIP
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicIP'
+
+  PublicDnsName:
+    Description: Public DNS name of the Windows server
+    Value: !GetAtt WindowsInstance.PublicDnsName
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicDNS'
+
+  SecurityGroupId:
+    Description: Security Group ID for the Windows server
+    Value: !Ref WindowsSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupId'
+
+  RDPConnectionString:
+    Description: RDP connection string for the Windows server
+    Value: !Sub 'mstsc /v:${ElasticIP}:3389'
+
+  InstanceType:
+    Description: Instance type of the Windows server
+    Value: !Ref InstanceType
+
+  KeyPairUsed:
+    Description: Key pair used for the instance
+    Value: !Ref KeyName
+
+  UserDataLogLocation:
+    Description: Location of the UserData execution log
+    Value: 'C:\UserDataLog.txt'
+
+  RecommendedNextSteps:
+    Description: Recommended next steps after instance creation
+    Value: |
+      1. Wait for the instance to complete initialization (10-15 minutes)
+      2. Get the Administrator password from EC2 console
+      3. Connect via RDP using the public IP address
+      4. Check UserData log at C:\UserDataLog.txt
+      5. Verify installed tools: git, node, npm, choco, python, aws cli
+      6. Test Bedrock access: aws bedrock list-foundation-models
+      7. Configure Git with your credentials
+      8. Start developing with Bedrock!
+
+  BedrockInfo:
+    Description: Information about Bedrock integration
+    Value: |
+      This instance has full access to Amazon Bedrock services.
+      Installed tools: Python 3.x, boto3, anthropic SDK
+      Test command: python -c "import boto3; print(boto3.client('bedrock').list_foundation_models())"
+      Documentation: https://docs.aws.amazon.com/bedrock/

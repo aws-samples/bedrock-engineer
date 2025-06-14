@@ -14,6 +14,7 @@ import { GenerateVideoSettingForm } from './GenerateVideoSettingForm'
 import { FlowSettingForm } from './FlowSettingForm'
 import { CodeInterpreterSettingForm } from './CodeInterpreterSettingForm'
 import { ScreenCaptureSettingForm } from './ScreenCaptureSettingForm'
+import { CameraCaptureSettingForm } from './CameraCaptureSettingForm'
 import { Button, Modal, ToggleSwitch } from 'flowbite-react'
 import { memo, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -48,7 +49,8 @@ const TOOLS_WITH_SETTINGS = [
   'generateVideo',
   'invokeFlow',
   'codeInterpreter',
-  'screenCapture'
+  'screenCapture',
+  'cameraCapture'
 ]
 
 interface ToolSettingModalProps {
@@ -305,6 +307,39 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
 
     // エージェントの設定を更新
     updateAgentTools(selectedAgentId, updatedTools)
+
+    // CameraCaptureToolが有効になった場合、プレビューウィンドウを自動表示
+    if (toolName === 'cameraCapture') {
+      const isNowEnabled = existingToolIndex !== -1 ? !agentTools[existingToolIndex].enabled : true
+
+      if (isNowEnabled && window.api?.camera) {
+        // 少し遅延を入れてプレビューウィンドウを表示
+        setTimeout(async () => {
+          try {
+            const result = await window.api.camera.showPreviewWindow({
+              size: 'medium',
+              opacity: 0.9,
+              position: 'bottom-right'
+            })
+            if (result.success) {
+              toast.success('Camera preview window opened')
+            }
+          } catch (error) {
+            console.error('Failed to show camera preview window:', error)
+          }
+        }, 500)
+      } else if (!isNowEnabled && window.api?.camera) {
+        // ツールが無効になった場合はプレビューウィンドウを閉じる
+        setTimeout(async () => {
+          try {
+            await window.api.camera.hidePreviewWindow()
+            toast.success('Camera preview window closed')
+          } catch (error) {
+            console.error('Failed to hide camera preview window:', error)
+          }
+        }, 100)
+      }
+    }
   }
 
   const selectTool = (toolName: string) => {
@@ -545,6 +580,7 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                     )}
                     {selectedTool === 'codeInterpreter' && <CodeInterpreterSettingForm />}
                     {selectedTool === 'screenCapture' && <ScreenCaptureSettingForm />}
+                    {selectedTool === 'cameraCapture' && <CameraCaptureSettingForm />}
                   </div>
                 ) : (
                   <div className="prose dark:prose-invert max-w-none">

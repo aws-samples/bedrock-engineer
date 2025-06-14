@@ -28,6 +28,7 @@ import { ExecuteCommandTool } from './handlers/command/ExecuteCommandTool'
 import { ThinkTool } from './handlers/thinking/ThinkTool'
 import { CodeInterpreterTool } from './handlers/interpreter/CodeInterpreterTool'
 import { ScreenCaptureTool } from './handlers/system/ScreenCaptureTool'
+import { CameraCaptureTool } from './handlers/system/CameraCaptureTool'
 
 /**
  * Registry for managing tools
@@ -412,6 +413,10 @@ export class ToolMetadataCollector {
       specs.push({ toolSpec: ScreenCaptureTool.toolSpec })
     }
 
+    if (CameraCaptureTool.toolSpec) {
+      specs.push({ toolSpec: CameraCaptureTool.toolSpec })
+    }
+
     return specs
   }
 
@@ -515,6 +520,10 @@ export class ToolMetadataCollector {
     // Phase 6: System Tools
     if (ScreenCaptureTool.systemPromptDescription) {
       descriptions.screenCapture = ScreenCaptureTool.systemPromptDescription
+    }
+
+    if (CameraCaptureTool.systemPromptDescription) {
+      descriptions.cameraCapture = CameraCaptureTool.systemPromptDescription
     }
 
     return descriptions

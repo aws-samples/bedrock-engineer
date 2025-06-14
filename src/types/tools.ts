@@ -24,6 +24,7 @@ export type BuiltInToolName =
   | 'codeInterpreter'
   | 'mcp_adapter'
   | 'screenCapture'
+  | 'cameraCapture'
 
 // MCPツール名の型安全な定義
 export type McpToolName = `mcp_${string}`
@@ -54,7 +55,8 @@ const BUILT_IN_TOOLS: readonly BuiltInToolName[] = [
   'invokeFlow',
   'codeInterpreter',
   'mcp_adapter',
-  'screenCapture'
+  'screenCapture',
+  'cameraCapture'
 ] as const
 
 // 組み込みツール名であるかを判定する型ガード
@@ -259,6 +261,35 @@ export type ScreenCaptureInput = {
   windowTarget?: string // ウィンドウ名またはアプリケーション名による指定（部分一致）
 }
 
+// cameraCapture ツールの入力型
+export type CameraCaptureInput = {
+  type: 'cameraCapture'
+  deviceId?: string // 使用するカメラデバイスID（指定がない場合はデフォルトカメラ）
+  recognizePrompt?: string // AI画像認識用のプロンプト（空の場合は撮影のみ）
+  quality?: 'low' | 'medium' | 'high' // 画像品質 (low: 640x480, medium: 1280x720, high: 1920x1080)
+  format?: 'jpg' | 'png' // 出力形式（デフォルト: jpg）
+}
+
+// カメラデバイス情報の型定義
+export interface CameraInfo {
+  id: string // カメラデバイスID
+  name: string // カメラ名（例：FaceTime HDカメラ）
+  enabled: boolean // 選択状態
+  thumbnail?: string // プレビュー画像（base64エンコード）
+  capabilities: {
+    maxWidth: number // 最大解像度（幅）
+    maxHeight: number // 最大解像度（高さ）
+    supportedFormats: string[] // サポートされている形式
+  }
+}
+
+// エージェント固有のカメラ設定
+export interface CameraConfig {
+  id: string // カメラデバイスID
+  name: string // カメラ名
+  enabled: boolean // 許可状態
+}
+
 // codeInterpreter ツールの入力型（操作別にディスクリミネーテッドユニオン化）
 export type CodeInterpreterInput =
   | CodeInterpreterExecuteInput
@@ -338,6 +369,7 @@ export type ToolInput =
   | ApplyDiffEditInput
   | ThinkInput
   | ScreenCaptureInput
+  | CameraCaptureInput
   | InvokeFlowInput
   | CodeInterpreterInput
   | McpToolInput // MCPツール入力を追加
@@ -363,6 +395,7 @@ export type ToolInputTypeMap = {
   applyDiffEdit: ApplyDiffEditInput
   think: ThinkInput
   screenCapture: ScreenCaptureInput
+  cameraCapture: CameraCaptureInput
   invokeFlow: InvokeFlowInput
   codeInterpreter: CodeInterpreterInput
   [key: string]: any // MCPツールに対応するためのインデックスシグネチャ

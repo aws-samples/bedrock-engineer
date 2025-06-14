@@ -1,7 +1,7 @@
 Language: [English](./README.md) / [Japanese](./README-ja.md)
 
 > [!IMPORTANT]
-> v1.6.0 からエージェントごとにツールの設定が可能になりました。v1.6.0 以前のバージョンで作成していたエージェントのプロンプトはそのままご利用いただけますが、エージェントごとに利用できるツールを設定する必要がありますのでご注意ください。
+
 
 # 🧙 Bedrock Engineer
 
@@ -19,9 +19,13 @@ Bedrock Engineer はネイティブアプリです。アプリをダウンロー
 
 MacOS:
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.0.dmg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.1.dmg)
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.0.pkg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.1.pkg)
+
+Windows:
+
+[<img src="https://img.shields.io/badge/Download_FOR_WINDOWS-Latest%20Release-blue?style=for-the-badge" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.1-setup.exe)
 
 MacOS に最適化されていますが、Windows, Linux OS でもビルドして使用できます。不具合がある場合、issue に起票ください。
 
@@ -93,7 +97,7 @@ npm run build:linux
 - 🔄 チャット履歴の管理
 - 🌐 多言語対応
 - 🛡️ ガードレール対応
-- 💡 軽量処理用モデルによるコスト最適化 (v1.10.0+)
+- 💡 軽量処理用モデルによるコスト最適化
 
 | ![agent-chat-diagram](./assets/agent-chat-diagram.png) | ![agent-chat-search](./assets/agent-chat-search.png) |
 | :----------------------------------------------------: | :--------------------------------------------------: |

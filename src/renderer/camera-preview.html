@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Camera Preview</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background-color: rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      .preview-container {
+        position: relative;
+        width: 100%;
+        height: 100vh;
+        background: linear-gradient(45deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .video-stream {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 10px;
+      }
+
+      .controls-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 8px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 10;
+      }
+
+      .preview-container:hover .controls-overlay {
+        opacity: 1;
+      }
+
+      .control-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 4px;
+        color: white;
+        font-size: 12px;
+        padding: 4px 6px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .control-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .status-indicator {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 8px;
+        height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        z-index: 10;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .error-message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-align: center;
+        font-size: 14px;
+        padding: 20px;
+        background: rgba(239, 68, 68, 0.9);
+        border-radius: 8px;
+        z-index: 20;
+      }
+
+      .loading-message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-align: center;
+        font-size: 14px;
+        z-index: 20;
+      }
+
+      .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        margin-bottom: 8px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .camera-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+        color: white;
+        font-size: 11px;
+        padding: 8px;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .preview-container:hover .camera-info {
+        opacity: 1;
+      }
+
+      /* ドラッグ可能エリア */
+      .drag-handle {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        z-index: 5;
+        cursor: move;
+        -webkit-app-region: drag;
+      }
+
+      .control-button {
+        -webkit-app-region: no-drag;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="preview-container" id="previewContainer">
+      <!-- ドラッグハンドル -->
+      <div class="drag-handle"></div>
+
+      <!-- コントロールオーバーレイ -->
+      <div class="controls-overlay">
+        <button class="control-button" id="settingsBtn" title="Settings">⚙️</button>
+        <button class="control-button" id="closeBtn" title="Close">✕</button>
+      </div>
+
+      <!-- ステータスインジケーター -->
+      <div class="status-indicator" id="statusIndicator"></div>
+
+      <!-- ビデオストリーム -->
+      <video class="video-stream" id="videoStream" autoplay muted playsinline></video>
+
+      <!-- ローディングメッセージ -->
+      <div class="loading-message" id="loadingMessage">
+        <div class="loading-spinner"></div>
+        <div>Starting camera...</div>
+      </div>
+
+      <!-- エラーメッセージ -->
+      <div class="error-message" id="errorMessage" style="display: none">
+        <div>Camera access failed</div>
+        <div style="font-size: 12px; margin-top: 8px" id="errorDetails"></div>
+      </div>
+
+      <!-- カメラ情報 -->
+      <div class="camera-info" id="cameraInfo">
+        <div id="cameraName">Camera Preview</div>
+        <div id="cameraResolution"></div>
+      </div>
+    </div>
+
+    <script>
+      class CameraPreview {
+        constructor() {
+          this.videoElement = document.getElementById('videoStream')
+          this.loadingMessage = document.getElementById('loadingMessage')
+          this.errorMessage = document.getElementById('errorMessage')
+          this.errorDetails = document.getElementById('errorDetails')
+          this.statusIndicator = document.getElementById('statusIndicator')
+          this.cameraInfo = document.getElementById('cameraInfo')
+          this.cameraName = document.getElementById('cameraName')
+          this.cameraResolution = document.getElementById('cameraResolution')
+
+          this.currentStream = null
+          this.isInitialized = false
+
+          this.init()
+        }
+
+        async init() {
+          try {
+            // イベントリスナーを設定
+            this.setupEventListeners()
+
+            // カメラストリームを開始
+            await this.startCameraStream()
+
+            this.isInitialized = true
+          } catch (error) {
+            console.error('Failed to initialize camera preview:', error)
+            this.showError('Initialization failed', error.message)
+          }
+        }
+
+        setupEventListeners() {
+          // 閉じるボタン
+          document.getElementById('closeBtn').addEventListener('click', async () => {
+            this.cleanup()
+
+            // URLパラメータからdeviceIdを取得して個別ウィンドウクローズを実行
+            const urlParams = new URLSearchParams(window.location.search)
+            const deviceId = urlParams.get('deviceId') || 'default'
+
+            try {
+              // 直接ipcRendererを使用してIPCハンドラーと通信
+              const { ipcRenderer } = require('electron')
+
+              console.log('Attempting to close individual preview window:', deviceId)
+              const result = await ipcRenderer.invoke('camera:close-preview-window', deviceId)
+
+              if (result.success) {
+                console.log('Individual window close result:', result.message)
+                // ウィンドウが正常に閉じられるとclosedイベントが発火され、自動的に削除される
+              } else {
+                console.error('Failed to close individual window:', result.message)
+                // フォールバックとして全体を閉じる
+                await this.fallbackClose()
+              }
+            } catch (error) {
+              console.error('Error during individual window close:', error)
+              // エラー時のフォールバック
+              await this.fallbackClose()
+            }
+          })
+
+          // 設定ボタン（将来の拡張用）
+          document.getElementById('settingsBtn').addEventListener('click', () => {
+            // 将来的にここで設定パネルを表示
+            console.log('Settings clicked')
+          })
+
+          // ウィンドウが閉じられる時のクリーンアップ
+          window.addEventListener('beforeunload', () => {
+            this.cleanup()
+          })
+
+          // ビデオ要素のイベント
+          this.videoElement.addEventListener('loadedmetadata', () => {
+            this.onStreamLoaded()
+          })
+
+          this.videoElement.addEventListener('error', (error) => {
+            console.error('Video element error:', error)
+            this.showError('Video playback failed', 'Unable to display camera stream')
+          })
+        }
+
+        async startCameraStream() {
+          try {
+            this.showLoading()
+
+            // URLパラメータからdeviceIdとdeviceNameを取得
+            const urlParams = new URLSearchParams(window.location.search)
+            const targetDeviceId = urlParams.get('deviceId')
+            const targetDeviceName = urlParams.get('deviceName')
+
+            console.log('Starting camera stream for:', {
+              deviceId: targetDeviceId,
+              deviceName: targetDeviceName
+            })
+
+            // カメラタイトルを更新
+            if (targetDeviceName) {
+              this.cameraName.textContent = decodeURIComponent(targetDeviceName)
+              document.title = `Camera Preview - ${decodeURIComponent(targetDeviceName)}`
+            }
+
+            // getUserMedia APIでカメラストリームを取得
+            const constraints = {
+              video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                frameRate: { ideal: 30, max: 30 }
+              },
+              audio: false
+            }
+
+            // 特定のdeviceIdが指定されている場合は制約に追加
+            if (targetDeviceId && targetDeviceId !== 'default') {
+              constraints.video.deviceId = { exact: targetDeviceId }
+              console.log('Using specific camera device:', targetDeviceId)
+            } else {
+              console.log('Using default camera device')
+            }
+
+            this.currentStream = await navigator.mediaDevices.getUserMedia(constraints)
+            this.videoElement.srcObject = this.currentStream
+
+            // デバイス情報を取得
+            await this.updateCameraInfo()
+          } catch (error) {
+            console.error('Camera access failed:', error)
+
+            // 特定のデバイスIDでの取得に失敗した場合、デフォルトカメラにフォールバック
+            if (error.name === 'OverconstrainedError' || error.name === 'NotFoundError') {
+              console.log('Falling back to default camera...')
+              try {
+                const fallbackConstraints = {
+                  video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    frameRate: { ideal: 30, max: 30 }
+                  },
+                  audio: false
+                }
+
+                this.currentStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints)
+                this.videoElement.srcObject = this.currentStream
+                await this.updateCameraInfo()
+
+                // フォールバック警告を表示
+                this.showWarning(
+                  'Using default camera',
+                  'Specified camera not available, using default camera instead'
+                )
+              } catch (fallbackError) {
+                console.error('Fallback camera access also failed:', fallbackError)
+                this.showError('Camera access failed', this.getErrorMessage(fallbackError))
+              }
+            } else {
+              this.showError('Camera access failed', this.getErrorMessage(error))
+            }
+          }
+        }
+
+        async updateCameraInfo() {
+          try {
+            if (!this.currentStream) return
+
+            const videoTrack = this.currentStream.getVideoTracks()[0]
+            if (!videoTrack) return
+
+            const settings = videoTrack.getSettings()
+            const devices = await navigator.mediaDevices.enumerateDevices()
+            const videoDevices = devices.filter((device) => device.kind === 'videoinput')
+
+            const currentDevice = videoDevices.find(
+              (device) => device.deviceId === settings.deviceId
+            )
+
+            if (currentDevice) {
+              this.cameraName.textContent = currentDevice.label || 'Camera'
+            }
+
+            if (settings.width && settings.height) {
+              this.cameraResolution.textContent = `${settings.width}×${settings.height}`
+            }
+          } catch (error) {
+            console.error('Failed to update camera info:', error)
+          }
+        }
+
+        onStreamLoaded() {
+          this.hideLoading()
+          this.hideError()
+          this.updateStatus('active')
+        }
+
+        showLoading() {
+          this.loadingMessage.style.display = 'block'
+          this.errorMessage.style.display = 'none'
+          this.updateStatus('loading')
+        }
+
+        hideLoading() {
+          this.loadingMessage.style.display = 'none'
+        }
+
+        showError(title, details) {
+          this.loadingMessage.style.display = 'none'
+          this.errorMessage.style.display = 'block'
+          this.errorMessage.firstElementChild.textContent = title
+          this.errorDetails.textContent = details
+          this.updateStatus('error')
+        }
+
+        showWarning(title, details) {
+          console.warn(`${title}: ${details}`)
+          // 警告は一時的に表示して自動で消える
+          const warningElement = this.errorMessage.cloneNode(true)
+          warningElement.style.background = 'rgba(245, 158, 11, 0.9)' // 警告色（オレンジ）
+          warningElement.firstElementChild.textContent = title
+          warningElement.children[1].textContent = details
+
+          this.loadingMessage.style.display = 'none'
+          this.errorMessage.style.display = 'none'
+          warningElement.style.display = 'block'
+
+          // 警告要素を一時的に追加
+          document.getElementById('previewContainer').appendChild(warningElement)
+
+          // 3秒後に警告を自動で非表示
+          setTimeout(() => {
+            if (warningElement.parentNode) {
+              warningElement.parentNode.removeChild(warningElement)
+            }
+            this.updateStatus('active')
+          }, 3000)
+
+          this.updateStatus('warning')
+        }
+
+        hideError() {
+          this.errorMessage.style.display = 'none'
+        }
+
+        updateStatus(status) {
+          switch (status) {
+            case 'active':
+              this.statusIndicator.style.background = '#22c55e'
+              break
+            case 'loading':
+              this.statusIndicator.style.background = '#f59e0b'
+              break
+            case 'error':
+              this.statusIndicator.style.background = '#ef4444'
+              break
+            default:
+              this.statusIndicator.style.background = '#6b7280'
+          }
+        }
+
+        getErrorMessage(error) {
+          if (error.name === 'NotAllowedError') {
+            return 'Camera permission denied. Please allow camera access in your browser settings.'
+          } else if (error.name === 'NotFoundError') {
+            return 'No camera device found. Please connect a camera and try again.'
+          } else if (error.name === 'NotReadableError') {
+            return 'Camera is already in use by another application.'
+          } else if (error.name === 'OverconstrainedError') {
+            return 'Camera does not support the requested configuration.'
+          } else {
+            return error.message || 'Unknown camera error occurred.'
+          }
+        }
+
+        async fallbackClose() {
+          try {
+            console.log('Attempting fallback close using hidePreviewWindow')
+            const { ipcRenderer } = require('electron')
+            const result = await ipcRenderer.invoke('camera:hide-preview-window')
+
+            if (result.success) {
+              console.log('Fallback close successful:', result.message)
+            } else {
+              console.error('Fallback close failed:', result.message)
+              // 最後の手段として、ウィンドウを直接閉じる
+              window.close()
+            }
+          } catch (error) {
+            console.error('Fallback close error:', error)
+            // 最後の手段として、ウィンドウを直接閉じる
+            window.close()
+          }
+        }
+
+        cleanup() {
+          if (this.currentStream) {
+            this.currentStream.getTracks().forEach((track) => {
+              track.stop()
+            })
+            this.currentStream = null
+          }
+
+          if (this.videoElement) {
+            this.videoElement.srcObject = null
+          }
+        }
+      }
+
+      // カメラプレビューを初期化
+      document.addEventListener('DOMContentLoaded', () => {
+        new CameraPreview()
+      })
+    </script>
+  </body>
+</html>

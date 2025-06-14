@@ -322,7 +322,9 @@ const AgentFormTabs = {
 const CodeBlock = {
   Source: 'Source',
   Preview: 'Preview',
-  'Toggle View': 'Toggle View'
+  'Toggle View': 'Toggle View',
+  'Camera Capture': 'Camera Capture',
+  'Camera Device': 'Camera Device'
 }
 
 const en = {

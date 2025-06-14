@@ -259,6 +259,32 @@ export interface IPCChannelDefinitions {
       message: string
     }
   }
+
+  // カメラキャプチャ関連
+  'camera:save-captured-image': {
+    params: {
+      base64Data: string
+      deviceId: string
+      deviceName: string
+      width: number
+      height: number
+      format: string
+      outputPath?: string
+    }
+    result: {
+      success: boolean
+      filePath: string
+      metadata: {
+        width: number
+        height: number
+        format: string
+        fileSize: number
+        timestamp: string
+        deviceId: string
+        deviceName: string
+      }
+    }
+  }
 }
 
 // 型ヘルパー

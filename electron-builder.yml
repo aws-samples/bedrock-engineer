@@ -16,6 +16,8 @@ extraResources:
     to: 'directory-agents'
   - from: 'public/worklets'
     to: 'worklets'
+  - from: 'src/renderer/camera-preview.html'
+    to: 'renderer/camera-preview.html'
 win:
   executableName: Bedrock Engineer
 nsis:

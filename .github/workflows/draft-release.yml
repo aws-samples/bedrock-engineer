@@ -1,0 +1,172 @@
+name: Build Draft Release
+
+# release/ で始まるブランチへのプッシュをトリガーにする
+on:
+  push:
+    branches:
+      - 'release/**'
+  # 手動でワークフローを実行できるようにする
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'リリースバージョン'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  build:
+    name: Build Release Assets
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        include:
+          - os: macos-latest
+            build_command: build:mac
+          - os: windows-latest
+            build_command: build:win
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run ${{ matrix.build_command }}
+
+      - name: Find artifact
+        id: find-artifact
+        shell: bash
+        run: |
+          echo "Looking for artifacts..."
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            find ./dist -type f -name "*.dmg" -o -name "*.pkg" | xargs -I{} echo "Found mac artifact: {}"
+          else
+            find ./dist -type f -name "*.exe" | xargs -I{} echo "Found windows artifact: {}"
+          fi
+
+          # Output directory listing for debugging
+          echo "Directory listing for ./dist:"
+          find ./dist -type f | sort
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-artifacts
+          path: |
+            ./dist/**/*.dmg
+            ./dist/**/*.pkg
+            ./dist/**/*.exe
+          if-no-files-found: error
+
+  create-draft-release:
+    name: Create Draft Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from branch name
+        id: extract-version
+        run: |
+          BRANCH_NAME="${{ github.ref_name }}"
+          VERSION=$(echo $BRANCH_NAME | sed -E 's/release\/v?(.+)/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Extracted version: $VERSION"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find ./artifacts -type f | sort
+
+      - name: Generate Release Notes
+        id: release-notes
+        run: |
+          VERSION="${{ env.VERSION }}"
+          echo "Generating release notes for version $VERSION"
+
+          # Get package.json version to confirm
+          PACKAGE_VERSION=$(grep -o '"version": *"[^"]*"' package.json | cut -d'"' -f4)
+          echo "Package.json version: $PACKAGE_VERSION"
+
+          # Extract changes since previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            echo "No previous tag found, using all commits"
+            CHANGES=$(git log --pretty=format:"* %s (%h)" HEAD)
+          else
+            echo "Previous tag: $PREVIOUS_TAG"
+            CHANGES=$(git log --pretty=format:"* %s (%h)" ${PREVIOUS_TAG}..HEAD)
+          fi
+
+          # Categorize changes
+          FEATURES=$(echo "$CHANGES" | grep -i -E '(feat|feature|add):' || echo "")
+          FIXES=$(echo "$CHANGES" | grep -i -E '(fix|bug|issue):' || echo "")
+          OTHERS=$(echo "$CHANGES" | grep -v -i -E '(feat|feature|add|fix|bug|issue):' || echo "")
+
+          # Save release notes to a file
+          cat > RELEASE_NOTES.md << EOF
+          # Bedrock Engineer v$VERSION
+
+          ## 新機能
+          ${FEATURES:-"なし"}
+
+          ## 修正
+          ${FIXES:-"なし"}
+
+          ## その他の変更
+          ${OTHERS:-"なし"}
+
+          ## プラットフォーム
+          - macOS (Universal)
+          - Windows
+          EOF
+
+          cat RELEASE_NOTES.md
+
+      - name: Create Draft GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}
+          files: |
+            artifacts/**/*.dmg
+            artifacts/**/*.pkg
+            artifacts/**/*.exe
+          body_path: RELEASE_NOTES.md
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post Release Information
+        run: |
+          echo "ドラフトリリース v${{ env.VERSION }} が作成されました。"
+          echo "URL: ${{ steps.create_release.outputs.url }}"
+          echo ""
+          echo "次のステップ："
+          echo "1. リリース内容とビルド成果物を確認してください"
+          echo "2. 問題なければ手動でPRを作成し、mainブランチへのマージをリクエストしてください"
+          echo "   PR作成時の説明に、作成したリリースのURLを含めることをお勧めします"
+          echo "3. PRがマージされると、リリースが自動的に公開されます"

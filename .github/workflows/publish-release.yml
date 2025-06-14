@@ -1,0 +1,63 @@
+name: Publish Release
+
+# PRがマージされたときのみ実行
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  publish-release:
+    name: Publish GitHub Release
+    # PRがマージされた場合のみ実行し、release/ で始まるブランチからのPRに限定
+    if: |
+      github.event.pull_request.merged == true && 
+      startsWith(github.event.pull_request.head.ref, 'release/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+      
+      - name: Extract version from branch name
+        id: extract-version
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=$(echo $BRANCH_NAME | sed -E 's/release\/v?(.+)/\1/')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "Extracted version: $VERSION"
+          
+      - name: Find and publish draft release
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Looking for draft release for tag v${{ env.VERSION }}..."
+          
+          # Find the release ID
+          RELEASE_ID=$(gh release view v${{ env.VERSION }} --json id,isDraft --jq '.id')
+          
+          if [ -z "$RELEASE_ID" ]; then
+            echo "Error: Release for v${{ env.VERSION }} not found"
+            exit 1
+          fi
+          
+          # Check if release is a draft
+          IS_DRAFT=$(gh release view v${{ env.VERSION }} --json isDraft --jq '.isDraft')
+          
+          if [ "$IS_DRAFT" != "true" ]; then
+            echo "Warning: Release is already published"
+            exit 0
+          fi
+          
+          echo "Publishing draft release..."
+          gh release edit v${{ env.VERSION }} --draft=false
+          echo "Release v${{ env.VERSION }} has been published successfully!"
+          
+      - name: Post release notification
+        run: |
+          echo "🎉 リリース v${{ env.VERSION }} が公開されました！"
+          echo "URL: https://github.com/${{ github.repository }}/releases/tag/v${{ env.VERSION }}"

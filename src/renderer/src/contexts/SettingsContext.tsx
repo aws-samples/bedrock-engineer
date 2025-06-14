@@ -5,7 +5,8 @@ import {
   McpServerConfig,
   SendMsgKey,
   ToolState,
-  WindowConfig
+  WindowConfig,
+  CameraConfig
 } from 'src/types/agent-chat'
 import { ToolName } from 'src/types/tools'
 import { listModels } from '@renderer/lib/api'
@@ -180,6 +181,10 @@ export interface SettingsContextType {
   // エージェント固有の許可ウィンドウ設定
   getAgentAllowedWindows: (agentId: string) => WindowConfig[]
   updateAgentAllowedWindows: (agentId: string, windows: WindowConfig[]) => void
+
+  // エージェント固有の許可カメラ設定
+  getAgentAllowedCameras: (agentId: string) => CameraConfig[]
+  updateAgentAllowedCameras: (agentId: string, cameras: CameraConfig[]) => void
 
   // エージェント固有のBedrock Agents設定
   getAgentBedrockAgents: (agentId: string) => BedrockAgent[]
@@ -996,6 +1001,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }
 
   const setSelectedAgentId = (agentId: string) => {
+    // エージェント切り替え時に既存のカメラプレビューウィンドウを閉じる
+    if (window.api?.camera?.hidePreviewWindow) {
+      window.api.camera.hidePreviewWindow().catch((error) => {
+        console.warn('Failed to hide camera preview window during agent switch:', error)
+      })
+    }
+
     setStateSelectedAgentId(agentId)
     window.store.set('selectedAgentId', agentId)
   }
@@ -1265,6 +1277,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       projectPath,
       allowedCommands: allAgents.find((a) => a.id === selectedAgentId)?.allowedCommands || [],
       allowedWindows: allAgents.find((a) => a.id === selectedAgentId)?.allowedWindows || [],
+      allowedCameras: allAgents.find((a) => a.id === selectedAgentId)?.allowedCameras || [],
       knowledgeBases: allAgents.find((a) => a.id === selectedAgentId)?.knowledgeBases || [],
       bedrockAgents: allAgents.find((a) => a.id === selectedAgentId)?.bedrockAgents || [],
       flows: allAgents.find((a) => a.id === selectedAgentId)?.flows || []
@@ -1320,6 +1333,33 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // カスタムエージェントの場合のみ更新可能
       const updatedAgents = customAgents.map((agent) =>
         agent.id === agentId ? { ...agent, allowedWindows: windows } : agent
+      )
+
+      setCustomAgents(updatedAgents)
+      window.store.set('customAgents', updatedAgents)
+    },
+    [customAgents]
+  )
+
+  // エージェント固有の許可カメラを取得する関数
+  const getAgentAllowedCameras = useCallback(
+    (agentId: string): CameraConfig[] => {
+      // 現在選択されているエージェントを見つける
+      const agent = allAgents.find((a) => a.id === agentId)
+
+      // エージェント固有の許可カメラ設定がある場合はそれを返す
+      // それ以外は空配列を返す
+      return (agent && agent.allowedCameras) || []
+    },
+    [allAgents]
+  )
+
+  // エージェントの許可カメラ設定を更新する関数
+  const updateAgentAllowedCameras = useCallback(
+    (agentId: string, cameras: CameraConfig[]) => {
+      // カスタムエージェントの場合のみ更新可能
+      const updatedAgents = customAgents.map((agent) =>
+        agent.id === agentId ? { ...agent, allowedCameras: cameras } : agent
       )
 
       setCustomAgents(updatedAgents)
@@ -1606,6 +1646,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     updateAgentAllowedCommands,
     getAgentAllowedWindows,
     updateAgentAllowedWindows,
+    getAgentAllowedCameras,
+    updateAgentAllowedCameras,
     getAgentBedrockAgents,
     updateAgentBedrockAgents,
     getAgentKnowledgeBases,

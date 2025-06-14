@@ -15,6 +15,13 @@ export interface WindowConfig {
   enabled: boolean // 許可/非許可
 }
 
+// カメラ設定の型定義
+export interface CameraConfig {
+  id: string // カメラデバイスID
+  name: string // カメラ名
+  enabled: boolean // 許可/非許可
+}
+
 export type AgentChatConfig = {
   ignoreFiles?: string[]
   contextLength?: number
@@ -222,6 +229,7 @@ export type CustomAgent = Agent & {
   category?: AgentCategory // エージェントのカテゴリ
   allowedCommands?: CommandConfig[] // エージェント固有の許可コマンド
   allowedWindows?: WindowConfig[] // エージェント固有の許可ウィンドウ
+  allowedCameras?: CameraConfig[] // エージェント固有の許可カメラ
   bedrockAgents?: BedrockAgent[] // エージェント固有のBedrock Agents
   knowledgeBases?: KnowledgeBase[] // エージェント固有のKnowledge Base
   flows?: FlowConfig[] // エージェント固有のFlow設定
