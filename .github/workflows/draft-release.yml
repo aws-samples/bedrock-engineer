@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - 'release/**'
+  # 手動でワークフローを実行できるようにする
+  workflow_dispatch:
+    # 追加のパラメータは不要
 
 jobs:
   build:

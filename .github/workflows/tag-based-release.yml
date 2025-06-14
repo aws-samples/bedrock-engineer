@@ -175,11 +175,23 @@ jobs:
           echo "✓ Pushed changes to branch: ${{ env.BRANCH_NAME }}"
           
       # 既存のdraft-release.ymlを直接呼び出して実行
-      - name: Wait for draft release workflow
+      - name: Trigger draft release workflow manually
         if: steps.commit-changes.outputs.pushed == 'true'
         run: |
-          # リリースブランチをプッシュした後、ドラフトリリースワークフローが起動するのを待つ
-          echo "リリースブランチがプッシュされました。ドラフトリリースワークフローが起動されます。"
+          # リリースブランチをプッシュした後、ドラフトリリースワークフローを明示的に起動
+          echo "リリースブランチがプッシュされました。ドラフトリリースワークフローを手動で起動します。"
+
+          # リリースブランチの最新コミットSHAを取得
+          BRANCH_SHA=$(git rev-parse HEAD)
+          
+          # GitHub APIを使ってワークフローディスパッチイベントを送信
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/draft-release.yml/dispatches \
+            -d "{\"ref\":\"${{ env.BRANCH_NAME }}\", \"inputs\": {}}"
+            
+          echo "ドラフトリリースワークフローを手動でトリガーしました"
           # 10秒待って、ワークフローがGitHubに登録されるのを確認
           sleep 10
           
