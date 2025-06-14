@@ -45,155 +45,58 @@ jobs:
       
       - name: Update package.json version
         run: |
-          # Node.js と npm は GitHub Actions環境にプリインストールされているため、
-          # npm コマンドを最優先で使用する
-
           echo "Updating package.json and package-lock.json to version ${{ env.VERSION }}..."
           
-          # 既存のpackage.jsonのバックアップを作成
-          cp package.json package.json.backup
-          cp package-lock.json package-lock.json.backup
-          
-          # 方法1: npm version コマンドで更新（最も確実な方法）
-          echo "Using npm to update version..."
+          # npmコマンドでバージョンを更新（GitHub Actions環境で最も確実な方法）
           npm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
           
           # バージョン更新の確認
           UPDATED_VERSION=$(node -p "require('./package.json').version")
-          if [ "$UPDATED_VERSION" = "${{ env.VERSION }}" ]; then
-            echo "✓ Successfully updated package.json to version $UPDATED_VERSION using npm"
-          else
-            echo "⚠️ npm update failed, restoring backup and trying alternative method"
-            cp package.json.backup package.json
-            cp package-lock.json.backup package-lock.json
-            
-            # 方法2: Node.jsのファイル編集スクリプトを使用
-            echo "Using Node.js to update version..."
-            node -e "
-              const fs = require('fs');
-              
-              // package.json の更新
-              const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-              packageJson.version = '${{ env.VERSION }}';
-              fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
-              
-              // package-lock.json の更新
-              try {
-                const packageLockJson = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
-                packageLockJson.version = '${{ env.VERSION }}';
-                if (packageLockJson.packages && packageLockJson.packages['']) {
-                  packageLockJson.packages[''].version = '${{ env.VERSION }}';
-                }
-                fs.writeFileSync('package-lock.json', JSON.stringify(packageLockJson, null, 2));
-              } catch (e) {
-                console.error('Error updating package-lock.json:', e);
-              }
-            "
-            
-            # 再度確認
-            UPDATED_VERSION=$(node -p "require('./package.json').version")
-            if [ "$UPDATED_VERSION" = "${{ env.VERSION }}" ]; then
-              echo "✓ Successfully updated package.json to version $UPDATED_VERSION using Node.js"
-            else
-              echo "⚠️ Node.js update failed too, trying direct file edit"
-              
-              # 方法3: 単純なファイル置換
-              cp package.json.backup package.json
-              cp package-lock.json.backup package-lock.json
-              
-              # package.jsonの更新 (シンプルな文字列置換)
-              echo "Using direct string replacement..."
-              sed -i "s/\"version\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"version\": \"${{ env.VERSION }}\"/g" package.json
-              sed -i "s/\"version\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"version\": \"${{ env.VERSION }}\"/g" package-lock.json
-              
-              # package-lock.jsonの「packages」セクション内のバージョンも更新
-              sed -i '0,/"name": "bedrock-engineer",\n  "version": "[0-9]*\.[0-9]*\.[0-9]*"/s//"name": "bedrock-engineer",\n  "version": "${{ env.VERSION }}"/' package-lock.json
-            fi
-          fi
+          echo "✓ Updated to version: $UPDATED_VERSION"
           
-          # 最終確認と出力
+          # 簡単な検証
           echo "==== VERIFICATION ===="
           echo "package.json version:"
           grep -A1 '"version"' package.json
           
           echo "package-lock.json version:"
           grep -A1 '"version"' package-lock.json | head -2
-          
-          # バックアップファイルの削除
-          rm -f package.json.backup package-lock.json.backup
       
       - name: Update README files
         run: |
-          # READMEファイル内の特定のバージョン表記を更新する関数
-          update_version_references() {
-            local file=$1
-            local new_version=$2
-            local major_version=$(echo $new_version | cut -d. -f1)  # 1.14.6 -> 1
+          # READMEファイル内のバージョン参照を更新
+          echo "Updating README files to version v${{ env.VERSION }}..."
+          
+          # メジャーバージョン番号を抽出（例：1.14.8 から 1）
+          major_version=$(echo ${{ env.VERSION }} | cut -d. -f1)
+          
+          # README.mdとREADME-ja.mdを更新
+          for file in README.md README-ja.md; do
+            echo "Processing $file..."
             
-            echo "Updating version references in $file (to v$new_version)..."
-            
-            # 現在のファイル内容をバックアップ
+            # ファイルのバックアップを作成
             cp $file ${file}.bak
             
-            # バージョン参照を更新する複数のパターン
-            # 1. v1.6.0 のような具体的なバージョン番号 (文字列末尾や特定記号の前にあるケース)
-            echo "Updating standard version references..."
-            sed -i -E "s/v${major_version}\.[0-9]+\.[0-9]+([^0-9])/v${new_version}\1/g" $file
+            # 一般的なバージョン参照パターンを更新
+            sed -i -E "s/v${major_version}\\.[0-9]+\\.[0-9]+([^0-9])/v${{ env.VERSION }}\\1/g" $file
+            sed -i -E "s/\\(v${major_version}\\.[0-9]+\\.[0-9]+\\+\\)/\\(v${{ env.VERSION }}+\\)/g" $file
+            sed -i -E "s/> v${major_version}\\.[0-9]+\\.[0-9]+/> v${{ env.VERSION }}/g" $file
+            sed -i -E "s/Starting with v${major_version}\\.[0-9]+\\.[0-9]+/Starting with v${{ env.VERSION }}/g" $file
             
-            # 2. (v1.10.0+) のような形式
-            echo "Updating version references with plus sign..."
-            sed -i -E "s/\(v${major_version}\.[0-9]+\.[0-9]+\+\)/\(v${new_version}+\)/g" $file
-            
-            # 3. "v1.10.0" のようにクォート内にあるケース
-            echo "Updating quoted version references..."
-            sed -i -E "s/\"v${major_version}\.[0-9]+\.[0-9]+\"/\"v${new_version}\"/g" $file
-            
-            # 4. > v1.6.0 のような行頭から始まるケース
-            echo "Updating line-starting version references..."
-            sed -i -E "s/> v${major_version}\.[0-9]+\.[0-9]+/> v${new_version}/g" $file
-            
-            # 5. Starting with v1.6.0 のようなテキスト内の特定パターン
-            echo "Updating 'Starting with vX.Y.Z' pattern..."
-            sed -i -E "s/Starting with v${major_version}\.[0-9]+\.[0-9]+/Starting with v${new_version}/g" $file
-            
-            # エラーが発生した場合はバックアップから復元
-            if [ $? -ne 0 ]; then
-              echo "Error updating $file, restoring from backup"
-              mv ${file}.bak $file
-              return 1
+            # 更新結果の確認
+            if grep -q "v${{ env.VERSION }}" $file; then
+              echo "✓ Successfully updated $file"
+            else
+              echo "⚠️ Note: No specific version pattern updated in $file"
             fi
             
-            # 変更を確認
-            echo "Checking for updated versions in $file:"
-            grep -n "v$new_version" $file || echo "No occurrences of v$new_version found in $file"
-            
-            # 成功したらバックアップを削除
+            # バックアップ削除
             rm -f ${file}.bak
-            return 0
-          }
-          
-          # 両方のREADMEファイルを更新
-          echo "Starting README updates..."
-          
-          # まずREADME.mdを更新
-          update_version_references README.md ${{ env.VERSION }}
-          README_STATUS=$?
-          
-          # 次にREADME-ja.mdを更新
-          update_version_references README-ja.md ${{ env.VERSION }}
-          README_JA_STATUS=$?
-          
-          # 少なくとも一つのファイルが正常に更新されたかを確認
-          if [ $README_STATUS -eq 0 ] || [ $README_JA_STATUS -eq 0 ]; then
-            echo "At least one README file was updated successfully."
-          else
-            echo "Warning: Failed to update version references in README files."
-            echo "This will not block the release process, but please check the files manually."
-          fi
+          done
       
       - name: Commit changes
         run: |
-          git add package.json README.md README-ja.md
+          git add package.json package-lock.json README.md README-ja.md
           git commit -m "chore: update version to ${{ env.VERSION }}"
           git push origin ${{ env.BRANCH_NAME }}
           echo "Pushed changes to branch: ${{ env.BRANCH_NAME }}"
@@ -203,8 +106,8 @@ jobs:
         run: |
           # リリースブランチをプッシュした後、ドラフトリリースワークフローが起動するのを待つ
           echo "リリースブランチがプッシュされました。ドラフトリリースワークフローが起動されます。"
-          # 30秒待って、ワークフローがGitHubに登録されるのを確認
-          sleep 30
+          # 10秒待って、ワークフローがGitHubに登録されるのを確認
+          sleep 10
           
       # PRの作成
       - name: Create Pull Request
