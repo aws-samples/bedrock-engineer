@@ -45,15 +45,69 @@ jobs:
       
       - name: Update package.json version
         run: |
-          # 直接 jq を使って package.json を更新する（npm version コマンドより確実）
-          cat package.json | jq ".version = \"${{ env.VERSION }}\"" > package.json.tmp
-          mv package.json.tmp package.json
+          # jqがインストールされているか確認し、なければインストール
+          if ! command -v jq &> /dev/null; then
+            echo "jq could not be found, installing..."
+            apt-get update && apt-get install -y jq || true
+          fi
+
+          # 複数の方法でpackage.jsonを更新（冗長性のため）
+          echo "Updating package.json version to ${{ env.VERSION }}..."
+          
+          # 方法1: jqを使用（利用可能な場合）
+          if command -v jq &> /dev/null; then
+            echo "Using jq to update version..."
+            jq ".version = \"${{ env.VERSION }}\"" package.json > package.json.tmp
+            if [ -s package.json.tmp ]; then  # ファイルが存在し、サイズが0より大きいか確認
+              mv package.json.tmp package.json
+              echo "Successfully updated package.json using jq"
+            else
+              echo "jq update failed, output file is empty or does not exist"
+              rm -f package.json.tmp  # 一時ファイルを削除
+            fi
+          else
+            echo "jq not available, skipping this method"
+          fi
+          
+          # 方法2: sedを使用（バックアップ手段として）
+          echo "Using sed to update version..."
+          sed -i -E "s/\"version\": \"[0-9]+\.[0-9]+\.[0-9]+\"/\"version\": \"${{ env.VERSION }}\"/g" package.json
+          echo "Updated package.json using sed"
+          
+          # 方法3: npmコマンドを使用（バックアップの2つ目の手段として）
+          echo "Using npm to update version..."
+          npm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version || true
+          echo "Attempted to update package.json using npm"
+          
+          # 確認
+          NEW_VERSION=$(grep -o "\"version\": *\"[0-9]\+\.[0-9]\+\.[0-9]\+\"" package.json | cut -d'"' -f4)
+          echo "New version in package.json: $NEW_VERSION"
           
           # package-lock.json も更新する
-          cat package-lock.json | jq ".version = \"${{ env.VERSION }}\" | .packages.\"\".version = \"${{ env.VERSION }}\"" > package-lock.json.tmp
-          mv package-lock.json.tmp package-lock.json
+          echo "Updating package-lock.json..."
           
-          echo "Updated package.json and package-lock.json to version ${{ env.VERSION }}"
+          # 方法1: jqを使用
+          if command -v jq &> /dev/null; then
+            echo "Using jq to update package-lock.json..."
+            jq ".version = \"${{ env.VERSION }}\" | .packages.\"\".version = \"${{ env.VERSION }}\"" package-lock.json > package-lock.json.tmp
+            if [ -s package-lock.json.tmp ]; then
+              mv package-lock.json.tmp package-lock.json
+              echo "Successfully updated package-lock.json using jq"
+            else
+              echo "jq update failed for package-lock.json, output file is empty or does not exist"
+              rm -f package-lock.json.tmp
+            fi
+          fi
+          
+          # 方法2: sedを使用
+          echo "Using sed to update package-lock.json..."
+          sed -i -E "0,/\"version\": \"[0-9]+\.[0-9]+\.[0-9]+\"/s//\"version\": \"${{ env.VERSION }}\"/" package-lock.json
+          sed -i -E "0,/\"name\": \"bedrock-engineer\",\n  \"version\": \"[0-9]+\.[0-9]+\.[0-9]+\"/s//\"name\": \"bedrock-engineer\",\n  \"version\": \"${{ env.VERSION }}\"/" package-lock.json
+          echo "Updated package-lock.json using sed"
+          
+          # 確認
+          echo "New version in package-lock.json:"
+          grep -n -A1 "\"name\": \"bedrock-engineer\"" package-lock.json | head -3
       
       - name: Update README files
         run: |
@@ -61,25 +115,68 @@ jobs:
           update_version_references() {
             local file=$1
             local new_version=$2
+            local major_version=$(echo $new_version | cut -d. -f1)  # 1.14.6 -> 1
+            
+            echo "Updating version references in $file (to v$new_version)..."
+            
+            # 現在のファイル内容をバックアップ
+            cp $file ${file}.bak
             
             # バージョン参照を更新する複数のパターン
-            # 1. v1.6.0 のような具体的なバージョン番号
-            sed -i -E "s/v1\.[0-9]+\.[0-9]+([^0-9])/v$new_version\1/g" $file
+            # 1. v1.6.0 のような具体的なバージョン番号 (文字列末尾や特定記号の前にあるケース)
+            echo "Updating standard version references..."
+            sed -i -E "s/v${major_version}\.[0-9]+\.[0-9]+([^0-9])/v${new_version}\1/g" $file
             
             # 2. (v1.10.0+) のような形式
-            sed -i -E "s/\(v1\.[0-9]+\.[0-9]+\+\)/\(v$new_version+\)/g" $file
+            echo "Updating version references with plus sign..."
+            sed -i -E "s/\(v${major_version}\.[0-9]+\.[0-9]+\+\)/\(v${new_version}+\)/g" $file
+            
+            # 3. "v1.10.0" のようにクォート内にあるケース
+            echo "Updating quoted version references..."
+            sed -i -E "s/\"v${major_version}\.[0-9]+\.[0-9]+\"/\"v${new_version}\"/g" $file
+            
+            # 4. > v1.6.0 のような行頭から始まるケース
+            echo "Updating line-starting version references..."
+            sed -i -E "s/> v${major_version}\.[0-9]+\.[0-9]+/> v${new_version}/g" $file
+            
+            # 5. Starting with v1.6.0 のようなテキスト内の特定パターン
+            echo "Updating 'Starting with vX.Y.Z' pattern..."
+            sed -i -E "s/Starting with v${major_version}\.[0-9]+\.[0-9]+/Starting with v${new_version}/g" $file
+            
+            # エラーが発生した場合はバックアップから復元
+            if [ $? -ne 0 ]; then
+              echo "Error updating $file, restoring from backup"
+              mv ${file}.bak $file
+              return 1
+            fi
             
             # 変更を確認
-            echo "Updated versions in $file:"
-            grep -n "v$new_version" $file | head -5
+            echo "Checking for updated versions in $file:"
+            grep -n "v$new_version" $file || echo "No occurrences of v$new_version found in $file"
+            
+            # 成功したらバックアップを削除
+            rm -f ${file}.bak
+            return 0
           }
           
           # 両方のREADMEファイルを更新
-          echo "Updating README.md..."
-          update_version_references README.md ${{ env.VERSION }}
+          echo "Starting README updates..."
           
-          echo "Updating README-ja.md..."
+          # まずREADME.mdを更新
+          update_version_references README.md ${{ env.VERSION }}
+          README_STATUS=$?
+          
+          # 次にREADME-ja.mdを更新
           update_version_references README-ja.md ${{ env.VERSION }}
+          README_JA_STATUS=$?
+          
+          # 少なくとも一つのファイルが正常に更新されたかを確認
+          if [ $README_STATUS -eq 0 ] || [ $README_JA_STATUS -eq 0 ]; then
+            echo "At least one README file was updated successfully."
+          else
+            echo "Warning: Failed to update version references in README files."
+            echo "This will not block the release process, but please check the files manually."
+          fi
       
       - name: Commit changes
         run: |
