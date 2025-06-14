@@ -295,12 +295,46 @@ const init = () => {
 init()
 
 type Key = keyof StoreScheme
+// イベントエミッター用のリスナーコレクション
+const listeners: { [eventName: string]: Function[] } = {}
+
 export const store = {
   get<T extends Key>(key: T) {
     return electronStore.get(key)
   },
   set<T extends Key>(key: T, value: StoreScheme[T]) {
     return electronStore.set(key, value)
+  },
+  // イベント通知用メソッドを追加
+  on(eventName: string, callback: Function) {
+    if (!listeners[eventName]) {
+      listeners[eventName] = []
+    }
+    listeners[eventName].push(callback)
+    
+    // リスナー削除用の関数を返す
+    return () => {
+      this.off(eventName, callback)
+    }
+  },
+  
+  off(eventName: string, callback: Function) {
+    if (!listeners[eventName]) return
+    const index = listeners[eventName].indexOf(callback)
+    if (index !== -1) {
+      listeners[eventName].splice(index, 1)
+    }
+  },
+  
+  emit(eventName: string, data?: any) {
+    if (!listeners[eventName]) return
+    listeners[eventName].forEach(callback => {
+      try {
+        callback(data)
+      } catch (error) {
+        console.error(`Error in event listener for ${eventName}`, error)
+      }
+    })
   }
 }
 
