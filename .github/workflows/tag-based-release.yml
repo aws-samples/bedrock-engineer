@@ -233,7 +233,8 @@ jobs:
             4. ビルド成果物のチェックが完了したらマージしてください
             5. マージするとリリースが自動的に公開されます
           
-          labels: "release"
+          # ラベル適用はエラーの原因になるため無効化（権限の問題）
+          # labels: "release"
           draft: false
       
       - name: Output PR URL
