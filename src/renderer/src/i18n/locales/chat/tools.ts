@@ -1,5 +1,13 @@
 export const tools = {
   en: {
+    'file changes': {
+      fileChanges: 'File Changes',
+      original: 'Original',
+      updated: 'Updated',
+      added: 'Added',
+      removed: 'Removed',
+      noChanges: 'No changes detected'
+    },
     'Available Tools': 'Available Tools',
     'Choose the tools': 'Choose the tools you want to enable for the AI assistant',
     // Common UI text
@@ -401,6 +409,14 @@ export const tools = {
     }
   },
   ja: {
+    'file changes': {
+      fileChanges: 'ファイルの変更',
+      original: '元の内容',
+      updated: '更新後の内容',
+      added: '追加された内容',
+      removed: '削除された内容',
+      noChanges: '変更はありません'
+    },
     'Available Tools': '利用可能なツール',
     'Choose the tools': 'AIアシスタントで使用するツールを選択してください',
     // Common UI text

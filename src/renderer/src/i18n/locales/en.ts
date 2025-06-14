@@ -327,12 +327,21 @@ const CodeBlock = {
   'Camera Device': 'Camera Device'
 }
 
+const FileChanges = {
+  original: 'Original',
+  updated: 'Updated',
+  added: 'Added',
+  removed: 'Removed',
+  noChanges: 'No changes detected'
+}
+
 const en = {
   ...HomePage,
   ...SettingPage,
   ...StepFunctionsGeneratorPage,
   ...chatPage.en,
   ...SpeakPage,
+  ...FileChanges,
   ...WebsiteGeneratorPage,
   ...Translation,
   ...CodeBlock,

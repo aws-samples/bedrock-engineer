@@ -351,12 +351,21 @@ const CodeBlock = {
   'Camera Device': 'カメラデバイス'
 }
 
+const FileChanges = {
+  original: '元の内容',
+  updated: '更新後の内容',
+  added: '追加された内容',
+  removed: '削除された内容',
+  noChanges: '変更はありません'
+}
+
 const ja = {
   ...HomePage,
   ...SettingPage,
   ...StepFunctionsGeneratorPage,
   ...chatPage.ja,
   ...SpeakPage,
+  ...FileChanges,
   ...WebsiteGeneratorPage,
   ...Translation,
   ...CodeBlock,

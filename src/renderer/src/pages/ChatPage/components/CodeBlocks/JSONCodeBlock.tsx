@@ -9,6 +9,7 @@ import { RecognizeImageResult } from './RecognizeImage/RecognizeImageResult'
 import { CodeInterpreterResult } from './CodeInterpreter/CodeInterpreterResult'
 import { ScreenCaptureResult } from './ScreenCapture/ScreenCaptureResult'
 import { CameraCaptureResult } from './CameraCapture/CameraCaptureResult'
+import { ApplyDiffEditResult } from './ApplyDiffEdit/ApplyDiffEditResult'
 import { AsyncTaskCard, AsyncTaskInfo } from '../CodeInterpreter/AsyncTaskCard'
 
 interface RetrieveResponse {
@@ -139,6 +140,10 @@ export const JSONCodeBlock: React.FC<{ json: any }> = ({ json }) => {
         <CodeInterpreterResult response={json} />
       </div>
     )
+  }
+
+  if (json.name === 'applyDiffEdit') {
+    return <ApplyDiffEditResult response={json} />
   }
 
   const jsonStr = JSON.stringify(json, null, 2)
