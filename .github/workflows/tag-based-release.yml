@@ -67,9 +67,6 @@ jobs:
           # READMEファイル内のバージョン参照を更新
           echo "Updating README files to version v${{ env.VERSION }}..."
           
-          # メジャーバージョン番号を抽出（例：1.14.8 から 1）
-          major_version=$(echo ${{ env.VERSION }} | cut -d. -f1)
-          
           # README.mdとREADME-ja.mdを更新
           for file in README.md README-ja.md; do
             echo "Processing $file..."
@@ -77,18 +74,23 @@ jobs:
             # ファイルのバックアップを作成
             cp $file ${file}.bak
             
+            # ダウンロードリンクを更新（複数行の置換）
+            sed -i -r "s/bedrock-engineer-[0-9]+\.[0-9]+\.[0-9]+\.dmg/bedrock-engineer-${{ env.VERSION }}.dmg/g" $file
+            sed -i -r "s/bedrock-engineer-[0-9]+\.[0-9]+\.[0-9]+\.pkg/bedrock-engineer-${{ env.VERSION }}.pkg/g" $file
+            sed -i -r "s/bedrock-engineer-[0-9]+\.[0-9]+\.[0-9]+-setup\.exe/bedrock-engineer-${{ env.VERSION }}-setup.exe/g" $file
+            
             # 一般的なバージョン参照パターンを更新
-            sed -i -E "s/v${major_version}\\.[0-9]+\\.[0-9]+([^0-9])/v${{ env.VERSION }}\\1/g" $file
-            sed -i -E "s/\\(v${major_version}\\.[0-9]+\\.[0-9]+\\+\\)/\\(v${{ env.VERSION }}+\\)/g" $file
-            sed -i -E "s/> v${major_version}\\.[0-9]+\\.[0-9]+/> v${{ env.VERSION }}/g" $file
-            sed -i -E "s/Starting with v${major_version}\\.[0-9]+\\.[0-9]+/Starting with v${{ env.VERSION }}/g" $file
+            sed -i -r "s/v[0-9]+\.[0-9]+\.[0-9]+([^0-9])/v${{ env.VERSION }}\1/g" $file
+            sed -i -r "s/\(v[0-9]+\.[0-9]+\.[0-9]+\+\)/\(v${{ env.VERSION }}+\)/g" $file
+            sed -i -r "s/> v[0-9]+\.[0-9]+\.[0-9]+/> v${{ env.VERSION }}/g" $file
+            sed -i -r "s/Starting with v[0-9]+\.[0-9]+\.[0-9]+/Starting with v${{ env.VERSION }}/g" $file
             
             # 更新結果の確認
-            if grep -q "v${{ env.VERSION }}" $file; then
-              echo "✓ Successfully updated $file"
-            else
-              echo "⚠️ Note: No specific version pattern updated in $file"
-            fi
+            echo "Checking download links update..."
+            grep -n "bedrock-engineer-${{ env.VERSION }}" $file || echo "⚠️ Download links not updated in $file"
+            
+            echo "Checking version references..."
+            grep -n "v${{ env.VERSION }}" $file || echo "⚠️ Version references not updated in $file"
             
             # バックアップ削除
             rm -f ${file}.bak
