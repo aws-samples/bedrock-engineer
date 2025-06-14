@@ -45,27 +45,41 @@ jobs:
       
       - name: Update package.json version
         run: |
-          # Update package.json version
-          npm version ${{ env.VERSION }} --no-git-tag-version
-          echo "Updated package.json to version ${{ env.VERSION }}"
+          # 直接 jq を使って package.json を更新する（npm version コマンドより確実）
+          cat package.json | jq ".version = \"${{ env.VERSION }}\"" > package.json.tmp
+          mv package.json.tmp package.json
+          
+          # package-lock.json も更新する
+          cat package-lock.json | jq ".version = \"${{ env.VERSION }}\" | .packages.\"\".version = \"${{ env.VERSION }}\"" > package-lock.json.tmp
+          mv package-lock.json.tmp package-lock.json
+          
+          echo "Updated package.json and package-lock.json to version ${{ env.VERSION }}"
       
       - name: Update README files
         run: |
-          # Function to update version references in README files
-          update_readme() {
+          # READMEファイル内の特定のバージョン表記を更新する関数
+          update_version_references() {
             local file=$1
             local new_version=$2
             
-            # Look for existing version patterns and update them
-            # Pattern: v1.X.Y or v1.X.X
-            sed -i -E "s/v1\.[0-9]+\.[0-9]+/v$new_version/g" $file
+            # バージョン参照を更新する複数のパターン
+            # 1. v1.6.0 のような具体的なバージョン番号
+            sed -i -E "s/v1\.[0-9]+\.[0-9]+([^0-9])/v$new_version\1/g" $file
             
-            echo "Updated versions in $file"
+            # 2. (v1.10.0+) のような形式
+            sed -i -E "s/\(v1\.[0-9]+\.[0-9]+\+\)/\(v$new_version+\)/g" $file
+            
+            # 変更を確認
+            echo "Updated versions in $file:"
+            grep -n "v$new_version" $file | head -5
           }
           
-          # Update both README files
-          update_readme README.md ${{ env.VERSION }}
-          update_readme README-ja.md ${{ env.VERSION }}
+          # 両方のREADMEファイルを更新
+          echo "Updating README.md..."
+          update_version_references README.md ${{ env.VERSION }}
+          
+          echo "Updating README-ja.md..."
+          update_version_references README-ja.md ${{ env.VERSION }}
       
       - name: Commit changes
         run: |
