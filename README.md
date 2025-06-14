@@ -99,7 +99,7 @@ The autonomous AI agent capable of development assists your development process.
 - 🔄 Chat history management
 - 🌐 Multi-language support
 - 🛡️ Guardrail support
-- 💡 Light processing model for cost optimization (v1.10.0+)
+- 💡 Light processing model for cost optimization
 
 | ![agent-chat-diagram](./assets/agent-chat-diagram.png) | ![agent-chat-search](./assets/agent-chat-search.png) |
 | :----------------------------------------------------: | :--------------------------------------------------: |
