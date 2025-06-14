@@ -20,6 +20,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # 明示的にトークンを指定してリポジトリへの書き込み権限を確保
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,15 +37,33 @@ jobs:
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
           echo "BRANCH_NAME=release/$TAG_NAME" >> $GITHUB_ENV
           echo "Extracted version: $VERSION from tag: $TAG_NAME"
+          
+          # バージョン形式の検証
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version format. Expected X.Y.Z format but got: $VERSION"
+            exit 1
+          fi
       
       - name: Create release branch
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-          git checkout -b ${{ env.BRANCH_NAME }}
-          echo "Created branch: ${{ env.BRANCH_NAME }}"
+          
+          # mainブランチから最新を取得
+          git fetch origin main --depth=1
+          
+          # 新しいブランチを作成し、origin/mainを起点とする
+          git checkout -b ${{ env.BRANCH_NAME }} origin/main
+          
+          if [ $? -ne 0 ]; then
+            echo "::error::Failed to create branch ${{ env.BRANCH_NAME }}"
+            exit 1
+          fi
+          
+          echo "Created branch: ${{ env.BRANCH_NAME }} from origin/main"
       
       - name: Update package.json version
+        id: update-version
         run: |
           echo "Updating package.json and package-lock.json to version ${{ env.VERSION }}..."
           
@@ -54,18 +74,28 @@ jobs:
           UPDATED_VERSION=$(node -p "require('./package.json').version")
           echo "✓ Updated to version: $UPDATED_VERSION"
           
-          # 簡単な検証
+          if [ "$UPDATED_VERSION" != "${{ env.VERSION }}" ]; then
+            echo "::error::Version update failed. Expected ${{ env.VERSION }} but got $UPDATED_VERSION"
+            exit 1
+          fi
+          
+          # 検証
           echo "==== VERIFICATION ===="
           echo "package.json version:"
           grep -A1 '"version"' package.json
           
           echo "package-lock.json version:"
           grep -A1 '"version"' package-lock.json | head -2
+          
+          echo "updated=true" >> $GITHUB_OUTPUT
       
       - name: Update README files
+        id: update-readme
         run: |
           # READMEファイル内のバージョン参照を更新
           echo "Updating README files to version v${{ env.VERSION }}..."
+          
+          README_UPDATED=false
           
           # README.mdとREADME-ja.mdを更新
           for file in README.md README-ja.md; do
@@ -87,61 +117,116 @@ jobs:
             
             # 更新結果の確認
             echo "Checking download links update..."
-            grep -n "bedrock-engineer-${{ env.VERSION }}" $file || echo "⚠️ Download links not updated in $file"
+            if grep -q "bedrock-engineer-${{ env.VERSION }}" $file; then
+              echo "✓ Download links updated in $file"
+              README_UPDATED=true
+            else
+              echo "⚠️ Download links not updated in $file"
+            fi
             
             echo "Checking version references..."
-            grep -n "v${{ env.VERSION }}" $file || echo "⚠️ Version references not updated in $file"
+            if grep -q "v${{ env.VERSION }}" $file; then
+              echo "✓ Version references updated in $file"
+              README_UPDATED=true
+            else
+              echo "⚠️ Version references not updated in $file"
+            fi
+            
+            # 変更があったか確認
+            if diff -q "$file" "${file}.bak" >/dev/null; then
+              echo "⚠️ No changes detected in $file"
+            else
+              echo "✓ Changes detected in $file"
+              README_UPDATED=true
+            fi
             
             # バックアップ削除
             rm -f ${file}.bak
           done
+          
+          if [ "$README_UPDATED" = "true" ]; then
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+            echo "::warning::No version references updated in README files"
+          fi
       
       - name: Commit changes
+        id: commit-changes
         run: |
           git add package.json package-lock.json README.md README-ja.md
+          
+          # 変更があるか確認
+          if git diff --cached --quiet; then
+            echo "::warning::No changes to commit"
+            echo "pushed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
           git commit -m "chore: update version to ${{ env.VERSION }}"
           git push origin ${{ env.BRANCH_NAME }}
-          echo "Pushed changes to branch: ${{ env.BRANCH_NAME }}"
+          
+          if [ $? -ne 0 ]; then
+            echo "::error::Failed to push branch ${{ env.BRANCH_NAME }}"
+            exit 1
+          fi
+          
+          echo "pushed=true" >> $GITHUB_OUTPUT
+          echo "✓ Pushed changes to branch: ${{ env.BRANCH_NAME }}"
           
       # 既存のdraft-release.ymlを直接呼び出して実行
-      - name: Trigger draft release workflow
+      - name: Wait for draft release workflow
+        if: steps.commit-changes.outputs.pushed == 'true'
         run: |
           # リリースブランチをプッシュした後、ドラフトリリースワークフローが起動するのを待つ
           echo "リリースブランチがプッシュされました。ドラフトリリースワークフローが起動されます。"
           # 10秒待って、ワークフローがGitHubに登録されるのを確認
           sleep 10
           
-      # PRの作成
+      # GitHub CLIでPRを作成（create-pull-requestアクションの代わりに）
       - name: Create Pull Request
         id: create-pr
-        uses: peter-evans/create-pull-request@v7.0.8
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: prepare release v${{ env.VERSION }}"
-          branch: ${{ env.BRANCH_NAME }}
-          base: main
-          title: "リリース v${{ env.VERSION }}"
-          body: |
-            ## リリース v${{ env.VERSION }} の準備
-            
-            このPRは `${{ env.TAG_NAME }}` タグがプッシュされたことをトリガーに自動生成されました。
-            
+        if: steps.commit-changes.outputs.pushed == 'true'
+        run: |
+          # GitHub CLIを使用してPRを作成
+          PR_URL=$(gh pr create \
+            --title "リリース v${{ env.VERSION }}" \
+            --body "## リリース v${{ env.VERSION }} の準備
+
+            このPRは \`${{ env.TAG_NAME }}\` タグがプッシュされたことをトリガーに自動生成されました。
+
             ### 変更内容
-            - package.json のバージョンを `${{ env.VERSION }}` に更新
+            - package.json のバージョンを \`${{ env.VERSION }}\` に更新
             - README.md と README-ja.md のバージョン参照を更新
             - リリースブランチの作成により、ドラフトリリースワークフローが自動的に起動されます
-            
+
             ### 次のステップ
             1. このPRのレビューと承認をお願いします
             2. [Actionsタブ](https://github.com/aws-samples/bedrock-engineer/actions)でワークフローの完了を確認してください
             3. [Releasesページ](https://github.com/aws-samples/bedrock-engineer/releases)でドラフトリリースを確認してください
             4. ビルド成果物のチェックが完了したらマージしてください
-            5. マージするとリリースが自動的に公開されます
+            5. マージするとリリースが自動的に公開されます" \
+            --base main \
+            --head "${{ env.BRANCH_NAME }}")
           
-          # ラベル適用はエラーの原因になるため無効化（権限の問題）
-          # labels: "release"
-          draft: false
+          if [ $? -ne 0 ]; then
+            echo "::error::Failed to create Pull Request"
+            exit 1
+          fi
+          
+          echo "pr_url=$PR_URL" >> $GITHUB_OUTPUT
+          echo "✓ Pull Request created: $PR_URL"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Output PR URL
+      - name: Output PR URL and Summary
+        if: steps.create-pr.outputs.pr_url != ''
         run: |
-          echo "Pull Request created: ${{ steps.create-pr.outputs.pull-request-url }}"
+          echo "Pull Request created: ${{ steps.create-pr.outputs.pr_url }}"
+          
+          echo "## タグベースリリース処理の結果" >> $GITHUB_STEP_SUMMARY
+          echo "- タグ: ${{ env.TAG_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- バージョン: ${{ env.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ブランチ: ${{ env.BRANCH_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: ${{ steps.create-pr.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ リリース準備が完了しました！" >> $GITHUB_STEP_SUMMARY
