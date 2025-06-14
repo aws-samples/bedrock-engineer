@@ -5,6 +5,14 @@ on:
   push:
     branches:
       - 'release/**'
+  # 手動でワークフローを実行できるようにする
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'リリースバージョン'
+        required: false
+        default: ''
+        type: string
 
 jobs:
   build:

@@ -175,13 +175,20 @@ jobs:
           echo "✓ Pushed changes to branch: ${{ env.BRANCH_NAME }}"
           
       # 既存のdraft-release.ymlを直接呼び出して実行
-      - name: Wait for draft release workflow
+      - name: Trigger draft release workflow manually
         if: steps.commit-changes.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # リリースブランチをプッシュした後、ドラフトリリースワークフローが起動するのを待つ
-          echo "リリースブランチがプッシュされました。ドラフトリリースワークフローが起動されます。"
-          # 10秒待って、ワークフローがGitHubに登録されるのを確認
-          sleep 10
+          # リリースブランチをプッシュした後、ドラフトリリースワークフローを明示的に起動
+          echo "リリースブランチがプッシュされました。ドラフトリリースワークフローを手動で起動します。"
+          
+          # GitHub CLIを使ってワークフローを手動実行
+          gh workflow run draft-release.yml --ref ${{ env.BRANCH_NAME }} --repo ${{ github.repository }}
+          
+          echo "ドラフトリリースワークフローを手動でトリガーしました"
+          # ワークフローが起動するまで少し待つ
+          sleep 15
           
       # GitHub CLIでPRを作成（create-pull-requestアクションの代わりに）
       - name: Create Pull Request
