@@ -1,7 +1,7 @@
 Language: [English](./README.md) / [Japanese](./README-ja.md)
 
 > [!IMPORTANT]
-> Starting with v1.6.0, it is now possible to set tools for each agent. Agent prompts created in versions prior to v1.6.0 can still be used, but please note that you will need to set the tools available to each agent.
+> Starting with v1.14.6, it is now possible to set tools for each agent. Agent prompts created in versions prior to v1.14.6 can still be used, but please note that you will need to set the tools available to each agent.
 
 # 🧙 Bedrock Engineer
 
@@ -19,13 +19,13 @@ Bedrock Engineer is a native app, you can download the app or build the source c
 
 MacOS:
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.1.dmg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.6.dmg)
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.1.pkg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.6.pkg)
 
 Windows:
 
-[<img src="https://img.shields.io/badge/Download_FOR_WINDOWS-Latest%20Release-blue?style=for-the-badge" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.1-setup.exe)
+[<img src="https://img.shields.io/badge/Download_FOR_WINDOWS-Latest%20Release-blue?style=for-the-badge" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.14.6-setup.exe)
 
 It is optimized for MacOS, but can also be built and used on Windows and Linux OS. If you have any problems, please report an issue.
 
@@ -99,7 +99,7 @@ The autonomous AI agent capable of development assists your development process.
 - 🔄 Chat history management
 - 🌐 Multi-language support
 - 🛡️ Guardrail support
-- 💡 Light processing model for cost optimization (v1.10.0+)
+- 💡 Light processing model for cost optimization (v1.14.6+)
 
 | ![agent-chat-diagram](./assets/agent-chat-diagram.png) | ![agent-chat-search](./assets/agent-chat-search.png) |
 | :----------------------------------------------------: | :--------------------------------------------------: |
