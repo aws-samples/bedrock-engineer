@@ -415,9 +415,10 @@ export const tools = {
     'Low (640x480)': '低画質 (640x480)',
     'Medium (1280x720)': '中画質 (1280x720)',
     'High (1920x1080)': '高画質 (1920x1080)',
-    'Refresh': '更新',
+    Refresh: '更新',
     'Loading camera devices...': 'カメラデバイスを読み込み中...',
-    'No cameras available. Click refresh to try again.': 'カメラが見つかりません。更新をクリックして再試行してください。',
+    'No cameras available. Click refresh to try again.':
+      'カメラが見つかりません。更新をクリックして再試行してください。',
     'Preview not available': 'プレビュー利用不可',
     'Live Preview': 'ライブプレビュー',
     '{{count}} camera(s) allowed': '{{count}} 台のカメラが許可されています',
@@ -434,19 +435,28 @@ export const tools = {
     'Window Opacity': 'ウィンドウ透明度',
     'Preview Window Active': 'プレビューウィンドウ アクティブ',
     'Preview Window Inactive': 'プレビューウィンドウ 非アクティブ',
-    'The camera preview window is currently displayed on your screen.': 'カメラプレビューウィンドウが現在画面に表示されています。',
-    'Enable the toggle above to show the camera preview window.': 'トグルをオンにしてカメラプレビューウィンドウを表示します。',
+    'The camera preview window is currently displayed on your screen.':
+      'カメラプレビューウィンドウが現在画面に表示されています。',
+    'Enable the toggle above to show the camera preview window.':
+      'トグルをオンにしてカメラプレビューウィンドウを表示します。',
     'Preview Window Features': 'プレビューウィンドウ機能',
-    'Always on top - stays visible above other windows': '常に手前に表示 - 他のウィンドウより上に表示されます',
+    'Always on top - stays visible above other windows':
+      '常に手前に表示 - 他のウィンドウより上に表示されます',
     'Draggable - can be moved around the screen': 'ドラッグ可能 - 画面上で移動できます',
-    'Live camera feed - shows real-time video from your camera': 'ライブカメラフィード - カメラからのリアルタイム映像を表示',
-    'Hover controls - settings and close buttons appear on mouse hover': 'ホバーコントロール - マウスホバー時に設定と閉じるボタンが表示',
-    'Automatic positioning - remembers your preferred screen location': '自動位置決め - お好みの画面位置を記憶します',
+    'Live camera feed - shows real-time video from your camera':
+      'ライブカメラフィード - カメラからのリアルタイム映像を表示',
+    'Hover controls - settings and close buttons appear on mouse hover':
+      'ホバーコントロール - マウスホバー時に設定と閉じるボタンが表示',
+    'Automatic positioning - remembers your preferred screen location':
+      '自動位置決め - お好みの画面位置を記憶します',
     'Important Notes': '注意事項',
     'Preview window requires camera permission': 'プレビューウィンドウにはカメラ許可が必要です',
-    'Only one preview window can be active at a time': '一度にアクティブにできるプレビューウィンドウは1つのみです',
-    'Settings changes apply immediately to active preview': '設定変更はアクティブなプレビューにすぐに適用されます',
-    'Close the preview window to free up camera resources': 'カメラリソースを解放するにはプレビューウィンドウを閉じてください',
+    'Only one preview window can be active at a time':
+      '一度にアクティブにできるプレビューウィンドウは1つのみです',
+    'Settings changes apply immediately to active preview':
+      '設定変更はアクティブなプレビューにすぐに適用されます',
+    'Close the preview window to free up camera resources':
+      'カメラリソースを解放するにはプレビューウィンドウを閉じてください',
     // MCP Tool related
     'MCP tool from Model Context Protocol server': 'Model Context Protocol サーバーからのMCPツール',
     'MCP tools available from configured servers': '設定済みサーバーからのMCPツールが利用可能',
