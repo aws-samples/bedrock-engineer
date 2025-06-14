@@ -17,6 +17,11 @@ import {
   containsXmlTags,
   isXmlComplete
 } from './utils/xmlParser'
+import {
+  calculateXmlProgress,
+  calculateTimeBasedProgress,
+  getProgressMessage
+} from './utils/progressCalculator'
 import { DIAGRAM_GENERATOR_SYSTEM_PROMPT } from '../ChatPage/constants/DEFAULT_AGENTS'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
 import { DiagramExplanationView } from './components/DiagramExplanationView'
@@ -46,6 +51,11 @@ export default function DiagramGeneratorPage() {
   // ストリーミング中の説明文を保持する状態
   const [streamingExplanation, setStreamingExplanation] = useState<string>('')
   const [selectedHistoryIndex, setSelectedHistoryIndex] = useState<number | null>(null)
+
+  // 進捗管理用の状態
+  const [generationStartTime, setGenerationStartTime] = useState<number>(0)
+  const [xmlProgress, setXmlProgress] = useState<number>(0)
+  const [progressMessage, setProgressMessage] = useState<string>('')
 
   const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
 
@@ -108,6 +118,13 @@ export default function DiagramGeneratorPage() {
     setUserInput('')
     // 履歴から選択していた場合はリセット
     setSelectedHistoryIndex(null)
+    // 生成開始時間を記録
+    setGenerationStartTime(Date.now())
+    setXmlProgress(0)
+    setProgressMessage('')
+    // 既存のダイアグラムをクリアして即座にローダーを表示
+    setXml('')
+    setDiagramExplanation('')
   }
 
   // システムプロンプトを検索状態に応じて更新
@@ -130,6 +147,8 @@ export default function DiagramGeneratorPage() {
     } else if (!loading) {
       // ローディングが終了したらストリーミング状態をクリア
       setStreamingExplanation('')
+      setXmlProgress(0)
+      setProgressMessage('')
     }
   }, [messages, loading])
 
@@ -140,6 +159,35 @@ export default function DiagramGeneratorPage() {
     }
     return false
   }, [loading, streamingExplanation])
+
+  // XML生成進捗の計算と更新
+  useEffect(() => {
+    if (loading && isXmlGenerating && streamingExplanation) {
+      // XMLの進捗を計算
+      const baseProgress = calculateXmlProgress(streamingExplanation)
+
+      // 時間ベースの補正を適用
+      const timeAdjustedProgress =
+        generationStartTime > 0
+          ? calculateTimeBasedProgress(generationStartTime, baseProgress)
+          : baseProgress
+
+      setXmlProgress(timeAdjustedProgress)
+      setProgressMessage(getProgressMessage(timeAdjustedProgress))
+    } else if (!loading) {
+      // 生成完了時は100%に設定
+      if (xmlProgress > 0) {
+        setXmlProgress(100)
+        setProgressMessage('ダイアグラム生成完了')
+
+        // 少し遅延してからリセット
+        setTimeout(() => {
+          setXmlProgress(0)
+          setProgressMessage('')
+        }, 1000)
+      }
+    }
+  }, [loading, isXmlGenerating, streamingExplanation, generationStartTime, xmlProgress])
 
   // XMLタグを除去した説明文
   const filteredExplanation = useMemo(() => {
@@ -264,7 +312,12 @@ export default function DiagramGeneratorPage() {
           >
             {(loading && !xml) || isXmlGenerating ? (
               <div className="flex h-full justify-center items-center flex-col">
-                <LoaderWithReasoning reasoningText={latestReasoningText}>
+                <LoaderWithReasoning
+                  reasoningText={latestReasoningText}
+                  progress={isXmlGenerating ? xmlProgress : undefined}
+                  progressMessage={isXmlGenerating ? progressMessage : undefined}
+                  showProgress={isXmlGenerating}
+                >
                   {executingTool === 'tavilySearch' ? <WebLoader /> : <Loader />}
                 </LoaderWithReasoning>
               </div>
