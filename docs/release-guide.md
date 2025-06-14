@@ -1,84 +1,78 @@
-# リリースガイド
+# リリース手順ガイド
 
-このドキュメントでは、Bedrock Engineerのリリース方法について説明します。タグベースの自動リリースフローにより、リリース作業が大幅に効率化されています。
+このドキュメントでは、Bedrock Engineerのリリース方法について説明します。このリリースフローではリリース用ブランチとPRによる承認プロセスを使用します。
 
-## タグベースのリリースフロー
+## リリース手順
 
-### 1. **タグの作成とプッシュのみでリリース開始**
+### 1. **バージョンアップ**:
+
+- `package.json`ファイルのバージョン番号を更新します：
+
+  ```json
+  {
+    "name": "bedrock-engineer",
+    "version": "vX.Y.Z", // ここを更新
+    ...
+  }
+  ```
+
+- README.md, README-ja.md の該当箇所のバージョンを更新します。
+
+### 2. **リリースブランチの作成**:
 
 ```bash
 # 最新のmainブランチから開始
 git checkout main
 git pull
 
-# リリース用タグを作成
-git tag vX.Y.Z
+# リリースブランチを作成
+git checkout -b release/vX.Y.Z
 
-# タグをプッシュしてリリースプロセスを開始
-git push origin vX.Y.Z
+# バージョン更新をコミット
+git add package.json
+git commit -m "chore: バージョンをX.Y.Zに更新"
+
+# リリースブランチをプッシュ
+git push origin release/vX.Y.Z
 ```
 
-### 2. **自動リリースプロセス**
+### 3. **ビルドとドラフトリリース作成の監視**:
 
-タグをプッシュすると、以下が自動的に実行されます：
+- リリースブランチのプッシュにより、GitHub Actionsの`Build Draft Release`ワークフローが自動的に起動します
+- GitHub Actionsの進行状況を[Actionsタブ](https://github.com/aws-samples/bedrock-engineer/actions)で確認します
+- ワークフローが正常に完了すると、以下の処理が自動的に行われます:
+  1. Mac版とWindows版のビルドが実行される
+  2. ビルド成果物が添付されたドラフトリリースが作成される
 
-1. **バージョン更新**：
-   - `package.json` と `package-lock.json` のバージョンが自動更新
-   - README.md と README-ja.md のバージョン参照が自動更新
+### 4. **リリース確認とPR作成**:
 
-2. **リリースブランチ作成**：
-   - `release/vX.Y.Z` ブランチが自動生成
+- ドラフトリリースにアクセスし、ビルド成果物（.dmg、.pkg、.exe）と内容を確認します
+- リリースノートを確認します
+- 問題がなければ、手動でPRを作成します：
 
-3. **ビルドとドラフトリリース**：
-   - Mac版とWindows版のビルドが実行
-   - ビルド成果物が添付されたドラフトリリースが生成
+  ```bash
+  # リリースブランチから作成
+  gh pr create \
+    --title "リリース vX.Y.Z" \
+    --body "## リリース vX.Y.Z の準備ができました
 
-4. **プルリクエスト作成**：
-   - リリース用PRが自動生成
+    このPRがマージされるとリリース vX.Y.Z が公開されます。
 
-### 3. **レビューとマージ**
+    ### ドラフトリリース
+    [リリースページで確認](URLをここに貼り付け)
 
-1. 自動生成されたPRをレビュー
-2. [Actionsタブ](https://github.com/aws-samples/bedrock-engineer/actions)でビルドの完了を確認
-3. [Releasesページ](https://github.com/aws-samples/bedrock-engineer/releases)でドラフトリリースを確認
-4. ビルド成果物（.dmg、.pkg、.exe）の動作を検証
-5. 問題がなければPRをマージ
+    ビルド成果物の動作確認済み:
+    - [ ] Mac版
+    - [ ] Windows版
+    " \
+    --base main \
+    --head release/X.Y.Z
+  ```
 
-### 4. **公開**
+### 5. **リリース公開**:
 
-PRがマージされると自動的に：
-
-- `Publish Release` ワークフローが実行され、ドラフトリリースが公開状態に変更
-- [Releasesページ](https://github.com/aws-samples/bedrock-engineer/releases)で公開リリースが確認可能
-
-## トラブルシューティング
-
-### タグプッシュ後にワークフローが実行されない場合：
-
-1. [Actionsタブ](https://github.com/aws-samples/bedrock-engineer/actions)でワークフローの状態を確認
-2. エラーがある場合は、ログを確認して対処
-3. 必要に応じてタグを削除し、修正後に再度プッシュ：
-   ```bash
-   git tag -d vX.Y.Z
-   git push --delete origin vX.Y.Z
-   ```
-
-### バージョン更新に問題がある場合：
-
-1. ワークフローログで更新処理の出力を確認
-2. 必要に応じて手動で修正PRを作成
-
-## 補足：従来の手動リリースフロー（参考）
-
-従来は以下の手順で手動リリースを行っていました：
-
-1. `package.json`とREADMEファイルのバージョン手動更新
-2. リリースブランチ手動作成
-3. PRの手動作成
-4. ビルドとドラフトリリース待機
-5. マージ後の公開確認
-
-タグベースの自動フローにより、これらの手順が大幅に簡略化されました。
+- PRがマージされると、自動的に`Publish Release`ワークフローが実行され、ドラフトリリースが公開されます
+- [Releasesページ](https://github.com/aws-samples/bedrock-engineer/releases)で公開されたリリースを確認できます
 
 ## トラブルシューティング
 
