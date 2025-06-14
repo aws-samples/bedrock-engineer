@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { DrawIoEmbed, DrawIoEmbedRef } from 'react-drawio'
 import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
-import { TextArea } from '../ChatPage/components/InputForm/TextArea'
+import { TextArea, AttachedImage } from '../ChatPage/components/InputForm/TextArea'
 import useSetting from '@renderer/hooks/useSetting'
 import { Loader } from '@renderer/components/Loader'
 import { exampleDiagrams } from './example-diagrams'
@@ -113,8 +113,8 @@ export default function DiagramGeneratorPage() {
     }
   )
 
-  const onSubmit = (input: string) => {
-    handleSubmit(input)
+  const onSubmit = (input: string, images?: AttachedImage[]) => {
+    handleSubmit(input, images)
     setUserInput('')
     // 履歴から選択していた場合はリセット
     setSelectedHistoryIndex(null)
