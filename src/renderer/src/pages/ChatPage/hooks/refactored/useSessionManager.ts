@@ -104,7 +104,7 @@ export const useSessionManager = ({
 
   // メッセージ数を監視してタイトル生成をトリガーする関数
   const checkAndGenerateTitle = useCallback(
-    (messages: IdentifiableMessage[]) => {
+    async (messages: IdentifiableMessage[]) => {
       // メッセージが閾値を超え、まだタイトルが生成されていない場合に実行
       if (
         messages.length > MESSAGE_THRESHOLD &&
@@ -112,7 +112,7 @@ export const useSessionManager = ({
         !titleGenerated.current.has(currentSessionId) &&
         enableHistory
       ) {
-        generateTitleForCurrentSession()
+        await generateTitleForCurrentSession()
       }
     },
     [currentSessionId, generateTitleForCurrentSession, enableHistory]

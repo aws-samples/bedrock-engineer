@@ -7,7 +7,11 @@ import { useAgentTools } from '../useAgentTools'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { notificationService } from '@renderer/services/NotificationService'
-import { AttachedImage } from '../components/InputForm/TextArea'
+// Import type will be resolved from the original location
+type AttachedImage = {
+  file: File
+  base64: string
+}
 
 // 分割されたフックをインポート
 import { useMessages } from './useMessages'
@@ -83,7 +87,7 @@ export const useAgentChatRefactored = (
     enableHistory
   })
 
-  const messages = useMessages({
+  const messagesHook = useMessages({
     enableHistory,
     modelId,
     enabledTools
@@ -97,10 +101,10 @@ export const useAgentChatRefactored = (
   const streamChat = useStreamChat({
     contextLength,
     enablePromptCache,
-    setMessages: messages.setMessages,
+    setMessages: messagesHook.setMessages,
     setReasoning: uiState.setReasoning,
     setLatestReasoningText: uiState.setLatestReasoningText,
-    persistMessage: (msg) => messages.persistMessage(msg, sessionManager.currentSessionId)
+    persistMessage: (msg) => messagesHook.persistMessage(msg, sessionManager.currentSessionId)
   })
 
   // セッション初期化時にメッセージを同期
@@ -114,9 +118,9 @@ export const useAgentChatRefactored = (
   const stopGeneration = useCallback(() => {
     requestControl.abortCurrentRequest()
 
-    if (messages.messages.length > 0) {
+    if (messagesHook.messages.length > 0) {
       // 不完全なtoolUse/toolResultペアを削除するロジック
-      const updatedMessages = [...messages.messages]
+      const updatedMessages = [...messagesHook.messages]
       const toolUseIds = new Map<string, { useIndex: number; resultIndex: number }>()
 
       updatedMessages.forEach((msg, msgIndex) => {
@@ -151,7 +155,7 @@ export const useAgentChatRefactored = (
         for (const index of sortedIndicesToDelete) {
           updatedMessages.splice(index, 1)
         }
-        messages.setMessages(updatedMessages)
+        messagesHook.setMessages(updatedMessages)
         toast.success(t('Generation stopped'))
       } else {
         toast.success(t('Generation stopped'))
@@ -160,7 +164,7 @@ export const useAgentChatRefactored = (
 
     uiState.setLoading(false)
     uiState.setExecutingTool(null)
-  }, [requestControl, messages, uiState, t])
+  }, [requestControl, messagesHook, uiState, t])
 
   const handleSubmit = useCallback(
     async (userInput: string, attachedImages?: AttachedImage[]) => {
@@ -174,7 +178,7 @@ export const useAgentChatRefactored = (
 
       try {
         uiState.setLoading(true)
-        const currentMessages = [...messages.messages]
+        const currentMessages = [...messagesHook.messages]
 
         const imageContents: any =
           attachedImages?.map((image) => ({
@@ -200,7 +204,7 @@ export const useAgentChatRefactored = (
 
         const content = imageContents.length > 0 ? [...imageContents, textContent] : [textContent]
 
-        const userMessage = await messages.addUserMessage(content, sessionManager.currentSessionId)
+        const userMessage = await messagesHook.addUserMessage(content, sessionManager.currentSessionId)
         currentMessages.push(userMessage)
 
         const abortController = requestControl.createNewAbortController()
@@ -222,7 +226,7 @@ export const useAgentChatRefactored = (
             await toolExecution.executeToolsRecursively(
               lastMessage.content,
               currentMessages,
-              (msg) => messages.persistMessage(msg, sessionManager.currentSessionId),
+              (msg) => messagesHook.persistMessage(msg, sessionManager.currentSessionId),
               streamChat.streamChat,
               modelId,
               systemPrompt,
@@ -232,7 +236,7 @@ export const useAgentChatRefactored = (
         }
 
         // タイトル生成のチェック
-        sessionManager.generateTitleForCurrentSession(messages.messages)
+        sessionManager.generateTitleForCurrentSession(messagesHook.messages)
 
         // 通知の表示
         if (notification) {
@@ -278,13 +282,16 @@ export const useAgentChatRefactored = (
         uiState.setLoading(false)
         uiState.setExecutingTool(null)
       }
+
+      return // Add explicit return for TypeScript
+    },
     },
     [
       modelId,
       systemPrompt,
       enabledTools,
       guardrailSettings,
-      messages,
+      messagesHook,
       sessionManager,
       requestControl,
       streamChat,
@@ -298,17 +305,17 @@ export const useAgentChatRefactored = (
   const clearChat = useCallback(async () => {
     requestControl.abortCurrentRequest()
     await sessionManager.clearSession()
-    messages.clearMessages()
-  }, [requestControl, sessionManager, messages])
+    messagesHook.clearMessages()
+  }, [requestControl, sessionManager, messagesHook])
 
   return {
-    messages: messages.messages,
+    messages: messagesHook.messages,
     loading: uiState.loading,
     reasoning: uiState.reasoning,
     executingTool: uiState.executingTool,
     latestReasoningText: uiState.latestReasoningText,
     handleSubmit,
-    setMessages: messages.setMessages,
+    setMessages: messagesHook.setMessages,
     currentSessionId: sessionManager.currentSessionId,
     setCurrentSessionId: sessionManager.setCurrentSessionId,
     clearChat,
