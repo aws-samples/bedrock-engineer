@@ -1,5 +1,6 @@
 import { chatPage } from './chat'
 import { awsDiagramGenerator } from './awsDiagramGenerator'
+import { stepFunctionGenerator } from './stepFunctionGenerator'
 import {
   iamPolicy,
   notificationSettings,
@@ -389,6 +390,7 @@ const ja = {
   ...tokenAnalyticsSettings.ja,
   ...lightModelSettings.ja,
   ...awsDiagramGenerator.ja,
+  ...stepFunctionGenerator.ja,
   ...thinkingMode.ja,
   ...agentDirectory.ja,
   ...AgentFormTabs,
