@@ -1,7 +1,7 @@
 /**
  * AWS関連ヘルパーユーティリティ
  */
-import { fromIni, fromEnv, fromTemporaryCredentials } from '@aws-sdk/credential-providers'
+import { fromIni, fromEnv } from '@aws-sdk/credential-providers'
 import { loadConfig } from './config'
 import { AwsCredentialIdentityProvider } from '@smithy/types'
 

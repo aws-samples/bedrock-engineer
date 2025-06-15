@@ -7,7 +7,9 @@ import { loadConfig } from './config'
  * AWS認証情報プロバイダを作成
  */
 export function createCredentialsProvider() {
-  const config = loadConfig()
+  // 設定は現在このシンプルな実装では使用していない
+  // 将来的にはここで認証情報を取得したり変更したりする
+  loadConfig()
 
   // モックの認証情報を返す（CLI専用の簡易実装）
   return {

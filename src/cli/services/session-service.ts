@@ -3,7 +3,7 @@
  */
 import fs from 'fs'
 import path from 'path'
-import os from 'os'
+// import os from 'os' - 未使用のため削除
 import { v4 as uuidv4 } from 'uuid'
 import { getConfigDir } from '../utils/config'
 
@@ -49,7 +49,7 @@ function getSessionFilePath(sessionId: string): string {
  */
 export function createSession(agentId: string, modelId: string): string {
   ensureSessionDir()
-  
+
   const sessionId = `session_${Date.now()}_${uuidv4().slice(0, 8)}`
   const session: ChatSession = {
     id: sessionId,
@@ -60,11 +60,11 @@ export function createSession(agentId: string, modelId: string): string {
     agentId,
     modelId
   }
-  
+
   // セッションをファイルに保存
   const filePath = getSessionFilePath(sessionId)
   fs.writeFileSync(filePath, JSON.stringify(session, null, 2))
-  
+
   return sessionId
 }
 
@@ -76,7 +76,7 @@ export function addMessage(sessionId: string, role: 'user' | 'assistant', conten
   if (!session) {
     throw new Error(`セッションID "${sessionId}" が見つかりません`)
   }
-  
+
   // メッセージを追加
   const message: ChatMessage = {
     id: uuidv4(),
@@ -84,10 +84,10 @@ export function addMessage(sessionId: string, role: 'user' | 'assistant', conten
     content,
     timestamp: Date.now()
   }
-  
+
   session.messages.push(message)
   session.updatedAt = Date.now()
-  
+
   // セッションをファイルに保存
   const filePath = getSessionFilePath(sessionId)
   fs.writeFileSync(filePath, JSON.stringify(session, null, 2))
@@ -98,11 +98,11 @@ export function addMessage(sessionId: string, role: 'user' | 'assistant', conten
  */
 export function getSession(sessionId: string): ChatSession | null {
   const filePath = getSessionFilePath(sessionId)
-  
+
   if (!fs.existsSync(filePath)) {
     return null
   }
-  
+
   try {
     const data = fs.readFileSync(filePath, 'utf-8')
     return JSON.parse(data) as ChatSession
@@ -117,11 +117,11 @@ export function getSession(sessionId: string): ChatSession | null {
  */
 export function deleteSession(sessionId: string): boolean {
   const filePath = getSessionFilePath(sessionId)
-  
+
   if (!fs.existsSync(filePath)) {
     return false
   }
-  
+
   try {
     fs.unlinkSync(filePath)
     return true
@@ -136,7 +136,7 @@ export function deleteSession(sessionId: string): boolean {
  */
 export function deleteAllSessions(): boolean {
   ensureSessionDir()
-  
+
   try {
     const files = fs.readdirSync(SESSIONS_DIR)
     for (const file of files) {
@@ -156,11 +156,11 @@ export function deleteAllSessions(): boolean {
  */
 export function getAllSessions(): ChatSession[] {
   ensureSessionDir()
-  
+
   try {
     const files = fs.readdirSync(SESSIONS_DIR)
     const sessions: ChatSession[] = []
-    
+
     for (const file of files) {
       if (file.endsWith('.json')) {
         const filePath = path.join(SESSIONS_DIR, file)
@@ -173,7 +173,7 @@ export function getAllSessions(): ChatSession[] {
         }
       }
     }
-    
+
     // 最終更新日時の降順でソート
     return sessions.sort((a, b) => b.updatedAt - a.updatedAt)
   } catch (error) {

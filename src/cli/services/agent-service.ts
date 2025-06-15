@@ -35,7 +35,8 @@ const DEFAULT_AGENTS: Agent[] = [
     id: 'programming-mentor',
     name: 'プログラミングメンター',
     description: 'プログラミング学習のサポートを行います',
-    system: 'あなたはプログラミング教育の専門家です。初心者にわかりやすく説明し、学習をサポートします。',
+    system:
+      'あなたはプログラミング教育の専門家です。初心者にわかりやすく説明し、学習をサポートします。',
     icon: 'book',
     iconColor: '#2ecc71'
   },
@@ -43,7 +44,8 @@ const DEFAULT_AGENTS: Agent[] = [
     id: 'product-designer',
     name: 'プロダクトデザイナー',
     description: '製品やサービスのデザイン支援を行います',
-    system: 'あなたは製品デザインの専門家です。UIデザイン、UXデザイン、製品計画のサポートを行います。',
+    system:
+      'あなたは製品デザインの専門家です。UIデザイン、UXデザイン、製品計画のサポートを行います。',
     icon: 'design',
     iconColor: '#e74c3c'
   }
@@ -56,13 +58,13 @@ export async function getAgents(): Promise<Agent[]> {
   try {
     const config = loadConfig()
     const agents = [...DEFAULT_AGENTS]
-    
+
     // プロジェクトパスが設定されていれば、カスタムエージェントを読み込む
     if (config.project.path) {
       const customAgents = await loadCustomAgents(config.project.path)
       agents.push(...customAgents)
     }
-    
+
     return agents
   } catch (error) {
     console.error('エージェント一覧の取得に失敗しました:', error)
@@ -75,7 +77,7 @@ export async function getAgents(): Promise<Agent[]> {
  */
 export async function getAgentById(agentId: string): Promise<Agent | undefined> {
   const agents = await getAgents()
-  return agents.find(agent => agent.id === agentId)
+  return agents.find((agent) => agent.id === agentId)
 }
 
 /**
@@ -84,24 +86,24 @@ export async function getAgentById(agentId: string): Promise<Agent | undefined> 
 async function loadCustomAgents(projectPath: string): Promise<Agent[]> {
   try {
     const agentsDir = path.join(projectPath, '.bedrock-engineer/agents')
-    
+
     // エージェントディレクトリが存在しない場合は空配列を返す
     if (!fs.existsSync(agentsDir)) {
       return []
     }
-    
+
     // JSON/YAMLファイルを読み込む
-    const files = fs.readdirSync(agentsDir).filter(
-      file => file.endsWith('.json') || file.endsWith('.yml') || file.endsWith('.yaml')
-    )
-    
+    const files = fs
+      .readdirSync(agentsDir)
+      .filter((file) => file.endsWith('.json') || file.endsWith('.yml') || file.endsWith('.yaml'))
+
     const customAgents: Agent[] = []
-    
+
     for (const file of files) {
       try {
         const filePath = path.join(agentsDir, file)
         const content = fs.readFileSync(filePath, 'utf-8')
-        
+
         // ファイルの拡張子に応じてパース
         let agent: any
         if (file.endsWith('.json')) {
@@ -109,23 +111,23 @@ async function loadCustomAgents(projectPath: string): Promise<Agent[]> {
         } else {
           agent = yaml.load(content)
         }
-        
+
         // 必須フィールドを検証
         if (!agent.id || !agent.name) {
           console.warn(`エージェントファイル${file}は必須フィールドが不足しています`)
           continue
         }
-        
+
         // 共有エージェントのフラグを設定
         agent.isCustom = true
         agent.isShared = true
-        
+
         customAgents.push(agent)
       } catch (err) {
         console.error(`エージェントファイル${file}の読み込みに失敗しました:`, err)
       }
     }
-    
+
     return customAgents
   } catch (error) {
     console.error('カスタムエージェントの読み込みに失敗しました:', error)
@@ -136,16 +138,20 @@ async function loadCustomAgents(projectPath: string): Promise<Agent[]> {
 /**
  * エージェントのメッセージ送信（モック）
  */
-export async function sendMessage(agentId: string, message: string, modelId: string = 'anthropic.claude-3-5-sonnet-20240620-v1:0'): Promise<string> {
+export async function sendMessage(
+  agentId: string,
+  message: string,
+  _modelId: string = 'anthropic.claude-3-5-sonnet-20240620-v1:0' // prefixを_追加して未使用変数警告を回避
+): Promise<string> {
   // 実際にはAWS SDKを使ってBedrockと通信するが、デモとしてモック応答を返す
   const agent = await getAgentById(agentId)
-  
+
   if (!agent) {
     throw new Error(`エージェントID "${agentId}" が見つかりません`)
   }
-  
+
   console.log(chalk.blue(`[${agent.name}] メッセージを処理中...`))
-  
+
   // デモ用のモック応答
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -154,7 +160,9 @@ export async function sendMessage(agentId: string, message: string, modelId: str
       } else if (message.includes('help') || message.includes('ヘルプ')) {
         resolve(`どのようなことでお困りですか？具体的に教えていただければ、サポートします。`)
       } else {
-        resolve(`ご質問ありがとうございます。実際の回答を得るには、AWS認証情報を正しく設定し、Bedrockサービスに接続する必要があります。このデモでは簡易的な応答のみ提供しています。`)
+        resolve(
+          `ご質問ありがとうございます。実際の回答を得るには、AWS認証情報を正しく設定し、Bedrockサービスに接続する必要があります。このデモでは簡易的な応答のみ提供しています。`
+        )
       }
     }, 1000) // 1秒の遅延で応答
   })

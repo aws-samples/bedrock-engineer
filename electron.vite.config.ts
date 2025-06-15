@@ -3,6 +3,8 @@ import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import svgr from 'vite-plugin-svgr'
 import tailwindcss from 'tailwindcss'
+// CLI用の設定は別ファイルで管理
+// import { build } from 'vite' - 未使用のため削除
 
 export default defineConfig({
   main: {
