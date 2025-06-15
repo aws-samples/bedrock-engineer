@@ -25,34 +25,34 @@ const CDKImplementButtonComponent = ({
   if (!visible) return null
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
+    <motion.button
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0 }}
       transition={{ duration: 0.3 }}
-      className="mt-4 p-3 border-t border-gray-200 dark:border-gray-700"
+      onClick={onImplement}
+      disabled={disabled}
+      className={`
+        cursor-pointer
+        rounded-full
+        border
+        p-2
+        text-xs
+        flex items-center gap-1
+        transition-colors
+        duration-200
+        whitespace-nowrap
+        flex-shrink-0
+        ${
+          disabled
+            ? 'bg-gray-200 text-gray-400 border-gray-300 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500 dark:border-gray-600'
+            : 'text-blue-700 border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100 dark:text-blue-300 dark:border-blue-600 dark:bg-blue-900/30 dark:hover:bg-blue-800/40 dark:hover:border-blue-500'
+        }
+      `}
     >
-      <button
-        onClick={onImplement}
-        disabled={disabled}
-        className={`
-          w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg
-          font-medium text-white transition-all duration-200
-          ${
-            disabled
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800 hover:shadow-md'
-          }
-        `}
-      >
-        <FaAws className="text-lg" />
-        <span>{t('Implement with AWS CDK', 'AWS CDKで実装する')}</span>
-      </button>
-
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
-        {t('Continue with CDK implementation', 'CDKでステートマシンを実装します')}
-      </p>
-    </motion.div>
+      <FaAws className="text-sm" />
+      <span>{t('Chat で CDK を実装する', 'Chat で CDK を実装する')}</span>
+    </motion.button>
   )
 }
 

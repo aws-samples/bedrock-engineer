@@ -13,7 +13,10 @@ import prompts from '@renderer/prompts/prompts'
 import MD from '@renderer/components/Markdown/MD'
 import { AttachedImage, TextArea } from '../ChatPage/components/InputForm/TextArea'
 import { CDKImplementButton } from './components/CDKImplementButton'
-import { generateCDKImplementPrompt, generateCDKImplementPromptJa } from './utils/cdkPromptGenerator'
+import {
+  generateCDKImplementPrompt,
+  generateCDKImplementPromptJa
+} from './utils/cdkPromptGenerator'
 import { useNavigate } from 'react-router'
 
 function StepFunctionsGeneratorPage() {
@@ -21,7 +24,7 @@ function StepFunctionsGeneratorPage() {
     t,
     i18n: { language: lng }
   } = useTranslation()
-  
+
   const navigate = useNavigate()
 
   const systemPrompt = prompts.StepFunctonsGenerator.system(lng)
@@ -41,7 +44,7 @@ function StepFunctionsGeneratorPage() {
     handleSubmit(input, images)
     setUserInput('')
   }
-  
+
   // CDK実装用にAgent Chatに遷移する処理
   const handleCDKImplementation = useCallback(() => {
     try {
@@ -51,28 +54,30 @@ function StepFunctionsGeneratorPage() {
         console.error('No ASL definition available')
         return
       }
-      
+
       // エディタの内容が有効なJSONかチェック
       try {
         // 文字列をJSONとして解析してフォーマット
         const parsedJson = JSON.parse(aslDefinition)
         const formattedAsl = JSON.stringify(parsedJson, null, 2)
-        
+
         // 言語に応じたプロンプト生成
         const language = lng === 'ja' ? 'ja' : 'en'
-        const prompt = language === 'ja'
-          ? generateCDKImplementPromptJa(formattedAsl, userInput)
-          : generateCDKImplementPrompt(formattedAsl, userInput)
-        
+        const prompt =
+          language === 'ja'
+            ? generateCDKImplementPromptJa(formattedAsl, userInput)
+            : generateCDKImplementPrompt(formattedAsl, userInput)
+
         // Agent Chatページに遷移
         navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
       } catch (jsonError) {
         console.error('Invalid JSON in ASL definition:', jsonError)
         // 無効なJSONでもとりあえず試みる
         const language = lng === 'ja' ? 'ja' : 'en'
-        const prompt = language === 'ja'
-          ? generateCDKImplementPromptJa(aslDefinition, userInput)
-          : generateCDKImplementPrompt(aslDefinition, userInput)
+        const prompt =
+          language === 'ja'
+            ? generateCDKImplementPromptJa(aslDefinition, userInput)
+            : generateCDKImplementPrompt(aslDefinition, userInput)
         navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
       }
     } catch (error) {
@@ -87,10 +92,11 @@ function StepFunctionsGeneratorPage() {
 
     if (messages !== undefined && messages.length > 0 && !loading) {
       const lastOne = messages[messages.length - 1]
-      const lastMessageText = lastOne?.content && Array.isArray(lastOne.content) && lastOne.content.length > 0
-        ? lastOne.content[0]?.text || ''
-        : ''
-        
+      const lastMessageText =
+        lastOne?.content && Array.isArray(lastOne.content) && lastOne.content.length > 0
+          ? lastOne.content[0]?.text || ''
+          : ''
+
       try {
         // lastMessageTextが存在し、JSONとして解析可能な場合
         if (lastMessageText && lastMessageText.trim()) {
@@ -193,8 +199,8 @@ function StepFunctionsGeneratorPage() {
       {/* Buttom Input Field Block */}
       <div className="flex gap-2 fixed bottom-0 left-[5rem] right-5 bottom-3">
         <div className="relative w-full">
-          <div className="flex gap-2 justify-between mb-4">
-            <div className="overflow-x-auto flex-grow max-w-[100%]">
+          <div className="flex gap-2 justify-between mb-4 items-center">
+            <div className="overflow-x-auto flex-grow">
               <div className="flex flex-nowrap gap-2 min-w-0 whitespace-nowrap">
                 {examples.map((e, index) => {
                   return (
@@ -230,6 +236,13 @@ function StepFunctionsGeneratorPage() {
                 })}
               </div>
             </div>
+            <div className="flex-shrink-0 ml-2">
+              <CDKImplementButton
+                visible={hasValidStateMachine && !loading}
+                onImplement={handleCDKImplementation}
+                disabled={loading}
+              />
+            </div>
           </div>
 
           {/* prompt input form */}
@@ -242,15 +255,6 @@ function StepFunctionsGeneratorPage() {
             setIsComposing={setIsComposing}
             sendMsgKey={sendMsgKey}
           />
-          
-          {/* CDK実装ボタン */}
-          <div className="mt-4">
-            <CDKImplementButton 
-              visible={hasValidStateMachine && !loading}
-              onImplement={handleCDKImplementation}
-              disabled={loading}
-            />
-          </div>
         </div>
       </div>
     </div>
