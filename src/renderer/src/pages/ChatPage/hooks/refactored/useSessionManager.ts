@@ -17,7 +17,7 @@ export interface UseSessionManagerReturn {
   setCurrentSessionId: (sessionId: string) => void
   clearSession: () => Promise<void>
   initializeSession: () => Promise<void>
-  generateTitleForCurrentSession: () => Promise<void>
+  generateTitleForCurrentSession: (messages: IdentifiableMessage[]) => Promise<void>
 }
 
 export const useSessionManager = ({

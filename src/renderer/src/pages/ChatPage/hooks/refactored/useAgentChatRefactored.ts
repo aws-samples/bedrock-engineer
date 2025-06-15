@@ -104,7 +104,12 @@ export const useAgentChatRefactored = (
     setMessages: messagesHook.setMessages,
     setReasoning: uiState.setReasoning,
     setLatestReasoningText: uiState.setLatestReasoningText,
-    persistMessage: (msg) => messagesHook.persistMessage(msg, sessionManager.currentSessionId)
+    persistMessage: async (msg) => {
+      if (sessionManager.currentSessionId) {
+        return await messagesHook.persistMessage(msg, sessionManager.currentSessionId)
+      }
+      return msg
+    }
   })
 
   // セッション初期化時にメッセージを同期
@@ -204,7 +209,10 @@ export const useAgentChatRefactored = (
 
         const content = imageContents.length > 0 ? [...imageContents, textContent] : [textContent]
 
-        const userMessage = await messagesHook.addUserMessage(content, sessionManager.currentSessionId)
+        const userMessage = await messagesHook.addUserMessage(
+          content,
+          sessionManager.currentSessionId
+        )
         currentMessages.push(userMessage)
 
         const abortController = requestControl.createNewAbortController()
@@ -226,7 +234,12 @@ export const useAgentChatRefactored = (
             await toolExecution.executeToolsRecursively(
               lastMessage.content,
               currentMessages,
-              (msg) => messagesHook.persistMessage(msg, sessionManager.currentSessionId),
+              async (msg) => {
+                if (sessionManager.currentSessionId) {
+                  return await messagesHook.persistMessage(msg, sessionManager.currentSessionId)
+                }
+                return msg
+              },
               streamChat.streamChat,
               modelId,
               systemPrompt,
@@ -236,7 +249,7 @@ export const useAgentChatRefactored = (
         }
 
         // タイトル生成のチェック
-        sessionManager.generateTitleForCurrentSession(messagesHook.messages)
+        await sessionManager.generateTitleForCurrentSession(messagesHook.messages)
 
         // 通知の表示
         if (notification) {

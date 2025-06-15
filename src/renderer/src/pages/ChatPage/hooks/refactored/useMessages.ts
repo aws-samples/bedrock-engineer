@@ -30,7 +30,8 @@ export const useMessages = ({
   // メッセージの永続化を行うラッパー関数
   const persistMessage = useCallback(
     async (message: IdentifiableMessage, sessionId?: string) => {
-      if (!enableHistory || !sessionId) return message
+      if (!enableHistory) return message
+      if (!sessionId) return message
 
       if (message.role && message.content) {
         // メッセージにIDがなければ生成する
