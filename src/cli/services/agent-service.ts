@@ -143,6 +143,11 @@ export async function sendMessage(
   message: string,
   _modelId: string = 'anthropic.claude-3-5-sonnet-20240620-v1:0' // prefixを_追加して未使用変数警告を回避
 ): Promise<string> {
+  // ツール使用のパース・実行を追加予定
+  // const { processedMessage, toolDetected } = await processMessage(message);
+  // if (toolDetected) {
+  //   return processedMessage;
+  // }
   // 実際にはAWS SDKを使ってBedrockと通信するが、デモとしてモック応答を返す
   const agent = await getAgentById(agentId)
 
