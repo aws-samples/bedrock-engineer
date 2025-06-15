@@ -13,8 +13,8 @@ export interface UseMessagesProps {
 export interface UseMessagesReturn {
   messages: IdentifiableMessage[]
   setMessages: React.Dispatch<React.SetStateAction<IdentifiableMessage[]>>
-  persistMessage: (message: IdentifiableMessage) => Promise<IdentifiableMessage>
-  addUserMessage: (content: any[]) => Promise<IdentifiableMessage>
+  persistMessage: (message: IdentifiableMessage, sessionId?: string) => Promise<IdentifiableMessage>
+  addUserMessage: (content: any[], sessionId?: string) => Promise<IdentifiableMessage>
   addAssistantMessage: (content: any[], id?: string) => IdentifiableMessage
   clearMessages: () => void
 }
