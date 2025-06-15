@@ -38,6 +38,9 @@ import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '../../components/DeepSearchButton'
 import { ToolState } from '@/types/agent-chat'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
+import { ContinueDevelopmentButton } from './components/ContinueDevelopmentButton'
+import { generateContinueDevelopmentPrompt, generateContinueDevelopmentPromptJa } from './utils/promptGenerator'
+import { useNavigate } from 'react-router'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -82,6 +85,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { runSandpack } = sandpack
   const { updateCode, code } = useActiveCode()
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   const { recommendChanges, recommendLoading, getRecommendChanges, refleshRecommendChanges } =
     useRecommendChanges()
@@ -89,6 +93,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const [showCode, setShowCode] = useState(false)
   const [userInput, setUserInput] = useState('')
   const { currentLLM: llm, sendMsgKey, getAgentTools } = useSetting()
+  // 継続開発ボタン表示の制御状態
+  const [showContinueDevelopmentButton, setShowContinueDevelopmentButton] = useState(false)
 
   const handleClickShowCode = () => {
     setShowCode(!showCode)
@@ -222,6 +228,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       updateCode(lastText)
       if (!loading) {
         runSandpack()
+        // ウェブサイトの生成が完了したら継続開発ボタンを表示する
+        setShowContinueDevelopmentButton(true)
       }
     }
   }, [loading, lastText])
@@ -229,6 +237,28 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const [isComposing, setIsComposing] = useState(false)
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  
+  // Agent Chatに遷移して継続開発するための処理
+  const handleContinueDevelopment = useCallback(() => {
+    try {
+      // 言語に応じたプロンプト生成
+      const language = t('language', 'en') // 現在の言語を取得
+      const prompt = language === 'ja'
+        ? generateContinueDevelopmentPromptJa(sandpack.files, template, styleType, userInput)
+        : generateContinueDevelopmentPrompt(sandpack.files, template, styleType, userInput)
+      
+      // コードが抽出できない場合のチェック
+      if (!prompt) {
+        console.error('Failed to generate prompt: No code content extracted')
+        return
+      }
+      
+      // Agent Chatページに遷移し、プロンプトをクエリパラメータで渡す
+      navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
+    } catch (error) {
+      console.error('Error generating prompt or navigating:', error)
+    }
+  }, [sandpack.files, template, styleType, userInput, navigate, t])
 
   const filterdMessages = messages.filter((m) => {
     if (m?.content === undefined) {
@@ -396,9 +426,21 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
                 onSelect={setUserInput}
                 loadingText={t('addRecommend')}
               />
+              {/* 継続開発ボタンをRecommendChangesの下に配置 */}
+              {showContinueDevelopmentButton && messages.length > 0 && !loading && (
+                <div className="mt-3">
+                  <ContinueDevelopmentButton 
+                    visible={true}
+                    onContinue={handleContinueDevelopment}
+                    disabled={loading}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3 items-center">
+              {/* 継続開発ボタンを追加 - ボタンをRecommendChangesの下に移動 */}
+              
               <DeepSearchButton
                 enableDeepSearch={enableSearch}
                 handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
