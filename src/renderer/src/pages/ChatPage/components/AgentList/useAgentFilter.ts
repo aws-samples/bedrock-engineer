@@ -18,7 +18,13 @@ export const useAgentFilter = (agents: CustomAgent[]) => {
       [...agents]
         .filter((agent) => {
           // 別ページで使用している特殊エージェントは表示しない
-          return agent.id !== 'websiteGeneratorAgent' && agent.id !== 'diagramGeneratorAgent'
+          const excludedAgentIds = [
+            'reactGeneratorAgent',
+            'vueGeneratorAgent',
+            'svelteGeneratorAgent',
+            'diagramGeneratorAgent'
+          ]
+          return !excludedAgentIds.includes(agent.id)
         })
         .filter((agent) => {
           const nameMatch = agent.name.toLowerCase().includes(searchQuery.toLowerCase())
