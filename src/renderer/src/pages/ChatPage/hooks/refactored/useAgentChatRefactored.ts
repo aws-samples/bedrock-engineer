@@ -284,8 +284,6 @@ export const useAgentChatRefactored = (
       }
 
       return // Add explicit return for TypeScript
-    },
-    },
     [
       modelId,
       systemPrompt,
