@@ -57,16 +57,16 @@ export function registerConfigCommand(program: Command): void {
         if (options.project) {
           // パスを絶対パスに変換
           const projectPath = path.resolve(options.project)
-          
+
           // ディレクトリが存在するか確認
           if (!fs.existsSync(projectPath)) {
             console.log(chalk.red(`指定されたパス ${projectPath} が存在しません`))
             return
           }
-          
+
           updateProjectPath(projectPath)
           console.log(chalk.green(`プロジェクトパスを ${projectPath} に設定しました`))
-          
+
           // .bedrock-engineerディレクトリがない場合は警告
           const bedrockDir = path.join(projectPath, '.bedrock-engineer')
           if (!fs.existsSync(bedrockDir)) {
@@ -74,7 +74,7 @@ export function registerConfigCommand(program: Command): void {
             console.log(chalk.yellow('これはBedrock Engineerプロジェクトではないかもしれません'))
             console.log(chalk.yellow(`ディレクトリを作成するには: mkdir -p ${bedrockDir}/agents`))
           }
-          
+
           configUpdated = true
         }
 
@@ -88,34 +88,44 @@ export function registerConfigCommand(program: Command): void {
           if (currentConfig.aws.profile) {
             console.log(` プロファイル: ${chalk.cyan(currentConfig.aws.profile)}`)
           } else {
-            const hasCredentials = !!currentConfig.aws.credentials?.accessKeyId && 
-                                   !!currentConfig.aws.credentials?.secretAccessKey
-            
-            console.log(` 認証情報: ${hasCredentials ? chalk.green('設定済み') : chalk.yellow('未設定')}`)
+            const hasCredentials =
+              !!currentConfig.aws.credentials?.accessKeyId &&
+              !!currentConfig.aws.credentials?.secretAccessKey
+
+            console.log(
+              ` 認証情報: ${hasCredentials ? chalk.green('設定済み') : chalk.yellow('未設定')}`
+            )
           }
 
           console.log('')
           console.log(chalk.bold('プロジェクト設定:'))
           if (currentConfig.project.path) {
             console.log(` パス: ${chalk.cyan(currentConfig.project.path)}`)
-            
+
             // エージェントディレクトリの存在確認
             const agentsDir = path.join(currentConfig.project.path, '.bedrock-engineer/agents')
             if (fs.existsSync(agentsDir)) {
-              const agentFiles = fs.readdirSync(agentsDir).filter(
-                file => file.endsWith('.json') || file.endsWith('.yml') || file.endsWith('.yaml')
-              )
+              const agentFiles = fs
+                .readdirSync(agentsDir)
+                .filter(
+                  (file) =>
+                    file.endsWith('.json') || file.endsWith('.yml') || file.endsWith('.yaml')
+                )
               console.log(` エージェント数: ${chalk.cyan(agentFiles.length)}`)
             } else {
               console.log(` エージェント: ${chalk.yellow('ディレクトリが見つかりません')}`)
             }
           } else {
             console.log(` パス: ${chalk.yellow('未設定')}`)
-            console.log(` ヒント: ${chalk.green('--project <path>')} オプションでプロジェクトパスを設定してください`)
+            console.log(
+              ` ヒント: ${chalk.green('--project <path>')} オプションでプロジェクトパスを設定してください`
+            )
           }
 
           console.log('')
-          console.log(chalk.dim(`設定ファイルの場所: ${path.join(getConfigDir(), 'cli-config.json')}`))
+          console.log(
+            chalk.dim(`設定ファイルの場所: ${path.join(getConfigDir(), 'cli-config.json')}`)
+          )
         }
       } catch (error) {
         console.error(chalk.red('設定の更新に失敗しました:'), error)

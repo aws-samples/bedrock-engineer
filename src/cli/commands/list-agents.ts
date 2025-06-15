@@ -17,7 +17,7 @@ export function registerListAgentsCommand(program: Command): void {
       try {
         // 設定読み込み
         const config = loadConfig()
-        
+
         if (!config.project.path) {
           console.log(
             chalk.yellow(
@@ -25,17 +25,11 @@ export function registerListAgentsCommand(program: Command): void {
             )
           )
           console.log(
-            chalk.yellow(
-              'カスタムエージェントを表示するには: bedrock-cli config --project <path>'
-            )
+            chalk.yellow('カスタムエージェントを表示するには: bedrock-cli config --project <path>')
           )
           console.log('')
         } else {
-          console.log(
-            chalk.green(
-              `プロジェクト: ${config.project.path}`
-            )
-          )
+          console.log(chalk.green(`プロジェクト: ${config.project.path}`))
           console.log(
             chalk.dim(
               `エージェント定義ディレクトリ: ${path.join(config.project.path, '.bedrock-engineer/agents')}`
@@ -46,7 +40,7 @@ export function registerListAgentsCommand(program: Command): void {
 
         // エージェント一覧を取得
         const agents = await getAgents()
-        
+
         if (agents.length === 0) {
           console.log(chalk.yellow('利用可能なエージェントが見つかりませんでした。'))
           return
@@ -59,17 +53,19 @@ export function registerListAgentsCommand(program: Command): void {
         agents.forEach((agent, index) => {
           // エージェントのタイプ（デフォルトかカスタムか）
           const agentType = agent.isCustom ? chalk.blue('[カスタム]') : chalk.green('[デフォルト]')
-          
-          console.log(`${chalk.bold(index + 1)}. ${chalk.cyan(agent.name)} ${agentType} [ID: ${agent.id}]`)
+
+          console.log(
+            `${chalk.bold(index + 1)}. ${chalk.cyan(agent.name)} ${agentType} [ID: ${agent.id}]`
+          )
           console.log(`   ${agent.description || '説明なし'}`)
-          
+
           // 詳細モードの場合は追加情報を表示
           if (options.verbose) {
             if (agent.tags && agent.tags.length > 0) {
               console.log(`   ${chalk.dim('タグ:')} ${agent.tags.join(', ')}`)
             }
           }
-          
+
           console.log('')
         })
 

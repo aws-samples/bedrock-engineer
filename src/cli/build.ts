@@ -20,12 +20,12 @@ async function buildCli() {
         rollupOptions: {
           external: [
             'electron',
-            'fs', 
-            'path', 
-            'os', 
-            'child_process', 
-            'http', 
-            'https', 
+            'fs',
+            'path',
+            'os',
+            'child_process',
+            'http',
+            'https',
             'url',
             'net',
             'tls',

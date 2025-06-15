@@ -27,13 +27,13 @@ program.exitOverride((err) => {
   if (err.code === 'commander.helpDisplayed') {
     process.exit(0)
   }
-  
+
   if (err.code === 'commander.unknownCommand') {
     console.error(`エラー: 不明なコマンド '${err.message.split("'")[1]}'`)
     console.log(`'bedrock-cli --help' でヘルプを表示`)
     process.exit(1)
   }
-  
+
   console.error(`エラー: ${err.message}`)
   process.exit(1)
 })
