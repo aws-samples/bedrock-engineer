@@ -264,7 +264,8 @@ export default function DiagramGeneratorPage() {
   }
 
   return (
-    <div className="flex flex-col p-3 h-[calc(100vh-11rem)] overflow-y-auto">
+    <div className="flex flex-col p-3 h-[calc(100vh-14rem)]">
+      {/* Header */}
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex flex-col gap-2 w-full">
           <div className="flex justify-between">
@@ -288,28 +289,31 @@ export default function DiagramGeneratorPage() {
                   {index + 1}
                 </motion.span>
               ))}
+              {diagramHistory.length === 0 && (
+                <span className="text-sm text-gray-800 dark:text-gray-400 font-medium">
+                  Turn your ideas into visuals. Easily make diagrams, blueprints, flowcharts, and
+                  other visual materials you need.
+                </span>
+              )}
             </div>
           </div>
         </span>
       </div>
 
+      {/* Body */}
       <div className="flex-1 rounded-lg">
         <div
-          className="w-full h-[95%] flex"
+          className="w-full h-[calc(calc(100vh-14rem)-5rem)] flex overflow-y-auto"
           style={{
-            display: 'flex',
             gap: '1rem',
             backgroundColor: isDark
               ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
               : 'rgb(243 244 246 / var(--tw-bg-opacity))',
-            border: 'none',
-            height: '100%'
+            border: 'none'
           }}
         >
           {/* 図の表示エリア - 左側 */}
-          <div
-            className={`border border-gray-200 rounded-lg ${showExplanation ? 'w-2/3' : 'w-full'}`}
-          >
+          <div className={`h-full ${showExplanation ? 'w-2/3' : 'w-full'}`}>
             {(loading && !xml) || isXmlGenerating ? (
               <div className="flex h-full justify-center items-center flex-col">
                 <LoaderWithReasoning
@@ -338,7 +342,7 @@ export default function DiagramGeneratorPage() {
 
           {/* 説明文の表示エリア - 右側 */}
           {showExplanation && (
-            <div className="w-1/3">
+            <div className="w-1/3 h-full">
               <DiagramExplanationView
                 explanation={
                   loading && filteredExplanation
@@ -354,6 +358,7 @@ export default function DiagramGeneratorPage() {
         </div>
       </div>
 
+      {/* Footer */}
       <div className="flex gap-2 fixed bottom-0 left-[5rem] right-5 bottom-3">
         <div className="relative w-full">
           <div className="flex gap-2 justify-between pb-2">
@@ -373,11 +378,7 @@ export default function DiagramGeneratorPage() {
               />
 
               {/* 説明文表示切り替えボタン */}
-              <Tooltip
-                content={showExplanation ? '説明文を非表示' : '説明文を表示'}
-                placement="bottom"
-                animation="duration-500"
-              >
+              <Tooltip content={showExplanation ? 'Hide' : 'Show'} animation="duration-500">
                 <button
                   className={`cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                     showExplanation ? 'bg-gray-200 dark:bg-gray-700' : ''
