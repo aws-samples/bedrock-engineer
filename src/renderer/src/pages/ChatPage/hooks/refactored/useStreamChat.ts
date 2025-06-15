@@ -85,7 +85,7 @@ export const useStreamChat = ({
   persistMessage
 }: UseStreamChatProps): UseStreamChatReturn => {
   const { t } = useTranslation()
-  
+
   // キャッシュポイントを保持するための参照
   const lastCachePoint = useRef<number | undefined>(undefined)
   const lastAssistantMessageId = useRef<string | null>(null)

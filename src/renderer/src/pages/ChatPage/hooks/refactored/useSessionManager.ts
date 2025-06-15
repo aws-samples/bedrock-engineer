@@ -27,20 +27,15 @@ export const useSessionManager = ({
   enableHistory = true
 }: UseSessionManagerProps): UseSessionManagerReturn => {
   const [currentSessionId, setCurrentSessionIdState] = useState<string | undefined>(sessionId)
-  
+
   // タイトル生成済みフラグ（同じセッションで複数回生成しないため）
   const titleGenerated = useRef<Set<string>>(new Set())
   const MESSAGE_THRESHOLD = 4 // タイトル生成のためのメッセージ数閾値
 
   const { t } = useTranslation()
   const { getLightModelId } = useLightProcessingModel()
-  
-  const {
-    getSession,
-    createSession,
-    updateSessionTitle,
-    setActiveSession
-  } = useChatHistory()
+
+  const { getSession, createSession, updateSessionTitle, setActiveSession } = useChatHistory()
 
   // セッションの初期化
   const initializeSession = useCallback(async () => {
@@ -57,12 +52,15 @@ export const useSessionManager = ({
   }, [sessionId, enableHistory, getSession, createSession, modelId, systemPrompt])
 
   // セッションを切り替える
-  const setCurrentSessionId = useCallback((newSessionId: string) => {
-    setCurrentSessionIdState(newSessionId)
-    if (newSessionId) {
-      setActiveSession(newSessionId)
-    }
-  }, [setActiveSession])
+  const setCurrentSessionId = useCallback(
+    (newSessionId: string) => {
+      setCurrentSessionIdState(newSessionId)
+      if (newSessionId) {
+        setActiveSession(newSessionId)
+      }
+    },
+    [setActiveSession]
+  )
 
   // セッションをクリア（新しいセッションを作成）
   const clearSession = useCallback(async () => {
@@ -105,17 +103,20 @@ export const useSessionManager = ({
   }, [currentSessionId, enableHistory, getSession, getLightModelId, t, updateSessionTitle])
 
   // メッセージ数を監視してタイトル生成をトリガーする関数
-  const checkAndGenerateTitle = useCallback((messages: IdentifiableMessage[]) => {
-    // メッセージが閾値を超え、まだタイトルが生成されていない場合に実行
-    if (
-      messages.length > MESSAGE_THRESHOLD &&
-      currentSessionId &&
-      !titleGenerated.current.has(currentSessionId) &&
-      enableHistory
-    ) {
-      generateTitleForCurrentSession()
-    }
-  }, [currentSessionId, generateTitleForCurrentSession, enableHistory])
+  const checkAndGenerateTitle = useCallback(
+    (messages: IdentifiableMessage[]) => {
+      // メッセージが閾値を超え、まだタイトルが生成されていない場合に実行
+      if (
+        messages.length > MESSAGE_THRESHOLD &&
+        currentSessionId &&
+        !titleGenerated.current.has(currentSessionId) &&
+        enableHistory
+      ) {
+        generateTitleForCurrentSession()
+      }
+    },
+    [currentSessionId, generateTitleForCurrentSession, enableHistory]
+  )
 
   // 初期化
   useEffect(() => {

@@ -67,11 +67,11 @@ export const useMessages = ({
       }
 
       setMessages((prev) => [...prev, userMessage])
-      
+
       if (sessionId) {
         await persistMessage(userMessage, sessionId)
       }
-      
+
       return userMessage
     },
     [persistMessage]

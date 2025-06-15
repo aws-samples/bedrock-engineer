@@ -41,18 +41,18 @@ export interface UseAgentChatReturn {
   // メッセージ関連
   messages: IdentifiableMessage[]
   setMessages: React.Dispatch<React.SetStateAction<IdentifiableMessage[]>>
-  
+
   // UI状態
   loading: boolean
   reasoning: boolean
   executingTool: ToolName | null
   latestReasoningText: string
-  
+
   // セッション管理
   currentSessionId: string | undefined
   setCurrentSessionId: (sessionId: string) => void
   clearChat: () => Promise<void>
-  
+
   // メイン機能
   handleSubmit: (userInput: string, attachedImages?: any[]) => Promise<any>
   stopGeneration: () => void

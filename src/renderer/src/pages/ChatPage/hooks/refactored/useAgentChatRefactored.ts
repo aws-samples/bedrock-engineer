@@ -15,7 +15,7 @@ import { useRequestControl } from './useRequestControl'
 import { useChatUIState } from './useChatUIState'
 import { useSessionManager } from './useSessionManager'
 import { useToolExecution } from './useToolExecution'
-import { useStreamChat } = './useStreamChat'
+import { useStreamChat } from './useStreamChat'
 
 export const useAgentChatRefactored = (
   modelId: string,
@@ -29,7 +29,7 @@ export const useAgentChatRefactored = (
 ) => {
   const { enableHistory = true, tools: explicitTools } = options || {}
   const { t } = useTranslation()
-  
+
   const {
     notification,
     contextLength,
@@ -113,7 +113,7 @@ export const useAgentChatRefactored = (
 
   const stopGeneration = useCallback(() => {
     requestControl.abortCurrentRequest()
-    
+
     if (messages.messages.length > 0) {
       // 不完全なtoolUse/toolResultペアを削除するロジック
       const updatedMessages = [...messages.messages]
@@ -236,9 +236,11 @@ export const useAgentChatRefactored = (
 
         // 通知の表示
         if (notification) {
-          const lastAssistantMessage = currentMessages.filter((msg) => msg.role === 'assistant').pop()
+          const lastAssistantMessage = currentMessages
+            .filter((msg) => msg.role === 'assistant')
+            .pop()
           let notificationBody = ''
-          
+
           if (lastAssistantMessage?.content) {
             const textContent = lastAssistantMessage.content
               .filter((content) => 'text' in content)
@@ -261,10 +263,13 @@ export const useAgentChatRefactored = (
             notificationBody = t('notification.messages.chatComplete.body')
           }
 
-          await notificationService.showNotification(t('notification.messages.chatComplete.title'), {
-            body: notificationBody,
-            silent: false
-          })
+          await notificationService.showNotification(
+            t('notification.messages.chatComplete.title'),
+            {
+              body: notificationBody,
+              silent: false
+            }
+          )
         }
       } catch (error: any) {
         console.error('Error in handleSubmit:', error)

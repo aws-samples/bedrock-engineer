@@ -22,7 +22,7 @@ export const useRequestControl = (): UseRequestControlReturn => {
   const createNewAbortController = useCallback(() => {
     // 既存のコントローラーがあれば中断
     abortCurrentRequest()
-    
+
     // 新しい AbortController を作成
     abortController.current = new AbortController()
     return abortController.current
