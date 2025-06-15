@@ -17,9 +17,11 @@ import { ChatHistory } from './components/ChatHistory'
 import { useSystemPromptModal } from './modals/useSystemPromptModal'
 import { useTokenAnalyticsModal } from './modals/useTokenAnalyticsModal'
 import { useChatHistory } from '@renderer/contexts/ChatHistoryContext'
+import { useLocation } from 'react-router'
 
 export default function ChatPage() {
   const { t } = useTranslation()
+  const location = useLocation()
   const {
     currentLLM: llm,
     projectPath,
@@ -136,6 +138,27 @@ export default function ChatPage() {
   const handleSessionSelect = (sessionId: string) => {
     setCurrentSessionId(sessionId)
   }
+
+  // URLパラメータからプロンプトとエージェントを自動設定
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const promptFromUrl = searchParams.get('prompt')
+    const agentFromUrl = searchParams.get('agent')
+
+    if (promptFromUrl && inputFormRef.current) {
+      // プロンプトをテキストエリアに設定
+      inputFormRef.current.setInputText(decodeURIComponent(promptFromUrl))
+
+      // 指定されたエージェントに切り替え
+      if (agentFromUrl && agents.find((a) => a.id === agentFromUrl)) {
+        setSelectedAgentId(agentFromUrl)
+      }
+
+      // URLパラメータをクリア（同じリンクを再度クリックした時の対応）
+      const newUrl = window.location.pathname + window.location.hash
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [location.search, agents, setSelectedAgentId])
 
   return (
     <React.Fragment>
