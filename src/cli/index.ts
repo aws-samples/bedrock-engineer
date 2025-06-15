@@ -3,7 +3,7 @@
  */
 import { Command } from 'commander'
 import { registerListAgentsCommand } from './commands/list-agents'
-// import { registerChatCommand } from './commands/chat'
+import { registerChatCommand } from './commands/chat'
 import fs from 'fs'
 import path from 'path'
 
@@ -20,7 +20,7 @@ program
 
 // コマンドを登録
 registerListAgentsCommand(program)
-// registerChatCommand(program)
+registerChatCommand(program)
 
 // エラーハンドリングを設定
 program.exitOverride((err) => {
