@@ -9,16 +9,13 @@ import { ToolState } from '@/types/agent-chat'
 import { generateMessageId } from '@/types/chat/metadata'
 import { StreamChatCompletionProps, streamChatCompletion } from '@renderer/lib/api'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { generateSessionTitle } from '../utils/titleGenerator'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 import { useChatHistory } from '@renderer/contexts/ChatHistoryContext'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
-import { useLightProcessingModel } from '@renderer/lib/modelSelection'
 import { useAgentTools } from './useAgentTools'
 
 import { AttachedImage } from '../components/InputForm/TextArea'
-import { ChatMessage } from '@/types/chat/history'
 import { ToolName, isMcpTool } from '@/types/tools'
 import { notificationService } from '@renderer/services/NotificationService'
 import { limitContextLength } from '@renderer/lib/contextLength'
@@ -30,46 +27,12 @@ import {
   logCacheUsage
 } from '@renderer/lib/promptCacheUtils'
 import { calculateCost } from '@renderer/lib/pricing/modelPricing'
+import { useLightProcessingModel } from '@renderer/lib/modelSelection'
+import { generateSessionTitle } from '../utils/titleGenerator'
 
-// メッセージの送信時に、Trace を全て載せると InputToken が逼迫するので取り除く
-function removeTraces(messages) {
-  return messages.map((message) => {
-    if (message.content && Array.isArray(message.content)) {
-      return {
-        ...message,
-        content: message.content.map((item) => {
-          if (item.toolResult) {
-            return {
-              ...item,
-              toolResult: {
-                ...item.toolResult,
-                content: item.toolResult.content.map((c) => {
-                  if (c?.json?.result?.completion) {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { traces, ...restCompletion } = c.json.result.completion
-                    return {
-                      ...c,
-                      json: {
-                        ...c.json,
-                        result: {
-                          ...c.json.result,
-                          completion: restCompletion
-                        }
-                      }
-                    }
-                  }
-                  return c
-                })
-              }
-            }
-          }
-          return item
-        })
-      }
-    }
-    return message
-  })
-}
+// 新しいユーティリティとカスタムフックのインポート
+import { removeTraces } from '../utils/messageUtils'
+import { useMessagePersistence } from './useMessagePersistence'
 
 export const useAgentChat = (
   modelId: string,
@@ -153,6 +116,14 @@ export const useAgentChat = (
 
   // Plan/Act モードに基づいてツールをフィルタリング
   const enabledTools = useAgentTools(rawEnabledTools)
+
+  // メッセージ永続化カスタムフック
+  const { persistMessage } = useMessagePersistence({
+    currentSessionId,
+    modelId,
+    enabledTools,
+    enableHistory
+  })
 
   // 通信を中断する関数
   const abortCurrentRequest = useCallback(() => {
@@ -241,14 +212,8 @@ export const useAgentChat = (
   }, [messages, currentSessionId, t])
 
   // ChatHistoryContext から操作関数を取得
-  const {
-    getSession,
-    createSession,
-    addMessage,
-    updateSessionTitle,
-    setActiveSession,
-    deleteMessage
-  } = useChatHistory()
+  const { getSession, createSession, updateSessionTitle, setActiveSession, deleteMessage } =
+    useChatHistory()
 
   // セッションの初期化
   useEffect(() => {
@@ -296,36 +261,6 @@ export const useAgentChat = (
       }
     }
   }, [currentSessionId, getSession, setActiveSession, abortCurrentRequest])
-
-  // メッセージの永続化を行うラッパー関数
-  const persistMessage = useCallback(
-    async (message: IdentifiableMessage) => {
-      if (!enableHistory) return
-
-      if (currentSessionId && message.role && message.content) {
-        // メッセージにIDがなければ生成する
-        if (!message.id) {
-          message.id = generateMessageId()
-        }
-
-        const chatMessage: ChatMessage = {
-          id: message.id,
-          role: message.role,
-          content: message.content,
-          timestamp: Date.now(),
-          metadata: {
-            modelId,
-            tools: enabledTools,
-            converseMetadata: message.metadata?.converseMetadata // メッセージ内のメタデータを使用
-          }
-        }
-        await addMessage(currentSessionId, chatMessage)
-      }
-
-      return message
-    },
-    [currentSessionId, modelId, enabledTools, enableHistory, addMessage]
-  )
 
   const streamChat = async (props: StreamChatCompletionProps, currentMessages: Message[]) => {
     // 既存の通信があれば中断
