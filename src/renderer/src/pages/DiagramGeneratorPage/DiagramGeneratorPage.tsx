@@ -36,7 +36,7 @@ export default function DiagramGeneratorPage() {
   const [xml, setXml] = useState(exampleDiagrams['serverless'])
   const [isComposing, setIsComposing] = useState(false)
   const drawioRef = useRef<DrawIoEmbedRef>(null)
-  const { currentLLM: llm, sendMsgKey, getAgentTools } = useSetting()
+  const { currentLLM: llm, sendMsgKey, getAgentTools, enabledTavilySearch } = useSetting()
 
   // 検索機能の状態
   const [enableSearch, setEnableSearch] = useState(false)
@@ -61,6 +61,8 @@ export default function DiagramGeneratorPage() {
   // XML生成専用の状態管理
   const [xmlLoading, setXmlLoading] = useState(false)
   const [hasValidXml, setHasValidXml] = useState(false)
+  // 新しいリクエスト状態フラグ
+  const [isNewRequest, setIsNewRequest] = useState(false)
 
   const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
 
@@ -99,12 +101,14 @@ export default function DiagramGeneratorPage() {
   // Diagram Generator Agent で利用可能なツールを定義
   // enableSearch が true の場合のみ tavilySearch ツールを有効にする
   const diagramAgentTools = useMemo(() => {
-    if (!enableSearch) return []
+    const agentTools = getAgentTools(diagramAgentId)
 
-    // diagramAgentIdからツールを取得し、tavilySearch ツールのみをフィルタリング
-    return getAgentTools(diagramAgentId).filter(
-      (tool) => tool.toolSpec?.name === 'tavilySearch' && tool.enabled
-    )
+    if (enableSearch) {
+      // diagramAgentIdからツールを取得し、tavilySearch ツールをフィルタリング
+      return agentTools.filter((tool) => tool.toolSpec?.name === 'tavilySearch' && tool.enabled)
+    }
+
+    return agentTools
   }, [enableSearch, getAgentTools, diagramAgentId])
 
   const { messages, loading, handleSubmit, executingTool, latestReasoningText } = useAgentChat(
@@ -130,6 +134,8 @@ export default function DiagramGeneratorPage() {
     // XML生成状態をリセット
     setXmlLoading(true)
     setHasValidXml(false)
+    // 新しいリクエスト開始フラグを設定
+    setIsNewRequest(true)
     // 既存のダイアグラムをクリアして即座にローダーを表示
     setXml('')
     setDiagramExplanation('')
@@ -187,6 +193,8 @@ export default function DiagramGeneratorPage() {
       // XML状態もリセット
       setXmlLoading(false)
       setHasValidXml(false)
+      // 新しいリクエスト状態もリセット
+      setIsNewRequest(false)
     }
   }, [messages, loading, xmlLoading, hasValidXml])
 
@@ -377,7 +385,8 @@ export default function DiagramGeneratorPage() {
                 ref={drawioRef}
                 xml={xml}
                 configuration={{
-                  defaultLibraries: 'aws4;aws3;aws3d'
+                  defaultLibraries: 'aws4;aws3;aws3d',
+                  sidebarWidth: 140
                 }}
                 urlParameters={{
                   dark: isDark,
@@ -388,15 +397,7 @@ export default function DiagramGeneratorPage() {
 
             {/* ローダーをオーバーレイとして表示 */}
             {(() => {
-              const shouldShowLoader = xmlLoading || (loading && !xml)
-              console.log('[DEBUG] Display conditions:', {
-                xmlLoading,
-                loading,
-                xmlExists: !!xml,
-                xmlLength: xml?.length || 0,
-                shouldShowLoader,
-                drawioVisibility: shouldShowLoader ? 'hidden' : 'visible'
-              })
+              const shouldShowLoader = isNewRequest || xmlLoading || (loading && !xml)
               return shouldShowLoader ? (
                 <div className="absolute inset-0 flex h-full justify-center items-center flex-col bg-gray-50 dark:bg-gray-900">
                   <LoaderWithReasoning
@@ -444,11 +445,12 @@ export default function DiagramGeneratorPage() {
             </div>
 
             <div className="flex gap-3 items-center">
-              <DeepSearchButton
-                enableDeepSearch={enableSearch}
-                handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
-              />
-
+              {enabledTavilySearch && (
+                <DeepSearchButton
+                  enableDeepSearch={enableSearch}
+                  handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
+                />
+              )}
               {/* 説明文表示切り替えボタン */}
               <Tooltip content={showExplanation ? 'Hide' : 'Show'} animation="duration-500">
                 <button
