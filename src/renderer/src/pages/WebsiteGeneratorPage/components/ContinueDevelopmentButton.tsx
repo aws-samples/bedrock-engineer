@@ -2,11 +2,13 @@ import { memo } from 'react'
 import { motion } from 'framer-motion'
 import { FaCode } from 'react-icons/fa'
 import { useTranslation } from 'react-i18next'
+import { Tooltip } from 'flowbite-react'
 
 interface ContinueDevelopmentButtonProps {
   visible: boolean
   onContinue: () => void
   disabled?: boolean
+  compact?: boolean
 }
 
 /**
@@ -18,12 +20,44 @@ interface ContinueDevelopmentButtonProps {
 const ContinueDevelopmentButtonComponent = ({
   visible,
   onContinue,
-  disabled = false
+  disabled = false,
+  compact = false
 }: ContinueDevelopmentButtonProps) => {
   const { t } = useTranslation()
 
   if (!visible) return null
 
+  // Compact version for header
+  if (compact) {
+    return (
+      <Tooltip
+        content={t('Continue development in Agent Chat', 'Agent Chatで開発を続ける')}
+        placement="bottom"
+        animation="duration-500"
+      >
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.3 }}
+          onClick={onContinue}
+          disabled={disabled}
+          className={`
+            cursor-pointer rounded-md py-1.5 px-2 transition-all duration-200
+            ${
+              disabled
+                ? 'text-gray-400 cursor-not-allowed'
+                : 'hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }
+          `}
+        >
+          <FaCode className="text-xl" />
+        </motion.button>
+      </Tooltip>
+    )
+  }
+
+  // Full version for bottom section
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}

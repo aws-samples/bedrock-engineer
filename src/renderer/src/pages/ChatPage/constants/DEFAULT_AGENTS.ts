@@ -357,79 +357,68 @@ However, you may want to minimize the amount of information in the output if you
     isCustom: false
   },
   {
-    id: 'websiteGeneratorAgent',
-    name: 'Website Generator',
-    description: 'WebsiteGenerator Agent',
-    system: `As a React expert, you are an assistant who checks the source code in the Knowledge Base and generates efficient and optimal React source code.
-
-- **!!MOST IMPORTANT:** Provide complete working source code, no omissions allowed.
-- **!IMPORTANT:** Use triple backticks or triple backquotes (\`\`\`code\`\`\`) to indicate code snippets. There must be no explanation before or after the source code. This is an absolute rule.
-- **!IMPORTANT:** Do not import modules with relative paths (e.g. import { Button } from './Button';) If you have required components, put them all in the same file.
-
-Main responsibilities:
-1. Check and analyze code from the Knowledge Base for sevelal times
-2. Use tavilySearch to find the best sample code for the user's prompt. Be sure to perform this task. Run the tool at least three times
-3. Generate code based on React best practices
-4. Apply modern React development methods
-5. Optimize component design and state management
-6. Check the output results yourself, and if there is a risk of errors, correct them again.
-
-You can retrieve the information stored in the Knowledge Base as needed and generates the final source code.
-**!MOST IMPORTANT:** **Be sure to check** the relevant code in the knowledge base to gather enough information before printing the results.
-**!IMPORTANT:** Please check the output result several times by yourself, even if it takes time.
-
-How to proceed:
-- 1. First, use the retrieve tool to retrieve the necessary information from the Knowledge Base
-- 2. Design React components based on the retrieved information
-
-When you use retrieve tool:
-- If you need to retrieve information from the knowledge base, use the retrieve tool.
-- Available Knowledge Bases: {{knowledgeBases}}
-
-When you use tavilySearch Tool:
-- Make sure you use the best query to get the most accurate and up-to-date information
-- Try creating and searching at least two different queries to get a better idea of the search results.
-
-Basic principles for code generation:
-
-- Create a React component for whatever the user asked you to create and make sure it can run by itself by using a default export
-- Make sure the React app is interactive and functional by creating state when needed and having no required props
-- Use TypeScript as the language for the React component
-- Use Tailwind classes for styling. DO NOT USE ARBITRARY VALUES (e.g. \`h-[600px]\`). Make sure to use a consistent color palette.
-
-- The following libraries can be used:
-  - react
-  - react-dom
-  - @types/react
-  - @types/react-dom
-  - tailwindcss
-
-- ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
-- NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
-- Any text other than the source code is strictly prohibited. Greetings, chatting, explanations of rules, etc. are strictly prohibited.
-- The generated application will be displayed to the full screen, but this may be changed if specified.
-- If necessary, source code that fetches and displays the API will also be generated.
-- The background color should be white.
-- If an image is required, please refer to an appropriate one from pexels. If specified, it is also possible to reference something else.
-- If data is required it is possible to fetch it via the Web API, but unless otherwise specified you should endeavor to create mock data in memory and display it.`,
+    id: 'reactGeneratorAgent',
+    name: 'React Website Generator',
+    description: 'React専用ウェブサイト生成エージェント',
+    system: '', // 動的に生成されるため空文字列
     scenarios: [
-      { title: 'Landing Page', content: '' },
-      { title: 'Dashboard', content: '' },
-      { title: 'E-commerce Product Page', content: '' },
-      { title: 'Portfolio Website', content: '' },
-      { title: 'Blog Layout', content: '' },
-      { title: 'Contact Form', content: '' }
+      { title: 'React Landing Page', content: '' },
+      { title: 'React Dashboard', content: '' },
+      { title: 'React E-commerce Product Page', content: '' },
+      { title: 'React Portfolio Website', content: '' },
+      { title: 'React Blog Layout', content: '' },
+      { title: 'React Contact Form', content: '' }
     ],
     icon: 'web',
-    iconColor: 'oklch(0.67 0.2 29.23)',
+    iconColor: 'oklch(0.67 0.2 190)', // React blue
     category: 'website',
-    // ウェブサイト生成用のツール設定
     tools: ['tavilySearch', 'retrieve', 'think'],
-    // ウェブサイト生成用の許可コマンド設定
     allowedCommands: [],
-    // ウェブサイト生成用のBedrock Agents設定
     bedrockAgents: [],
-    // ウェブサイト生成用のKnowledge Base設定
+    knowledgeBases: [],
+    isCustom: false
+  },
+  {
+    id: 'vueGeneratorAgent',
+    name: 'Vue Website Generator',
+    description: 'Vue専用ウェブサイト生成エージェント',
+    system: '', // 動的に生成されるため空文字列
+    scenarios: [
+      { title: 'Vue Landing Page', content: '' },
+      { title: 'Vue Dashboard', content: '' },
+      { title: 'Vue E-commerce Product Page', content: '' },
+      { title: 'Vue Portfolio Website', content: '' },
+      { title: 'Vue Blog Layout', content: '' },
+      { title: 'Vue Contact Form', content: '' }
+    ],
+    icon: 'web',
+    iconColor: 'oklch(0.67 0.2 150)', // Vue green
+    category: 'website',
+    tools: ['tavilySearch', 'retrieve', 'think'],
+    allowedCommands: [],
+    bedrockAgents: [],
+    knowledgeBases: [],
+    isCustom: false
+  },
+  {
+    id: 'svelteGeneratorAgent',
+    name: 'Svelte Website Generator',
+    description: 'Svelte専用ウェブサイト生成エージェント',
+    system: '', // 動的に生成されるため空文字列
+    scenarios: [
+      { title: 'Svelte Landing Page', content: '' },
+      { title: 'Svelte Dashboard', content: '' },
+      { title: 'Svelte E-commerce Product Page', content: '' },
+      { title: 'Svelte Portfolio Website', content: '' },
+      { title: 'Svelte Blog Layout', content: '' },
+      { title: 'Svelte Contact Form', content: '' }
+    ],
+    icon: 'web',
+    iconColor: 'oklch(0.67 0.2 30)', // Svelte orange
+    category: 'website',
+    tools: ['tavilySearch', 'retrieve', 'think'],
+    allowedCommands: [],
+    bedrockAgents: [],
     knowledgeBases: [],
     isCustom: false
   }
@@ -439,4 +428,6 @@ export const SOFTWARE_AGENT_SYSTEM_PROMPT = DEFAULT_AGENTS[0].system
 export const CODE_BUDDY_SYSTEM_PROMPT = DEFAULT_AGENTS[1].system
 export const PRODUCT_DESIGNER_SYSTEM_PROMPT = DEFAULT_AGENTS[2].system
 export const DIAGRAM_GENERATOR_SYSTEM_PROMPT = DEFAULT_AGENTS[3].system
-export const WEBSITE_GENERATOR_SYSTEM_PROMPT = DEFAULT_AGENTS[4].system
+export const REACT_GENERATOR_SYSTEM_PROMPT = DEFAULT_AGENTS[4].system
+export const VUE_GENERATOR_SYSTEM_PROMPT = DEFAULT_AGENTS[5].system
+export const SVELTE_GENERATOR_SYSTEM_PROMPT = DEFAULT_AGENTS[6].system
