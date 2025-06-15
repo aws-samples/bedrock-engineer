@@ -104,9 +104,10 @@ export const useAgentChatRefactored = (
     setMessages: messagesHook.setMessages,
     setReasoning: uiState.setReasoning,
     setLatestReasoningText: uiState.setLatestReasoningText,
-    persistMessage: async (msg) => {
-      if (sessionManager.currentSessionId) {
-        return await messagesHook.persistMessage(msg, sessionManager.currentSessionId)
+    persistMessage: async (msg, sessionId) => {
+      const targetSessionId = sessionId || sessionManager.currentSessionId
+      if (targetSessionId) {
+        return await messagesHook.persistMessage(msg, targetSessionId)
       }
       return msg
     }

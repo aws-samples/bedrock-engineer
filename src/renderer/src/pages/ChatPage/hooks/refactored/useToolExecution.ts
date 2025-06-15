@@ -19,8 +19,8 @@ export interface UseToolExecutionReturn {
   executeToolsRecursively: (
     contentBlocks: ContentBlock[],
     currentMessages: any[],
-    persistMessage: (message: IdentifiableMessage) => Promise<IdentifiableMessage>,
-    streamChat: (props: any, messages: any[]) => Promise<string | undefined>,
+    persistMessage: (message: IdentifiableMessage, sessionId?: string) => Promise<IdentifiableMessage>,
+    streamChat: (props: any, messages: any[], abortSignal: AbortSignal) => Promise<string | undefined>,
     modelId: string,
     systemPrompt?: string,
     enabledTools?: any[]
@@ -37,8 +37,8 @@ export const useToolExecution = ({
     async (
       contentBlocks: ContentBlock[],
       currentMessages: any[],
-      persistMessage: (message: IdentifiableMessage) => Promise<IdentifiableMessage>,
-      streamChat: (props: any, messages: any[]) => Promise<string | undefined>,
+      persistMessage: (message: IdentifiableMessage, sessionId?: string) => Promise<IdentifiableMessage>,
+      streamChat: (props: any, messages: any[], abortSignal: AbortSignal) => Promise<string | undefined>,
       modelId: string,
       systemPrompt?: string,
       enabledTools: any[] = []
@@ -171,6 +171,9 @@ export const useToolExecution = ({
       currentMessages.push(toolResultMessage)
       await persistMessage(toolResultMessage)
 
+      // Create a new AbortController for this specific call
+      const abortController = new AbortController()
+      
       const stopReason = await streamChat(
         {
           messages: currentMessages,
@@ -178,7 +181,8 @@ export const useToolExecution = ({
           system: systemPrompt ? [{ text: systemPrompt }] : undefined,
           toolConfig: enabledTools.length ? { tools: enabledTools } : undefined
         },
-        currentMessages
+        currentMessages,
+        abortController.signal
       )
 
       if (stopReason === 'tool_use') {

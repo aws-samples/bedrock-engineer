@@ -65,7 +65,7 @@ export interface UseStreamChatProps {
   setMessages: React.Dispatch<React.SetStateAction<IdentifiableMessage[]>>
   setReasoning: (value: boolean) => void
   setLatestReasoningText: (text: string) => void
-  persistMessage: (message: IdentifiableMessage) => Promise<IdentifiableMessage>
+  persistMessage: (message: IdentifiableMessage, sessionId?: string) => Promise<IdentifiableMessage>
 }
 
 export interface UseStreamChatReturn {
