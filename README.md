@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/aws-samples/bedrock-engineer)
+
 Language: [English](./README.md) / [Japanese](./README-ja.md)
 
 # 🧙 Bedrock Engineer

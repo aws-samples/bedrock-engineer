@@ -13,6 +13,7 @@ import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '@renderer/components/DeepSearchButton'
 import {
   extractDiagramContent,
+  extractDrawioXml,
   filterXmlFromStreamingContent,
   containsXmlTags,
   isXmlComplete
@@ -35,7 +36,7 @@ export default function DiagramGeneratorPage() {
   const [xml, setXml] = useState(exampleDiagrams['serverless'])
   const [isComposing, setIsComposing] = useState(false)
   const drawioRef = useRef<DrawIoEmbedRef>(null)
-  const { currentLLM: llm, sendMsgKey, getAgentTools } = useSetting()
+  const { currentLLM: llm, sendMsgKey, getAgentTools, enabledTavilySearch } = useSetting()
 
   // 検索機能の状態
   const [enableSearch, setEnableSearch] = useState(false)
@@ -56,6 +57,12 @@ export default function DiagramGeneratorPage() {
   const [generationStartTime, setGenerationStartTime] = useState<number>(0)
   const [xmlProgress, setXmlProgress] = useState<number>(0)
   const [progressMessage, setProgressMessage] = useState<string>('')
+
+  // XML生成専用の状態管理
+  const [xmlLoading, setXmlLoading] = useState(false)
+  const [hasValidXml, setHasValidXml] = useState(false)
+  // 新しいリクエスト状態フラグ
+  const [isNewRequest, setIsNewRequest] = useState(false)
 
   const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
 
@@ -94,12 +101,14 @@ export default function DiagramGeneratorPage() {
   // Diagram Generator Agent で利用可能なツールを定義
   // enableSearch が true の場合のみ tavilySearch ツールを有効にする
   const diagramAgentTools = useMemo(() => {
-    if (!enableSearch) return []
+    const agentTools = getAgentTools(diagramAgentId)
 
-    // diagramAgentIdからツールを取得し、tavilySearch ツールのみをフィルタリング
-    return getAgentTools(diagramAgentId).filter(
-      (tool) => tool.toolSpec?.name === 'tavilySearch' && tool.enabled
-    )
+    if (enableSearch) {
+      // diagramAgentIdからツールを取得し、tavilySearch ツールをフィルタリング
+      return agentTools.filter((tool) => tool.toolSpec?.name === 'tavilySearch' && tool.enabled)
+    }
+
+    return agentTools
   }, [enableSearch, getAgentTools, diagramAgentId])
 
   const { messages, loading, handleSubmit, executingTool, latestReasoningText } = useAgentChat(
@@ -122,6 +131,11 @@ export default function DiagramGeneratorPage() {
     setGenerationStartTime(Date.now())
     setXmlProgress(0)
     setProgressMessage('')
+    // XML生成状態をリセット
+    setXmlLoading(true)
+    setHasValidXml(false)
+    // 新しいリクエスト開始フラグを設定
+    setIsNewRequest(true)
     // 既存のダイアグラムをクリアして即座にローダーを表示
     setXml('')
     setDiagramExplanation('')
@@ -143,14 +157,59 @@ export default function DiagramGeneratorPage() {
 
         // ストリーミング中の部分的なテキストを設定
         setStreamingExplanation(currentText)
+
+        // ストリーミング中にXMLが利用可能になったら即座に反映
+        if (xmlLoading && !hasValidXml && drawioRef.current) {
+          const extractedXml = extractDrawioXml(currentText)
+          console.log('[DEBUG] XML extraction attempt:', {
+            xmlLoading,
+            hasValidXml,
+            drawioRefExists: !!drawioRef.current,
+            extractedXmlLength: extractedXml?.length || 0,
+            containsXmlTags: containsXmlTags(currentText),
+            isXmlComplete: isXmlComplete(currentText),
+            textPreview: currentText.substring(0, 200) + '...'
+          })
+
+          if (extractedXml) {
+            try {
+              console.log('[DEBUG] Loading XML to drawio:', extractedXml.substring(0, 200) + '...')
+              drawioRef.current.load({ xml: extractedXml })
+              setXml(extractedXml)
+              setHasValidXml(true)
+              setXmlLoading(false)
+              console.log('[DEBUG] XML loaded successfully, updated states')
+            } catch (error) {
+              console.error('Failed to load streaming XML:', error)
+            }
+          }
+        }
       }
     } else if (!loading) {
       // ローディングが終了したらストリーミング状態をクリア
       setStreamingExplanation('')
       setXmlProgress(0)
       setProgressMessage('')
+      // XML状態もリセット
+      setXmlLoading(false)
+      setHasValidXml(false)
+      // 新しいリクエスト状態もリセット
+      setIsNewRequest(false)
     }
-  }, [messages, loading])
+  }, [messages, loading, xmlLoading, hasValidXml])
+
+  // XMLステートの変更を監視してdrawioに反映
+  useEffect(() => {
+    if (xml && drawioRef.current) {
+      console.log('[DEBUG] XML state changed, updating drawio:', xml.substring(0, 200) + '...')
+      try {
+        drawioRef.current.load({ xml })
+        console.log('[DEBUG] DrawIO updated successfully')
+      } catch (error) {
+        console.error('[DEBUG] Failed to update DrawIO with new XML:', error)
+      }
+    }
+  }, [xml])
 
   // XML生成状態を判定
   const isXmlGenerating = useMemo(() => {
@@ -264,7 +323,8 @@ export default function DiagramGeneratorPage() {
   }
 
   return (
-    <div className="flex flex-col p-3 h-[calc(100vh-11rem)] overflow-y-auto">
+    <div className="flex flex-col p-3 h-[calc(100vh-14rem)]">
+      {/* Header */}
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex flex-col gap-2 w-full">
           <div className="flex justify-between">
@@ -288,57 +348,74 @@ export default function DiagramGeneratorPage() {
                   {index + 1}
                 </motion.span>
               ))}
+              {diagramHistory.length === 0 && (
+                <span className="text-sm text-gray-800 dark:text-gray-400 font-medium">
+                  Turn your ideas into visuals. Easily make diagrams, blueprints, flowcharts, and
+                  other visual materials you need.
+                </span>
+              )}
             </div>
           </div>
         </span>
       </div>
 
+      {/* Body */}
       <div className="flex-1 rounded-lg">
         <div
-          className="w-full h-[95%] flex"
+          className="w-full h-[calc(calc(100vh-14rem)-5rem)] flex overflow-y-auto"
           style={{
-            display: 'flex',
             gap: '1rem',
             backgroundColor: isDark
               ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
               : 'rgb(243 244 246 / var(--tw-bg-opacity))',
-            border: 'none',
-            height: '100%'
+            border: 'none'
           }}
         >
           {/* 図の表示エリア - 左側 */}
-          <div
-            className={`border border-gray-200 rounded-lg ${showExplanation ? 'w-2/3' : 'w-full'}`}
-          >
-            {(loading && !xml) || isXmlGenerating ? (
-              <div className="flex h-full justify-center items-center flex-col">
-                <LoaderWithReasoning
-                  reasoningText={latestReasoningText}
-                  progress={isXmlGenerating ? xmlProgress : undefined}
-                  progressMessage={isXmlGenerating ? progressMessage : undefined}
-                  showProgress={isXmlGenerating}
-                >
-                  {executingTool === 'tavilySearch' ? <WebLoader /> : <Loader />}
-                </LoaderWithReasoning>
-              </div>
-            ) : (
+          <div className={`h-full ${showExplanation ? 'w-2/3' : 'w-full'} relative`}>
+            {/* DrawIoEmbedを常にマウントしておく */}
+            <div
+              style={{
+                visibility: xmlLoading || (loading && !xml) ? 'hidden' : 'visible',
+                width: '100%',
+                height: '100%'
+              }}
+            >
               <DrawIoEmbed
                 ref={drawioRef}
                 xml={xml}
                 configuration={{
-                  defaultLibraries: 'aws4;aws3;aws3d'
+                  defaultLibraries: 'aws4;aws3;aws3d',
+                  sidebarWidth: 140
                 }}
                 urlParameters={{
                   dark: isDark,
                   lang: language
                 }}
               />
-            )}
+            </div>
+
+            {/* ローダーをオーバーレイとして表示 */}
+            {(() => {
+              const shouldShowLoader = isNewRequest || xmlLoading || (loading && !xml)
+              return shouldShowLoader ? (
+                <div className="absolute inset-0 flex h-full justify-center items-center flex-col bg-gray-50 dark:bg-gray-900">
+                  <LoaderWithReasoning
+                    reasoningText={latestReasoningText}
+                    progress={isXmlGenerating ? xmlProgress : undefined}
+                    progressMessage={isXmlGenerating ? progressMessage : undefined}
+                    showProgress={isXmlGenerating}
+                  >
+                    {executingTool === 'tavilySearch' ? <WebLoader /> : <Loader />}
+                  </LoaderWithReasoning>
+                </div>
+              ) : null
+            })()}
           </div>
 
           {/* 説明文の表示エリア - 右側 */}
           {showExplanation && (
-            <div className="w-1/3">
+            <div className="w-1/3 h-full">
               <DiagramExplanationView
                 explanation={
                   loading && filteredExplanation
@@ -354,6 +431,7 @@ export default function DiagramGeneratorPage() {
         </div>
       </div>
 
+      {/* Footer */}
       <div className="flex gap-2 fixed bottom-0 left-[5rem] right-5 bottom-3">
         <div className="relative w-full">
           <div className="flex gap-2 justify-between pb-2">
@@ -367,17 +445,14 @@ export default function DiagramGeneratorPage() {
             </div>
 
             <div className="flex gap-3 items-center">
-              <DeepSearchButton
-                enableDeepSearch={enableSearch}
-                handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
-              />
-
+              {enabledTavilySearch && (
+                <DeepSearchButton
+                  enableDeepSearch={enableSearch}
+                  handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
+                />
+              )}
               {/* 説明文表示切り替えボタン */}
-              <Tooltip
-                content={showExplanation ? '説明文を非表示' : '説明文を表示'}
-                placement="bottom"
-                animation="duration-500"
-              >
+              <Tooltip content={showExplanation ? 'Hide' : 'Show'} animation="duration-500">
                 <button
                   className={`cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                     showExplanation ? 'bg-gray-200 dark:bg-gray-700' : ''
