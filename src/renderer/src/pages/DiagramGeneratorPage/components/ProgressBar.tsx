@@ -30,7 +30,7 @@ const ProgressBarComponent = ({
       {/* 進捗バー */}
       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 relative overflow-hidden">
         <div
-          className="bg-blue-500 dark:bg-blue-400 h-2.5 rounded-full transition-all duration-300 ease-out"
+          className="bg-blue-300 dark:bg-blue-300 h-2.5 rounded-full transition-all duration-300 ease-out"
           style={{ width: `${clampedProgress}%` }}
         />
 
