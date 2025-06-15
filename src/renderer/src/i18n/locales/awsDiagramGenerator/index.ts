@@ -32,7 +32,11 @@ export const awsDiagramGenerator = {
       'Create a sequence diagram showing the interaction between a user, frontend, API service, and database during a user registration and authentication flow',
     userStoryMapTitle: 'User Story Map',
     userStoryMapValue:
-      'Design a user story map for an e-commerce mobile app showing the customer journey from product discovery to purchase completion and order tracking'
+      'Design a user story map for an e-commerce mobile app showing the customer journey from product discovery to purchase completion and order tracking',
+
+    // AWS CDK conversion
+    'Convert to AWS CDK': 'Convert to AWS CDK with Agent Chat',
+    'AWS architecture detected': 'AWS architecture detected'
   },
   ja: {
     // Page title and components
@@ -67,6 +71,10 @@ export const awsDiagramGenerator = {
       'ユーザー登録と認証フローにおけるユーザー、フロントエンド、APIサービス、データベース間の相互作用を示すシーケンス図を作成する',
     userStoryMapTitle: 'ユーザーストーリーマップ',
     userStoryMapValue:
-      '商品発見から購入完了、注文追跡までの顧客の旅を示すEコマースモバイルアプリのためのユーザーストーリーマップを設計する'
+      '商品発見から購入完了、注文追跡までの顧客の旅を示すEコマースモバイルアプリのためのユーザーストーリーマップを設計する',
+
+    // AWS CDK conversion
+    'Convert to AWS CDK': 'Agent ChatでAWS CDKに変換',
+    'AWS architecture detected': 'AWS構成が検出されました'
   }
 }

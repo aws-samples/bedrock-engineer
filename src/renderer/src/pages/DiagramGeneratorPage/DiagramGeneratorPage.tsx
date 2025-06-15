@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { DrawIoEmbed, DrawIoEmbedRef } from 'react-drawio'
 import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
 import { TextArea, AttachedImage } from '../ChatPage/components/InputForm/TextArea'
@@ -28,6 +28,8 @@ import { LoaderWithReasoning } from './components/LoaderWithReasoning'
 import { DiagramExplanationView } from './components/DiagramExplanationView'
 import { MdOutlineArticle } from 'react-icons/md'
 import { Tooltip } from 'flowbite-react'
+import { useNavigate } from 'react-router'
+import { generateCDKPrompt } from './utils/awsDetector'
 
 export default function DiagramGeneratorPage() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -61,10 +63,10 @@ export default function DiagramGeneratorPage() {
   // XML生成専用の状態管理
   const [xmlLoading, setXmlLoading] = useState(false)
   const [hasValidXml, setHasValidXml] = useState(false)
-  // 新しいリクエスト状態フラグ
-  const [isNewRequest, setIsNewRequest] = useState(false)
 
   const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
+
+  const navigate = useNavigate()
 
   const {
     t,
@@ -134,8 +136,7 @@ export default function DiagramGeneratorPage() {
     // XML生成状態をリセット
     setXmlLoading(true)
     setHasValidXml(false)
-    // 新しいリクエスト開始フラグを設定
-    setIsNewRequest(true)
+
     // 既存のダイアグラムをクリアして即座にローダーを表示
     setXml('')
     setDiagramExplanation('')
@@ -193,8 +194,6 @@ export default function DiagramGeneratorPage() {
       // XML状態もリセット
       setXmlLoading(false)
       setHasValidXml(false)
-      // 新しいリクエスト状態もリセット
-      setIsNewRequest(false)
     }
   }, [messages, loading, xmlLoading, hasValidXml])
 
@@ -322,6 +321,18 @@ export default function DiagramGeneratorPage() {
     setShowExplanation(!showExplanation)
   }
 
+  // AWS CDK変換ハンドラー
+  const handleCDKConversion = useCallback(() => {
+    const currentExplanation =
+      loading && filteredExplanation ? filteredExplanation : diagramExplanation || ''
+
+    const prompt = generateCDKPrompt(xml, currentExplanation)
+
+    // Agent Chat画面に遷移し、プロンプトをクエリパラメータで渡す
+    // CDK Developer エージェントを指定
+    navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
+  }, [xml, diagramExplanation, filteredExplanation, loading, navigate])
+
   return (
     <div className="flex flex-col p-3 h-[calc(100vh-14rem)]">
       {/* Header */}
@@ -397,7 +408,7 @@ export default function DiagramGeneratorPage() {
 
             {/* ローダーをオーバーレイとして表示 */}
             {(() => {
-              const shouldShowLoader = isNewRequest || xmlLoading || (loading && !xml)
+              const shouldShowLoader = xmlLoading || (loading && !xml)
               return shouldShowLoader ? (
                 <div className="absolute inset-0 flex h-full justify-center items-center flex-col bg-gray-50 dark:bg-gray-900">
                   <LoaderWithReasoning
@@ -425,6 +436,9 @@ export default function DiagramGeneratorPage() {
                 isStreaming={loading && filteredExplanation.length > 0}
                 isVisible={showExplanation}
                 onClose={toggleExplanationView}
+                xml={xml}
+                onCDKConvert={handleCDKConversion}
+                hasMessages={messages.length > 0}
               />
             </div>
           )}
