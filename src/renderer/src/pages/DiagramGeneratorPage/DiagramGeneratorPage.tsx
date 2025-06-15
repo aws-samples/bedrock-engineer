@@ -13,6 +13,7 @@ import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '@renderer/components/DeepSearchButton'
 import {
   extractDiagramContent,
+  extractDrawioXml,
   filterXmlFromStreamingContent,
   containsXmlTags,
   isXmlComplete
@@ -56,6 +57,10 @@ export default function DiagramGeneratorPage() {
   const [generationStartTime, setGenerationStartTime] = useState<number>(0)
   const [xmlProgress, setXmlProgress] = useState<number>(0)
   const [progressMessage, setProgressMessage] = useState<string>('')
+
+  // XML生成専用の状態管理
+  const [xmlLoading, setXmlLoading] = useState(false)
+  const [hasValidXml, setHasValidXml] = useState(false)
 
   const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
 
@@ -122,6 +127,9 @@ export default function DiagramGeneratorPage() {
     setGenerationStartTime(Date.now())
     setXmlProgress(0)
     setProgressMessage('')
+    // XML生成状態をリセット
+    setXmlLoading(true)
+    setHasValidXml(false)
     // 既存のダイアグラムをクリアして即座にローダーを表示
     setXml('')
     setDiagramExplanation('')
@@ -143,14 +151,57 @@ export default function DiagramGeneratorPage() {
 
         // ストリーミング中の部分的なテキストを設定
         setStreamingExplanation(currentText)
+
+        // ストリーミング中にXMLが利用可能になったら即座に反映
+        if (xmlLoading && !hasValidXml && drawioRef.current) {
+          const extractedXml = extractDrawioXml(currentText)
+          console.log('[DEBUG] XML extraction attempt:', {
+            xmlLoading,
+            hasValidXml,
+            drawioRefExists: !!drawioRef.current,
+            extractedXmlLength: extractedXml?.length || 0,
+            containsXmlTags: containsXmlTags(currentText),
+            isXmlComplete: isXmlComplete(currentText),
+            textPreview: currentText.substring(0, 200) + '...'
+          })
+
+          if (extractedXml) {
+            try {
+              console.log('[DEBUG] Loading XML to drawio:', extractedXml.substring(0, 200) + '...')
+              drawioRef.current.load({ xml: extractedXml })
+              setXml(extractedXml)
+              setHasValidXml(true)
+              setXmlLoading(false)
+              console.log('[DEBUG] XML loaded successfully, updated states')
+            } catch (error) {
+              console.error('Failed to load streaming XML:', error)
+            }
+          }
+        }
       }
     } else if (!loading) {
       // ローディングが終了したらストリーミング状態をクリア
       setStreamingExplanation('')
       setXmlProgress(0)
       setProgressMessage('')
+      // XML状態もリセット
+      setXmlLoading(false)
+      setHasValidXml(false)
     }
-  }, [messages, loading])
+  }, [messages, loading, xmlLoading, hasValidXml])
+
+  // XMLステートの変更を監視してdrawioに反映
+  useEffect(() => {
+    if (xml && drawioRef.current) {
+      console.log('[DEBUG] XML state changed, updating drawio:', xml.substring(0, 200) + '...')
+      try {
+        drawioRef.current.load({ xml })
+        console.log('[DEBUG] DrawIO updated successfully')
+      } catch (error) {
+        console.error('[DEBUG] Failed to update DrawIO with new XML:', error)
+      }
+    }
+  }, [xml])
 
   // XML生成状態を判定
   const isXmlGenerating = useMemo(() => {
@@ -313,19 +364,15 @@ export default function DiagramGeneratorPage() {
           }}
         >
           {/* 図の表示エリア - 左側 */}
-          <div className={`h-full ${showExplanation ? 'w-2/3' : 'w-full'}`}>
-            {(loading && !xml) || isXmlGenerating ? (
-              <div className="flex h-full justify-center items-center flex-col">
-                <LoaderWithReasoning
-                  reasoningText={latestReasoningText}
-                  progress={isXmlGenerating ? xmlProgress : undefined}
-                  progressMessage={isXmlGenerating ? progressMessage : undefined}
-                  showProgress={isXmlGenerating}
-                >
-                  {executingTool === 'tavilySearch' ? <WebLoader /> : <Loader />}
-                </LoaderWithReasoning>
-              </div>
-            ) : (
+          <div className={`h-full ${showExplanation ? 'w-2/3' : 'w-full'} relative`}>
+            {/* DrawIoEmbedを常にマウントしておく */}
+            <div
+              style={{
+                visibility: xmlLoading || (loading && !xml) ? 'hidden' : 'visible',
+                width: '100%',
+                height: '100%'
+              }}
+            >
               <DrawIoEmbed
                 ref={drawioRef}
                 xml={xml}
@@ -337,7 +384,32 @@ export default function DiagramGeneratorPage() {
                   lang: language
                 }}
               />
-            )}
+            </div>
+
+            {/* ローダーをオーバーレイとして表示 */}
+            {(() => {
+              const shouldShowLoader = xmlLoading || (loading && !xml)
+              console.log('[DEBUG] Display conditions:', {
+                xmlLoading,
+                loading,
+                xmlExists: !!xml,
+                xmlLength: xml?.length || 0,
+                shouldShowLoader,
+                drawioVisibility: shouldShowLoader ? 'hidden' : 'visible'
+              })
+              return shouldShowLoader ? (
+                <div className="absolute inset-0 flex h-full justify-center items-center flex-col bg-gray-50 dark:bg-gray-900">
+                  <LoaderWithReasoning
+                    reasoningText={latestReasoningText}
+                    progress={isXmlGenerating ? xmlProgress : undefined}
+                    progressMessage={isXmlGenerating ? progressMessage : undefined}
+                    showProgress={isXmlGenerating}
+                  >
+                    {executingTool === 'tavilySearch' ? <WebLoader /> : <Loader />}
+                  </LoaderWithReasoning>
+                </div>
+              ) : null
+            })()}
           </div>
 
           {/* 説明文の表示エリア - 右側 */}

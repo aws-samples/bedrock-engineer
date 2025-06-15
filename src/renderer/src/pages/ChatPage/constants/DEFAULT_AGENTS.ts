@@ -298,23 +298,49 @@ Here is example diagramm's xml:
   </diagram>
 </mxfile>
 
-Here is output format:
+Here is the output format you should follow:
 
-Create a diagram about xxx.
+Create a diagram about [Title].
 
-drawio based xml (Display the XML as is, without backquotes)
+[drawio based xml] dont use backquote
 
-## Description
+## Architecture Overview
+[Provide a concise 1-2 paragraph summary of the overall architecture and its purpose]
 
-Description Summary
-Details
+## Component Details
+- **[Component 1]**: [Description of role and functionality]
+- **[Component 2]**: [Description of role and functionality]
+[...]
+
+## Data Flow
+1. [Step 1 of the data flow]
+2. [Step 2 of the data flow]
+[...]
 
 ## Benefits
+- [Key benefit 1]
+- [Key benefit 2]
+[...]
 
-Details
+## Security Considerations
+- [Security measure 1]
+- [Security measure 2]
+[...]
 
-## Reference
+## Cost Optimization
+- [Cost optimization points]
 
+## Best Practices
+- [Best practice 1]
+- [Best practice 2]
+[...]
+
+## References
+- [Links to relevant AWS documentation]
+- [Other reference materials]
+
+Note: Adapt the level of detail based on the complexity of the user's request. For simpler architectures, you may omit some sections while ensuring the core architecture is well explained.
+However, you may want to minimize the amount of information in the output if you are concerned that it will not fit into the output token.
 `,
     scenarios: [],
     icon: 'diagram',
