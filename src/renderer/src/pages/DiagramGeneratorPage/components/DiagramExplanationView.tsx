@@ -3,12 +3,17 @@ import { AiOutlineCloseCircle } from 'react-icons/ai'
 import { MdOutlineContentCopy } from 'react-icons/md'
 import { toast } from 'react-hot-toast'
 import MD from '@renderer/components/Markdown/MD'
+import { AWSCDKConvertButton } from './AWSCDKConvertButton'
+import { detectAWSElements } from '../utils/awsDetector'
 
 type DiagramExplanationViewProps = {
   explanation: string
   isVisible: boolean
   isStreaming?: boolean
   onClose: () => void
+  xml?: string
+  onCDKConvert?: () => void
+  hasMessages?: boolean
 }
 
 /**
@@ -20,7 +25,10 @@ const DiagramExplanationViewComponent = ({
   explanation,
   isVisible,
   isStreaming = false,
-  onClose
+  onClose,
+  xml = '',
+  onCDKConvert,
+  hasMessages = false
 }: DiagramExplanationViewProps) => {
   if (!isVisible || !explanation) {
     return null
@@ -30,6 +38,10 @@ const DiagramExplanationViewComponent = ({
     navigator.clipboard.writeText(explanation)
     toast.success('説明をクリップボードにコピーしました')
   }
+
+  // AWS関連要素を検出（LLMとの会話がある場合のみ表示）
+  const showCDKButton =
+    detectAWSElements(xml, explanation) && onCDKConvert && !isStreaming && hasMessages
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
@@ -68,6 +80,11 @@ const DiagramExplanationViewComponent = ({
           </div>
         )}
       </div>
+
+      {/* AWS CDK変換ボタン */}
+      {showCDKButton && onCDKConvert && (
+        <AWSCDKConvertButton visible={true} onConvert={onCDKConvert} />
+      )}
     </div>
   )
 }
