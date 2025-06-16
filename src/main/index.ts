@@ -213,14 +213,8 @@ async function createWindow(): Promise<BrowserWindow> {
     mainWindow.show()
   })
 
-  // Handle window close event to properly manage macOS window lifecycle
-  mainWindow.on('close', (event) => {
-    if (process.platform === 'darwin') {
-      // On macOS, hide the window instead of closing it
-      event.preventDefault()
-      mainWindow.hide()
-    }
-  })
+  // On macOS, when window is closed, we want to allow normal closure
+  // but ensure the app doesn't quit completely so dock icon remains active
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
@@ -316,16 +310,8 @@ app.whenReady().then(async () => {
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    const existingWindows = BrowserWindow.getAllWindows()
-    if (existingWindows.length === 0) {
+    if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
-    } else {
-      // Show the existing window if it's hidden
-      const mainWindow = existingWindows[0]
-      if (!mainWindow.isVisible()) {
-        mainWindow.show()
-      }
-      mainWindow.focus()
     }
   })
 })
@@ -337,6 +323,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+  // On macOS, keep the app running in background so dock icon remains clickable
 })
 
 // In this file you can include the rest of your app"s specific main process
