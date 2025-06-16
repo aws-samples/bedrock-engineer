@@ -3,7 +3,6 @@ import { ToggleSwitch, Tooltip } from 'flowbite-react'
 import { GrClearOption } from 'react-icons/gr'
 import prompts from '../../prompts/prompts'
 import { AiOutlineReload } from 'react-icons/ai'
-import { WEBSITE_GENERATOR_SYSTEM_PROMPT } from '../ChatPage/constants/DEFAULT_AGENTS'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
   SandpackCodeEditor,
@@ -38,6 +37,9 @@ import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '../../components/DeepSearchButton'
 import { ToolState } from '@/types/agent-chat'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
+import { ContinueDevelopmentButton } from './components/ContinueDevelopmentButton'
+import { generateContinueDevelopmentPrompt } from './utils/promptGenerator'
+import { useNavigate } from 'react-router'
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -82,6 +84,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { runSandpack } = sandpack
   const { updateCode, code } = useActiveCode()
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   const { recommendChanges, recommendLoading, getRecommendChanges, refleshRecommendChanges } =
     useRecommendChanges()
@@ -89,6 +92,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const [showCode, setShowCode] = useState(false)
   const [userInput, setUserInput] = useState('')
   const { currentLLM: llm, sendMsgKey, getAgentTools } = useSetting()
+  // 継続開発ボタン表示の制御状態
+  const [showContinueDevelopmentButton, setShowContinueDevelopmentButton] = useState(false)
 
   const handleClickShowCode = () => {
     setShowCode(!showCode)
@@ -108,37 +113,32 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { knowledgeBases, enableKnowledgeBase, enableSearch, setEnableSearch } =
     useWebsiteGeneratorSettings()
 
-  // WebsiteGeneratorAgentのシステムプロンプトを利用しつつ、テンプレート固有の設定を反映
-  const systemPrompt = useMemo(() => {
-    // ベースプロンプトとしてWebsiteGeneratorAgentのシステムプロンプトを使用
-    let basePrompt = WEBSITE_GENERATOR_SYSTEM_PROMPT
+  // テンプレートに応じたエージェントIDの選択
+  const getAgentIdForTemplate = (template: SupportedTemplate['id']): string => {
+    const agentMap = {
+      'react-ts': 'reactGeneratorAgent',
+      'vue-ts': 'vueGeneratorAgent',
+      svelte: 'svelteGeneratorAgent'
+    }
+    return agentMap[template]
+  }
 
-    // プロンプトの最後の部分に、テンプレート固有の設定を追加
-    const templateSpecificSettings = prompts.WebsiteGenerator.system[template]({
+  // ウェブサイト生成用のエージェントID（テンプレートに応じて動的に変更）
+  const websiteAgentId = getAgentIdForTemplate(template)
+
+  // テンプレート固有のシステムプロンプトを直接使用
+  const systemPrompt = useMemo(() => {
+    // テンプレート固有のプロンプトを直接使用
+    const templateSpecificPrompt = prompts.WebsiteGenerator.system[template]({
       styleType: styleType.value,
       libraries: Object.keys(templates[template].customSetup.dependencies),
       ragEnabled: enableKnowledgeBase,
       tavilySearchEnabled: enableSearch
     })
 
-    // テンプレート固有の基本原則部分を抽出
-    const basicPrinciplesMatch = templateSpecificSettings.match(
-      /Basic principles for code generation:[\s\S]*/
-    )
-    if (basicPrinciplesMatch) {
-      // 既存の「Basic principles」部分を新しい内容に置換
-      basePrompt = basePrompt.replace(
-        /Basic principles for code generation:[\s\S]*/,
-        basicPrinciplesMatch[0]
-      )
-    }
-
     // Knowledge Basesのプレースホルダーを置換
-    return replacePlaceholders(basePrompt, knowledgeBases)
+    return replacePlaceholders(templateSpecificPrompt, knowledgeBases)
   }, [template, styleType.value, enableKnowledgeBase, enableSearch, knowledgeBases])
-
-  // ウェブサイト生成用のエージェントID
-  const websiteAgentId = 'websiteGeneratorAgent'
   const sessionId = undefined
 
   // Website Generator Agent で利用可能なツールを定義
@@ -179,6 +179,11 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     handleSubmit,
     clearChat: initChat
   } = useAgentChat(llm?.modelId, systemPrompt, websiteAgentId, sessionId, options)
+
+  // テンプレート変更時にチャットをリセット
+  useEffect(() => {
+    initChat() // エージェントが変わったらチャット履歴をクリア
+  }, [websiteAgentId, initChat])
 
   const onSubmit = (input: string, images: AttachedImage[]) => {
     handleSubmit(input, images)
@@ -222,6 +227,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       updateCode(lastText)
       if (!loading) {
         runSandpack()
+        // ウェブサイトの生成が完了したら継続開発ボタンを表示する
+        setShowContinueDevelopmentButton(true)
       }
     }
   }, [loading, lastText])
@@ -229,6 +236,30 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const [isComposing, setIsComposing] = useState(false)
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
+  // Agent Chatに遷移して継続開発するための処理
+  const handleContinueDevelopment = useCallback(() => {
+    try {
+      // プロンプト生成
+      const prompt = generateContinueDevelopmentPrompt(
+        sandpack.files,
+        template,
+        styleType,
+        userInput
+      )
+
+      // コードが抽出できない場合のチェック
+      if (!prompt) {
+        console.error('Failed to generate prompt: No code content extracted')
+        return
+      }
+
+      // Agent Chatページに遷移し、プロンプトをクエリパラメータで渡す
+      navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
+    } catch (error) {
+      console.error('Error generating prompt or navigating:', error)
+    }
+  }, [sandpack.files, template, styleType, userInput, navigate])
 
   const filterdMessages = messages.filter((m) => {
     if (m?.content === undefined) {
@@ -331,14 +362,26 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
               </div>
             </div>
 
-            <Tooltip content="re:run" placement="bottom" animation="duration-500">
-              <button
-                className="cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                onClick={runSandpack}
-              >
-                <AiOutlineReload className="text-xl" />
-              </button>
-            </Tooltip>
+            <div className="flex gap-2 items-center">
+              {/* 継続開発ボタン - コンパクト版をヘッダーに配置 */}
+              {showContinueDevelopmentButton && messages.length > 0 && !loading && (
+                <ContinueDevelopmentButton
+                  visible={true}
+                  onContinue={handleContinueDevelopment}
+                  disabled={loading}
+                  compact={true}
+                />
+              )}
+
+              <Tooltip content="re:run" placement="bottom" animation="duration-500">
+                <button
+                  className="cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  onClick={runSandpack}
+                >
+                  <AiOutlineReload className="text-xl" />
+                </button>
+              </Tooltip>
+            </div>
           </div>
         </span>
       </div>

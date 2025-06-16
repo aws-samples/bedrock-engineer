@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { SAMPLE_ASL_PARALLEL } from './SAMPLE_ASL'
 import AWSSfnGraph from '@tshepomgaga/aws-sfn-graph'
 import '@tshepomgaga/aws-sfn-graph/index.css'
@@ -12,6 +12,12 @@ import useModal from '@renderer/hooks/useModal'
 import prompts from '@renderer/prompts/prompts'
 import MD from '@renderer/components/Markdown/MD'
 import { AttachedImage, TextArea } from '../ChatPage/components/InputForm/TextArea'
+import { CDKImplementButton } from './components/CDKImplementButton'
+import {
+  generateCDKImplementPrompt,
+  generateCDKImplementPromptJa
+} from './utils/cdkPromptGenerator'
+import { useNavigate } from 'react-router'
 
 function StepFunctionsGeneratorPage() {
   const {
@@ -19,12 +25,16 @@ function StepFunctionsGeneratorPage() {
     i18n: { language: lng }
   } = useTranslation()
 
+  const navigate = useNavigate()
+
   const systemPrompt = prompts.StepFunctonsGenerator.system(lng)
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_asl, setAsl] = useState(SAMPLE_ASL_PARALLEL)
   const [editorValue, setEditorValue] = useState(JSON.stringify(SAMPLE_ASL_PARALLEL, null, 2))
   const [userInput, setUserInput] = useState('')
+  // ステートマシン生成完了フラグ
+  const [hasValidStateMachine, setHasValidStateMachine] = useState(false)
   const { currentLLM: llm, sendMsgKey } = useSetting()
   const { messages, handleSubmit, loading, lastText } = useChat({
     systemPrompt,
@@ -35,6 +45,46 @@ function StepFunctionsGeneratorPage() {
     setUserInput('')
   }
 
+  // CDK実装用にAgent Chatに遷移する処理
+  const handleCDKImplementation = useCallback(() => {
+    try {
+      // 現在のエディタの内容を取得
+      const aslDefinition = editorValue
+      if (!aslDefinition || aslDefinition.trim() === '') {
+        console.error('No ASL definition available')
+        return
+      }
+
+      // エディタの内容が有効なJSONかチェック
+      try {
+        // 文字列をJSONとして解析してフォーマット
+        const parsedJson = JSON.parse(aslDefinition)
+        const formattedAsl = JSON.stringify(parsedJson, null, 2)
+
+        // 言語に応じたプロンプト生成
+        const language = lng === 'ja' ? 'ja' : 'en'
+        const prompt =
+          language === 'ja'
+            ? generateCDKImplementPromptJa(formattedAsl, userInput)
+            : generateCDKImplementPrompt(formattedAsl, userInput)
+
+        // Agent Chatページに遷移
+        navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
+      } catch (jsonError) {
+        console.error('Invalid JSON in ASL definition:', jsonError)
+        // 無効なJSONでもとりあえず試みる
+        const language = lng === 'ja' ? 'ja' : 'en'
+        const prompt =
+          language === 'ja'
+            ? generateCDKImplementPromptJa(aslDefinition, userInput)
+            : generateCDKImplementPrompt(aslDefinition, userInput)
+        navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
+      }
+    } catch (error) {
+      console.error('Error generating CDK implementation prompt:', error)
+    }
+  }, [editorValue, userInput, navigate, lng])
+
   useEffect(() => {
     if (messages !== undefined && messages.length > 0) {
       setEditorValue(lastText)
@@ -42,11 +92,20 @@ function StepFunctionsGeneratorPage() {
 
     if (messages !== undefined && messages.length > 0 && !loading) {
       const lastOne = messages[messages.length - 1]
-      const lastMessageText = lastOne?.content[0]?.text
+      const lastMessageText =
+        lastOne?.content && Array.isArray(lastOne.content) && lastOne.content.length > 0
+          ? lastOne.content[0]?.text || ''
+          : ''
+
       try {
-        const json = JSON.parse(lastMessageText)
-        console.log(json)
-        setAsl(json)
+        // lastMessageTextが存在し、JSONとして解析可能な場合
+        if (lastMessageText && lastMessageText.trim()) {
+          const json = JSON.parse(lastMessageText)
+          console.log(json)
+          setAsl(json)
+          // ステートマシンが正常に生成された場合、フラグをセット
+          setHasValidStateMachine(true)
+        }
       } catch (e) {
         console.error(e)
         console.error(lastMessageText)
@@ -140,8 +199,8 @@ function StepFunctionsGeneratorPage() {
       {/* Buttom Input Field Block */}
       <div className="flex gap-2 fixed bottom-0 left-[5rem] right-5 bottom-3">
         <div className="relative w-full">
-          <div className="flex gap-2 justify-between mb-4">
-            <div className="overflow-x-auto flex-grow max-w-[100%]">
+          <div className="flex gap-2 justify-between mb-4 items-center">
+            <div className="overflow-x-auto flex-grow">
               <div className="flex flex-nowrap gap-2 min-w-0 whitespace-nowrap">
                 {examples.map((e, index) => {
                   return (
@@ -176,6 +235,13 @@ function StepFunctionsGeneratorPage() {
                   )
                 })}
               </div>
+            </div>
+            <div className="flex-shrink-0 ml-2">
+              <CDKImplementButton
+                visible={hasValidStateMachine && !loading}
+                onImplement={handleCDKImplementation}
+                disabled={loading}
+              />
             </div>
           </div>
 
