@@ -22,7 +22,7 @@ export type BuiltInToolName =
   | 'recognizeImage'
   | 'invokeFlow'
   | 'codeInterpreter'
-  | 'mcp_adapter'
+  | 'mcp'
   | 'screenCapture'
   | 'cameraCapture'
 
@@ -54,7 +54,7 @@ const BUILT_IN_TOOLS: readonly BuiltInToolName[] = [
   'recognizeImage',
   'invokeFlow',
   'codeInterpreter',
-  'mcp_adapter',
+  'mcp',
   'screenCapture',
   'cameraCapture'
 ] as const
