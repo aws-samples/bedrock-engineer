@@ -115,7 +115,20 @@ function createMenu(window: BrowserWindow) {
         { role: 'minimize' },
         { role: 'zoom' },
         ...(isMac
-          ? [{ type: 'separator' }, { role: 'front' }, { role: 'window' }]
+          ? [
+              {
+                label: 'Hide Window',
+                accelerator: 'Cmd+W',
+                click: () => {
+                  if (mainWindow) {
+                    mainWindow.hide()
+                  }
+                }
+              },
+              { type: 'separator' },
+              { role: 'front' },
+              { role: 'window' }
+            ]
           : [{ role: 'close' }])
       ]
     },
@@ -205,9 +218,9 @@ async function createWindow(): Promise<void> {
     mainWindow!.show()
   })
 
-  // Handle window close event for macOS - hide instead of close
+  // Handle window close event for macOS - hide instead of close unless quitting
   mainWindow.on('close', (event) => {
-    if (process.platform === 'darwin') {
+    if (process.platform === 'darwin' && !isQuitting) {
       event.preventDefault()
       mainWindow!.hide()
     } else {
@@ -254,6 +267,8 @@ registerGlobalErrorHandlers()
 
 // Global reference to main window
 let mainWindow: BrowserWindow | null = null
+// Track app quit state for macOS
+let isQuitting = false
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -320,6 +335,11 @@ app.whenReady().then(async () => {
     } else if (mainWindow && !mainWindow.isVisible()) {
       mainWindow.show()
     }
+  })
+
+  // Handle before-quit to set flag for macOS
+  app.on('before-quit', () => {
+    isQuitting = true
   })
 })
 
