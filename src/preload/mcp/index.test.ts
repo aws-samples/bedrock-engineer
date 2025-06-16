@@ -37,6 +37,7 @@ describe('MCP Module Tests', () => {
     {
       name: 'mock-server',
       description: 'Mock MCP server for testing',
+      transportType: 'stdio',
       command: 'mock-command',
       args: ['arg1', 'arg2'],
       env: { TEST_ENV: 'test_value' }

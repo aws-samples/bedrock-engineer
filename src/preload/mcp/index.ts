@@ -7,9 +7,19 @@ const configSchema = z.object({
   mcpServers: z.record(
     z.string(),
     z.object({
-      command: z.string(),
-      args: z.array(z.string()),
-      env: z.record(z.string(), z.string()).optional()
+      transportType: z.enum(['stdio', 'http']).optional(),
+      command: z.string().optional(),
+      args: z.array(z.string()).optional(),
+      env: z.record(z.string(), z.string()).optional(),
+      url: z.string().optional(),
+      headers: z.record(z.string(), z.string()).optional(),
+      timeout: z.number().optional(),
+      auth: z.object({
+        type: z.enum(['bearer', 'basic']),
+        token: z.string().optional(),
+        username: z.string().optional(),
+        password: z.string().optional()
+      }).optional()
     })
   )
 })
@@ -37,10 +47,15 @@ const generateConfigHash = (servers: McpServerConfig[]): string => {
   // 本質的な設定のみを含むオブジェクトの配列を作成
   const essentialConfigs = sortedServers.map((server) => ({
     name: server.name,
+    transportType: server.transportType,
     command: server.command,
-    args: [...server.args], // 配列のコピーを作成して安定させる
+    args: server.args ? [...server.args] : [], // 配列のコピーを作成して安定させる
+    url: server.url,
     // 環境変数がある場合のみ含める
-    ...(server.env && Object.keys(server.env).length > 0 ? { env: { ...server.env } } : {})
+    ...(server.env && Object.keys(server.env).length > 0 ? { env: { ...server.env } } : {}),
+    ...(server.headers && Object.keys(server.headers).length > 0 ? { headers: { ...server.headers } } : {}),
+    ...(server.timeout ? { timeout: server.timeout } : {}),
+    ...(server.auth ? { auth: { ...server.auth } } : {})
   }))
 
   return JSON.stringify(essentialConfigs)
@@ -147,13 +162,18 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
         mcpServers: mcpServers.reduce(
           (acc, server) => {
             acc[server.name] = {
+              transportType: server.transportType,
               command: server.command,
               args: server.args,
-              env: server.env || {}
+              env: server.env || {},
+              url: server.url,
+              headers: server.headers,
+              timeout: server.timeout,
+              auth: server.auth
             }
             return acc
           },
-          {} as Record<string, { command: string; args: string[]; env?: Record<string, string> }>
+          {} as Record<string, any>
         )
       }
 
@@ -170,11 +190,18 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
           mcpServers.map(async (serverConfig) => {
             try {
               console.log(`Starting MCP server: ${serverConfig.name}`)
-              const client = await MCPClient.fromCommand(
-                serverConfig.command,
-                serverConfig.args,
-                serverConfig.env
-              )
+              let client: MCPClient
+              
+              if (serverConfig.transportType === 'http') {
+                client = await MCPClient.fromHttp(serverConfig)
+              } else {
+                // Default to stdio for backward compatibility
+                client = await MCPClient.fromCommand(
+                  serverConfig.command!,
+                  serverConfig.args!,
+                  serverConfig.env
+                )
+              }
               return { name: serverConfig.name, client }
             } catch (e) {
               console.log(
@@ -310,7 +337,14 @@ export const testMcpServerConnection = async (
 
   try {
     // 単一サーバー用の一時的なクライアントを作成
-    const client = await MCPClient.fromCommand(mcpServer.command, mcpServer.args, mcpServer.env)
+    let client: MCPClient
+    
+    if (mcpServer.transportType === 'http') {
+      client = await MCPClient.fromHttp(mcpServer)
+    } else {
+      // Default to stdio for backward compatibility
+      client = await MCPClient.fromCommand(mcpServer.command!, mcpServer.args!, mcpServer.env)
+    }
 
     // ツール情報を取得
     const tools = client.tools || []
@@ -395,12 +429,30 @@ export const testAllMcpServerConnections = async (
 function analyzeServerError(errorMessage: string): string {
   const lowerError = errorMessage.toLowerCase()
 
-  if (lowerError.includes('enoent') || lowerError.includes('command not found')) {
-    return 'Command not found. Please make sure the command is installed and the path is correct.'
+  // HTTP specific errors
+  if (lowerError.includes('fetch failed') || lowerError.includes('network error')) {
+    return 'Network connection failed. Please check the URL and ensure the server is accessible.'
+  }
+
+  if (lowerError.includes('401') || lowerError.includes('unauthorized')) {
+    return 'Authentication failed. Please check your credentials or authentication token.'
+  }
+
+  if (lowerError.includes('403') || lowerError.includes('forbidden')) {
+    return 'Access denied. You may not have permission to access this server.'
+  }
+
+  if (lowerError.includes('404') || lowerError.includes('not found')) {
+    return 'Server endpoint not found. Please verify the URL is correct.'
   }
 
   if (lowerError.includes('timeout')) {
-    return 'The response from the server timed out. Please check if the server is running properly.'
+    return 'The response from the server timed out. Please check if the server is running properly or increase the timeout value.'
+  }
+
+  // Stdio specific errors
+  if (lowerError.includes('enoent') || lowerError.includes('command not found')) {
+    return 'Command not found. Please make sure the command is installed and the path is correct.'
   }
 
   if (lowerError.includes('permission denied') || lowerError.includes('eacces')) {
@@ -411,5 +463,5 @@ function analyzeServerError(errorMessage: string): string {
     return 'The port is already in use. Please make sure that no other process is using the same port.'
   }
 
-  return 'Please make sure your command and arguments are correct.'
+  return 'Please make sure your server configuration is correct.'
 }

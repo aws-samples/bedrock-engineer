@@ -193,10 +193,10 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            setJsonInput(generateSampleJson())
+            setJsonInput(generateSampleJson('multiple'))
           }}
         >
-          {t('Set example mcp server')}
+          {t('Stdio & HTTP Examples')}
         </button>
         {editorMode === 'simple' ? (
           <textarea

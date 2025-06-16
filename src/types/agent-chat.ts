@@ -263,9 +263,23 @@ export type FlowConfig = {
 export interface McpServerConfig {
   name: string
   description: string
-  command: string
-  args: string[]
+  transportType: 'stdio' | 'http' // Transport type selection
+  
+  // stdio設定 (既存)
+  command?: string
+  args?: string[]
   env?: Record<string, string>
+  
+  // http設定 (新規)
+  url?: string
+  headers?: Record<string, string>
+  timeout?: number
+  auth?: {
+    type: 'bearer' | 'basic'
+    token?: string
+    username?: string
+    password?: string
+  }
 }
 
 // 環境コンテキスト設定の型定義

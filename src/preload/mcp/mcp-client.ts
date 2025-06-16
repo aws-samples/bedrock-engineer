@@ -1,13 +1,15 @@
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { z } from 'zod'
 import { resolveCommand } from './command-resolver'
+import { McpServerConfig } from '../../types/agent-chat'
 
 // https://github.com/modelcontextprotocol/quickstart-resources/blob/main/mcp-client-typescript/index.ts
 export class MCPClient {
   private mcp: Client
-  private transport: StdioClientTransport | null = null
+  private transport: StdioClientTransport | StreamableHTTPClientTransport | null = null
   private _tools: Tool[] = []
 
   private constructor() {
@@ -28,7 +30,13 @@ export class MCPClient {
     if (resolvedCommand !== command) {
       console.log(`Using resolved command path: ${resolvedCommand} (original: ${command})`)
     }
-    await client.connectToServer(resolvedCommand, args, env ?? {})
+    await client.connectToStdioServer(resolvedCommand, args, env ?? {})
+    return client
+  }
+
+  static async fromHttp(serverConfig: McpServerConfig) {
+    const client = new MCPClient()
+    await client.connectToHttpServer(serverConfig)
     return client
   }
 
@@ -36,7 +44,7 @@ export class MCPClient {
     return this._tools
   }
 
-  async connectToServer(command: string, args: string[], env: Record<string, string>) {
+  async connectToStdioServer(command: string, args: string[], env: Record<string, string>) {
     try {
       // Initialize transport and connect to server
       this.transport = new StdioClientTransport({
@@ -50,26 +58,82 @@ export class MCPClient {
         }
       })
       await this.mcp.connect(this.transport)
-
-      // List available tools
-      const toolsResult = await this.mcp.listTools()
-      this._tools = toolsResult.tools.map((tool) => {
-        return {
-          toolSpec: {
-            name: tool.name,
-            description: tool.description,
-            inputSchema: { json: JSON.parse(JSON.stringify(tool.inputSchema)) }
-          }
-        }
-      })
+      await this.loadTools()
       console.log(
-        'Connected to server with tools:',
+        'Connected to stdio server with tools:',
         this._tools.map(({ toolSpec }) => toolSpec!.name)
       )
     } catch (e) {
-      console.log('Failed to connect to MCP server: ', e)
+      console.log('Failed to connect to stdio MCP server: ', e)
       throw e
     }
+  }
+
+  async connectToHttpServer(serverConfig: McpServerConfig) {
+    try {
+      if (!serverConfig.url) {
+        throw new Error('URL is required for HTTP transport')
+      }
+
+      // Prepare HTTP transport options
+      const transportOptions: any = {}
+      
+      if (serverConfig.headers) {
+        transportOptions.requestInit = {
+          headers: serverConfig.headers
+        }
+      }
+
+      if (serverConfig.timeout) {
+        transportOptions.requestInit = {
+          ...transportOptions.requestInit,
+          signal: AbortSignal.timeout(serverConfig.timeout)
+        }
+      }
+
+      // Handle authentication
+      if (serverConfig.auth) {
+        const headers = transportOptions.requestInit?.headers || {}
+        
+        if (serverConfig.auth.type === 'bearer' && serverConfig.auth.token) {
+          headers['Authorization'] = `Bearer ${serverConfig.auth.token}`
+        } else if (serverConfig.auth.type === 'basic' && serverConfig.auth.username && serverConfig.auth.password) {
+          const credentials = btoa(`${serverConfig.auth.username}:${serverConfig.auth.password}`)
+          headers['Authorization'] = `Basic ${credentials}`
+        }
+        
+        transportOptions.requestInit = {
+          ...transportOptions.requestInit,
+          headers
+        }
+      }
+
+      // Initialize HTTP transport and connect to server
+      this.transport = new StreamableHTTPClientTransport(new URL(serverConfig.url), transportOptions)
+      await this.mcp.connect(this.transport)
+      await this.loadTools()
+      console.log(
+        'Connected to HTTP server with tools:',
+        this._tools.map(({ toolSpec }) => toolSpec!.name)
+      )
+    } catch (e) {
+      console.log('Failed to connect to HTTP MCP server: ', e)
+      throw e
+    }
+  }
+
+  private async loadTools() {
+    // List available tools
+    const toolsResult = await this.mcp.listTools()
+    this._tools = toolsResult.tools.map((tool) => {
+      return {
+        toolSpec: {
+          name: tool.name,
+          description: tool.description,
+          inputSchema: { json: JSON.parse(JSON.stringify(tool.inputSchema)) }
+        }
+      }
+    })
   }
 
   async callTool(toolName: string, input: any) {
@@ -95,6 +159,14 @@ export class MCPClient {
     /**
      * Clean up resources
      */
+    try {
+      if (this.transport instanceof StreamableHTTPClientTransport) {
+        await this.transport.terminateSession()
+      }
+    } catch (e) {
+      console.log('Failed to terminate HTTP session:', e)
+    }
+    
     await this.mcp.close()
   }
 }

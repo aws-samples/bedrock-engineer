@@ -191,7 +191,7 @@ export const AgentDetailModal: React.FC<AgentDetailModalProps> = ({
                         <span className="text-blue-600 dark:text-blue-400">Command:</span>{' '}
                         {server.command}
                       </div>
-                      {server.args.length > 0 && (
+                      {server.args && server.args.length > 0 && (
                         <div>
                           <span className="text-blue-600 dark:text-blue-400">Args:</span>{' '}
                           {server.args.join(' ')}
