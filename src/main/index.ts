@@ -244,6 +244,8 @@ async function createWindow(): Promise<BrowserWindow> {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return mainWindow
 }
 
 // Get userDataPath early to ensure it's available for logger initialization
