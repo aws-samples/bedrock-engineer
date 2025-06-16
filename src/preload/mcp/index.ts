@@ -14,12 +14,14 @@ const configSchema = z.object({
       url: z.string().optional(),
       headers: z.record(z.string(), z.string()).optional(),
       timeout: z.number().optional(),
-      auth: z.object({
-        type: z.enum(['bearer', 'basic']),
-        token: z.string().optional(),
-        username: z.string().optional(),
-        password: z.string().optional()
-      }).optional()
+      auth: z
+        .object({
+          type: z.enum(['bearer', 'basic']),
+          token: z.string().optional(),
+          username: z.string().optional(),
+          password: z.string().optional()
+        })
+        .optional()
     })
   )
 })
@@ -53,7 +55,9 @@ const generateConfigHash = (servers: McpServerConfig[]): string => {
     url: server.url,
     // 環境変数がある場合のみ含める
     ...(server.env && Object.keys(server.env).length > 0 ? { env: { ...server.env } } : {}),
-    ...(server.headers && Object.keys(server.headers).length > 0 ? { headers: { ...server.headers } } : {}),
+    ...(server.headers && Object.keys(server.headers).length > 0
+      ? { headers: { ...server.headers } }
+      : {}),
     ...(server.timeout ? { timeout: server.timeout } : {}),
     ...(server.auth ? { auth: { ...server.auth } } : {})
   }))
@@ -191,7 +195,7 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
             try {
               console.log(`Starting MCP server: ${serverConfig.name}`)
               let client: MCPClient
-              
+
               if (serverConfig.transportType === 'http') {
                 client = await MCPClient.fromHttp(serverConfig)
               } else {
@@ -338,7 +342,7 @@ export const testMcpServerConnection = async (
   try {
     // 単一サーバー用の一時的なクライアントを作成
     let client: MCPClient
-    
+
     if (mcpServer.transportType === 'http') {
       client = await MCPClient.fromHttp(mcpServer)
     } else {

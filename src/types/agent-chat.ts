@@ -264,12 +264,12 @@ export interface McpServerConfig {
   name: string
   description: string
   transportType: 'stdio' | 'http' // Transport type selection
-  
+
   // stdio設定 (既存)
   command?: string
   args?: string[]
   env?: Record<string, string>
-  
+
   // http設定 (新規)
   url?: string
   headers?: Record<string, string>

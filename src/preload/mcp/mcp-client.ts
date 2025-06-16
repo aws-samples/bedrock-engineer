@@ -77,7 +77,7 @@ export class MCPClient {
 
       // Prepare HTTP transport options
       const transportOptions: any = {}
-      
+
       if (serverConfig.headers) {
         transportOptions.requestInit = {
           headers: serverConfig.headers
@@ -94,14 +94,18 @@ export class MCPClient {
       // Handle authentication
       if (serverConfig.auth) {
         const headers = transportOptions.requestInit?.headers || {}
-        
+
         if (serverConfig.auth.type === 'bearer' && serverConfig.auth.token) {
           headers['Authorization'] = `Bearer ${serverConfig.auth.token}`
-        } else if (serverConfig.auth.type === 'basic' && serverConfig.auth.username && serverConfig.auth.password) {
+        } else if (
+          serverConfig.auth.type === 'basic' &&
+          serverConfig.auth.username &&
+          serverConfig.auth.password
+        ) {
           const credentials = btoa(`${serverConfig.auth.username}:${serverConfig.auth.password}`)
           headers['Authorization'] = `Basic ${credentials}`
         }
-        
+
         transportOptions.requestInit = {
           ...transportOptions.requestInit,
           headers
@@ -109,7 +113,10 @@ export class MCPClient {
       }
 
       // Initialize HTTP transport and connect to server
-      this.transport = new StreamableHTTPClientTransport(new URL(serverConfig.url), transportOptions)
+      this.transport = new StreamableHTTPClientTransport(
+        new URL(serverConfig.url),
+        transportOptions
+      )
       await this.mcp.connect(this.transport)
       await this.loadTools()
       console.log(
@@ -166,7 +173,7 @@ export class MCPClient {
     } catch (e) {
       console.log('Failed to terminate HTTP session:', e)
     }
-    
+
     await this.mcp.close()
   }
 }
