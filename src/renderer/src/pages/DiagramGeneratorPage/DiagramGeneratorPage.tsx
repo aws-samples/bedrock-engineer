@@ -16,7 +16,8 @@ import {
   extractDrawioXml,
   filterXmlFromStreamingContent,
   containsXmlTags,
-  isXmlComplete
+  isXmlComplete,
+  mergeDiagramContent
 } from './utils/xmlParser'
 import {
   calculateXmlProgress,
@@ -63,6 +64,11 @@ export default function DiagramGeneratorPage() {
   // XML生成専用の状態管理
   const [xmlLoading, setXmlLoading] = useState(false)
   const [hasValidXml, setHasValidXml] = useState(false)
+  
+  // 継続生成用の状態管理
+  const [isContinueGeneration, setIsContinueGeneration] = useState(false)
+  const [previousXml, setPreviousXml] = useState<string>('')
+  const [previousExplanation, setPreviousExplanation] = useState<string>('')
 
   const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
 
@@ -268,15 +274,27 @@ export default function DiagramGeneratorPage() {
         .join('')
 
       // XMLと説明文を分離するパーサーを使用
-      const { xml, explanation } = extractDiagramContent(rawContent)
-      const validXml = xml || rawContent
+      const currentContent = extractDiagramContent(rawContent)
+      let finalContent = currentContent
+
+      // 継続生成の場合はXMLを結合
+      if (isContinueGeneration && previousXml) {
+        const previousContent = { xml: previousXml, explanation: previousExplanation }
+        finalContent = mergeDiagramContent(previousContent, currentContent)
+        // 継続生成フラグをリセット
+        setIsContinueGeneration(false)
+        setPreviousXml('')
+        setPreviousExplanation('')
+      }
+
+      const validXml = finalContent.xml || rawContent
 
       if (validXml) {
         try {
           drawioRef.current.load({ xml: validXml })
           setXml(validXml)
           // 説明文を設定
-          setDiagramExplanation(explanation)
+          setDiagramExplanation(finalContent.explanation)
           // Generate new recommendations based on the current diagram
           getRecommendDiagrams(validXml)
 
@@ -286,7 +304,7 @@ export default function DiagramGeneratorPage() {
               .map((c) => ('text' in c ? c.text : ''))
               .join('')
             setDiagramHistory((prev) => {
-              const newHistory = [...prev, { xml: validXml, explanation, prompt: userPrompt }]
+              const newHistory = [...prev, { xml: validXml, explanation: finalContent.explanation, prompt: userPrompt }]
               // 最大10つまで保持
               return newHistory.slice(-10)
             })
@@ -331,9 +349,13 @@ export default function DiagramGeneratorPage() {
   // 継続生成ハンドラー
   const handleContinueGeneration = useCallback(() => {
     if (canContinueGeneration && continueGeneration) {
+      // 継続生成フラグを設定し、現在のXMLと説明文を保存
+      setIsContinueGeneration(true)
+      setPreviousXml(xml)
+      setPreviousExplanation(diagramExplanation)
       continueGeneration()
     }
-  }, [canContinueGeneration, continueGeneration])
+  }, [canContinueGeneration, continueGeneration, xml, diagramExplanation])
 
   // AWS CDK変換ハンドラー
   const handleCDKConversion = useCallback(() => {

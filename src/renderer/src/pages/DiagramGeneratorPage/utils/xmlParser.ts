@@ -136,3 +136,111 @@ export const isXmlComplete = (content: string): boolean => {
   // </mxfile>タグで終了している、またはコードブロックが閉じている
   return content.includes('</mxfile>') || /```[\s\S]*?```/.test(content)
 }
+
+
+/**
+ * 2つのDrawIO XMLを結合する関数
+ * 継続生成時に前回のXMLと新しいXMLを統合する
+ *
+ * @param previousXml 前回生成されたXML
+ * @param newXml 新たに生成されたXML
+ * @returns 結合されたXML文字列
+ */
+export const mergeDrawioXml = (previousXml: string, newXml: string): string => {
+  if (!previousXml) return newXml
+  if (!newXml) return previousXml
+
+  try {
+    // XMLからmxGraphModelを抽出
+    const extractMxGraphModel = (xml: string) => {
+      const mxGraphModelRegex = /<mxGraphModel[\s\S]*?<\/mxGraphModel>/i
+      const match = xml.match(mxGraphModelRegex)
+      return match ? match[0] : null
+    }
+
+    // 各XMLからmxGraphModelを取得
+    const previousModel = extractMxGraphModel(previousXml)
+    const newModel = extractMxGraphModel(newXml)
+
+    if (!previousModel || !newModel) {
+      // いずれかのXMLが不正な場合は新しいXMLを返す
+      return newXml || previousXml
+    }
+
+    // mxGraphModel内のmxCellを抽出
+    const extractCells = (model: string) => {
+      const cellsRegex = /<mxCell[\s\S]*?\/>/g
+      return model.match(cellsRegex) || []
+    }
+
+    const previousCells = extractCells(previousModel)
+    const newCells = extractCells(newModel)
+
+    // 重複を避けるためIDをチェック
+    const getIdFromCell = (cell: string) => {
+      const idMatch = cell.match(/id="([^"]*)"/)
+      return idMatch ? idMatch[1] : null
+    }
+
+    const existingIds = new Set(previousCells.map(getIdFromCell).filter(Boolean))
+    const uniqueNewCells = newCells.filter(cell => {
+      const id = getIdFromCell(cell)
+      return id && !existingIds.has(id)
+    })
+
+    // 結合されたセルリストを作成
+    const allCells = [...previousCells, ...uniqueNewCells]
+
+    // 新しいmxGraphModelを構築
+    const mxGraphModelStart = previousModel.match(/<mxGraphModel[^>]*>/i)?.[0] || "<mxGraphModel>"
+    const rootStart = previousModel.match(/<root>/i)?.[0] || "<root>"
+    const rootEnd = "</root>"
+    const mxGraphModelEnd = "</mxGraphModel>"
+
+    const mergedModel = `${mxGraphModelStart}
+    ${rootStart}
+      ${allCells.join("
+      ")}
+    ${rootEnd}
+  ${mxGraphModelEnd}`
+
+    // 元のXMLの外側構造を保持
+    const xmlHeader = previousXml.match(/<mxfile[^>]*>/i)?.[0] || "<mxfile>"
+    const diagramStart = previousXml.match(/<diagram[^>]*>/i)?.[0] || "<diagram>"
+    const diagramEnd = "</diagram>"
+    const xmlEnd = "</mxfile>"
+
+    return `${xmlHeader}
+  ${diagramStart}
+    ${mergedModel}
+  ${diagramEnd}
+${xmlEnd}`
+  } catch (error) {
+    console.error("Error merging DrawIO XML:", error)
+    // エラーが発生した場合は新しいXMLを返す
+    return newXml || previousXml
+  }
+}
+
+/**
+ * XMLの内容を結合するヘルパー関数
+ * 説明文も考慮して結合を行う
+ *
+ * @param previousContent 前回の内容（XML + 説明）
+ * @param newContent 新しい内容（XML + 説明）
+ * @returns 結合された内容
+ */
+export const mergeDiagramContent = (
+  previousContent: { xml: string; explanation: string },
+  newContent: { xml: string; explanation: string }
+): { xml: string; explanation: string } => {
+  const mergedXml = mergeDrawioXml(previousContent.xml, newContent.xml)
+  const mergedExplanation = previousContent.explanation + "
+
+" + newContent.explanation
+
+  return {
+    xml: mergedXml,
+    explanation: mergedExplanation.trim()
+  }
+}

@@ -1,4 +1,4 @@
-import { extractDrawioXml } from '../xmlParser'
+import { extractDrawioXml, mergeDrawioXml, mergeDiagramContent } from '../xmlParser'
 import { describe, expect, test } from '@jest/globals'
 
 describe('extractDrawioXml', () => {
@@ -170,5 +170,111 @@ describe('extractDrawioXml', () => {
     `
 
     expect(extractDrawioXml(content)).toBe(content.trim())
+  })
+})
+
+describe('mergeDrawioXml', () => {
+  const xmlTemplate1 = `<mxfile host="Electron" modified="2023-01-01T12:00:00.000Z" type="device">
+  <diagram>
+    <mxGraphModel>
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+      <mxCell id="cell1" value="First Cell" style="rounded=1;" vertex="1" parent="1"/>
+    </root>
+  </mxGraphModel>
+  </diagram>
+</mxfile>`
+
+  const xmlTemplate2 = `<mxfile host="Electron" modified="2023-01-02T12:00:00.000Z" type="device">
+  <diagram>
+    <mxGraphModel>
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+      <mxCell id="cell2" value="Second Cell" style="rounded=1;" vertex="1" parent="1"/>
+    </root>
+  </mxGraphModel>
+  </diagram>
+</mxfile>`
+
+  test('should merge two DrawIO XMLs correctly', () => {
+    const result = mergeDrawioXml(xmlTemplate1, xmlTemplate2)
+    
+    // 結合されたXMLが両方のセルを含んでいることを確認
+    expect(result).toContain('cell1')
+    expect(result).toContain('cell2')
+    expect(result).toContain('First Cell')
+    expect(result).toContain('Second Cell')
+    
+    // XML構造が保持されていることを確認
+    expect(result).toContain('<mxfile')
+    expect(result).toContain('</mxfile>')
+    expect(result).toContain('<mxGraphModel')
+    expect(result).toContain('</mxGraphModel>')
+  })
+
+  test('should return new XML when previous XML is empty', () => {
+    const result = mergeDrawioXml('', xmlTemplate2)
+    expect(result).toBe(xmlTemplate2)
+  })
+
+  test('should return previous XML when new XML is empty', () => {
+    const result = mergeDrawioXml(xmlTemplate1, '')
+    expect(result).toBe(xmlTemplate1)
+  })
+
+  test('should handle duplicate IDs correctly', () => {
+    const xmlWithDuplicate = `<mxfile host="Electron" modified="2023-01-02T12:00:00.000Z" type="device">
+  <diagram>
+    <mxGraphModel>
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+      <mxCell id="cell1" value="Duplicate Cell" style="rounded=1;" vertex="1" parent="1"/>
+    </root>
+  </mxGraphModel>
+  </diagram>
+</mxfile>`
+
+    const result = mergeDrawioXml(xmlTemplate1, xmlWithDuplicate)
+    
+    // 重複したIDのセルは除外される
+    const cell1Matches = (result.match(/id="cell1"/g) || []).length
+    expect(cell1Matches).toBe(1)
+  })
+})
+
+describe('mergeDiagramContent', () => {
+  test('should merge diagram content with XML and explanations', () => {
+    const previousContent = {
+      xml: '<mxfile><diagram><mxGraphModel><root><mxCell id="cell1"/></root></mxGraphModel></diagram></mxfile>',
+      explanation: 'This is the first part of the diagram.'
+    }
+
+    const newContent = {
+      xml: '<mxfile><diagram><mxGraphModel><root><mxCell id="cell2"/></root></mxGraphModel></diagram></mxfile>',
+      explanation: 'This is the second part of the diagram.'
+    }
+
+    const result = mergeDiagramContent(previousContent, newContent)
+
+    expect(result.xml).toContain('cell1')
+    expect(result.xml).toContain('cell2')
+    expect(result.explanation).toContain('first part')
+    expect(result.explanation).toContain('second part')
+  })
+
+  test('should handle empty previous content', () => {
+    const previousContent = { xml: '', explanation: '' }
+    const newContent = {
+      xml: '<mxfile><diagram><mxGraphModel><root><mxCell id="cell1"/></root></mxGraphModel></diagram></mxfile>',
+      explanation: 'New diagram explanation.'
+    }
+
+    const result = mergeDiagramContent(previousContent, newContent)
+
+    expect(result.xml).toBe(newContent.xml)
+    expect(result.explanation).toBe(newContent.explanation)
   })
 })
