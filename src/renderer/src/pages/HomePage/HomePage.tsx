@@ -81,12 +81,12 @@ const HomePage = () => {
           <Kbd className="bg-gray-200">K</Kbd>.
         </motion.span>
       </div>
-      {isInitLoad && (
+      {!isInitLoad && (
         <motion.button
           initial={{ opacity: 0, scale: 1 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 1.5, duration: 1.0 }}
-          className="text-sm bg-gradient-to-bl from-green-400 to-blue-700 bg-clip-text text-transparent leading-normal hover:text-blue-700"
+          className="text-sm font-bold bg-gradient-to-bl from-green-400 to-blue-700 bg-clip-text text-transparent leading-normal hover:text-blue-700"
           onClick={() => setIsOpen(true)}
         >
           Open Tour

@@ -57,7 +57,7 @@ If a configuration file error occurs when starting the application, please check
 First, install the npm modules:
 
 ```bash
-npm install
+npm ci
 ```
 
 Then, build application package
@@ -74,10 +74,8 @@ npm run build:win
 
 or
 
-```
-
+```bash
 npm run build:linux
-
 ```
 
 Use the application stored in the `dist` directory.

@@ -49,9 +49,9 @@ const CmdK = () => {
     return {
       id: route.href,
       children: route.name,
-      href: '#' + route.href,
+      href: route.href,
       icon: () => route.icon({ className: 'text-xl' }),
-      onClick: () => navigate('#' + route.href)
+      onClick: () => navigate(route.href)
     }
   })
 
