@@ -139,7 +139,7 @@ function createMenu(window: BrowserWindow) {
 
 async function createWindow(): Promise<void> {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     minWidth: 640,
     minHeight: 416,
     width: 1800,
@@ -164,18 +164,18 @@ async function createWindow(): Promise<void> {
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.control || input.meta) {
       if (input.key === '=' || input.key === '+') {
-        const currentZoom = mainWindow.webContents.getZoomFactor()
-        mainWindow.webContents.setZoomFactor(currentZoom + 0.1)
+        const currentZoom = mainWindow!.webContents.getZoomFactor()
+        mainWindow!.webContents.setZoomFactor(currentZoom + 0.1)
         event.preventDefault()
       } else if (input.key === '-') {
-        const currentZoom = mainWindow.webContents.getZoomFactor()
-        mainWindow.webContents.setZoomFactor(Math.max(0.1, currentZoom - 0.1))
+        const currentZoom = mainWindow!.webContents.getZoomFactor()
+        mainWindow!.webContents.setZoomFactor(Math.max(0.1, currentZoom - 0.1))
         event.preventDefault()
       } else if (input.key === '0') {
-        mainWindow.webContents.setZoomFactor(1.0)
+        mainWindow!.webContents.setZoomFactor(1.0)
         event.preventDefault()
       } else if (input.key === 'r') {
-        mainWindow.reload()
+        mainWindow!.reload()
         event.preventDefault()
       }
     }
@@ -202,7 +202,22 @@ async function createWindow(): Promise<void> {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    mainWindow!.show()
+  })
+
+  // Handle window close event for macOS - hide instead of close
+  mainWindow.on('close', (event) => {
+    if (process.platform === 'darwin') {
+      event.preventDefault()
+      mainWindow!.hide()
+    } else {
+      mainWindow = null
+    }
+  })
+
+  // Handle window closed event for cleanup
+  mainWindow.on('closed', () => {
+    mainWindow = null
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -236,6 +251,9 @@ initLoggerConfig(userDataPath)
 // Create the logger instance explicitly after configuration is set
 initLogger()
 registerGlobalErrorHandlers()
+
+// Global reference to main window
+let mainWindow: BrowserWindow | null = null
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -297,7 +315,11 @@ app.whenReady().then(async () => {
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (mainWindow === null) {
+      createWindow()
+    } else if (mainWindow && !mainWindow.isVisible()) {
+      mainWindow.show()
+    }
   })
 })
 
