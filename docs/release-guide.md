@@ -6,7 +6,7 @@
 
 ### 1. **バージョンアップ**:
 
-- `package.json`ファイルのバージョン番号を更新します：
+- `package.json`ファイルのバージョン番号を更新します
 
   ```json
   {
@@ -15,6 +15,12 @@
     ...
   }
   ```
+
+- `npm ci` コマンドを実行して、package-lock.json も更新します。
+
+```bash
+npm ci
+```
 
 - README.md, README-ja.md の該当箇所のバージョンを更新します。
 
@@ -29,7 +35,7 @@ git pull
 git checkout -b release/vX.Y.Z
 
 # バージョン更新をコミット
-git add package.json
+git add .
 git commit -m "chore: バージョンをX.Y.Zに更新"
 
 # リリースブランチをプッシュ
