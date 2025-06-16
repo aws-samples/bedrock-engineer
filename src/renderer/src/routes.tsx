@@ -8,9 +8,11 @@ import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepF
 import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorPage'
 import ChatPage from './pages/ChatPage/ChatPage'
 import DiagramGeneratorPage from './pages/DiagramGeneratorPage/DiagramGeneratorPage'
+import ReactFlowGeneratorPage from './pages/ReactFlowGeneratorPage/ReactFlowGeneratorPage'
 import { AgentDirectoryPage } from './pages/AgentDirectoryPage/AgentDirectoryPage'
 import SpeakPage from './pages/SpeakPage'
 import { LuBookDown } from 'react-icons/lu'
+import { MdAccountTree } from 'react-icons/md'
 
 export const routes = [
   {
@@ -61,6 +63,13 @@ export const routes = [
     icon: BsLayoutWtf,
     position: 'top',
     element: <DiagramGeneratorPage />
+  },
+  {
+    name: 'React Flow Generator',
+    href: '/react-flow-generator',
+    icon: MdAccountTree,
+    position: 'top',
+    element: <ReactFlowGeneratorPage />
   },
   {
     name: 'Setting',
