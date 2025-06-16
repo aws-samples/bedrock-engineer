@@ -47,6 +47,14 @@ function createMenu(window: BrowserWindow) {
             submenu: [
               { role: 'about' },
               { type: 'separator' },
+              {
+                label: 'New Window',
+                accelerator: 'CommandOrControl+N',
+                click: () => {
+                  createWindow()
+                }
+              },
+              { type: 'separator' },
               { role: 'services' },
               { type: 'separator' },
               { role: 'hide' },
@@ -137,7 +145,7 @@ function createMenu(window: BrowserWindow) {
   Menu.setApplicationMenu(menu)
 }
 
-async function createWindow(): Promise<void> {
+async function createWindow(): Promise<BrowserWindow> {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     minWidth: 640,
@@ -203,6 +211,15 @@ async function createWindow(): Promise<void> {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+  })
+
+  // Handle window close event to properly manage macOS window lifecycle
+  mainWindow.on('close', (event) => {
+    if (process.platform === 'darwin') {
+      // On macOS, hide the window instead of closing it
+      event.preventDefault()
+      mainWindow.hide()
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -297,7 +314,17 @@ app.whenReady().then(async () => {
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    const existingWindows = BrowserWindow.getAllWindows()
+    if (existingWindows.length === 0) {
+      createWindow()
+    } else {
+      // Show the existing window if it's hidden
+      const mainWindow = existingWindows[0]
+      if (!mainWindow.isVisible()) {
+        mainWindow.show()
+      }
+      mainWindow.focus()
+    }
   })
 })
 
