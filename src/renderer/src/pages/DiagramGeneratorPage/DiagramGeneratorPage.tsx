@@ -113,24 +113,18 @@ export default function DiagramGeneratorPage() {
     return agentTools
   }, [enableSearch, getAgentTools, diagramAgentId])
 
-  const { 
-    messages, 
-    loading, 
-    handleSubmit, 
-    executingTool, 
+  const {
+    messages,
+    loading,
+    handleSubmit,
+    executingTool,
     latestReasoningText,
     lastStopReason,
     continueGeneration
-  } = useAgentChat(
-    llm?.modelId,
-    systemPrompt,
-    diagramAgentId,
-    undefined,
-    {
-      enableHistory: false,
-      tools: diagramAgentTools // 明示的にツール設定を渡す
-    }
-  )
+  } = useAgentChat(llm?.modelId, systemPrompt, diagramAgentId, undefined, {
+    enableHistory: false,
+    tools: diagramAgentTools // 明示的にツール設定を渡す
+  })
 
   const onSubmit = (input: string, images?: AttachedImage[]) => {
     handleSubmit(input, images)
@@ -491,7 +485,7 @@ export default function DiagramGeneratorPage() {
                   </button>
                 </Tooltip>
               )}
-              
+
               {enabledTavilySearch && (
                 <DeepSearchButton
                   enableDeepSearch={enableSearch}

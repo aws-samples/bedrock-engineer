@@ -980,7 +980,7 @@ export const useAgentChat = (
       await persistMessage(continueMessage)
 
       // 継続生成を実行
-      const stopReason = await streamChat(
+      await streamChat(
         {
           messages: currentMessages,
           modelId,
@@ -1029,7 +1029,7 @@ export const useAgentChat = (
 
     // キャッシュポイントもリセット
     lastCachePoint.current = undefined
-    
+
     // stopReasonもリセット
     setLastStopReason(null)
   }, [modelId, systemPrompt, abortCurrentRequest, createSession])
