@@ -109,12 +109,17 @@ export function parseServerConfigJson(
           return
         }
 
-        const newServer = {
+        const newServer: McpServerConfig = {
           name,
           description: name, // デフォルトでは名前と同じ
+          transportType: (serverConfig.transportType || 'stdio') as 'stdio' | 'http',
           command: serverConfig.command,
           args: serverConfig.args,
-          env: serverConfig.env || {}
+          env: serverConfig.env || {},
+          url: serverConfig.url,
+          headers: serverConfig.headers,
+          timeout: serverConfig.timeout,
+          auth: serverConfig.auth
         }
 
         newServers.push(newServer)
@@ -165,10 +170,15 @@ export function parseServerConfigJson(
       return { success: false, error: 'A server with this name already exists.' }
     }
 
+    const typedServerConfig: McpServerConfig = {
+      ...serverConfig,
+      transportType: (serverConfig.transportType || 'stdio') as 'stdio' | 'http'
+    }
+
     return {
       success: true,
-      servers: [serverConfig],
-      newlyAddedServer: serverConfig
+      servers: [typedServerConfig],
+      newlyAddedServer: typedServerConfig
     }
   } catch (error) {
     return { success: false, error: 'Invalid JSON format.' }
