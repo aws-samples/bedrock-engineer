@@ -89,6 +89,7 @@ export const useAgentChat = (
   const [executingTool, setExecutingTool] = useState<ToolName | null>(null)
   const [latestReasoningText, setLatestReasoningText] = useState<string>('')
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
+  const [lastStopReason, setLastStopReason] = useState<string | null>(null)
   const lastAssistantMessageId = useRef<string | null>(null)
   const abortController = useRef<AbortController | null>(null)
   // キャッシュポイントを保持するための状態
@@ -402,6 +403,8 @@ export const useAgentChat = (
           // この時点ではまだメタデータが来ていない可能性があるため
 
           stopReason = json.messageStop.stopReason
+          // stopReasonを状態として保存
+          setLastStopReason(stopReason)
         } else if (json.contentBlockStart) {
           toolUse = json.contentBlockStart.start?.toolUse
         } else if (json.contentBlockStop) {
@@ -955,6 +958,63 @@ export const useAgentChat = (
     return result
   }
 
+  // 継続生成機能
+  const continueGeneration = useCallback(async () => {
+    if (loading || !messages.length || lastStopReason !== 'max_tokens') {
+      return
+    }
+
+    try {
+      setLoading(true)
+      const currentMessages = [...messages]
+
+      // 継続メッセージを作成
+      const continueMessage: IdentifiableMessage = {
+        role: 'user',
+        content: [{ text: '続きを生成してください。' }],
+        id: generateMessageId()
+      }
+
+      currentMessages.push(continueMessage)
+      setMessages((prev) => [...prev, continueMessage])
+      await persistMessage(continueMessage)
+
+      // 継続生成を実行
+      const stopReason = await streamChat(
+        {
+          messages: currentMessages,
+          modelId,
+          system: systemPrompt ? [{ text: systemPrompt }] : undefined,
+          toolConfig: enabledTools.length ? { tools: enabledTools } : undefined
+        },
+        currentMessages
+      )
+
+      // ツール使用がある場合は再帰的に実行
+      const lastMessage = currentMessages[currentMessages.length - 1]
+      if (lastMessage.content?.find((v) => v.toolUse)) {
+        if (lastMessage.content) {
+          await recursivelyExecTool(lastMessage.content, currentMessages)
+        }
+      }
+    } catch (error: any) {
+      console.error('Error in continueGeneration:', error)
+      toast.error(error.message || 'An error occurred during continuation')
+    } finally {
+      setLoading(false)
+      setExecutingTool(null)
+    }
+  }, [
+    loading,
+    messages,
+    lastStopReason,
+    modelId,
+    systemPrompt,
+    enabledTools,
+    persistMessage,
+    recursivelyExecTool
+  ])
+
   // チャットをクリアする機能
   const clearChat = useCallback(async () => {
     // 進行中の通信を中断
@@ -969,6 +1029,9 @@ export const useAgentChat = (
 
     // キャッシュポイントもリセット
     lastCachePoint.current = undefined
+    
+    // stopReasonもリセット
+    setLastStopReason(null)
   }, [modelId, systemPrompt, abortCurrentRequest, createSession])
 
   // 軽量処理用モデルIDを取得
@@ -1048,11 +1111,13 @@ export const useAgentChat = (
     reasoning,
     executingTool,
     latestReasoningText, // 最新のreasoningTextを外部に公開
+    lastStopReason, // 最後の停止理由を外部に公開
     handleSubmit,
     setMessages,
     currentSessionId,
     setCurrentSessionId: setSession, // 中断処理付きのセッション切り替え関数を返す
     clearChat,
-    stopGeneration // 停止ボタン用の関数をエクスポート
+    stopGeneration, // 停止ボタン用の関数をエクスポート
+    continueGeneration // 継続生成用の関数をエクスポート
   }
 }

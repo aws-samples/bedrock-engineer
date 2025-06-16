@@ -113,7 +113,15 @@ export default function DiagramGeneratorPage() {
     return agentTools
   }, [enableSearch, getAgentTools, diagramAgentId])
 
-  const { messages, loading, handleSubmit, executingTool, latestReasoningText } = useAgentChat(
+  const { 
+    messages, 
+    loading, 
+    handleSubmit, 
+    executingTool, 
+    latestReasoningText,
+    lastStopReason,
+    continueGeneration
+  } = useAgentChat(
     llm?.modelId,
     systemPrompt,
     diagramAgentId,
@@ -321,6 +329,18 @@ export default function DiagramGeneratorPage() {
     setShowExplanation(!showExplanation)
   }
 
+  // 継続生成が可能かどうかを判定
+  const canContinueGeneration = useMemo(() => {
+    return !loading && lastStopReason === 'max_tokens' && messages.length > 0
+  }, [loading, lastStopReason, messages.length])
+
+  // 継続生成ハンドラー
+  const handleContinueGeneration = useCallback(() => {
+    if (canContinueGeneration && continueGeneration) {
+      continueGeneration()
+    }
+  }, [canContinueGeneration, continueGeneration])
+
   // AWS CDK変換ハンドラー
   const handleCDKConversion = useCallback(() => {
     const currentExplanation =
@@ -459,6 +479,19 @@ export default function DiagramGeneratorPage() {
             </div>
 
             <div className="flex gap-3 items-center">
+              {/* 継続生成ボタン */}
+              {canContinueGeneration && (
+                <Tooltip content="Continue Generation" animation="duration-500">
+                  <button
+                    className="cursor-pointer rounded-md py-1.5 px-3 bg-blue-500 hover:bg-blue-600 text-white font-medium"
+                    onClick={handleContinueGeneration}
+                    disabled={loading}
+                  >
+                    Continue
+                  </button>
+                </Tooltip>
+              )}
+              
               {enabledTavilySearch && (
                 <DeepSearchButton
                   enableDeepSearch={enableSearch}
