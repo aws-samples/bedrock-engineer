@@ -1,13 +1,6 @@
-import {
-  ConversationRole,
-  ContentBlock,
-  Message,
-  ToolUseBlockStart,
-  ImageFormat
-} from '@aws-sdk/client-bedrock-runtime'
+import { ContentBlock, Message, ImageFormat } from '@aws-sdk/client-bedrock-runtime'
 import { ToolState } from '@/types/agent-chat'
 import { generateMessageId } from '@/types/chat/metadata'
-import { StreamChatCompletionProps, streamChatCompletion } from '@renderer/lib/api'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 import { useChatHistory } from '@renderer/contexts/ChatHistoryContext'
@@ -17,22 +10,13 @@ import { useAgentTools } from './useAgentTools'
 
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ToolName, isMcpTool } from '@/types/tools'
-import { notificationService } from '@renderer/services/NotificationService'
-import { limitContextLength } from '@renderer/lib/contextLength'
 import { IdentifiableMessage } from '@/types/chat/message'
-import {
-  addCachePointsToMessages,
-  addCachePointToSystem,
-  addCachePointToTools,
-  logCacheUsage
-} from '@renderer/lib/promptCacheUtils'
-import { calculateCost } from '@renderer/lib/pricing/modelPricing'
-import { useLightProcessingModel } from '@renderer/lib/modelSelection'
-import { generateSessionTitle } from '../utils/titleGenerator'
 
 // 新しいユーティリティとカスタムフックのインポート
-import { removeTraces } from '../utils/messageUtils'
 import { useMessagePersistence } from './useMessagePersistence'
+import { useSessionTitleGenerator } from './useSessionTitleGenerator'
+import { useChatNotification } from './useChatNotification'
+import { useStreamChat } from './useStreamChat'
 
 export const useAgentChat = (
   modelId: string,
@@ -54,12 +38,6 @@ export const useAgentChat = (
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
   const lastAssistantMessageId = useRef<string | null>(null)
   const abortController = useRef<AbortController | null>(null)
-  // キャッシュポイントを保持するための状態
-  const lastCachePoint = useRef<number | undefined>(undefined)
-  // タイトル生成済みフラグ（同じセッションで複数回生成しないため）
-  const titleGenerated = useRef<Set<string>>(new Set())
-  // メッセージ数が閾値を超えたときにタイトル生成を実行
-  const MESSAGE_THRESHOLD = 4 // タイトル生成のためのメッセージ数閾値
   const { t } = useTranslation()
   const {
     notification,
@@ -123,6 +101,25 @@ export const useAgentChat = (
     modelId,
     enabledTools,
     enableHistory
+  })
+
+  // チャット通知カスタムフック
+  const { showChatCompleteNotification } = useChatNotification({
+    notification
+  })
+
+  // セッションタイトル生成カスタムフック
+  const { checkAndGenerateTitle, generateTitleForPreviousSession } = useSessionTitleGenerator({
+    enableHistory
+  })
+
+  // ストリームチャットカスタムフック
+  const { streamChat, resetCachePoint } = useStreamChat({
+    modelId,
+    contextLength,
+    enablePromptCache,
+    lastAssistantMessageId,
+    persistMessage
   })
 
   // 通信を中断する関数
@@ -212,8 +209,7 @@ export const useAgentChat = (
   }, [messages, currentSessionId, t])
 
   // ChatHistoryContext から操作関数を取得
-  const { getSession, createSession, updateSessionTitle, setActiveSession, deleteMessage } =
-    useChatHistory()
+  const { getSession, createSession, setActiveSession, deleteMessage } = useChatHistory()
 
   // セッションの初期化
   useEffect(() => {
@@ -226,14 +222,14 @@ export const useAgentChat = (
           setMessages(session.messages as Message[])
           setCurrentSessionId(sessionId)
           // 新しいセッションに切り替えた場合はキャッシュポイントをリセット
-          lastCachePoint.current = undefined
+          resetCachePoint()
         }
       } else if (enableHistory) {
         // 履歴保存が有効な場合のみ新しいセッションを作成
         const newSessionId = await createSession('defaultAgent', modelId, systemPrompt)
         setCurrentSessionId(newSessionId)
         // 新しいセッションを作成した場合はキャッシュポイントをリセット
-        lastCachePoint.current = undefined
+        resetCachePoint()
       }
     }
 
@@ -257,373 +253,10 @@ export const useAgentChat = (
         setMessages(session.messages as Message[])
         setActiveSession(currentSessionId)
         // セッション切り替え時にキャッシュポイントをリセット
-        lastCachePoint.current = undefined
+        resetCachePoint()
       }
     }
-  }, [currentSessionId, getSession, setActiveSession, abortCurrentRequest])
-
-  const streamChat = async (props: StreamChatCompletionProps, currentMessages: Message[]) => {
-    // 既存の通信があれば中断
-    if (abortController.current) {
-      abortController.current.abort()
-    }
-
-    // 新しい AbortController を作成
-    abortController.current = new AbortController()
-
-    // Context長に基づいてメッセージを制限
-    const limitedMessages = removeTraces(limitContextLength(currentMessages, contextLength))
-
-    // キャッシュポイントを追加（前回のキャッシュポイントを引き継ぐ）
-    props.messages = enablePromptCache
-      ? addCachePointsToMessages(limitedMessages, modelId, lastCachePoint.current)
-      : limitedMessages
-
-    // キャッシュポイントが更新された場合、次回の会話ためにキャッシュポイントのインデックスを更新
-    if (props.messages[props.messages.length - 1].content?.some((b) => b.cachePoint?.type)) {
-      // 次回の会話のために現在のキャッシュポイントを更新
-      // 現在のメッセージ配列の最後のインデックスを次回の最初のキャッシュポイントとして設定
-      lastCachePoint.current = props.messages.length - 1
-    }
-
-    // システムプロンプトとツール設定にもキャッシュポイントを追加
-    if (props.system && enablePromptCache) {
-      props.system = addCachePointToSystem(props.system, modelId)
-    }
-
-    if (props.toolConfig && enablePromptCache) {
-      props.toolConfig = addCachePointToTools(props.toolConfig, modelId)
-    }
-
-    const generator = streamChatCompletion(props, abortController.current.signal)
-
-    let s = ''
-    let reasoningContentText = ''
-    let reasoningContentSignature = ''
-    let redactedContent
-    let input = ''
-    let role: ConversationRole = 'assistant' // デフォルト値を設定
-    let toolUse: ToolUseBlockStart | undefined = undefined
-    let stopReason
-    const content: ContentBlock[] = []
-
-    let messageStart = false
-    try {
-      for await (const json of generator) {
-        if (json.messageStart) {
-          role = json.messageStart.role ?? 'assistant' // デフォルト値を設定
-          messageStart = true
-        } else if (json.messageStop) {
-          if (!messageStart) {
-            console.warn('messageStop without messageStart')
-            console.log(messages)
-            await streamChat(props, currentMessages)
-            return
-          }
-          // 新しいメッセージIDを生成
-          const messageId = generateMessageId()
-          const newMessage: IdentifiableMessage = { role, content, id: messageId }
-
-          // アシスタントメッセージの場合、最後のメッセージIDを保持
-          if (role === 'assistant') {
-            lastAssistantMessageId.current = messageId
-          }
-
-          // UI表示のために即時メッセージを追加
-          setMessages([...currentMessages, newMessage])
-          currentMessages.push(newMessage)
-
-          // メッセージ停止時点では永続化せず、後のメタデータ処理で永続化する
-          // この時点ではまだメタデータが来ていない可能性があるため
-
-          stopReason = json.messageStop.stopReason
-        } else if (json.contentBlockStart) {
-          toolUse = json.contentBlockStart.start?.toolUse
-        } else if (json.contentBlockStop) {
-          if (toolUse) {
-            let parseInput: string
-            try {
-              parseInput = JSON.parse(input)
-            } catch (e) {
-              parseInput = input
-            }
-
-            content.push({
-              toolUse: { name: toolUse?.name, toolUseId: toolUse?.toolUseId, input: parseInput }
-            })
-          } else {
-            if (s.length > 0) {
-              const getReasoningBlock = () => {
-                if (reasoningContentText.length > 0) {
-                  return {
-                    reasoningContent: {
-                      reasoningText: {
-                        text: reasoningContentText,
-                        signature: reasoningContentSignature
-                      }
-                    }
-                  }
-                } else if (reasoningContentSignature.length > 0) {
-                  return {
-                    reasoningContent: {
-                      redactedContent: redactedContent
-                    }
-                  }
-                } else {
-                  return null
-                }
-              }
-
-              const reasoningBlock = getReasoningBlock()
-              const contentBlocks = reasoningBlock ? [reasoningBlock, { text: s }] : [{ text: s }]
-              content.push(...contentBlocks)
-            }
-          }
-          input = ''
-          setReasoning(false)
-        } else if (json.contentBlockDelta) {
-          const text = json.contentBlockDelta.delta?.text
-          if (text) {
-            s = s + text
-
-            const getContentBlocks = () => {
-              if (redactedContent) {
-                return [
-                  {
-                    reasoningContent: {
-                      redactedContent: redactedContent
-                    }
-                  },
-                  { text: s }
-                ]
-              } else if (reasoningContentText.length > 0) {
-                return [
-                  {
-                    reasoningContent: {
-                      reasoningText: {
-                        text: reasoningContentText,
-                        signature: reasoningContentSignature
-                      }
-                    }
-                  },
-                  { text: s }
-                ]
-              } else {
-                return [{ text: s }]
-              }
-            }
-
-            const contentBlocks = getContentBlocks()
-            setMessages([...currentMessages, { role, content: contentBlocks }])
-          }
-
-          const reasoningContent = json.contentBlockDelta.delta?.reasoningContent
-          if (reasoningContent) {
-            setReasoning(true)
-            if (reasoningContent?.text || reasoningContent?.signature) {
-              reasoningContentText = reasoningContentText + (reasoningContent?.text || '')
-              reasoningContentSignature = reasoningContent?.signature || ''
-
-              // 最新のreasoningTextを状態として保持
-              if (reasoningContent?.text) {
-                setLatestReasoningText(reasoningContentText)
-              }
-
-              setMessages([
-                ...currentMessages,
-                {
-                  role: 'assistant',
-                  content: [
-                    {
-                      reasoningContent: {
-                        reasoningText: {
-                          text: reasoningContentText,
-                          signature: reasoningContentSignature
-                        }
-                      }
-                    },
-                    { text: s }
-                  ]
-                }
-              ])
-            } else if (reasoningContent.redactedContent) {
-              redactedContent = reasoningContent.redactedContent
-              setMessages([
-                ...currentMessages,
-                {
-                  role: 'assistant',
-                  content: [
-                    {
-                      reasoningContent: {
-                        redactedContent: reasoningContent.redactedContent
-                      }
-                    },
-                    { text: s }
-                  ]
-                }
-              ])
-            }
-          }
-
-          if (toolUse) {
-            input = input + json.contentBlockDelta.delta?.toolUse?.input
-
-            const getContentBlocks = () => {
-              if (redactedContent) {
-                return [
-                  {
-                    reasoningContent: {
-                      redactedContent: redactedContent
-                    }
-                  },
-                  { text: s },
-                  {
-                    toolUse: { name: toolUse?.name, toolUseId: toolUse?.toolUseId, input: input }
-                  }
-                ]
-              } else if (reasoningContentText.length > 0) {
-                return [
-                  {
-                    reasoningContent: {
-                      reasoningText: {
-                        text: reasoningContentText,
-                        signature: reasoningContentSignature
-                      }
-                    }
-                  },
-                  { text: s },
-                  {
-                    toolUse: { name: toolUse?.name, toolUseId: toolUse?.toolUseId, input: input }
-                  }
-                ]
-              } else {
-                return [
-                  { text: s },
-                  {
-                    toolUse: { name: toolUse?.name, toolUseId: toolUse?.toolUseId, input: input }
-                  }
-                ]
-              }
-            }
-
-            setMessages([
-              ...currentMessages,
-              {
-                role,
-                content: getContentBlocks()
-              }
-            ])
-          }
-        } else if (json.metadata) {
-          // Metadataを処理
-          const metadata: IdentifiableMessage['metadata'] = {
-            converseMetadata: {},
-            sessionCost: undefined
-          }
-          metadata.converseMetadata = json.metadata
-
-          let sessionCost: number
-          // モデルIDがある場合、コストを計算
-          if (
-            modelId &&
-            metadata.converseMetadata.usage &&
-            metadata.converseMetadata.usage.inputTokens &&
-            metadata.converseMetadata.usage.outputTokens
-          ) {
-            try {
-              sessionCost = calculateCost(
-                modelId,
-                metadata.converseMetadata.usage.inputTokens,
-                metadata.converseMetadata.usage.outputTokens,
-                metadata.converseMetadata.usage.cacheReadInputTokens,
-                metadata.converseMetadata.usage.cacheWriteInputTokens
-              )
-              metadata.sessionCost = sessionCost
-            } catch (error) {
-              console.error('Error calculating cost:', error)
-            }
-          }
-
-          // Prompt Cacheの使用状況をログ出力
-          logCacheUsage(metadata.converseMetadata, modelId)
-
-          // 直近のアシスタントメッセージにメタデータを関連付ける
-          if (lastAssistantMessageId.current) {
-            // メッセージ配列からIDが一致するメッセージを見つけてメタデータを追加
-            setMessages((prevMessages) => {
-              return prevMessages.map((msg) => {
-                if (msg.id === lastAssistantMessageId.current) {
-                  return {
-                    ...msg,
-                    metadata: {
-                      ...msg.metadata,
-                      converseMetadata: metadata.converseMetadata,
-                      sessionCost: metadata.sessionCost
-                    }
-                  }
-                }
-                return msg
-              })
-            })
-
-            // currentMessagesの最後（直近のメッセージ）を永続化する
-            const lastMessageIndex = currentMessages.length - 1
-            const lastMessage = currentMessages[lastMessageIndex]
-
-            if (
-              lastMessage &&
-              'id' in lastMessage &&
-              lastMessage.id === lastAssistantMessageId.current
-            ) {
-              // 型を明確にしてメタデータを追加
-              const updatedMessage: IdentifiableMessage = {
-                ...(lastMessage as IdentifiableMessage),
-                metadata: {
-                  ...(lastMessage as any).metadata,
-                  converseMetadata: metadata.converseMetadata,
-                  sessionCost: metadata.sessionCost
-                }
-              }
-
-              // 配列の最後のメッセージを更新
-              currentMessages[lastMessageIndex] = updatedMessage
-
-              // メタデータを受信した時点で永続化を行う
-              await persistMessage(updatedMessage)
-            }
-          }
-        } else {
-          console.error('unexpected json:', json)
-        }
-      }
-
-      return stopReason
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.log('Chat stream aborted')
-        return
-      }
-      console.error({ streamChatRequestError: error })
-      toast.error(t('request error'))
-      const messageId = generateMessageId()
-      const errorMessage: IdentifiableMessage = {
-        role: 'assistant' as const,
-        content: [{ text: error.message }],
-        id: messageId
-      }
-
-      // エラーメッセージIDを記録
-      lastAssistantMessageId.current = messageId
-      setMessages([...currentMessages, errorMessage])
-      await persistMessage(errorMessage)
-      throw error
-    } finally {
-      // 使用済みの AbortController をクリア
-      if (abortController.current?.signal.aborted) {
-        abortController.current = null
-      }
-    }
-  }
+  }, [currentSessionId, getSession, setActiveSession, abortCurrentRequest, resetCachePoint])
 
   const recursivelyExecTool = async (contentBlocks: ContentBlock[], currentMessages: Message[]) => {
     const contentBlock = contentBlocks.find((block) => block.toolUse)
@@ -762,7 +395,12 @@ export const useAgentChat = (
         system: systemPrompt ? [{ text: systemPrompt }] : undefined,
         toolConfig: enabledTools.length ? { tools: enabledTools } : undefined
       },
-      currentMessages
+      currentMessages,
+      {
+        setMessages,
+        setReasoning,
+        setLatestReasoningText
+      }
     )
 
     if (stopReason === 'tool_use') {
@@ -830,7 +468,12 @@ export const useAgentChat = (
           system: systemPrompt ? [{ text: systemPrompt }] : undefined,
           toolConfig: enabledTools.length ? { tools: enabledTools } : undefined
         },
-        currentMessages
+        currentMessages,
+        {
+          setMessages,
+          setReasoning,
+          setLatestReasoningText
+        }
       )
 
       const lastMessage = currentMessages[currentMessages.length - 1]
@@ -843,43 +486,8 @@ export const useAgentChat = (
         }
       }
 
-      // チャット完了時に通知を表示（設定が有効な場合のみ）
-      if (notification) {
-        // 最新のアシスタントメッセージを取得
-        const lastAssistantMessage = currentMessages.filter((msg) => msg.role === 'assistant').pop()
-
-        // テキストコンテンツを抽出
-        let notificationBody = ''
-        if (lastAssistantMessage?.content) {
-          const textContent = lastAssistantMessage.content
-            .filter((content) => 'text' in content)
-            .map((content) => (content as { text: string }).text)
-            .join(' ')
-
-          // 最初の1-2文を抽出（または最初の100文字程度）
-          notificationBody = textContent
-            .split(/[.。]/)
-            .filter((sentence) => sentence.trim().length > 0)
-            .slice(0, 2)
-            .join('. ')
-            .trim()
-
-          // 長すぎる場合は切り詰める
-          if (notificationBody.length > 100) {
-            notificationBody = notificationBody.substring(0, 100) + '...'
-          }
-        }
-
-        // 応答が空の場合はデフォルトメッセージを使用
-        if (!notificationBody) {
-          notificationBody = t('notification.messages.chatComplete.body')
-        }
-
-        await notificationService.showNotification(t('notification.messages.chatComplete.title'), {
-          body: notificationBody,
-          silent: false // 通知音を有効化
-        })
-      }
+      // チャット完了時に通知を表示（カスタムフック使用）
+      await showChatCompleteNotification(currentMessages as IdentifiableMessage[])
     } catch (error: any) {
       console.error('Error in handleSubmit:', error)
       toast.error(error.message || 'An error occurred')
@@ -903,78 +511,24 @@ export const useAgentChat = (
     setMessages([])
 
     // キャッシュポイントもリセット
-    lastCachePoint.current = undefined
-  }, [modelId, systemPrompt, abortCurrentRequest, createSession])
+    resetCachePoint()
+  }, [modelId, systemPrompt, abortCurrentRequest, createSession, resetCachePoint])
 
-  // 軽量処理用モデルIDを取得
-  const { getLightModelId } = useLightProcessingModel()
-
-  // 現在のセッションにタイトルを生成する関数
-  const generateTitleForCurrentSession = useCallback(async () => {
-    if (!currentSessionId || !enableHistory) return
-
-    // このセッションIDをタイトル生成済みとしてマーク
-    titleGenerated.current.add(currentSessionId)
-
-    try {
-      // セッションの詳細を取得
-      const session = getSession(currentSessionId)
-      if (!session) return
-
-      // セッションのタイトルが既にカスタマイズされている場合は生成しない
-      // "Chat "で始まるデフォルトタイトルのみ置き換える
-      if (!session.title.startsWith('Chat ')) return
-
-      // 軽量処理用モデルIDを取得
-      const lightModelId = getLightModelId()
-
-      // 軽量モデルでタイトルを生成
-      const newTitle = await generateSessionTitle(session, lightModelId, t)
-      if (newTitle) {
-        await updateSessionTitle(currentSessionId, newTitle)
-      }
-    } catch (error) {
-      console.error('Error generating title for current session:', error)
-    }
-  }, [currentSessionId, modelId, t, enableHistory, getSession, updateSessionTitle])
-
-  // メッセージ数を監視してタイトル生成を実行
+  // メッセージ数を監視してタイトル生成を実行（カスタムフック使用）
   useEffect(() => {
-    // メッセージが閾値を超え、まだタイトルが生成されていない場合に実行
-    if (
-      messages.length > MESSAGE_THRESHOLD &&
-      currentSessionId &&
-      !titleGenerated.current.has(currentSessionId) &&
-      enableHistory
-    ) {
-      generateTitleForCurrentSession()
-    }
-  }, [messages.length, currentSessionId, generateTitleForCurrentSession, enableHistory])
+    checkAndGenerateTitle(messages, currentSessionId)
+  }, [messages.length, currentSessionId, checkAndGenerateTitle])
 
   const setSession = useCallback(
     (newSessionId: string) => {
-      // 既存のセッションにタイトルを生成
-      if (
-        currentSessionId &&
-        messages.length > MESSAGE_THRESHOLD &&
-        !titleGenerated.current.has(currentSessionId) &&
-        enableHistory
-      ) {
-        generateTitleForCurrentSession()
-      }
+      // 既存のセッションにタイトルを生成（カスタムフック使用）
+      generateTitleForPreviousSession(messages, currentSessionId)
 
       // 進行中の通信を中断してから新しいセッションを設定
       abortCurrentRequest()
       setCurrentSessionId(newSessionId)
     },
-    [
-      abortCurrentRequest,
-      messages.length,
-      currentSessionId,
-      MESSAGE_THRESHOLD,
-      generateTitleForCurrentSession,
-      enableHistory
-    ]
+    [abortCurrentRequest, messages, currentSessionId, generateTitleForPreviousSession]
   )
 
   return {
