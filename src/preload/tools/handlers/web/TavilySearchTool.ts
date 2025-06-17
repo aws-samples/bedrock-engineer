@@ -133,7 +133,18 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
     const tavilyConfig = this.storeManager.get('tavilySearch') as { apikey?: string } | undefined
     const apiKey = tavilyConfig?.apikey
 
+    this.logger.debug('Tavily API key configuration check', {
+      hasTavilyConfig: !!tavilyConfig,
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey ? apiKey.length : 0,
+      apiKeyPrefix: apiKey ? apiKey.substring(0, 8) + '...' : undefined
+    })
+
     if (!apiKey) {
+      this.logger.error('Tavily API key not configured', {
+        tavilyConfig,
+        query
+      })
       throw new ExecutionError('Tavily API key not configured', this.name, undefined, { query })
     }
 
@@ -146,10 +157,10 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
       const fetchOptions = {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          api_key: apiKey,
           query,
           search_depth: 'advanced',
           include_answer: true,
