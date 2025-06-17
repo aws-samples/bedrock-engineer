@@ -164,9 +164,10 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
           <textarea
             value={additionalInstruction || ''}
             onChange={handleAdditionalInstructionChange}
-            className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
+            disabled={isGenerating || isGeneratingVoiceChat}
+            className={`block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
               text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              h-[150px]"
+              h-[150px] ${(isGenerating || isGeneratingVoiceChat) ? 'opacity-50 cursor-not-allowed' : ''}`}
             placeholder={t(
               'additionalInstructionPlaceholder',
               'Enter additional instructions for system prompt generation...'
@@ -208,9 +209,10 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
           <textarea
             value={system}
             onChange={(e) => onChange(e.target.value)}
-            className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
+            disabled={isGenerating || isGeneratingVoiceChat}
+            className={`block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
               text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              h-[512px]"
+              h-[512px] ${(isGenerating || isGeneratingVoiceChat) ? 'opacity-50 cursor-not-allowed' : ''}`}
             required
             placeholder={t('systemPromptPlaceholder')}
           />
