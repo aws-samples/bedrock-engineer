@@ -7,6 +7,7 @@ import { NovaSonicBidirectionalStreamClient } from '../sonic/client'
 import type { AWSCredentials, ProxyConfiguration } from './types'
 import { S3Client } from '@aws-sdk/client-s3'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import { NodeHttpHandler } from '@smithy/node-http-handler'
 
 function createHttpOptions(proxyConfig?: ProxyConfiguration) {
   if (!proxyConfig?.enabled || !proxyConfig.host) {
@@ -23,13 +24,11 @@ function createHttpOptions(proxyConfig?: ProxyConfiguration) {
   }
 
   const agent = new HttpsProxyAgent(proxyUrl.href)
-
   return {
-    requestHandler: {
-      httpOptions: {
-        agent
-      }
-    }
+    requestHandler: new NodeHttpHandler({
+      httpAgent: agent,
+      httpsAgent: agent
+    })
   }
 }
 

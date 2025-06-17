@@ -22,11 +22,35 @@ import {
 } from './consts'
 import { SonicToolExecutor } from './tool-executor'
 import { ToolInput } from '../../../types/tools'
+import { ProxyConfiguration } from '../bedrock/types'
+import { HttpsProxyAgent } from 'https-proxy-agent'
+
+function createHttpOptions(proxyConfig?: ProxyConfiguration) {
+  if (!proxyConfig?.enabled || !proxyConfig.host) {
+    return {}
+  }
+
+  const proxyUrl = new URL(
+    `${proxyConfig.protocol || 'http'}://${proxyConfig.host}:${proxyConfig.port || 8080}`
+  )
+
+  if (proxyConfig.username && proxyConfig.password) {
+    proxyUrl.username = proxyConfig.username
+    proxyUrl.password = proxyConfig.password
+  }
+
+  const agent = new HttpsProxyAgent(proxyUrl.href)
+  return {
+    httpAgent: agent,
+    httpsAgent: agent
+  }
+}
 
 export interface NovaSonicBidirectionalStreamClientConfig {
   requestHandlerConfig?: NodeHttp2HandlerOptions | Provider<NodeHttp2HandlerOptions | void>
   clientConfig: Partial<BedrockRuntimeClientConfig>
   inferenceConfig?: InferenceConfig
+  proxyConfig?: ProxyConfiguration
 }
 
 export class StreamSession {
@@ -160,11 +184,15 @@ export class NovaSonicBidirectionalStreamClient {
   private toolExecutor?: SonicToolExecutor
 
   constructor(config: NovaSonicBidirectionalStreamClientConfig) {
+    // Create proxy configuration if provided
+    const httpOptions = createHttpOptions(config.proxyConfig)
+
     const nodeHttp2Handler = new NodeHttp2Handler({
       requestTimeout: 300000,
       sessionTimeout: 300000,
       disableConcurrentStreams: false,
       maxConcurrentStreams: 20,
+      ...httpOptions,
       ...config.requestHandlerConfig
     })
 

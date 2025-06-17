@@ -1,6 +1,26 @@
 import { IpcMainInvokeEvent, app } from 'electron'
 import { spawn } from 'child_process'
 import { log } from '../../common/logger'
+import { HttpsProxyAgent } from 'https-proxy-agent'
+import { store } from '../../preload/store'
+import type { ProxyConfiguration } from '../api/bedrock/types'
+
+function createProxyAgent(proxyConfig?: ProxyConfiguration) {
+  if (!proxyConfig?.enabled || !proxyConfig.host) {
+    return undefined
+  }
+
+  const proxyUrl = new URL(
+    `${proxyConfig.protocol || 'http'}://${proxyConfig.host}:${proxyConfig.port || 8080}`
+  )
+
+  if (proxyConfig.username && proxyConfig.password) {
+    proxyUrl.username = proxyConfig.username
+    proxyUrl.password = proxyConfig.password
+  }
+
+  return new HttpsProxyAgent(proxyUrl.href)
+}
 
 export const utilHandlers = {
   'get-app-path': async (_event: IpcMainInvokeEvent) => {
@@ -9,14 +29,25 @@ export const utilHandlers = {
 
   'fetch-website': async (_event: IpcMainInvokeEvent, url: string, options?: any) => {
     try {
-      const response = await fetch(url, {
+      // Get proxy configuration from store
+      const awsConfig = store.get('aws')
+      const proxyAgent = createProxyAgent(awsConfig?.proxyConfig)
+
+      const fetchOptions: any = {
         ...options,
         headers: {
           ...options?.headers,
           'User-Agent':
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
-      })
+      }
+
+      // Apply proxy agent if configured
+      if (proxyAgent) {
+        fetchOptions.agent = proxyAgent
+      }
+
+      const response = await fetch(url, fetchOptions)
 
       const contentType = response.headers.get('content-type')
 
