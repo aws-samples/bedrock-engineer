@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 import { BsQuestionCircle } from 'react-icons/bs'
 import { useSpeakChat } from './hooks/useSpeakChat'
 import { VoiceAILottie } from '@renderer/components/VoiceAI'
@@ -207,15 +208,6 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
 
   const handleReload = () => {
     window.location.reload()
-  }
-
-  const handleOpenSettings = () => {
-    // Navigate to settings page
-    if (window.location.hash) {
-      window.location.hash = '/settings'
-    } else {
-      window.location.href = '#/settings'
-    }
   }
 
   // Check if this is a region-related error
@@ -480,6 +472,7 @@ const DetailView: React.FC<DetailViewProps> = ({
 // ============================================================================
 
 export const SpeakPage: React.FC = () => {
+  const navigate = useNavigate()
   const [showChat, setShowChat] = useState(false)
   const [showVoiceSelector, setShowVoiceSelector] = useState(false)
   const [regionCheck, setRegionCheck] = useState<RegionCheckResult | null>(null)
@@ -626,13 +619,8 @@ export const SpeakPage: React.FC = () => {
   }
 
   const handleOpenSettings = () => {
-    // Navigate to settings page (AWS section)
-    if (window.location.hash) {
-      window.location.hash = '/settings'
-    } else {
-      // For electron routing
-      window.location.href = '#/settings'
-    }
+    // Navigate to settings page using React Router
+    navigate('/setting')
   }
 
   const handleDismissRegionWarning = () => {
