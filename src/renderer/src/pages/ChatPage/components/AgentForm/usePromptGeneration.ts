@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import useSetting from '@renderer/hooks/useSetting'
@@ -223,6 +223,19 @@ export function usePromptGeneration(
   const [isGeneratingVoiceChat, setIsGeneratingVoiceChat] = useState(false)
   const [isGeneratingScenarios, setIsGeneratingScenarios] = useState(false)
 
+  // コールバック関数の最新の参照を保持
+  const onSystemPromptGeneratedRef = useRef(onSystemPromptGenerated)
+  const onScenariosGeneratedRef = useRef(onScenariosGenerated)
+
+  // コールバック関数の参照を更新
+  useEffect(() => {
+    onSystemPromptGeneratedRef.current = onSystemPromptGenerated
+  }, [onSystemPromptGenerated])
+
+  useEffect(() => {
+    onScenariosGeneratedRef.current = onScenariosGenerated
+  }, [onScenariosGenerated])
+
   // システムプロンプト生成
   // カスタムツールが提供されていればそれを使用、なければ既存のエージェントツールを使用
   const agentTools = customTools || getAgentTools(selectedAgentId)
@@ -304,11 +317,11 @@ export function usePromptGeneration(
         // lastMessage.content の配列のなかから text フィールドを含む要素を取り出す
         const textContent = lastMessage.content.find((v) => v.text)
         if (textContent && textContent.text) {
-          onSystemPromptGenerated(textContent.text)
+          onSystemPromptGeneratedRef.current(textContent.text)
         }
       }
     }
-  }, [systemMessages, onSystemPromptGenerated])
+  }, [systemMessages])
 
   // 音声チャット用システムプロンプト生成結果の処理
   useEffect(() => {
@@ -317,11 +330,11 @@ export function usePromptGeneration(
       if (lastMessage.content) {
         const textContent = lastMessage.content.find((v) => v.text)
         if (textContent && textContent.text) {
-          onSystemPromptGenerated(textContent.text)
+          onSystemPromptGeneratedRef.current(textContent.text)
         }
       }
     }
-  }, [voiceChatMessages, onSystemPromptGenerated])
+  }, [voiceChatMessages])
 
   // シナリオ生成結果の処理
   useEffect(() => {
@@ -334,7 +347,7 @@ export function usePromptGeneration(
             // テキストをJSONとしてパースを試みる
             const scenarios = extractCompleteObjects(textContent.text)
             if (Array.isArray(scenarios)) {
-              onScenariosGenerated(scenarios)
+              onScenariosGeneratedRef.current(scenarios)
             }
           } catch (e) {
             console.error('Failed to parse scenarios:', e)
@@ -342,7 +355,7 @@ export function usePromptGeneration(
         }
       }
     }
-  }, [scenarioMessages, onScenariosGenerated])
+  }, [scenarioMessages])
 
   return {
     generateSystemPrompt,
