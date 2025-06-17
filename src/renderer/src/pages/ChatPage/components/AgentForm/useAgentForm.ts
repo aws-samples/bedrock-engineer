@@ -61,7 +61,18 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
   // 設定データへのアクセス
   const { getDefaultToolsForCategory } = useSetting()
 
-  // プロンプト生成機能の統合
+  // System prompt update callback functions with useCallback memoization
+  const handleSystemPromptUpdate = useCallback(
+    (prompt: string) => updateField('system', prompt),
+    [updateField]
+  )
+
+  const handleScenariosUpdate = useCallback(
+    (scenarios: Array<{ title: string; content: string }>) => updateField('scenarios', scenarios),
+    [updateField]
+  )
+
+  // Prompt generation functionality integration
   const {
     generateSystemPrompt,
     generateVoiceChatPrompt,
@@ -73,8 +84,8 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
     formData.name,
     formData.description,
     formData.system,
-    (prompt: string) => updateField('system', prompt),
-    (scenarios: Array<{ title: string; content: string }>) => updateField('scenarios', scenarios),
+    handleSystemPromptUpdate,
+    handleScenariosUpdate,
     formData.additionalInstruction,
     agentTools
   )
