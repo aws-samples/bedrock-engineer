@@ -530,6 +530,24 @@ export class ToolMetadataCollector {
   }
 
   /**
+   * Collect MCP tool system prompt descriptions
+   */
+  static getMcpSystemPromptDescriptions(mcpServers?: any[]): Record<string, string> {
+    const descriptions: Record<string, string> = {}
+
+    // MCPツールのシステムプロンプト記述を動的に生成
+    // ここではMCPサーバーから取得したツール情報を使用
+    if (mcpServers && mcpServers.length > 0) {
+      // 実際のMCPツールの仕様に基づいて記述を生成
+      // 今回は汎用的な記述を使用するが、将来的にはMCPサーバーから詳細情報を取得可能
+      descriptions.mcp =
+        'Execute tools provided by MCP (Model Context Protocol) servers.\\nRefer to individual tool documentation for specific usage.'
+    }
+
+    return descriptions
+  }
+
+  /**
    * Get all available tool metadata
    */
   static getAllToolMetadata(): {
@@ -539,6 +557,25 @@ export class ToolMetadataCollector {
     return {
       toolSpecs: this.getToolSpecs(),
       systemPromptDescriptions: this.getSystemPromptDescriptions()
+    }
+  }
+
+  /**
+   * Get all tool metadata including MCP tools
+   */
+  static getAllToolMetadataWithMcp(mcpServers?: any[]): {
+    toolSpecs: Tool[]
+    systemPromptDescriptions: Record<string, string>
+  } {
+    const builtInDescriptions = this.getSystemPromptDescriptions()
+    const mcpDescriptions = this.getMcpSystemPromptDescriptions(mcpServers)
+
+    return {
+      toolSpecs: this.getToolSpecs(),
+      systemPromptDescriptions: {
+        ...builtInDescriptions,
+        ...mcpDescriptions
+      }
     }
   }
 }

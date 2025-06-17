@@ -11,7 +11,9 @@ import { CodeInterpreterTool } from './tools/handlers/interpreter/CodeInterprete
 import { ToolMetadataCollector } from './tools/registry'
 import {
   getSystemPromptDescriptions,
-  getToolUsageDescription
+  getToolUsageDescription,
+  getAllSystemPromptDescriptions,
+  getToolUsageDescriptionWithMcp
 } from './tools/common/ToolMetadataHelper'
 
 export type CallConverseAPIProps = {
@@ -148,6 +150,15 @@ export const api = {
     },
     getAllToolMetadata: () => {
       return ToolMetadataCollector.getAllToolMetadata()
+    },
+    getAllToolMetadataWithMcp: (mcpServers?: any[]) => {
+      return ToolMetadataCollector.getAllToolMetadataWithMcp(mcpServers)
+    },
+    getAllSystemPromptDescriptions: async (mcpServers?: any[]) => {
+      return getAllSystemPromptDescriptions(mcpServers)
+    },
+    getToolUsageDescriptionWithMcp: async (toolName: string, mcpServers?: any[]) => {
+      return getToolUsageDescriptionWithMcp(toolName, mcpServers)
     }
   }
 }
