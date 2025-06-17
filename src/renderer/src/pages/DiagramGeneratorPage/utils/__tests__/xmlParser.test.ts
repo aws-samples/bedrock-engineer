@@ -297,7 +297,7 @@ describe('analyzeIncompleteContent', () => {
     
     const analysis = analyzeIncompleteContent(incompleteXml)
     
-    expect(analysis.type).toBe('xml_incomplete')
+    expect(analysis.type).toBe('mixed_incomplete')
     expect(analysis.xmlStatus).toBe('in_progress')
     expect(analysis.needsXmlContinuation).toBe(true)
     expect(analysis.unclosedTags).toContain('mxCell')
@@ -360,8 +360,8 @@ describe('generateContinuePrompt', () => {
     
     const prompt = generateContinuePrompt(incompleteXml)
     
-    expect(prompt).toContain('XMLの続きを出力してください')
-    expect(prompt).toContain('説明文は不要です')
+    expect(prompt).toContain('XMLが未完成です')
+    expect(prompt).toContain('まずXMLを完成させて')
   })
 
   test('should generate explanation continuation prompt', () => {
