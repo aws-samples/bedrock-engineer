@@ -959,22 +959,23 @@ export const useAgentChat = (
   }
 
   // 継続生成機能
-  const continueGeneration = useCallback(async (customPrompt?: string) => {
-    if (loading || !messages.length || lastStopReason !== 'max_tokens') {
-      return
-    }
-
-    try {
-      setLoading(true)
-      const currentMessages = [...messages]
-
-      // カスタムプロンプトまたはデフォルトの継続メッセージを作成
-      const promptText = customPrompt || '続きを生成してください。'
-      const continueMessage: IdentifiableMessage = {
-        role: 'user',
-        content: [{ text: promptText }],
-        id: generateMessageId()
+  const continueGeneration = useCallback(
+    async (customPrompt?: string) => {
+      if (loading || !messages.length || lastStopReason !== 'max_tokens') {
+        return
       }
+
+      try {
+        setLoading(true)
+        const currentMessages = [...messages]
+
+        // カスタムプロンプトまたはデフォルトの継続メッセージを作成
+        const promptText = customPrompt || '続きを生成してください。'
+        const continueMessage: IdentifiableMessage = {
+          role: 'user',
+          content: [{ text: promptText }],
+          id: generateMessageId()
+        }
 
       currentMessages.push(continueMessage)
       setMessages((prev) => [...prev, continueMessage])
@@ -998,23 +999,25 @@ export const useAgentChat = (
           await recursivelyExecTool(lastMessage.content, currentMessages)
         }
       }
-    } catch (error: any) {
-      console.error('Error in continueGeneration:', error)
-      toast.error(error.message || 'An error occurred during continuation')
-    } finally {
-      setLoading(false)
-      setExecutingTool(null)
-    }
-  }, [
-    loading,
-    messages,
-    lastStopReason,
-    modelId,
-    systemPrompt,
-    enabledTools,
-    persistMessage,
-    recursivelyExecTool
-  ])
+      } catch (error: any) {
+        console.error('Error in continueGeneration:', error)
+        toast.error(error.message || 'An error occurred during continuation')
+      } finally {
+        setLoading(false)
+        setExecutingTool(null)
+      }
+    },
+    [
+      loading,
+      messages,
+      lastStopReason,
+      modelId,
+      systemPrompt,
+      enabledTools,
+      persistMessage,
+      recursivelyExecTool
+    ]
+  )
 
   // チャットをクリアする機能
   const clearChat = useCallback(async () => {

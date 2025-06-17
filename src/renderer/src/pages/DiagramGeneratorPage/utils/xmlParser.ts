@@ -310,7 +310,7 @@ export const analyzeIncompleteContent = (content: string): ContentAnalysis => {
   // 説明文の状態を判定
   const xmlContent = extractDrawioXml(content)
   const remainingContent = xmlContent ? content.replace(xmlContent, '').trim() : content.trim()
-  const hasExplanation = remainingContent.length > 0 && !remainingContent.match(/^<.*>.*<\/.*>$/s)
+  const hasExplanation = remainingContent.length > 0 && !remainingContent.match(/^<.*>.*<\/.*>$/)
   
   let explanationStatus: ContentAnalysis['explanationStatus'] = 'not_started'
   if (hasExplanation) {
