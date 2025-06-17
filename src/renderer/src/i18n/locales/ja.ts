@@ -183,7 +183,25 @@ const SpeakPage = {
   'permissionHelp.noteTitle': '注意',
   'permissionHelp.noteDescription':
     'このコマンドは、アプリケーションにアドホックコード署名を適用し、システムの許可ダイヤログが重複して表示される問題を防ぎます。',
-  'permissionHelp.tooltip': '許可ダイヤログが繰り返し表示される？'
+  'permissionHelp.tooltip': '許可ダイヤログが繰り返し表示される？',
+  
+  // Voice Chat
+  'voiceChat.regionWarning.title': 'Voice Chat機能が利用できません',
+  'voiceChat.regionWarning.message': 'Voice Chat（Nova Sonic）は現在のリージョン（{{currentRegion}}）では利用できません。対応リージョンに切り替えてください：{{supportedRegions}}',
+  'voiceChat.regionWarning.openSettings': '設定を開く',
+  'voiceChat.error.regionNotSupported': 'Voice Chat機能は現在のリージョンでは利用できないか、権限に問題があります。AWSリージョン設定を確認してください。',
+  'voiceChat.error.regionConnection': 'Voice Chatサービスへの接続に失敗しました。リージョンの互換性の問題が考えられます。',
+  'voiceChat.error.openSettings': '設定を開く',
+  
+  // Settings
+  'settings.novaSonic.title': 'Voice Chat (Nova Sonic)',
+  'settings.novaSonic.checking': '可用性を確認中...',
+  'settings.novaSonic.available': '利用可能',
+  'settings.novaSonic.notAvailable': '利用不可',
+  'settings.novaSonic.refresh': 'ステータスを更新',
+  'settings.novaSonic.currentRegion': '現在のリージョン: {{region}}',
+  'settings.novaSonic.supportedRegions': '対応リージョン: {{regions}}',
+  'Voice Chat Status': 'Voice Chatステータス'
 }
 
 const WebsiteGeneratorPage = {

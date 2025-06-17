@@ -9,6 +9,7 @@ import { createCategoryLogger } from '../../common/logger'
 import { Server } from 'socket.io'
 import http from 'http'
 import { SonicToolExecutor } from './sonic/tool-executor'
+import { checkNovaSonicRegionSupport, testBedrockConnectivity } from './sonic/regionCheck'
 
 // Create category logger for API
 const apiLogger = createCategoryLogger('api:express')
@@ -193,6 +194,54 @@ api.get(
         stack: error.stack
       })
       return res.status(500).send(error)
+    }
+  })
+)
+
+// Nova Sonic region support check endpoint
+api.get(
+  '/nova-sonic/region-check',
+  wrap(async (req: Request, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    try {
+      const region = typeof req.query.region === 'string' ? req.query.region : undefined
+      const result = await checkNovaSonicRegionSupport(region)
+      return res.json(result)
+    } catch (error: any) {
+      apiLogger.error('Nova Sonic region check error', {
+        errorName: error.name,
+        message: error.message,
+        stack: error.stack
+      })
+      return res.status(500).send({
+        error: {
+          message: error instanceof Error ? error.message : String(error)
+        }
+      })
+    }
+  })
+)
+
+// Bedrock connectivity test endpoint
+api.get(
+  '/bedrock/connectivity-test',
+  wrap(async (req: Request, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    try {
+      const region = typeof req.query.region === 'string' ? req.query.region : undefined
+      const result = await testBedrockConnectivity(region)
+      return res.json(result)
+    } catch (error: any) {
+      apiLogger.error('Bedrock connectivity test error', {
+        errorName: error.name,
+        message: error.message,
+        stack: error.stack
+      })
+      return res.status(500).send({
+        error: {
+          message: error instanceof Error ? error.message : String(error)
+        }
+      })
     }
   })
 )

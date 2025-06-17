@@ -9,6 +9,7 @@ import { IAMPolicyModal } from '../IAMPolicyModal'
 import { ThinkingModeSettings } from '../ThinkingModeSettings'
 import { AWS_REGIONS } from '@/types/aws-regions'
 import { LLM } from '@/types/llm'
+import { NovaSonicStatus } from '../NovaSonicStatus'
 
 interface AWSSectionProps {
   // AWS Basic Settings
@@ -219,6 +220,10 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
             )}
           </div>
         </div>
+      </SettingSection>
+
+      <SettingSection title={t('Voice Chat Status')} icon={FcElectronics}>
+        <NovaSonicStatus currentRegion={awsRegion} />
       </SettingSection>
 
       <SettingSection title={t('Amazon Bedrock')} icon={FcElectronics}>
