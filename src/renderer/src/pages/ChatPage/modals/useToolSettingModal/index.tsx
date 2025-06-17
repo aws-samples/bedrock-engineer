@@ -531,7 +531,7 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                     <div className="prose dark:prose-invert max-w-none mb-4">
                       <div className="flex items-center gap-2 mb-4">
                         <p className="text-gray-700 dark:text-gray-100 font-bold mb-0">
-                          {t(`tool descriptions.${selectedTool}`)}
+                          {t(`tool descriptions.${selectedTool}`, '')}
                         </p>
                         <PlanModeCompatibilityBadge toolName={selectedTool} />
                       </div>
@@ -586,7 +586,7 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                   <div className="prose dark:prose-invert max-w-none">
                     <div className="flex items-center gap-2 mb-4">
                       <p className="text-gray-700 dark:text-gray-100 font-bold mb-0">
-                        {t(`tool descriptions.${selectedTool}`)}
+                        {t(`tool descriptions.${selectedTool}`, '')}
                       </p>
                       <PlanModeCompatibilityBadge toolName={selectedTool} />
                     </div>
