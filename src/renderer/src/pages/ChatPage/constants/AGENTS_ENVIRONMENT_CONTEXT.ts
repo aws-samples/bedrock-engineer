@@ -1,5 +1,4 @@
 import { ToolState, EnvironmentContextSettings } from '@/types/agent-chat'
-import { isMcpTool, getOriginalMcpToolName } from '@/types/tools'
 
 export const BASIC_ENVIRONMENT_CONTEXT = `**<context>**
 
@@ -80,7 +79,8 @@ No tools are currently enabled for this agent.
   // ツールごとの簡潔な説明を生成（preload APIを直接使用）
   activeTools.forEach((tool) => {
     const toolName = tool.toolSpec?.name || 'unknown'
-    const displayName = isMcpTool(toolName) ? getOriginalMcpToolName(toolName) : toolName
+    // Use toolName as-is to maintain mcp_ prefix consistency in system prompts
+    const displayName = toolName
     const description = getToolUsageDescription(toolName)
 
     rulesContent += `**${displayName}**\n${description}\n\n`
