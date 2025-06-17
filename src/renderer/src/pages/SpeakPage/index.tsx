@@ -199,9 +199,10 @@ const ThinkingIndicator: React.FC<ThinkingIndicatorProps> = ({ thinkingState }) 
 interface ErrorDisplayProps {
   status: SpeakChatStatus
   errorState: any
+  onOpenSettings?: () => void
 }
 
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
+const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState, onOpenSettings }) => {
   const { t } = useTranslation()
 
   if (status !== 'error') return null
@@ -302,9 +303,9 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
             </span>
           )}
           <div className="flex flex-wrap gap-2 mt-2">
-            {isRegionError && (
+            {isRegionError && onOpenSettings && (
               <button
-                onClick={handleOpenSettings}
+                onClick={onOpenSettings}
                 className="text-xs bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded transition-colors"
               >
                 {t('voiceChat.error.openSettings', 'Open Settings')}
@@ -328,19 +329,21 @@ interface FixedElementsProps {
   onToggleChat: (show: boolean) => void
   status: SpeakChatStatus
   errorState: any
+  onOpenSettings?: () => void
 }
 
 const FixedElements: React.FC<FixedElementsProps> = ({
   showChat,
   onToggleChat,
   status,
-  errorState
+  errorState,
+  onOpenSettings
 }) => (
   <>
     <div className={`fixed right-4 z-50 ${status === 'error' ? 'bottom-20' : 'bottom-4'}`}>
       <ViewToggleButton isDetailView={showChat} onToggle={onToggleChat} />
     </div>
-    <ErrorDisplay status={status} errorState={errorState} />
+    <ErrorDisplay status={status} errorState={errorState} onOpenSettings={onOpenSettings} />
   </>
 )
 
@@ -708,6 +711,7 @@ export const SpeakPage: React.FC = () => {
           onToggleChat={setShowChat}
           status={status}
           errorState={errorState}
+          onOpenSettings={handleOpenSettings}
         />
       </div>
     </div>

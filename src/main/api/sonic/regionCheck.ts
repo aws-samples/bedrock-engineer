@@ -1,4 +1,3 @@
-import { BedrockRuntimeClient } from '@aws-sdk/client-bedrock-runtime'
 import { isNovaSonicSupportedRegion, getNovaSonicSupportedRegions } from './constants'
 import { store } from '../../../preload/store'
 
@@ -59,18 +58,10 @@ export async function testBedrockConnectivity(region?: string): Promise<{
       }
     }
 
-    // Create a lightweight client to test connectivity
-    const _client = new BedrockRuntimeClient({
-      region: currentRegion,
-      credentials: {
-        accessKeyId: awsConfig.accessKeyId,
-        secretAccessKey: awsConfig.secretAccessKey,
-        sessionToken: awsConfig.sessionToken
-      }
-    })
-
-    // This is a simple test - we just create the client and see if it can be instantiated
+    // For now, we just validate that credentials exist and region is specified
     // A more comprehensive test would require making an actual API call, but that might be expensive
+    // and could fail due to network issues rather than configuration problems
+    console.log(`Testing connectivity for region: ${currentRegion}`)
     return {
       success: true
     }
