@@ -295,6 +295,21 @@ The diagrams are created using draw.io compatible XML format, allowing for furth
 
 [![Star History Chart](https://api.star-history.com/svg?repos=aws-samples/bedrock-engineer&type=Date)](https://star-history.com/#aws-samples/bedrock-engineer&Date)
 
+## Troubleshooting
+
+If you encounter any issues while using Bedrock Engineer, please refer to our comprehensive troubleshooting guide:
+
+📖 **[Troubleshooting Guide](./docs/troubleshooting/README.md)**
+
+The guide covers common issues including:
+- Installation and startup problems
+- AWS authentication setup
+- Agent chat functionality
+- Voice chat (Nova Sonic) issues
+- Website generator problems
+- Performance optimization
+- And much more...
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.

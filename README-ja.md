@@ -295,6 +295,21 @@ AWS Step Functions の ASL 定義を生成し、リアルタイムにプレビ�
 
 [![Star History Chart](https://api.star-history.com/svg?repos=aws-samples/bedrock-engineer&type=Date)](https://star-history.com/#aws-samples/bedrock-engineer&Date)
 
+## トラブルシューティング
+
+Bedrock Engineerの使用中に問題が発生した場合は、包括的なトラブルシューティングガイドを参照してください：
+
+📖 **[トラブルシューティングガイド](./docs/troubleshooting/README.md)**
+
+ガイドでは以下の一般的な問題を取り扱っています：
+- インストールと起動の問題
+- AWS認証設定
+- エージェントチャット機能
+- 音声チャット（Nova Sonic）の問題
+- ウェブサイト生成の問題
+- パフォーマンス最適化
+- その他多数...
+
 ## Security
 
 詳細については、[CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) を参照してください。
