@@ -199,8 +199,7 @@ export const mergeDrawioXml = (previousXml: string, newXml: string): string => {
 
     const mergedModel = `${mxGraphModelStart}
     ${rootStart}
-      ${allCells.join("
-      ")}
+      ${allCells.join('\n      ')}
     ${rootEnd}
   ${mxGraphModelEnd}`
 
@@ -216,7 +215,7 @@ export const mergeDrawioXml = (previousXml: string, newXml: string): string => {
   ${diagramEnd}
 ${xmlEnd}`
   } catch (error) {
-    console.error("Error merging DrawIO XML:", error)
+    console.error('Error merging DrawIO XML:', error)
     // エラーが発生した場合は新しいXMLを返す
     return newXml || previousXml
   }
@@ -235,9 +234,7 @@ export const mergeDiagramContent = (
   newContent: { xml: string; explanation: string }
 ): { xml: string; explanation: string } => {
   const mergedXml = mergeDrawioXml(previousContent.xml, newContent.xml)
-  const mergedExplanation = previousContent.explanation + "
-
-" + newContent.explanation
+  const mergedExplanation = previousContent.explanation + '\n\n' + newContent.explanation
 
   return {
     xml: mergedXml,

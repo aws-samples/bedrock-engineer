@@ -64,7 +64,7 @@ export default function DiagramGeneratorPage() {
   // XML生成専用の状態管理
   const [xmlLoading, setXmlLoading] = useState(false)
   const [hasValidXml, setHasValidXml] = useState(false)
-  
+
   // 継続生成用の状態管理
   const [isContinueGeneration, setIsContinueGeneration] = useState(false)
   const [previousXml, setPreviousXml] = useState<string>('')
@@ -304,7 +304,10 @@ export default function DiagramGeneratorPage() {
               .map((c) => ('text' in c ? c.text : ''))
               .join('')
             setDiagramHistory((prev) => {
-              const newHistory = [...prev, { xml: validXml, explanation: finalContent.explanation, prompt: userPrompt }]
+              const newHistory = [
+                ...prev,
+                { xml: validXml, explanation: finalContent.explanation, prompt: userPrompt }
+              ]
               // 最大10つまで保持
               return newHistory.slice(-10)
             })

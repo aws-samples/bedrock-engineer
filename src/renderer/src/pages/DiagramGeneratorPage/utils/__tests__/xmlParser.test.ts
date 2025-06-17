@@ -200,13 +200,13 @@ describe('mergeDrawioXml', () => {
 
   test('should merge two DrawIO XMLs correctly', () => {
     const result = mergeDrawioXml(xmlTemplate1, xmlTemplate2)
-    
+
     // 結合されたXMLが両方のセルを含んでいることを確認
     expect(result).toContain('cell1')
     expect(result).toContain('cell2')
     expect(result).toContain('First Cell')
     expect(result).toContain('Second Cell')
-    
+
     // XML構造が保持されていることを確認
     expect(result).toContain('<mxfile')
     expect(result).toContain('</mxfile>')
@@ -238,7 +238,7 @@ describe('mergeDrawioXml', () => {
 </mxfile>`
 
     const result = mergeDrawioXml(xmlTemplate1, xmlWithDuplicate)
-    
+
     // 重複したIDのセルは除外される
     const cell1Matches = (result.match(/id="cell1"/g) || []).length
     expect(cell1Matches).toBe(1)
