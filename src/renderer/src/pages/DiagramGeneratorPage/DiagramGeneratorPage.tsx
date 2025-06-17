@@ -16,7 +16,9 @@ import {
   extractDrawioXml,
   filterXmlFromStreamingContent,
   containsXmlTags,
-  isXmlComplete
+  isXmlComplete,
+  mergeDiagramContent,
+  generateContinuePrompt
 } from './utils/xmlParser'
 import {
   calculateXmlProgress,
@@ -63,6 +65,11 @@ export default function DiagramGeneratorPage() {
   // XML生成専用の状態管理
   const [xmlLoading, setXmlLoading] = useState(false)
   const [hasValidXml, setHasValidXml] = useState(false)
+
+  // 継続生成用の状態管理
+  const [isContinueGeneration, setIsContinueGeneration] = useState(false)
+  const [previousXml, setPreviousXml] = useState<string>('')
+  const [previousExplanation, setPreviousExplanation] = useState<string>('')
 
   const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
 
@@ -113,16 +120,18 @@ export default function DiagramGeneratorPage() {
     return agentTools
   }, [enableSearch, getAgentTools, diagramAgentId])
 
-  const { messages, loading, handleSubmit, executingTool, latestReasoningText } = useAgentChat(
-    llm?.modelId,
-    systemPrompt,
-    diagramAgentId,
-    undefined,
-    {
-      enableHistory: false,
-      tools: diagramAgentTools // 明示的にツール設定を渡す
-    }
-  )
+  const {
+    messages,
+    loading,
+    handleSubmit,
+    executingTool,
+    latestReasoningText,
+    lastStopReason,
+    continueGeneration
+  } = useAgentChat(llm?.modelId, systemPrompt, diagramAgentId, undefined, {
+    enableHistory: false,
+    tools: diagramAgentTools // 明示的にツール設定を渡す
+  })
 
   const onSubmit = (input: string, images?: AttachedImage[]) => {
     handleSubmit(input, images)
@@ -266,15 +275,27 @@ export default function DiagramGeneratorPage() {
         .join('')
 
       // XMLと説明文を分離するパーサーを使用
-      const { xml, explanation } = extractDiagramContent(rawContent)
-      const validXml = xml || rawContent
+      const currentContent = extractDiagramContent(rawContent)
+      let finalContent = currentContent
+
+      // 継続生成の場合はXMLを結合
+      if (isContinueGeneration && previousXml) {
+        const previousContent = { xml: previousXml, explanation: previousExplanation }
+        finalContent = mergeDiagramContent(previousContent, currentContent)
+        // 継続生成フラグをリセット
+        setIsContinueGeneration(false)
+        setPreviousXml('')
+        setPreviousExplanation('')
+      }
+
+      const validXml = finalContent.xml || rawContent
 
       if (validXml) {
         try {
           drawioRef.current.load({ xml: validXml })
           setXml(validXml)
           // 説明文を設定
-          setDiagramExplanation(explanation)
+          setDiagramExplanation(finalContent.explanation)
           // Generate new recommendations based on the current diagram
           getRecommendDiagrams(validXml)
 
@@ -284,7 +305,10 @@ export default function DiagramGeneratorPage() {
               .map((c) => ('text' in c ? c.text : ''))
               .join('')
             setDiagramHistory((prev) => {
-              const newHistory = [...prev, { xml: validXml, explanation, prompt: userPrompt }]
+              const newHistory = [
+                ...prev,
+                { xml: validXml, explanation: finalContent.explanation, prompt: userPrompt }
+              ]
               // 最大10つまで保持
               return newHistory.slice(-10)
             })
@@ -320,6 +344,35 @@ export default function DiagramGeneratorPage() {
   const toggleExplanationView = () => {
     setShowExplanation(!showExplanation)
   }
+
+  // 継続生成が可能かどうかを判定
+  const canContinueGeneration = useMemo(() => {
+    return !loading && lastStopReason === 'max_tokens' && messages.length > 0
+  }, [loading, lastStopReason, messages.length])
+
+  // 継続生成ハンドラー
+  const handleContinueGeneration = useCallback(() => {
+    if (canContinueGeneration && continueGeneration) {
+      // 継続生成フラグを設定し、現在のXMLと説明文を保存
+      setIsContinueGeneration(true)
+      setPreviousXml(xml)
+      setPreviousExplanation(diagramExplanation)
+
+      // 最後のアシスタントメッセージから内容を取得して適応的プロンプトを生成
+      const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').pop()
+      let lastContent = ''
+      
+      if (lastAssistantMessage?.content) {
+        lastContent = lastAssistantMessage.content
+          .map((c) => ('text' in c ? c.text : ''))
+          .join('')
+      }
+
+      // 適応的プロンプトを生成して継続実行
+      const adaptivePrompt = generateContinuePrompt(lastContent)
+      continueGeneration(adaptivePrompt)
+    }
+  }, [canContinueGeneration, continueGeneration, xml, diagramExplanation, messages])
 
   // AWS CDK変換ハンドラー
   const handleCDKConversion = useCallback(() => {
@@ -459,6 +512,19 @@ export default function DiagramGeneratorPage() {
             </div>
 
             <div className="flex gap-3 items-center">
+              {/* 継続生成ボタン */}
+              {canContinueGeneration && (
+                <Tooltip content="Continue Generation" animation="duration-500">
+                  <button
+                    className="cursor-pointer rounded-md py-1.5 px-3 bg-blue-500 hover:bg-blue-600 text-white font-medium"
+                    onClick={handleContinueGeneration}
+                    disabled={loading}
+                  >
+                    Continue
+                  </button>
+                </Tooltip>
+              )}
+
               {enabledTavilySearch && (
                 <DeepSearchButton
                   enableDeepSearch={enableSearch}
