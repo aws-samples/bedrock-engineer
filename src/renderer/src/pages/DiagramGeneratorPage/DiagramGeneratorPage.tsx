@@ -17,7 +17,8 @@ import {
   filterXmlFromStreamingContent,
   containsXmlTags,
   isXmlComplete,
-  mergeDiagramContent
+  mergeDiagramContent,
+  generateContinuePrompt
 } from './utils/xmlParser'
 import {
   calculateXmlProgress,
@@ -356,9 +357,22 @@ export default function DiagramGeneratorPage() {
       setIsContinueGeneration(true)
       setPreviousXml(xml)
       setPreviousExplanation(diagramExplanation)
-      continueGeneration()
+
+      // 最後のアシスタントメッセージから内容を取得して適応的プロンプトを生成
+      const lastAssistantMessage = messages.filter((m) => m.role === 'assistant').pop()
+      let lastContent = ''
+      
+      if (lastAssistantMessage?.content) {
+        lastContent = lastAssistantMessage.content
+          .map((c) => ('text' in c ? c.text : ''))
+          .join('')
+      }
+
+      // 適応的プロンプトを生成して継続実行
+      const adaptivePrompt = generateContinuePrompt(lastContent)
+      continueGeneration(adaptivePrompt)
     }
-  }, [canContinueGeneration, continueGeneration, xml, diagramExplanation])
+  }, [canContinueGeneration, continueGeneration, xml, diagramExplanation, messages])
 
   // AWS CDK変換ハンドラー
   const handleCDKConversion = useCallback(() => {

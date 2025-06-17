@@ -959,7 +959,7 @@ export const useAgentChat = (
   }
 
   // 継続生成機能
-  const continueGeneration = useCallback(async () => {
+  const continueGeneration = useCallback(async (customPrompt?: string) => {
     if (loading || !messages.length || lastStopReason !== 'max_tokens') {
       return
     }
@@ -968,10 +968,11 @@ export const useAgentChat = (
       setLoading(true)
       const currentMessages = [...messages]
 
-      // 継続メッセージを作成
+      // カスタムプロンプトまたはデフォルトの継続メッセージを作成
+      const promptText = customPrompt || '続きを生成してください。'
       const continueMessage: IdentifiableMessage = {
         role: 'user',
-        content: [{ text: '続きを生成してください。' }],
+        content: [{ text: promptText }],
         id: generateMessageId()
       }
 

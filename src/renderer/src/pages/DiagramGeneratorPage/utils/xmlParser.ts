@@ -229,6 +229,154 @@ ${xmlEnd}`
  * @param newContent 新しい内容（XML + 説明）
  * @returns 結合された内容
  */
+/**
+ * 開いているXMLタグを検出する
+ */
+const detectUnclosedTags = (content: string): string[] => {
+  const tagRegex = /<(\w+)[^>]*(?:\/>|>)/g
+  const closingTagRegex = /<\/(\w+)>/g
+  
+  let match
+  const openTags: string[] = []
+  
+  // 開始タグを収集
+  while ((match = tagRegex.exec(content)) !== null) {
+    const tagName = match[1]
+    const fullTag = match[0]
+    
+    // 自己終了タグでない場合
+    if (!fullTag.endsWith('/>')) {
+      openTags.push(tagName)
+    }
+  }
+  
+  // 終了タグを除去
+  while ((match = closingTagRegex.exec(content)) !== null) {
+    const tagName = match[1]
+    const lastIndex = openTags.lastIndexOf(tagName)
+    if (lastIndex !== -1) {
+      openTags.splice(lastIndex, 1)
+    }
+  }
+  
+  return openTags
+}
+
+/**
+ * 内容の完了状態を解析する
+ */
+export type ContentAnalysis = {
+  type: 'xml_incomplete' | 'explanation_incomplete' | 'mixed_incomplete' | 'complete'
+  xmlStatus: 'not_started' | 'in_progress' | 'complete' | 'malformed'
+  explanationStatus: 'not_started' | 'in_progress' | 'complete'
+  lastIncompleteTag: string | null
+  needsXmlContinuation: boolean
+  unclosedTags: string[]
+  hasPartialXml: boolean
+}
+
+export const analyzeIncompleteContent = (content: string): ContentAnalysis => {
+  if (!content || content.trim().length === 0) {
+    return {
+      type: 'complete',
+      xmlStatus: 'not_started',
+      explanationStatus: 'not_started',
+      lastIncompleteTag: null,
+      needsXmlContinuation: false,
+      unclosedTags: [],
+      hasPartialXml: false
+    }
+  }
+
+  const hasXmlStart = containsXmlTags(content)
+  const isCompleteXml = isXmlComplete(content)
+  const unclosedTags = detectUnclosedTags(content)
+  
+  // XMLの存在と完了状態を判定
+  let xmlStatus: ContentAnalysis['xmlStatus'] = 'not_started'
+  let hasPartialXml = false
+  
+  if (hasXmlStart) {
+    if (isCompleteXml && unclosedTags.length === 0) {
+      xmlStatus = 'complete'
+    } else if (content.includes('<mxfile') || content.includes('<mxGraphModel')) {
+      xmlStatus = 'in_progress'
+      hasPartialXml = true
+    } else {
+      xmlStatus = 'malformed'
+    }
+  }
+
+  // 説明文の状態を判定
+  const xmlContent = extractDrawioXml(content)
+  const remainingContent = xmlContent ? content.replace(xmlContent, '').trim() : content.trim()
+  const hasExplanation = remainingContent.length > 0 && !remainingContent.match(/^<.*>.*<\/.*>$/s)
+  
+  let explanationStatus: ContentAnalysis['explanationStatus'] = 'not_started'
+  if (hasExplanation) {
+    // 説明文が存在する場合、文章として完結しているかを簡易判定
+    const endsWithCompleteSentence = /[.。!！?？]\s*$/.test(remainingContent)
+    explanationStatus = endsWithCompleteSentence ? 'complete' : 'in_progress'
+  }
+
+  // 最後の不完全なタグを特定
+  const lastIncompleteTag = unclosedTags.length > 0 ? unclosedTags[unclosedTags.length - 1] : null
+
+  // 全体的な状態を判定
+  let type: ContentAnalysis['type'] = 'complete'
+  let needsXmlContinuation = false
+
+  if (xmlStatus === 'in_progress') {
+    needsXmlContinuation = true
+    if (explanationStatus === 'in_progress') {
+      type = 'mixed_incomplete'
+    } else {
+      type = 'xml_incomplete'
+    }
+  } else if (explanationStatus === 'in_progress') {
+    type = 'explanation_incomplete'
+  }
+
+  return {
+    type,
+    xmlStatus,
+    explanationStatus,
+    lastIncompleteTag,
+    needsXmlContinuation,
+    unclosedTags,
+    hasPartialXml
+  }
+}
+
+/**
+ * 分析結果に基づいて適切な継続プロンプトを生成する
+ */
+export const generateContinuePrompt = (lastContent: string): string => {
+  const analysis = analyzeIncompleteContent(lastContent)
+  
+  switch (analysis.type) {
+    case 'xml_incomplete':
+      if (analysis.unclosedTags.length > 0) {
+        const lastTag = analysis.lastIncompleteTag
+        return `XMLが途中で終わっています。${lastTag ? `<${lastTag}>タグ` : 'タグ'}を適切に閉じて、XMLの続きを出力してください。説明文は不要です。`
+      }
+      return 'XMLの続きを出力してください。説明文は不要です。最後に出力した内容の続きから正確に継続してください。'
+    
+    case 'explanation_incomplete':
+      return '説明文の続きを出力してください。XMLは既に完成しているので、説明部分のみ続行してください。'
+    
+    case 'mixed_incomplete':
+      if (analysis.needsXmlContinuation) {
+        return 'XMLが未完成です。まずXMLを完成させてから、その後に説明文を追加してください。'
+      }
+      return '内容の続きを出力してください。XMLと説明文の両方が未完成のようです。'
+    
+    default:
+      // 完成している場合は、さらなる改良を促す
+      return 'ダイアグラムをさらに詳細化して、追加の要素や改良を加えてください。'
+  }
+}
+
 export const mergeDiagramContent = (
   previousContent: { xml: string; explanation: string },
   newContent: { xml: string; explanation: string }

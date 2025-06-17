@@ -1,4 +1,10 @@
-import { extractDrawioXml, mergeDrawioXml, mergeDiagramContent } from '../xmlParser'
+import { 
+  extractDrawioXml, 
+  mergeDrawioXml, 
+  mergeDiagramContent,
+  analyzeIncompleteContent,
+  generateContinuePrompt
+} from '../xmlParser'
 import { describe, expect, test } from '@jest/globals'
 
 describe('extractDrawioXml', () => {
@@ -276,5 +282,125 @@ describe('mergeDiagramContent', () => {
 
     expect(result.xml).toBe(newContent.xml)
     expect(result.explanation).toBe(newContent.explanation)
+  })
+})
+
+describe('analyzeIncompleteContent', () => {
+  test('should detect incomplete XML', () => {
+    const incompleteXml = `<mxfile host="Electron" modified="2023-01-01T12:00:00.000Z" type="device">
+  <diagram>
+    <mxGraphModel>
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+      <mxCell id="cell1" value="Test" style="rounded=1;" vertex="1" parent="1"`
+    
+    const analysis = analyzeIncompleteContent(incompleteXml)
+    
+    expect(analysis.type).toBe('xml_incomplete')
+    expect(analysis.xmlStatus).toBe('in_progress')
+    expect(analysis.needsXmlContinuation).toBe(true)
+    expect(analysis.unclosedTags).toContain('mxCell')
+  })
+
+  test('should detect incomplete explanation', () => {
+    const completeXmlWithIncompleteExplanation = `<mxfile host="Electron" modified="2023-01-01T12:00:00.000Z" type="device">
+  <diagram>
+    <mxGraphModel>
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+      <mxCell id="cell1" value="Test" style="rounded=1;" vertex="1" parent="1"/>
+    </root>
+  </mxGraphModel>
+  </diagram>
+</mxfile>
+
+This diagram shows a simple`
+    
+    const analysis = analyzeIncompleteContent(completeXmlWithIncompleteExplanation)
+    
+    expect(analysis.type).toBe('explanation_incomplete')
+    expect(analysis.xmlStatus).toBe('complete')
+    expect(analysis.explanationStatus).toBe('in_progress')
+  })
+
+  test('should detect complete content', () => {
+    const completeContent = `<mxfile host="Electron" modified="2023-01-01T12:00:00.000Z" type="device">
+  <diagram>
+    <mxGraphModel>
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+      <mxCell id="cell1" value="Test" style="rounded=1;" vertex="1" parent="1"/>
+    </root>
+  </mxGraphModel>
+  </diagram>
+</mxfile>
+
+This diagram shows a simple test cell.`
+    
+    const analysis = analyzeIncompleteContent(completeContent)
+    
+    expect(analysis.type).toBe('complete')
+    expect(analysis.xmlStatus).toBe('complete')
+    expect(analysis.explanationStatus).toBe('complete')
+  })
+})
+
+describe('generateContinuePrompt', () => {
+  test('should generate XML continuation prompt for incomplete XML', () => {
+    const incompleteXml = `<mxfile host="Electron">
+  <diagram>
+    <mxGraphModel>
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+      <mxCell id="cell1"`
+    
+    const prompt = generateContinuePrompt(incompleteXml)
+    
+    expect(prompt).toContain('XMLの続きを出力してください')
+    expect(prompt).toContain('説明文は不要です')
+  })
+
+  test('should generate explanation continuation prompt', () => {
+    const completeXmlWithIncompleteExplanation = `<mxfile host="Electron">
+  <diagram>
+    <mxGraphModel>
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+    </root>
+  </mxGraphModel>
+  </diagram>
+</mxfile>
+
+This diagram`
+    
+    const prompt = generateContinuePrompt(completeXmlWithIncompleteExplanation)
+    
+    expect(prompt).toContain('説明文の続きを出力してください')
+    expect(prompt).toContain('XMLは既に完成している')
+  })
+
+  test('should generate enhancement prompt for complete content', () => {
+    const completeContent = `<mxfile host="Electron">
+  <diagram>
+    <mxGraphModel>
+    <root>
+      <mxCell id="0"/>
+      <mxCell id="1" parent="0"/>
+    </root>
+  </mxGraphModel>
+  </diagram>
+</mxfile>
+
+This is a complete diagram.`
+    
+    const prompt = generateContinuePrompt(completeContent)
+    
+    expect(prompt).toContain('さらに詳細化')
+    expect(prompt).toContain('追加の要素')
   })
 })
