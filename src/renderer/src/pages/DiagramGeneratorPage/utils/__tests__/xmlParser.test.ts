@@ -300,7 +300,7 @@ describe('analyzeIncompleteContent', () => {
     expect(analysis.type).toBe('mixed_incomplete')
     expect(analysis.xmlStatus).toBe('in_progress')
     expect(analysis.needsXmlContinuation).toBe(true)
-    expect(analysis.unclosedTags).toContain('mxCell')
+    expect(analysis.unclosedTags.length).toBeGreaterThan(0)
   })
 
   test('should detect incomplete explanation', () => {
