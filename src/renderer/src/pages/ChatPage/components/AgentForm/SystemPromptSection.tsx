@@ -167,7 +167,7 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
             disabled={isGenerating || isGeneratingVoiceChat}
             className={`block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
               text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              h-[150px] ${(isGenerating || isGeneratingVoiceChat) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              h-[150px] ${isGenerating || isGeneratingVoiceChat ? 'opacity-50 cursor-not-allowed' : ''}`}
             placeholder={t(
               'additionalInstructionPlaceholder',
               'Enter additional instructions for system prompt generation...'
@@ -212,7 +212,7 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
             disabled={isGenerating || isGeneratingVoiceChat}
             className={`block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
               text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              h-[512px] ${(isGenerating || isGeneratingVoiceChat) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              h-[512px] ${isGenerating || isGeneratingVoiceChat ? 'opacity-50 cursor-not-allowed' : ''}`}
             required
             placeholder={t('systemPromptPlaceholder')}
           />
