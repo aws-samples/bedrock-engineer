@@ -231,7 +231,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
       'ValidationException',
       'UnauthorizedOperation'
     ]
-    return regionKeywords.some(keyword => 
+    return regionKeywords.some((keyword) =>
       message.toLowerCase().includes(keyword.toLowerCase())
     )
   }
@@ -244,16 +244,20 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
       // Check for region-specific errors
       if (isRegionRelatedError(baseMessage)) {
         return t('voiceChat.error.regionNotSupported', {
-          defaultValue: 'Voice Chat is not available in the current region or there are permission issues. Please check your AWS region settings.',
+          defaultValue:
+            'Voice Chat is not available in the current region or there are permission issues. Please check your AWS region settings.',
           message: baseMessage.slice(0, 100) // Limit message length
         })
       }
 
       switch (errorState.type) {
         case 'connection':
-          return baseMessage.includes('region') || baseMessage.includes('Nova Sonic') || baseMessage.includes('nova-sonic')
+          return baseMessage.includes('region') ||
+            baseMessage.includes('Nova Sonic') ||
+            baseMessage.includes('nova-sonic')
             ? t('voiceChat.error.regionConnection', {
-                defaultValue: 'Failed to connect to Voice Chat service. This may be due to region compatibility issues.',
+                defaultValue:
+                  'Failed to connect to Voice Chat service. This may be due to region compatibility issues.',
                 originalMessage: baseMessage
               })
             : baseMessage || 'Connection error occurred'
@@ -636,8 +640,8 @@ export const SpeakPage: React.FC = () => {
   }
 
   const canStartRecording =
-    isConnected && 
-    (status === 'ready' || status === 'connected') && 
+    isConnected &&
+    (status === 'ready' || status === 'connected') &&
     !isRecording &&
     regionCheck?.isSupported === true
   const canStopRecording = isRecording
@@ -666,17 +670,17 @@ export const SpeakPage: React.FC = () => {
         />
 
         {/* Region Warning Banner */}
-        {!regionCheckLoading && 
-         regionCheck && 
-         !regionCheck.isSupported && 
-         showRegionWarning && (
-          <RegionWarningBanner
-            currentRegion={regionCheck.currentRegion}
-            supportedRegions={regionCheck.supportedRegions}
-            onDismiss={handleDismissRegionWarning}
-            onOpenSettings={handleOpenSettings}
-          />
-        )}
+        {!regionCheckLoading &&
+          regionCheck &&
+          !regionCheck.isSupported &&
+          showRegionWarning && (
+            <RegionWarningBanner
+              currentRegion={regionCheck.currentRegion}
+              supportedRegions={regionCheck.supportedRegions}
+              onDismiss={handleDismissRegionWarning}
+              onOpenSettings={handleOpenSettings}
+            />
+          )}
 
         {/* Main Content */}
         {showChat ? (

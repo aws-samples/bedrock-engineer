@@ -22,7 +22,7 @@ export const NovaSonicStatus: React.FC<NovaSonicStatusProps> = ({ currentRegion 
       setRegionCheck({
         isSupported: false,
         currentRegion,
-        supportedRegions: ['us-east-1', 'us-west-2'],
+        supportedRegions: ['us-east-1', 'us-west-2', 'ap-northeast-1', 'eu-north-1'],
         error: 'Failed to check region support'
       })
     } finally {
@@ -38,11 +38,11 @@ export const NovaSonicStatus: React.FC<NovaSonicStatusProps> = ({ currentRegion 
     if (loading) {
       return <BsArrowClockwise className="w-4 h-4 text-gray-500 animate-spin" />
     }
-    
+
     if (regionCheck?.isSupported) {
       return <BsCheckCircle className="w-4 h-4 text-green-500" />
     }
-    
+
     return <BsXCircle className="w-4 h-4 text-red-500" />
   }
 
@@ -50,11 +50,11 @@ export const NovaSonicStatus: React.FC<NovaSonicStatusProps> = ({ currentRegion 
     if (loading) {
       return t('settings.novaSonic.checking', 'Checking availability...')
     }
-    
+
     if (regionCheck?.isSupported) {
       return t('settings.novaSonic.available', 'Available')
     }
-    
+
     return t('settings.novaSonic.notAvailable', 'Not Available')
   }
 
@@ -82,9 +82,7 @@ export const NovaSonicStatus: React.FC<NovaSonicStatusProps> = ({ currentRegion 
 
       <div className="flex items-center space-x-2 mb-2">
         {getStatusIcon()}
-        <span className={`text-sm font-medium ${getStatusColor()}`}>
-          {getStatusText()}
-        </span>
+        <span className={`text-sm font-medium ${getStatusColor()}`}>{getStatusText()}</span>
       </div>
 
       {regionCheck && !loading && (

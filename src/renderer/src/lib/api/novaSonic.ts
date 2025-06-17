@@ -52,7 +52,7 @@ export async function testBedrockConnectivity(region?: string): Promise<Connecti
     }
 
     const response = await fetch(url.toString())
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: { message: 'Unknown error' } }))
       throw new Error(errorData.error?.message || `HTTP ${response.status}`)

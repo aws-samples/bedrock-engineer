@@ -1,10 +1,12 @@
 // Nova Sonic supported regions as of 2024
 export const NOVA_SONIC_SUPPORTED_REGIONS = [
-  'us-east-1',
-  'us-west-2'
+  'us-east-1', // 米国東部 (バージニア北部)
+  'us-west-2', // 米国西部 (オレゴン)
+  'ap-northeast-1', // アジアパシフィック (東京)
+  'eu-north-1' // 欧州 (ストックホルム)
 ] as const
 
-export type NovaSonicSupportedRegion = typeof NOVA_SONIC_SUPPORTED_REGIONS[number]
+export type NovaSonicSupportedRegion = (typeof NOVA_SONIC_SUPPORTED_REGIONS)[number]
 
 /**
  * Check if the given region supports Nova Sonic

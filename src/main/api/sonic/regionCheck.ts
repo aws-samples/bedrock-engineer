@@ -12,22 +12,22 @@ export interface RegionCheckResult {
 /**
  * Check if Nova Sonic is available in the current AWS region
  */
-export async function checkNovaSonicRegionSupport(
-  region?: string
-): Promise<RegionCheckResult> {
+export async function checkNovaSonicRegionSupport(region?: string): Promise<RegionCheckResult> {
   try {
     // Get the current region from store or parameter
     const currentRegion = region || store.get('aws')?.region || 'us-east-1'
     const supportedRegions = getNovaSonicSupportedRegions()
-    
+
     // Quick check against known supported regions
     const isSupported = isNovaSonicSupportedRegion(currentRegion)
-    
+
     return {
       isSupported,
       currentRegion,
       supportedRegions,
-      error: isSupported ? undefined : `Nova Sonic is not available in ${currentRegion}. Please switch to a supported region.`
+      error: isSupported
+        ? undefined
+        : `Nova Sonic is not available in ${currentRegion}. Please switch to a supported region.`
     }
   } catch (error) {
     const currentRegion = region || store.get('aws')?.region || 'us-east-1'
@@ -51,7 +51,7 @@ export async function testBedrockConnectivity(region?: string): Promise<{
   try {
     const currentRegion = region || store.get('aws')?.region || 'us-east-1'
     const awsConfig = store.get('aws')
-    
+
     if (!awsConfig?.accessKeyId || !awsConfig?.secretAccessKey) {
       return {
         success: false,
@@ -60,7 +60,7 @@ export async function testBedrockConnectivity(region?: string): Promise<{
     }
 
     // Create a lightweight client to test connectivity
-    const client = new BedrockRuntimeClient({
+    const _client = new BedrockRuntimeClient({
       region: currentRegion,
       credentials: {
         accessKeyId: awsConfig.accessKeyId,
