@@ -57,6 +57,17 @@ const Translation = {
 
 const SettingPage = {
   Setting: 'Setting',
+  'Proxy Settings': 'Proxy Settings',
+  'Enable Proxy': 'Enable Proxy',
+  'Proxy Host': 'Proxy Host',
+  Port: 'Port',
+  Protocol: 'Protocol',
+  'Username (optional)': 'Username (optional)',
+  'Password (optional)': 'Password (optional)',
+  'Enter username': 'Enter username',
+  'Enter password': 'Enter password',
+  'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.':
+    'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.',
   'Config Directory': 'Config Directory',
   'Config Directory Description':
     'This is the directory where the application settings are stored.',

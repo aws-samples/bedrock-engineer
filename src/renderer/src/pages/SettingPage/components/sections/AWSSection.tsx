@@ -27,6 +27,17 @@ interface AWSSectionProps {
   awsProfile: string
   onUpdateAwsProfile: (profile: string) => void
 
+  // Proxy Settings
+  proxySettings: {
+    enabled: boolean
+    host: string
+    port: number
+    username: string
+    password: string
+    protocol: 'http' | 'https'
+  }
+  onUpdateProxySettings: (settings: Partial<AWSSectionProps['proxySettings']>) => void
+
   // Bedrock Settings
   currentLLM: LLM
   availableModels: LLM[]
@@ -60,6 +71,10 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
   onUpdateUseAwsProfile,
   awsProfile,
   onUpdateAwsProfile,
+
+  // Proxy Settings
+  proxySettings,
+  onUpdateProxySettings,
 
   // Bedrock Settings
   currentLLM,
@@ -345,6 +360,88 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
           />
 
           <ThinkingModeSettings />
+        </div>
+      </SettingSection>
+
+      <SettingSection title={t('Proxy Settings')} icon={FcMindMap}>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="form-checkbox h-5 w-5 text-blue-600 rounded border-gray-300
+                  focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800
+                  focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                checked={proxySettings.enabled}
+                onChange={(e) => onUpdateProxySettings({ enabled: e.target.checked })}
+              />
+              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                {t('Enable Proxy')}
+              </span>
+            </label>
+          </div>
+
+          {proxySettings.enabled && (
+            <div className="space-y-4 p-4 border border-gray-200 dark:border-gray-700 rounded-md">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <SettingSelect
+                  label={t('Protocol')}
+                  value={proxySettings.protocol}
+                  options={[
+                    { value: 'http', label: 'HTTP' },
+                    { value: 'https', label: 'HTTPS' }
+                  ]}
+                  onChange={(e) =>
+                    onUpdateProxySettings({ protocol: e.target.value as 'http' | 'https' })
+                  }
+                />
+
+                <SettingInput
+                  label={t('Port')}
+                  type="number"
+                  placeholder="8080"
+                  value={proxySettings.port.toString()}
+                  onChange={(e) =>
+                    onUpdateProxySettings({ port: parseInt(e.target.value) || 8080 })
+                  }
+                />
+              </div>
+
+              <SettingInput
+                label={t('Proxy Host')}
+                type="string"
+                placeholder="proxy.example.com"
+                value={proxySettings.host}
+                onChange={(e) => onUpdateProxySettings({ host: e.target.value })}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <SettingInput
+                  label={t('Username (optional)')}
+                  type="string"
+                  placeholder={t('Enter username')}
+                  value={proxySettings.username}
+                  onChange={(e) => onUpdateProxySettings({ username: e.target.value })}
+                />
+
+                <SettingInput
+                  label={t('Password (optional)')}
+                  type="password"
+                  placeholder={t('Enter password')}
+                  value={proxySettings.password}
+                  onChange={(e) => onUpdateProxySettings({ password: e.target.value })}
+                />
+              </div>
+
+              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  {t(
+                    'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.'
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </SettingSection>
 

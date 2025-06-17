@@ -16,6 +16,15 @@ export type CallConverseAPIProps = {
   inferenceConfig?: InferenceConfiguration
 }
 
+export type ProxyConfiguration = {
+  enabled: boolean
+  host?: string
+  port?: number
+  username?: string
+  password?: string
+  protocol?: 'http' | 'https'
+}
+
 export type AWSCredentials = {
   accessKeyId: string
   secretAccessKey: string
@@ -23,6 +32,7 @@ export type AWSCredentials = {
   region: string
   profile?: string
   useProfile?: boolean
+  proxyConfig?: ProxyConfiguration
 }
 
 export interface ThinkingMode {

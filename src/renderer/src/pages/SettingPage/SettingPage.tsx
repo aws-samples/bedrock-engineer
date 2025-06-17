@@ -42,6 +42,8 @@ export const SettingPage: React.FC = () => {
     setUseAwsProfile,
     awsProfile,
     setAwsProfile,
+    proxySettings,
+    setProxySettings,
     inferenceParams,
     updateInferenceParams,
     bedrockSettings,
@@ -99,6 +101,8 @@ export const SettingPage: React.FC = () => {
         onUpdateUseAwsProfile={setUseAwsProfile}
         awsProfile={awsProfile}
         onUpdateAwsProfile={setAwsProfile}
+        proxySettings={proxySettings}
+        onUpdateProxySettings={setProxySettings}
         currentLLM={currentLLM}
         availableModels={availableModels}
         inferenceParams={inferenceParams}

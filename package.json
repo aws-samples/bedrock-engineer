@@ -57,6 +57,7 @@
     "fix-path": "^4.0.0",
     "flowbite-react": "0.10.1",
     "framer-motion": "11.3.29",
+    "https-proxy-agent": "^7.0.6",
     "i18next": "23.15.0",
     "lodash": "^4.17.21",
     "lottie-react": "2.4.0",

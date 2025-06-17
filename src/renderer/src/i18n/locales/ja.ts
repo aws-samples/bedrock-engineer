@@ -57,6 +57,17 @@ const Translation = {
 
 const SettingPage = {
   Setting: '設定',
+  'Proxy Settings': 'プロキシ設定',
+  'Enable Proxy': 'プロキシを有効にする',
+  'Proxy Host': 'プロキシホスト',
+  Port: 'ポート',
+  Protocol: 'プロトコル',
+  'Username (optional)': 'ユーザー名（オプション）',
+  'Password (optional)': 'パスワード（オプション）',
+  'Enter username': 'ユーザー名を入力',
+  'Enter password': 'パスワードを入力',
+  'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.':
+    'プロキシ設定は全てのAWS SDK接続に適用されます。設定後は接続テストを行って下さい。',
   'Config Directory': 'アプリの設定',
   'Config Directory Description': 'アプリの設定が保存されるディレクトリです。',
   'Project Setting': 'プロジェクト設定',
