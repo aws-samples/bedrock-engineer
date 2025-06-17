@@ -22,7 +22,7 @@ export const RegionWarningBanner: React.FC<RegionWarningBannerProps> = ({
       <div className="flex items-start space-x-3">
         {/* Warning Icon */}
         <BsExclamationTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-        
+
         {/* Content */}
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
@@ -35,7 +35,7 @@ export const RegionWarningBanner: React.FC<RegionWarningBannerProps> = ({
               defaultValue: `Voice Chat (Nova Sonic) is not available in the current region (${currentRegion}). Please switch to a supported region: ${supportedRegions.join(', ')}.`
             })}
           </p>
-          
+
           {/* Action Buttons */}
           <div className="mt-3 flex items-center space-x-3">
             <button
@@ -47,7 +47,7 @@ export const RegionWarningBanner: React.FC<RegionWarningBannerProps> = ({
             </button>
           </div>
         </div>
-        
+
         {/* Dismiss Button */}
         <button
           onClick={onDismiss}

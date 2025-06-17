@@ -223,16 +223,14 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
       'ValidationException',
       'UnauthorizedOperation'
     ]
-    return regionKeywords.some((keyword) =>
-      message.toLowerCase().includes(keyword.toLowerCase())
-    )
+    return regionKeywords.some((keyword) => message.toLowerCase().includes(keyword.toLowerCase()))
   }
 
   // Get error message based on error state
   const getErrorMessage = () => {
     if (errorState) {
       const baseMessage = errorState.message || 'An unknown error occurred'
-      
+
       // Check for region-specific errors
       if (isRegionRelatedError(baseMessage)) {
         return t('voiceChat.error.regionNotSupported', {
@@ -513,7 +511,7 @@ export const SpeakPage: React.FC = () => {
         setRegionCheckLoading(true)
         const result = await checkNovaSonicRegionSupport()
         setRegionCheck(result)
-        
+
         // If region is supported, show warning banner only briefly if there was an error
         if (result.isSupported && !result.error) {
           setShowRegionWarning(false)
@@ -658,17 +656,14 @@ export const SpeakPage: React.FC = () => {
         />
 
         {/* Region Warning Banner */}
-        {!regionCheckLoading &&
-          regionCheck &&
-          !regionCheck.isSupported &&
-          showRegionWarning && (
-            <RegionWarningBanner
-              currentRegion={regionCheck.currentRegion}
-              supportedRegions={regionCheck.supportedRegions}
-              onDismiss={handleDismissRegionWarning}
-              onOpenSettings={handleOpenSettings}
-            />
-          )}
+        {!regionCheckLoading && regionCheck && !regionCheck.isSupported && showRegionWarning && (
+          <RegionWarningBanner
+            currentRegion={regionCheck.currentRegion}
+            supportedRegions={regionCheck.supportedRegions}
+            onDismiss={handleDismissRegionWarning}
+            onOpenSettings={handleOpenSettings}
+          />
+        )}
 
         {/* Main Content */}
         {showChat ? (
