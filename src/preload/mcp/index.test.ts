@@ -66,7 +66,7 @@ describe('MCP Module Tests', () => {
 
     const firstTool = tools[0]
     expect(firstTool).toHaveProperty('toolSpec')
-    expect(firstTool.toolSpec?.name).toBe('mcp_mockTool') // 'mcp_'プレフィックスが追加されることを確認
+    expect(firstTool.toolSpec?.name).toBe('mockTool') // 元のツール名がそのまま使用されることを確認
   })
 
   test('should execute a valid MCP tool', async () => {
@@ -93,5 +93,18 @@ describe('MCP Module Tests', () => {
     // 見つからないはず
     expect(result.found).toBe(false)
     expect(result.success).toBe(false)
+  })
+
+  test('should execute MCP tool with original name', async () => {
+    // クライアント初期化
+    await getMcpToolSpecs(mockMcpServers)
+
+    // 元のツール名でツールを実行
+    const result = await tryExecuteMcpTool('mockTool', { testParam: 'value' }, mockMcpServers)
+
+    // 結果を検証
+    expect(result.found).toBe(true)
+    expect(result.success).toBe(true)
+    expect(result.result).toBeDefined()
   })
 })

@@ -26,8 +26,8 @@ export type BuiltInToolName =
   | 'screenCapture'
   | 'cameraCapture'
 
-// MCPツール名の型安全な定義
-export type McpToolName = `mcp_${string}`
+// MCPツール名の型安全な定義（元のツール名をそのまま使用）
+export type McpToolName = string
 
 // 統合されたToolName型
 export type ToolName = BuiltInToolName | McpToolName
@@ -64,25 +64,24 @@ export const isBuiltInTool = (name: string): name is BuiltInToolName => {
   return BUILT_IN_TOOLS.includes(name as BuiltInToolName)
 }
 
-// MCPツール名であるかを判定する型ガード
+// MCPツール名であるかを判定する型ガード（組み込みツールでなければMCPツール）
 export const isMcpTool = (name: string): name is McpToolName => {
-  return name.startsWith('mcp_')
+  return !isBuiltInTool(name)
 }
 
-// MCPツール名を標準化する関数（通常のツール名をMCP識別子付きにする）
-export const normalizeMcpToolName = (name: string): McpToolName => {
-  if (isMcpTool(name)) {
-    return name
-  }
-  return `mcp_${name}` as McpToolName
-}
-
-// MCP識別子を除いた素のツール名を取得する関数
+// 後方互換性のため、元のツール名を取得する関数（今は単純に元の名前を返すだけ）
 export const getOriginalMcpToolName = (name: string): string => {
-  if (isMcpTool(name)) {
-    return name.substring(4) // 'mcp_'の長さ(4)以降の文字列を返す
+  // 旧形式（mcp_ツール名）の場合は後方互換性のためにプリフィックスを除去
+  if (name.startsWith('mcp_')) {
+    return name.substring(4)
   }
+
   return name
+}
+
+// 旧形式のmcp_プリフィックス判定（後方互換性のため）
+export const isLegacyMcpTool = (name: string): boolean => {
+  return name.startsWith('mcp_')
 }
 
 // ToolName全体の型ガード

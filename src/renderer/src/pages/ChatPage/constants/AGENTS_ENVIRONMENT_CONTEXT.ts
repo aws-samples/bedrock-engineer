@@ -1,5 +1,5 @@
 import { ToolState, EnvironmentContextSettings } from '@/types/agent-chat'
-import { isMcpTool, getOriginalMcpToolName } from '@/types/tools'
+import { isMcpTool } from '@/types/tools'
 
 export const BASIC_ENVIRONMENT_CONTEXT = `**<context>**
 
@@ -77,14 +77,36 @@ No tools are currently enabled for this agent.
   let rulesContent = '\n**<tool usage rules>**\n'
   rulesContent += 'Available tools and their usage:\n\n'
 
-  // ツールごとの簡潔な説明を生成（preload APIを直接使用）
+  // ツールをMCPツールと組み込みツールに分離
+  const builtInTools: ToolState[] = []
+  const mcpTools: ToolState[] = []
+
   activeTools.forEach((tool) => {
     const toolName = tool.toolSpec?.name || 'unknown'
-    const displayName = isMcpTool(toolName) ? getOriginalMcpToolName(toolName) : toolName
+    if (isMcpTool(toolName)) {
+      mcpTools.push(tool)
+    } else {
+      builtInTools.push(tool)
+    }
+  })
+
+  // 組み込みツールの説明を個別に生成
+  builtInTools.forEach((tool) => {
+    const toolName = tool.toolSpec?.name || 'unknown'
+    const displayName = toolName
     const description = getToolUsageDescription(toolName)
 
     rulesContent += `**${displayName}**\n${description}\n\n`
   })
+
+  // MCPツールをまとめて1つのブロックで表示
+  if (mcpTools.length > 0) {
+    const mcpToolNames = mcpTools.map((tool) => tool.toolSpec?.name || 'unknown')
+    rulesContent += `**MCP Tools**\n`
+    rulesContent += `Available MCP tools: ${mcpToolNames.join(', ')}\n`
+    rulesContent += `External tools with specific functionality.\n`
+    rulesContent += `Refer to tool documentation for usage.\n\n`
+  }
 
   rulesContent += 'General guidelines:\n'
   rulesContent += '- Use tools one at a time and wait for results\n'
