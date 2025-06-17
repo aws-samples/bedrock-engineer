@@ -58,7 +58,18 @@ export class McpToolAdapter extends BaseTool<McpToolInput, McpToolResult> {
    */
   protected async executeInternal(input: McpToolInput): Promise<McpToolResult> {
     // Extract the actual tool name from mcpToolName or type
-    const toolName = input.mcpToolName || input.type.replace(/^mcp_/, '')
+    // The toolName should be the original tool name without mcp_ prefix
+    // since MCPサーバー内ではプレフィックスなしの名前でツールが格納されている
+    let toolName: string
+    
+    if (input.mcpToolName) {
+      // mcpToolName is already the original tool name (without prefix)
+      toolName = input.mcpToolName
+    } else {
+      // Remove mcp_ prefix if present, otherwise use as-is
+      // This handles cases where input.type might not have mcp_ prefix
+      toolName = input.type.startsWith('mcp_') ? input.type.replace(/^mcp_/, '') : input.type
+    }
 
     // Extract arguments (exclude type and mcpToolName)
     const { type, mcpToolName: _mcpToolName, ...args } = input
@@ -66,7 +77,9 @@ export class McpToolAdapter extends BaseTool<McpToolInput, McpToolResult> {
     this.logger.debug(`Executing MCP tool: ${toolName}`, {
       originalType: type,
       toolName,
-      hasArgs: Object.keys(args).length > 0
+      hasArgs: Object.keys(args).length > 0,
+      hasMcpPrefix: type.startsWith('mcp_'),
+      resolvedToolName: toolName
     })
 
     try {
@@ -133,7 +146,13 @@ export class McpToolAdapter extends BaseTool<McpToolInput, McpToolResult> {
             `MCP tool not found: ${toolName}. Please check if the tool is available in your configured MCP servers.`,
           this.name,
           undefined,
-          { toolName, availableServers: mcpServers.length }
+          { 
+            toolName, 
+            originalType: type,
+            resolvedToolName: toolName,
+            availableServers: mcpServers.length,
+            mcpServers: mcpServers.map(s => s.name)
+          }
         )
       }
 
