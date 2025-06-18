@@ -1,6 +1,6 @@
 {
   "name": "bedrock-engineer",
-  "version": "1.15.1",
+  "version": "1.15.2",
   "description": "Autonomous software development agent apps using Amazon Bedrock, capable of customize to create/edit files, execute commands, search the web, use knowledge base, use multi-agents, generative images and more.",
   "main": "./out/main/index.js",
   "homepage": "https://github.com/daisuke-awaji/bedrock-engineer",
