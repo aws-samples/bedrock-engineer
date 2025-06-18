@@ -35,12 +35,13 @@ import { Tooltip } from 'flowbite-react'
 import { useNavigate } from 'react-router'
 import { generateCDKPrompt } from './utils/awsDetector'
 import { DiagramModeSelector, DiagramMode } from './components/DiagramModeSelector'
+import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
 
 export default function DiagramGeneratorPage() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   const [userInput, setUserInput] = useState('')
-  const [xml, setXml] = useState(exampleDiagrams['serverless'])
+  const [xml, setXml] = useState(exampleDiagrams['aws'])
   const [isComposing, setIsComposing] = useState(false)
   const drawioRef = useRef<DrawIoEmbedRef>(null)
   const { currentLLM: llm, sendMsgKey, getAgentTools, enabledTavilySearch } = useSetting()
@@ -72,7 +73,12 @@ export default function DiagramGeneratorPage() {
   const [xmlLoading, setXmlLoading] = useState(false)
   const [hasValidXml, setHasValidXml] = useState(false)
 
-  const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
+  const {
+    recommendDiagrams,
+    recommendLoading,
+    getRecommendDiagrams,
+    refreshRecommendDiagrams: _refreshRecommendDiagrams
+  } = useRecommendDiagrams(diagramMode)
 
   const navigate = useNavigate()
 
@@ -80,6 +86,14 @@ export default function DiagramGeneratorPage() {
     t,
     i18n: { language }
   } = useTranslation()
+
+  // システムプロンプトモーダル
+  const {
+    show: showSystemPromptModal,
+    handleClose: handleCloseSystemPromptModal,
+    handleOpen: handleOpenSystemPromptModal,
+    SystemPromptModal
+  } = useSystemPromptModal()
 
   // カスタムシステムプロンプトを定義 - 言語設定と検索機能の有効化に対応
   const getSystemPrompt = () => {
@@ -180,11 +194,41 @@ export default function DiagramGeneratorPage() {
   }, [enableSearch, diagramMode])
 
   // モード変更時の処理
-  const handleModeChange = useCallback((newMode: DiagramMode) => {
-    setDiagramMode(newMode)
-    // モード変更時にチャット履歴をクリア
-    // handleSubmit関数をクリアする代わりに、新しいセッションを開始
-  }, [])
+  const handleModeChange = useCallback(
+    async (newMode: DiagramMode) => {
+      console.log('[DEBUG] Mode change initiated:', { from: diagramMode, to: newMode })
+
+      setDiagramMode(newMode)
+      // モード変更時にexampleDiagramを切り替える
+      const newXml = exampleDiagrams[newMode] || exampleDiagrams['aws']
+
+      console.log('[DEBUG] Loading new XML for mode:', {
+        mode: newMode,
+        xmlLength: newXml.length,
+        xmlPreview: newXml.substring(0, 100) + '...'
+      })
+
+      // DrawIOを明示的に更新してからステートを設定
+      if (drawioRef.current) {
+        try {
+          await drawioRef.current.load({ xml: newXml })
+          console.log('[DEBUG] DrawIO load successful for new mode')
+          setXml(newXml) // 成功後にステート更新
+        } catch (error) {
+          console.error('[DEBUG] Failed to load diagram for new mode:', error)
+          // フォールバック: ステートを更新してuseEffectに委ねる
+          setXml(newXml)
+        }
+      } else {
+        console.log('[DEBUG] DrawIO ref not ready, setting XML state only')
+        setXml(newXml)
+      }
+
+      // モード変更時にチャット履歴をクリア
+      // handleSubmit関数をクリアする代わりに、新しいセッションを開始
+    },
+    [diagramMode]
+  )
 
   // モード変更時のリフレッシュ処理
   const handleModeRefresh = useCallback(() => {
@@ -248,17 +292,42 @@ export default function DiagramGeneratorPage() {
     }
   }, [messages, loading, xmlLoading, hasValidXml])
 
-  // XMLステートの変更を監視してdrawioに反映
+  // XMLステートの変更を監視してdrawioに反映（デバウンス付き）
   useEffect(() => {
-    if (xml && drawioRef.current) {
-      console.log('[DEBUG] XML state changed, updating drawio:', xml.substring(0, 200) + '...')
-      try {
-        drawioRef.current.load({ xml })
-        console.log('[DEBUG] DrawIO updated successfully')
-      } catch (error) {
-        console.error('[DEBUG] Failed to update DrawIO with new XML:', error)
-      }
+    if (!xml || !drawioRef.current) {
+      return
     }
+
+    console.log('[DEBUG] XML state changed, scheduling drawio update:', {
+      xmlLength: xml.length,
+      xmlPreview: xml.substring(0, 200) + '...',
+      drawioExists: !!drawioRef.current
+    })
+
+    // デバウンス処理で頻繁な更新を制御
+    const timeoutId = setTimeout(async () => {
+      if (drawioRef.current) {
+        try {
+          await drawioRef.current.load({ xml })
+          console.log('[DEBUG] DrawIO updated successfully via useEffect')
+        } catch (error) {
+          console.error('[DEBUG] Failed to update DrawIO with new XML via useEffect:', error)
+          // リトライ処理
+          setTimeout(() => {
+            if (drawioRef.current) {
+              try {
+                drawioRef.current.load({ xml })
+                console.log('[DEBUG] DrawIO retry successful')
+              } catch (retryError) {
+                console.error('[DEBUG] DrawIO retry failed:', retryError)
+              }
+            }
+          }, 100)
+        }
+      }
+    }, 50) // 50msのデバウンス
+
+    return () => clearTimeout(timeoutId)
   }, [xml])
 
   // XML生成状態を判定
@@ -386,11 +455,24 @@ export default function DiagramGeneratorPage() {
 
   return (
     <div className="flex flex-col p-3 h-[calc(100vh-14rem)]">
+      {/* SystemPromptModal */}
+      <SystemPromptModal
+        isOpen={showSystemPromptModal}
+        onClose={handleCloseSystemPromptModal}
+        systemPrompt={systemPrompt}
+      />
+
       {/* Header */}
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex flex-col gap-2 w-full">
           <div className="flex justify-between">
             <h1 className="content-center dark:text-white text-lg">Diagram Generator</h1>
+            <span
+              className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
+              onClick={handleOpenSystemPromptModal}
+            >
+              SYSTEM_PROMPT
+            </span>
           </div>
           <div className="flex justify-between w-full">
             <div className="flex gap-2 items-center">

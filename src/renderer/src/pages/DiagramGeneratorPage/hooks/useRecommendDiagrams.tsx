@@ -1,78 +1,167 @@
 import useSetting from '@renderer/hooks/useSetting'
 import { converse } from '@renderer/lib/api'
 import { getLightProcessingModelId } from '@renderer/lib/modelSelection'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { DiagramMode } from '../components/DiagramModeSelector'
 
-export const useRecommendDiagrams = () => {
+export const useRecommendDiagrams = (mode: DiagramMode = 'aws') => {
   const {
     t,
     i18n: { language }
   } = useTranslation()
 
-  // Example prompts for various diagram types
-  const examplePrompts = [
-    {
-      title: t('serverlessArchitectureTitle', 'Serverless API'),
-      value: t(
-        'serverlessArchitectureValue',
-        'Create a serverless architecture with API Gateway, Lambda, and DynamoDB for a RESTful API'
-      )
-    },
-    {
-      title: t('microservicesTitle', 'Microservices'),
-      value: t(
-        'microservicesValue',
-        'Design a microservices architecture using ECS, API Gateway, and DynamoDB with service discovery'
-      )
-    },
-    {
-      title: t('webHostingTitle', 'Web Hosting'),
-      value: t(
-        'webHostingValue',
-        'Create a scalable web hosting architecture with S3, CloudFront, Route 53, and WAF'
-      )
-    },
-    {
-      title: t('dataLakeTitle', 'Data Lake'),
-      value: t(
-        'dataLakeValue',
-        'Design a data lake architecture using S3, Glue, Athena, and QuickSight for analytics'
-      )
-    },
-    {
-      title: t('containerizedAppTitle', 'Containerized App'),
-      value: t(
-        'containerizedAppValue',
-        'Create an EKS-based containerized application architecture with load balancing and auto-scaling'
-      )
-    },
-    {
-      title: t('hybridConnectivityTitle', 'Hybrid Network'),
-      value: t(
-        'hybridConnectivityValue',
-        'Design a hybrid connectivity architecture between on-premises and AWS using Direct Connect and VPN'
-      )
-    },
-    {
-      title: t('sequenceDiagramTitle', 'Sequence Diagram'),
-      value: t(
-        'sequenceDiagramValue',
-        'Create a sequence diagram showing the interaction between a user, frontend, API service, and database during a user registration and authentication flow'
-      )
-    },
-    {
-      title: t('userStoryMapTitle', 'User Story Map'),
-      value: t(
-        'userStoryMapValue',
-        'Design a user story map for an e-commerce mobile app showing the customer journey from product discovery to purchase completion and order tracking'
-      )
+  // Mode-specific example prompts
+  const getExamplePromptsByMode = (mode: DiagramMode) => {
+    switch (mode) {
+      case 'aws':
+        return [
+          {
+            title: t('serverlessArchitectureTitle', 'Serverless API'),
+            value: t(
+              'serverlessArchitectureValue',
+              'Create a serverless architecture with API Gateway, Lambda, and DynamoDB for a RESTful API'
+            )
+          },
+          {
+            title: t('microservicesTitle', 'Microservices'),
+            value: t(
+              'microservicesValue',
+              'Design a microservices architecture using ECS, API Gateway, and DynamoDB with service discovery'
+            )
+          },
+          {
+            title: t('webHostingTitle', 'Web Hosting'),
+            value: t(
+              'webHostingValue',
+              'Create a scalable web hosting architecture with S3, CloudFront, Route 53, and WAF'
+            )
+          },
+          {
+            title: t('dataLakeTitle', 'Data Lake'),
+            value: t(
+              'dataLakeValue',
+              'Design a data lake architecture using S3, Glue, Athena, and QuickSight for analytics'
+            )
+          },
+          {
+            title: t('containerizedAppTitle', 'Containerized App'),
+            value: t(
+              'containerizedAppValue',
+              'Create an EKS-based containerized application architecture with load balancing and auto-scaling'
+            )
+          },
+          {
+            title: t('hybridConnectivityTitle', 'Hybrid Network'),
+            value: t(
+              'hybridConnectivityValue',
+              'Design a hybrid connectivity architecture between on-premises and AWS using Direct Connect and VPN'
+            )
+          }
+        ]
+      case 'software-architecture':
+        return [
+          {
+            title: t('layeredArchTitle', 'Layered Arch'),
+            value: t(
+              'layeredArchValue',
+              'Create a layered architecture diagram showing presentation, business, data access, and database layers'
+            )
+          },
+          {
+            title: t('microservicesArchTitle', 'Microservices'),
+            value: t(
+              'microservicesArchValue',
+              'Design a microservices architecture with API gateway, service mesh, and database per service'
+            )
+          },
+          {
+            title: t('databaseDesignTitle', 'Database Design'),
+            value: t(
+              'databaseDesignValue',
+              'Create an Entity-Relationship diagram for an e-commerce system with users, products, and orders'
+            )
+          },
+          {
+            title: t('apiDesignTitle', 'API Design'),
+            value: t(
+              'apiDesignValue',
+              'Design REST API architecture showing endpoints, request/response flow, and authentication'
+            )
+          },
+          {
+            title: t('eventDrivenTitle', 'Event-Driven'),
+            value: t(
+              'eventDrivenValue',
+              'Create an event-driven architecture with message queues, event buses, and event handlers'
+            )
+          },
+          {
+            title: t('cqrsPatternTitle', 'CQRS Pattern'),
+            value: t(
+              'cqrsPatternValue',
+              'Design CQRS and Event Sourcing architecture with command and query separation'
+            )
+          }
+        ]
+      case 'business-process':
+        return [
+          {
+            title: t('approvalFlowTitle', 'Approval Flow'),
+            value: t(
+              'approvalFlowValue',
+              'Create an approval workflow diagram for document review and authorization process'
+            )
+          },
+          {
+            title: t('customerJourneyTitle', 'Customer Journey'),
+            value: t(
+              'customerJourneyValue',
+              'Design a customer journey map from awareness to purchase and post-sale support'
+            )
+          },
+          {
+            title: t('orderProcessTitle', 'Order Process'),
+            value: t(
+              'orderProcessValue',
+              'Create an order processing workflow from order placement to delivery and payment'
+            )
+          },
+          {
+            title: t('decisionTreeTitle', 'Decision Tree'),
+            value: t(
+              'decisionTreeValue',
+              'Design a decision-making flowchart for customer support issue resolution'
+            )
+          },
+          {
+            title: t('serviceFlowTitle', 'Service Flow'),
+            value: t(
+              'serviceFlowValue',
+              'Create a service delivery process diagram with stakeholder interactions'
+            )
+          },
+          {
+            title: t('bpmnDiagramTitle', 'BPMN Diagram'),
+            value: t(
+              'bpmnDiagramValue',
+              'Design a BPMN business process diagram for employee onboarding workflow'
+            )
+          }
+        ]
+      default:
+        return []
     }
-  ]
+  }
 
-  const [recommendDiagrams, setRecommendDiagrams] = useState(examplePrompts)
+  const [recommendDiagrams, setRecommendDiagrams] = useState(getExamplePromptsByMode(mode))
   const [recommendLoading, setRecommendLoading] = useState(false)
   const { currentLLM: llm, lightProcessingModel } = useSetting()
+
+  // モード変更時にレコメンデーションを自動更新
+  useEffect(() => {
+    setRecommendDiagrams(getExamplePromptsByMode(mode))
+  }, [mode, t])
 
   // Function to get diagram recommendations based on the current diagram XML
   const getRecommendDiagrams = async (diagramXml: string) => {
@@ -146,7 +235,7 @@ The value property should contain a detailed description of what to create. This
   }
 
   const refreshRecommendDiagrams = () => {
-    setRecommendDiagrams(examplePrompts)
+    setRecommendDiagrams(getExamplePromptsByMode(mode))
   }
 
   return {

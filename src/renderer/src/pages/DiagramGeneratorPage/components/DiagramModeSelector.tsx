@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { AiOutlineCloud, AiOutlineCode, AiOutlineProject } from 'react-icons/ai'
 
 export type DiagramMode = 'aws' | 'software-architecture' | 'business-process'
 
@@ -6,23 +7,27 @@ interface DiagramModeOption {
   id: DiagramMode
   label: string
   description: string
+  icon: JSX.Element
 }
 
 const modeOptions: DiagramModeOption[] = [
   {
     id: 'aws',
-    label: 'AWS',
-    description: 'AWS architecture diagrams'
+    label: 'Cloud',
+    description: 'AWS architecture diagrams',
+    icon: <AiOutlineCloud className="w-4 h-4" />
   },
   {
     id: 'software-architecture',
-    label: 'Software & DB',
-    description: 'Software architecture & database design diagrams'
+    label: 'Software',
+    description: 'Software architecture & database design diagrams',
+    icon: <AiOutlineCode className="w-4 h-4" />
   },
   {
     id: 'business-process',
-    label: 'Business Process',
-    description: 'Business process & workflow diagrams'
+    label: 'Business',
+    description: 'Business process & workflow diagrams',
+    icon: <AiOutlineProject className="w-4 h-4" />
   }
 ]
 
@@ -55,14 +60,33 @@ export function DiagramModeSelector({
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-            selectedMode === mode.id
-              ? 'bg-blue-500 text-white shadow-md'
-              : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500'
-          }`}
+          className={`
+            text-gray-900
+            ${selectedMode === mode.id ? 'bg-green-50' : 'bg-white'}
+            hover:bg-green-50
+            border
+            ${selectedMode === mode.id ? 'border-green-600' : 'border-gray-200'}
+            focus:ring-4
+            focus:outline-none
+            focus:ring-gray-100
+            font-medium
+            rounded-[1rem]
+            text-xs
+            px-3
+            py-1.5
+            inline-flex
+            items-center
+            flex
+            gap-2
+            dark:bg-gray-800
+            dark:text-white
+            dark:border-gray-600
+            dark:hover:bg-gray-700
+          `}
           onClick={() => handleModeChange(mode.id)}
         >
-          {mode.label}
+          <div className="w-[18px]">{mode.icon}</div>
+          <span>{mode.label}</span>
         </motion.button>
       ))}
     </div>
