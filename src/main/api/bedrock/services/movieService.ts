@@ -18,7 +18,9 @@ import type {
   Shot
 } from '../types/movie'
 import {
-  NOVA_REEL_MODEL_ID,
+  getNovaReelModelId,
+  isNovaReelSupportedInRegion,
+  isNovaReelV1_0,
   NOVA_REEL_RESOLUTION,
   NOVA_REEL_FPS,
   isValidDuration,
@@ -28,6 +30,7 @@ import {
 export class VideoService {
   private runtimeClient: BedrockRuntimeClient
   private s3Client: S3Client
+  private region: string
 
   constructor(private context: ServiceContext) {
     const awsCredentials = this.context.store.get('aws')
@@ -38,6 +41,17 @@ export class VideoService {
         (!awsCredentials.accessKeyId || !awsCredentials.secretAccessKey))
     ) {
       console.warn('AWS credentials not configured properly')
+    }
+
+    this.region = awsCredentials.region || 'us-east-1' // Default to us-east-1
+
+    // Validate that Nova Reel is supported in the selected region
+    if (!isNovaReelSupportedInRegion(this.region)) {
+      console.warn(
+        `Nova Reel is not available in region ${this.region}. Supported regions: ${Object.keys(
+          require('../types/movie').NOVA_REEL_REGION_SUPPORT
+        ).join(', ')}`
+      )
     }
 
     this.runtimeClient = createRuntimeClient(awsCredentials)
@@ -213,6 +227,42 @@ export class VideoService {
 
   private async buildNovaReelRequest(request: GenerateMovieRequest): Promise<NovaReelRequest> {
     const hasInputImages = Boolean(request.inputImages && request.inputImages.length > 0)
+    const modelId = getNovaReelModelId(this.region)
+
+    // Nova Reel v1.0 only supports TEXT_VIDEO format - it doesn't support MULTI_SHOT_AUTOMATED
+    if (isNovaReelV1_0(modelId)) {
+      const textToVideoParams: any = {
+        text: request.prompt
+      }
+
+      // Add image for TEXT_VIDEO with single image
+      if (hasInputImages && request.inputImages!.length === 1) {
+        const imagePath = request.inputImages![0]
+        const base64Data = await this.readImageAsBase64(imagePath)
+
+        textToVideoParams.images = [
+          {
+            format: this.detectImageFormat(imagePath),
+            source: {
+              bytes: base64Data
+            }
+          }
+        ]
+      }
+
+      return {
+        taskType: 'TEXT_VIDEO',
+        textToVideoParams,
+        videoGenerationConfig: {
+          durationSeconds: request.durationSeconds,
+          fps: NOVA_REEL_FPS,
+          dimension: NOVA_REEL_RESOLUTION,
+          seed: request.seed || Math.floor(Math.random() * 2147483647)
+        }
+      }
+    }
+
+    // Nova Reel v1.1 supports the full API with different task types
     const taskType = getTaskTypeForRequest(request.durationSeconds, hasInputImages)
 
     if (taskType === 'TEXT_VIDEO') {
@@ -284,12 +334,16 @@ export class VideoService {
 
     const novaReelRequest = await this.buildNovaReelRequest(request)
 
+    // Get the dynamic model ID for the current region
+    const modelId = getNovaReelModelId(this.region)
+
     try {
       // Add detailed logging for debugging
       console.log('Nova Reel Request Structure:', JSON.stringify(novaReelRequest, null, 2))
+      console.log(`Using Nova Reel model: ${modelId} for region: ${this.region}`)
 
       const command = new StartAsyncInvokeCommand({
-        modelId: NOVA_REEL_MODEL_ID,
+        modelId,
         modelInput: novaReelRequest as any, // AWS SDK expects DocumentType
         outputDataConfig: {
           s3OutputDataConfig: {
@@ -302,7 +356,7 @@ export class VideoService {
         'AWS Command:',
         JSON.stringify(
           {
-            modelId: NOVA_REEL_MODEL_ID,
+            modelId,
             modelInput: novaReelRequest,
             outputDataConfig: { s3OutputDataConfig: { s3Uri: request.s3Uri } }
           },
@@ -321,7 +375,7 @@ export class VideoService {
         invocationArn: response.invocationArn,
         status: {
           invocationArn: response.invocationArn,
-          modelId: NOVA_REEL_MODEL_ID,
+          modelId,
           status: 'InProgress',
           submitTime: new Date(),
           outputDataConfig: {
@@ -360,7 +414,7 @@ export class VideoService {
           console.log('Fallback Request:', JSON.stringify(fallbackRequest, null, 2))
 
           const fallbackCommand = new StartAsyncInvokeCommand({
-            modelId: NOVA_REEL_MODEL_ID,
+            modelId,
             modelInput: fallbackRequest as any,
             outputDataConfig: {
               s3OutputDataConfig: {
@@ -381,7 +435,7 @@ export class VideoService {
             invocationArn: response.invocationArn,
             status: {
               invocationArn: response.invocationArn,
-              modelId: NOVA_REEL_MODEL_ID,
+              modelId,
               status: 'InProgress',
               submitTime: new Date(),
               outputDataConfig: {
@@ -424,9 +478,12 @@ export class VideoService {
 
       const response = await this.runtimeClient.send(command)
 
+      // Get the dynamic model ID for the current region
+      const modelId = getNovaReelModelId(this.region)
+
       return {
         invocationArn: response.invocationArn || invocationArn,
-        modelId: NOVA_REEL_MODEL_ID, // modelId is not available in response, use constant
+        modelId, // Use dynamic model ID based on region
         status: response.status as 'InProgress' | 'Completed' | 'Failed',
         submitTime: response.submitTime || new Date(),
         endTime: response.endTime,

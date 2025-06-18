@@ -32,7 +32,7 @@ export class ImageRecognitionService {
     const {
       imagePath,
       prompt = 'Please explain in detail what this image is about.',
-      modelId = 'anthropic.claude-3-sonnet-20240229-v1:0'
+      modelId = 'amazon.nova-lite-v1:0'
     } = props
 
     imageLogger.debug('Recognizing image', {

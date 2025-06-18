@@ -107,14 +107,18 @@ export const GenerateVideoSettingForm: React.FC = () => {
           </h5>
           <ul className="text-sm text-gray-700 dark:text-gray-200 space-y-1">
             <li>
-              • {t('Model: Amazon Nova Reel v1.1 (fixed)', 'Model: Amazon Nova Reel v1.1 (fixed)')}
+              •{' '}
+              {t(
+                'Model: Amazon Nova Reel (region-based version selection)',
+                'Model: Amazon Nova Reel (region-based version selection)'
+              )}
             </li>
             <li>• {t('Resolution: 1280x720 (24fps)', 'Resolution: 1280x720 (24fps)')}</li>
             <li>
               •{' '}
               {t(
-                'Duration: 12-120 seconds (6-second increments)',
-                'Duration: 12-120 seconds (6-second increments)'
+                'Duration: 6-120 seconds (6-second increments)',
+                'Duration: 6-120 seconds (6-second increments)'
               )}
             </li>
             <li>
