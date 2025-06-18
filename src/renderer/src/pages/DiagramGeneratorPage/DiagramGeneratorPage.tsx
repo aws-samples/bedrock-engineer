@@ -151,9 +151,9 @@ export default function DiagramGeneratorPage() {
   const diagramAgentTools = useMemo(() => {
     const agentTools = getAgentTools(diagramAgentId)
 
-    if (enableSearch) {
-      // diagramAgentIdからツールを取得し、tavilySearch ツールをフィルタリング
-      return agentTools.filter((tool) => tool.toolSpec?.name === 'tavilySearch' && tool.enabled)
+    if (!enableSearch) {
+      // diagramAgentIdからツールを取得し、tavilySearch ツールだけをフィルタリング
+      return agentTools.filter((tool) => tool.toolSpec?.name !== 'tavilySearch')
     }
 
     return agentTools
