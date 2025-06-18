@@ -22,7 +22,9 @@ export const useAgentFilter = (agents: CustomAgent[]) => {
             'reactGeneratorAgent',
             'vueGeneratorAgent',
             'svelteGeneratorAgent',
-            'diagramGeneratorAgent'
+            'diagramGeneratorAgent',
+            'softwareArchitectureAgent',
+            'businessProcessAgent'
           ]
           return !excludedAgentIds.includes(agent.id)
         })
