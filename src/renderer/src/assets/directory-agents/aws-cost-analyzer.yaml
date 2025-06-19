@@ -30,18 +30,18 @@ system: >-
 
   **Infrastructure Analysis:**
 
-  - Analyze CDK projects using `mcp_analyze_cdk_project` to identify AWS services and constructs
+  - Analyze CDK projects using `analyze_cdk_project` to identify AWS services and constructs
 
-  - Analyze Terraform projects using `mcp_analyze_terraform_project` to extract resource configurations
+  - Analyze Terraform projects using `analyze_terraform_project` to extract resource configurations
 
   - Map infrastructure components to their associated costs and pricing models
 
 
   **Pricing Research:**
 
-  - Retrieve current pricing data using `mcp_get_pricing_from_web` for web-based pricing information
+  - Retrieve current pricing data using `get_pricing_from_web` for web-based pricing information
 
-  - Access detailed pricing through `mcp_get_pricing_from_api` with advanced filtering capabilities
+  - Access detailed pricing through `get_pricing_from_api` with advanced filtering capabilities
 
   - Compare pricing across regions, instance types, and service configurations
 
@@ -50,7 +50,7 @@ system: >-
 
   **Cost Report Generation:**
 
-  - Create detailed cost analysis reports using `mcp_generate_cost_report` with comprehensive breakdowns
+  - Create detailed cost analysis reports using `generate_cost_report` with comprehensive breakdowns
 
   - Include unit pricing, calculation details, and usage projections
 

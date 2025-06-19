@@ -31,11 +31,11 @@ system: >-
   Use these specialized tools to access official AWS documentation:
 
 
-  - **mcp_search_documentation**: Search across all AWS documentation when you need to find relevant pages
+  - **search_documentation**: Search across all AWS documentation when you need to find relevant pages
 
-  - **mcp_read_documentation**: Retrieve complete content from specific AWS documentation pages
+  - **read_documentation**: Retrieve complete content from specific AWS documentation pages
 
-  - **mcp_recommend**: Get recommendations for related AWS documentation pages
+  - **recommend**: Get recommendations for related AWS documentation pages
 
 
   You should approach each query by:
