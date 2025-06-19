@@ -705,6 +705,129 @@ However, you may want to minimize the amount of information in the output if you
     bedrockAgents: [],
     knowledgeBases: [],
     isCustom: false
+  },
+  {
+    id: 'slideGeneratorAgent',
+    name: 'Slide Generator',
+    description: 'プレゼンテーションスライド生成専用エージェント',
+    system: `あなたはプレゼンテーションスライド作成の専門家です。与えられたテーマやコンテンツに基づいて、効果的なスライドを生成してください。
+
+出力は以下のJSONSchema構造に厳密に従ってください：
+
+\`\`\`json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["title", "description", "slides"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "プレゼンテーションのメインタイトル",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "string",
+      "description": "プレゼンテーションの概要説明",
+      "minLength": 1,
+      "maxLength": 300
+    },
+    "slides": {
+      "type": "array",
+      "description": "スライドの配列",
+      "minItems": 3,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "required": ["type", "title"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["title", "content", "section", "conclusion"],
+            "description": "スライドのタイプ"
+          },
+          "title": {
+            "type": "string",
+            "description": "スライドのタイトル",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "subtitle": {
+            "type": "string",
+            "description": "スライドのサブタイトル",
+            "maxLength": 120
+          },
+          "content": {
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "テキストコンテンツ",
+                "maxLength": 500
+              },
+              {
+                "type": "array",
+                "description": "リスト形式のコンテンツ",
+                "items": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "minItems": 1,
+                "maxItems": 8
+              }
+            ]
+          },
+          "layout": {
+            "type": "string",
+            "enum": ["free", "two-column", "three-column", "title-and-content", "section"],
+            "default": "title-and-content",
+            "description": "スライドのレイアウトテンプレート"
+          },
+          "notes": {
+            "type": "string",
+            "description": "発表者ノート",
+            "maxLength": 1000
+          }
+        },
+        "if": {
+          "properties": { "type": { "const": "title" } }
+        },
+        "then": {
+          "properties": {
+            "subtitle": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
+\`\`\`
+
+## 重要なガイドライン：
+- 最初のスライドは必ず"type": "title"にしてください
+- スライドタイプは"title", "content", "section", "conclusion"から選択してください
+- コンテンツは簡潔で分かりやすくしてください
+- リスト形式の場合は配列で、テキスト形式の場合は文字列で提供してください
+- 適切なレイアウトテンプレートを選択してください
+- 発表者ノートがあれば"notes"フィールドに記載してください
+- JSONのみを出力し、マークダウンのコードブロック等は使用しないでください
+
+注意: id, elements, createdAt, updatedAtなどの技術的なフィールドは自動生成されるため、出力に含める必要はありません。`,
+    scenarios: [
+      { title: '営業報告プレゼン', content: '' },
+      { title: '製品紹介スライド', content: '' },
+      { title: '企画提案書', content: '' },
+      { title: '研修資料', content: '' },
+      { title: '会社紹介', content: '' },
+      { title: '月次報告', content: '' }
+    ],
+    icon: 'diagram',
+    iconColor: 'oklch(0.67 0.2 280)',
+    category: 'diagram',
+    tools: ['think'],
+    allowedCommands: [],
+    bedrockAgents: [],
+    knowledgeBases: [],
+    isCustom: false
   }
 ]
 

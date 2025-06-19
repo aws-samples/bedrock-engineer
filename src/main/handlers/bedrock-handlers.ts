@@ -242,5 +242,48 @@ export const bedrockHandlers = {
       downloadedPath,
       fileSize: stats.size
     }
+  },
+
+  'generate-slides': async (_event: IpcMainInvokeEvent, params: any) => {
+    bedrockLogger.debug('Generating slides', {
+      modelId: params.model,
+      systemPromptLength: params.systemPrompt?.length,
+      userPromptLength: params.userPrompt?.length
+    })
+
+    const response = await bedrock.converse({
+      modelId: params.model,
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              text: params.userPrompt
+            }
+          ]
+        }
+      ],
+      system: [
+        {
+          text: params.systemPrompt
+        }
+      ]
+    })
+
+    // レスポンスからテキストコンテンツを抽出
+    let content = ''
+    if (response.output?.message?.content) {
+      if (Array.isArray(response.output.message.content)) {
+        content = response.output.message.content
+          .filter((item: any) => item.text)
+          .map((item: any) => item.text)
+          .join('\n')
+      }
+    }
+
+    bedrockLogger.info('Slides generated successfully', {
+      responseLength: content.length
+    })
+    return { content }
   }
 } as const

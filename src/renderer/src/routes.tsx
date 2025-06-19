@@ -1,11 +1,12 @@
 import { FiHome, FiFeather, FiSettings, FiMic } from 'react-icons/fi'
 import { LuCombine } from 'react-icons/lu'
-import { HiOutlineChatAlt2 } from 'react-icons/hi'
+import { HiOutlineChatAlt2, HiOutlineDocumentText } from 'react-icons/hi'
 import { BsLayoutWtf } from 'react-icons/bs'
 import HomePage from './pages/HomePage/HomePage'
 import SettingPage from './pages/SettingPage/SettingPage'
 import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
 import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorPage'
+import SlideGeneratorPage from './pages/SlideGeneratorPage/SlideGeneratorPage'
 import ChatPage from './pages/ChatPage/ChatPage'
 import DiagramGeneratorPage from './pages/DiagramGeneratorPage/DiagramGeneratorPage'
 import { AgentDirectoryPage } from './pages/AgentDirectoryPage/AgentDirectoryPage'
@@ -47,6 +48,13 @@ export const routes = [
     icon: FiFeather,
     position: 'top',
     element: <WebsiteGeneratorPage />
+  },
+  {
+    name: 'Slide Generator',
+    href: '/slide-generator',
+    icon: HiOutlineDocumentText,
+    position: 'top',
+    element: <SlideGeneratorPage />
   },
   {
     name: 'Step Functions Generator',
