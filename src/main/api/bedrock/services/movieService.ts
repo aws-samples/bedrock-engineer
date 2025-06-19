@@ -24,7 +24,8 @@ import {
   NOVA_REEL_RESOLUTION,
   NOVA_REEL_FPS,
   isValidDuration,
-  getTaskTypeForRequest
+  getTaskTypeForRequest,
+  NOVA_REEL_REGION_SUPPORT
 } from '../types/movie'
 
 export class VideoService {
@@ -49,7 +50,7 @@ export class VideoService {
     if (!isNovaReelSupportedInRegion(this.region)) {
       console.warn(
         `Nova Reel is not available in region ${this.region}. Supported regions: ${Object.keys(
-          require('../types/movie').NOVA_REEL_REGION_SUPPORT
+          NOVA_REEL_REGION_SUPPORT
         ).join(', ')}`
       )
     }
