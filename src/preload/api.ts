@@ -149,6 +149,37 @@ export const api = {
     getAllToolMetadata: () => {
       return ToolMetadataCollector.getAllToolMetadata()
     }
+  },
+  backgroundAgent: {
+    getAvailableAgents: async () => {
+      return ipcRenderer.invoke('backgroundAgent:getAvailableAgents')
+    },
+    start: async (params: {
+      agentId: string
+      modelId: string
+      config?: {
+        autoStart?: boolean
+        maxSessions?: number
+        logLevel?: 'debug' | 'info' | 'warn' | 'error'
+      }
+    }) => {
+      return ipcRenderer.invoke('backgroundAgent:start', params)
+    },
+    stop: async (agentId: string) => {
+      return ipcRenderer.invoke('backgroundAgent:stop', agentId)
+    },
+    restart: async (agentId: string) => {
+      return ipcRenderer.invoke('backgroundAgent:restart', agentId)
+    },
+    getStatus: async (agentId: string) => {
+      return ipcRenderer.invoke('backgroundAgent:getStatus', agentId)
+    },
+    getAllStatuses: async () => {
+      return ipcRenderer.invoke('backgroundAgent:getAllStatuses')
+    },
+    processMessage: async (params: { agentId: string; message: string; sessionId?: string }) => {
+      return ipcRenderer.invoke('backgroundAgent:processMessage', params)
+    }
   }
 }
 

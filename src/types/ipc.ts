@@ -285,6 +285,93 @@ export interface IPCChannelDefinitions {
       }
     }
   }
+
+  // Background Agent関連
+  'backgroundAgent:getAvailableAgents': {
+    params: void
+    result: {
+      customAgents: any[]
+      sharedAgents: any[]
+    }
+  }
+  'backgroundAgent:start': {
+    params: {
+      agentId: string
+      modelId: string
+      config?: {
+        autoStart?: boolean
+        maxSessions?: number
+        logLevel?: 'debug' | 'info' | 'warn' | 'error'
+      }
+    }
+    result: {
+      success: boolean
+      data?: any
+      error?: string
+    }
+  }
+  'backgroundAgent:stop': {
+    params: string // agentId
+    result: {
+      success: boolean
+      data?: any
+      error?: string
+    }
+  }
+  'backgroundAgent:restart': {
+    params: string // agentId
+    result: {
+      success: boolean
+      data?: any
+      error?: string
+    }
+  }
+  'backgroundAgent:getStatus': {
+    params: string // agentId
+    result: {
+      id: string
+      agentId: string
+      status: 'idle' | 'running' | 'error' | 'stopped'
+      startedAt?: number
+      lastActivity?: number
+      uptime?: number
+      currentSessionId?: string
+      totalSessions: number
+      activeSessionCount: number
+      messagesProcessed: number
+      toolsExecuted: number
+      errorCount: number
+      config: any
+      lastError?: string
+    } | null
+  }
+  'backgroundAgent:getAllStatuses': {
+    params: void
+    result: Array<{
+      id: string
+      agentId: string
+      status: 'idle' | 'running' | 'error' | 'stopped'
+      startedAt?: number
+      lastActivity?: number
+      uptime?: number
+      currentSessionId?: string
+      totalSessions: number
+      activeSessionCount: number
+      messagesProcessed: number
+      toolsExecuted: number
+      errorCount: number
+      config: any
+      lastError?: string
+    }>
+  }
+  'backgroundAgent:processMessage': {
+    params: {
+      agentId: string
+      message: string
+      sessionId?: string
+    }
+    result: any[] // IdentifiableMessage[]
+  }
 }
 
 // 型ヘルパー

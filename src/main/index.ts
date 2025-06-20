@@ -21,6 +21,13 @@ import { agentHandlers } from './handlers/agent-handlers'
 import { utilHandlers } from './handlers/util-handlers'
 import { screenHandlers } from './handlers/screen-handlers'
 import { cameraHandlers } from './handlers/camera-handlers'
+import {
+  backgroundAgentHandlers,
+  setBackgroundAgentManager
+} from './handlers/background-agent-handlers'
+import { BackgroundAgentManager } from './managers/backgroundAgentManager'
+import { ChatSessionManager } from './store/chatSession'
+import { BedrockService } from './api/bedrock'
 // 動的インポートを使用してfix-pathパッケージを読み込む
 import('fix-path')
   .then((fixPathModule) => {
@@ -269,6 +276,8 @@ registerGlobalErrorHandlers()
 let mainWindow: BrowserWindow | null = null
 // Track app quit state for macOS
 let isQuitting = false
+// Background Agent Manager instance
+let backgroundAgentManager: BackgroundAgentManager | null = null
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -294,6 +303,17 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
+  // Background Agent Managerの初期化
+  try {
+    const chatSessionManager = new ChatSessionManager()
+    const bedrockService = new BedrockService({ store })
+    backgroundAgentManager = new BackgroundAgentManager(chatSessionManager, bedrockService)
+    setBackgroundAgentManager(backgroundAgentManager)
+    log.info('Background Agent Manager initialized successfully')
+  } catch (error: any) {
+    log.error('Failed to initialize Background Agent Manager', error)
+  }
+
   // IPCハンドラーの一括登録
   registerIpcHandlers(bedrockHandlers, { loggerCategory: 'bedrock:ipc' })
   registerIpcHandlers(fileHandlers, { loggerCategory: 'file:ipc' })
@@ -302,6 +322,7 @@ app.whenReady().then(async () => {
   registerIpcHandlers(utilHandlers, { loggerCategory: 'utils:ipc' })
   registerIpcHandlers(screenHandlers, { loggerCategory: 'screen:ipc' })
   registerIpcHandlers(cameraHandlers, { loggerCategory: 'camera:ipc' })
+  registerIpcHandlers(backgroundAgentHandlers, { loggerCategory: 'background-agent:ipc' })
 
   // ログハンドラーの登録
   registerLogHandler()
@@ -338,8 +359,18 @@ app.whenReady().then(async () => {
   })
 
   // Handle before-quit to set flag for macOS
-  app.on('before-quit', () => {
+  app.on('before-quit', async () => {
     isQuitting = true
+
+    // Background Agentのクリーンアップ
+    if (backgroundAgentManager) {
+      try {
+        await backgroundAgentManager.shutdown()
+        log.info('Background agents shut down successfully')
+      } catch (error: any) {
+        log.error('Error shutting down background agents', error)
+      }
+    }
   })
 })
 
