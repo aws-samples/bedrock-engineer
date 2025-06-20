@@ -1,20 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Tooltip } from 'flowbite-react'
 import { AiOutlineReload } from 'react-icons/ai'
 import { GrClearOption } from 'react-icons/gr'
-import {
-  HiOutlineDocumentText,
-  HiOutlineTemplate,
-  HiOutlinePencil,
-  HiOutlineEye
-} from 'react-icons/hi'
+import { HiOutlineDocumentText, HiOutlineTemplate } from 'react-icons/hi'
 import { IoChevronBack, IoChevronForward } from 'react-icons/io5'
 import { SlidePreview } from './components/SlidePreview'
-import { SlideEditor } from './components/SlideEditor'
 import { TemplateSelector } from './components/TemplateSelector'
 import { Slide, Presentation, PresentationTheme, PresentationSettings } from './types/slide'
 import { createDefaultTextProps, createDefaultShapeProps } from './types/element'
-import { SlideTemplate } from './templates/templates'
+import { SlideTemplate, slideTemplates } from './templates/templates'
 import { useSlideGenerator } from './hooks/useSlideGenerator'
 import { AttachedImage, TextArea } from '../ChatPage/components/InputForm/TextArea'
 import useSetting from '@renderer/hooks/useSetting'
@@ -26,8 +20,7 @@ export default function SlideGeneratorPage() {
   const [userInput, setUserInput] = useState('')
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
   const [showTemplateSelector, setShowTemplateSelector] = useState(false)
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>()
-  const [isEditMode, setIsEditMode] = useState(false)
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('business-presentation')
   const [isComposing, setIsComposing] = useState(false)
   const [lastProcessedMessageId, setLastProcessedMessageId] = useState<string | null>(null)
 
@@ -41,7 +34,10 @@ export default function SlideGeneratorPage() {
     generateSlides,
     clearError,
     getLatestResponseText,
-    parseAIResponse
+    parseAIResponse,
+    streamingSlides,
+    isStreamingComplete,
+    resetStreamingParser
   } = useSlideGenerator()
 
   // システムプロンプトモーダル
@@ -245,16 +241,23 @@ export default function SlideGeneratorPage() {
     setCurrentSlideIndex(0)
     setUserInput('')
     clearError()
+    resetStreamingParser()
   }
 
   const onSubmit = async (input: string, _images: AttachedImage[]) => {
     if (!input.trim()) return
 
+    // 選択されたテンプレートを取得
+    const selectedTemplate = selectedTemplateId
+      ? slideTemplates.find((t) => t.id === selectedTemplateId)
+      : undefined
+
     await generateSlides({
       content: input,
       slideCount: 5,
       theme: presentation.theme,
-      presentationTitle: ''
+      presentationTitle: '',
+      selectedTemplate: selectedTemplate
     })
 
     setUserInput('')
@@ -271,7 +274,38 @@ export default function SlideGeneratorPage() {
       ) {
         const responseText = getLatestResponseText()
         if (responseText) {
-          const slides = parseAIResponse(responseText, presentation.theme)
+          // 選択されたテンプレートを取得
+          const selectedTemplate = selectedTemplateId
+            ? slideTemplates.find((t) => t.id === selectedTemplateId)
+            : undefined
+
+          console.log(
+            'Selected template for parsing:',
+            selectedTemplate?.name || 'none',
+            'from templateId:',
+            selectedTemplateId
+          )
+
+          // 選択されたテンプレートがある場合、そのテーマを使用
+          const effectiveTheme = selectedTemplate
+            ? {
+                id: selectedTemplate.theme?.id || 'template-theme',
+                name: selectedTemplate.theme?.name || selectedTemplate.name,
+                primaryColor: selectedTemplate.theme?.primaryColor || '#3B82F6',
+                secondaryColor: selectedTemplate.theme?.secondaryColor || '#10B981',
+                backgroundColor: selectedTemplate.theme?.backgroundColor || '#FFFFFF',
+                textColor: selectedTemplate.theme?.textColor || '#1F2937',
+                fontFamily: selectedTemplate.theme?.fontFamily || 'Arial, sans-serif',
+                fontSize: {
+                  title: 32,
+                  subtitle: 24,
+                  body: 16
+                }
+              }
+            : presentation.theme
+
+          console.log('Calling parseAIResponse with template:', selectedTemplate?.name || 'none')
+          const slides = parseAIResponse(responseText, effectiveTheme, selectedTemplate)
 
           if (slides && slides.length > 0) {
             const now = new Date()
@@ -280,7 +314,7 @@ export default function SlideGeneratorPage() {
               title: 'AI生成プレゼンテーション',
               description: `Generated from user input`,
               author: '',
-              theme: presentation.theme,
+              theme: effectiveTheme,
               slides: slides,
               settings: presentation.settings,
               createdAt: now,
@@ -294,7 +328,16 @@ export default function SlideGeneratorPage() {
         }
       }
     }
-  }, [generating, messages, lastProcessedMessageId, getLatestResponseText, parseAIResponse])
+  }, [
+    generating,
+    messages,
+    lastProcessedMessageId,
+    getLatestResponseText,
+    parseAIResponse,
+    selectedTemplateId,
+    presentation.theme,
+    presentation.settings
+  ])
 
   const handlePrevSlide = () => {
     setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1))
@@ -350,19 +393,52 @@ export default function SlideGeneratorPage() {
     console.log('Template preview:', template.name)
   }
 
-  const handleSlidesUpdate = (updatedSlides: Slide[]) => {
-    setPresentation((prev) => ({
-      ...prev,
-      slides: updatedSlides,
-      updatedAt: new Date()
-    }))
-  }
+  // 表示するプレゼンテーションを決定（ストリーミング中は段階的表示）
+  const displayPresentation = useMemo(() => {
+    // ストリーミング中でスライドがある場合
+    if (generating && streamingSlides.length > 0) {
+      // 選択されたテンプレートからテーマを取得
+      const selectedTemplate = selectedTemplateId
+        ? slideTemplates.find((t) => t.id === selectedTemplateId)
+        : undefined
 
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode)
-  }
+      const effectiveTheme = selectedTemplate
+        ? {
+            id: selectedTemplate.theme?.id || 'template-theme',
+            name: selectedTemplate.theme?.name || selectedTemplate.name,
+            primaryColor: selectedTemplate.theme?.primaryColor || '#3B82F6',
+            secondaryColor: selectedTemplate.theme?.secondaryColor || '#10B981',
+            backgroundColor: selectedTemplate.theme?.backgroundColor || '#FFFFFF',
+            textColor: selectedTemplate.theme?.textColor || '#1F2937',
+            fontFamily: selectedTemplate.theme?.fontFamily || 'Arial, sans-serif',
+            fontSize: {
+              title: 32,
+              subtitle: 24,
+              body: 16
+            }
+          }
+        : presentation.theme
 
-  const currentSlide = presentation.slides[currentSlideIndex]
+      return {
+        ...presentation,
+        title: `AI生成中... (${streamingSlides.length}/${isStreamingComplete ? '完了' : '生成中'})`,
+        slides: streamingSlides,
+        theme: effectiveTheme
+      }
+    }
+
+    // 通常時は既存のプレゼンテーション
+    return presentation
+  }, [generating, streamingSlides, isStreamingComplete, presentation, selectedTemplateId])
+
+  const currentSlide = displayPresentation.slides[currentSlideIndex]
+
+  // スライドインデックスの調整（ストリーミング中にスライド数が変わる場合）
+  useEffect(() => {
+    if (currentSlideIndex >= displayPresentation.slides.length) {
+      setCurrentSlideIndex(Math.max(0, displayPresentation.slides.length - 1))
+    }
+  }, [displayPresentation.slides.length, currentSlideIndex])
 
   return (
     <div className="flex flex-col p-3 h-[calc(100vh-11rem)] overflow-y-auto">
@@ -384,37 +460,17 @@ export default function SlideGeneratorPage() {
 
           <div className="flex justify-between w-full">
             <div className="flex gap-2 items-center">
-              <span className="text-sm text-gray-600 dark:text-gray-300">{presentation.title}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-300">
+                {displayPresentation.title}
+              </span>
               <div className="flex gap-1 items-center text-xs text-gray-500">
                 <span>
-                  スライド {currentSlideIndex + 1} / {presentation.slides.length}
+                  スライド {currentSlideIndex + 1} / {displayPresentation.slides.length}
                 </span>
               </div>
             </div>
 
             <div className="flex gap-2 items-center">
-              <Tooltip
-                content={isEditMode ? 'プレビューモード' : '編集モード'}
-                placement="bottom"
-                animation="duration-500"
-              >
-                <button
-                  className={`cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
-                    isEditMode
-                      ? 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300'
-                      : ''
-                  }`}
-                  onClick={toggleEditMode}
-                  disabled={generating}
-                >
-                  {isEditMode ? (
-                    <HiOutlineEye className="text-xl" />
-                  ) : (
-                    <HiOutlinePencil className="text-xl" />
-                  )}
-                </button>
-              </Tooltip>
-
               <Tooltip content="テンプレート選択" placement="bottom" animation="duration-500">
                 <button
                   className="cursor-pointer rounded-md py-1.5 px-2 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -454,12 +510,12 @@ export default function SlideGeneratorPage() {
         {/* Slide Preview Area with Navigation */}
         <div className="relative flex items-center justify-center">
           {/* Previous Button */}
-          {presentation.slides.length > 1 && (
+          {displayPresentation.slides.length > 1 && (
             <button
               onClick={handlePrevSlide}
-              disabled={currentSlideIndex === 0}
+              disabled={currentSlideIndex === 0 || (generating && streamingSlides.length === 0)}
               className={`absolute left-[-50px] top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
-                currentSlideIndex === 0
+                currentSlideIndex === 0 || (generating && streamingSlides.length === 0)
                   ? 'text-gray-300 cursor-not-allowed'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
               }`}
@@ -468,30 +524,19 @@ export default function SlideGeneratorPage() {
             </button>
           )}
 
-          {/* Slide Preview/Editor */}
+          {/* Slide Preview */}
           <div className="flex flex-col items-center">
-            {isEditMode ? (
-              <SlideEditor
-                slide={currentSlide}
-                theme={presentation.theme}
-                settings={presentation.settings}
-                slides={presentation.slides}
-                onSlidesUpdate={handleSlidesUpdate}
-                isEditing={true}
-              />
-            ) : (
-              <SlidePreview
-                slide={currentSlide}
-                theme={presentation.theme}
-                settings={presentation.settings}
-                isLoading={generating}
-              />
-            )}
+            <SlidePreview
+              slide={currentSlide}
+              theme={displayPresentation.theme}
+              settings={displayPresentation.settings}
+              isLoading={generating && streamingSlides.length === 0}
+            />
 
             {/* Dot Navigation */}
-            {presentation.slides.length > 1 && (
+            {displayPresentation.slides.length > 1 && (
               <div className="flex gap-1 mt-4">
-                {presentation.slides.map((_, index) => (
+                {displayPresentation.slides.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentSlideIndex(index)}
@@ -505,12 +550,16 @@ export default function SlideGeneratorPage() {
           </div>
 
           {/* Next Button */}
-          {presentation.slides.length > 1 && (
+          {displayPresentation.slides.length > 1 && (
             <button
               onClick={handleNextSlide}
-              disabled={currentSlideIndex === presentation.slides.length - 1}
+              disabled={
+                currentSlideIndex === displayPresentation.slides.length - 1 ||
+                (generating && streamingSlides.length === 0)
+              }
               className={`absolute right-[-50px] top-1/2 transform -translate-y-1/2 z-10 p-2 rounded-full transition-all ${
-                currentSlideIndex === presentation.slides.length - 1
+                currentSlideIndex === displayPresentation.slides.length - 1 ||
+                (generating && streamingSlides.length === 0)
                   ? 'text-gray-300 cursor-not-allowed'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700'
               }`}
