@@ -137,7 +137,7 @@ function WebsiteGeneratorPageInner() {
   }
 
   // ウェブサイト生成用のエージェントID（テンプレートに応じて動的に変更）
-  const websiteAgentId = getAgentIdForTemplate(template)
+  const websiteAgentId = getAgentIdForTemplate(template as SupportedTemplate['id'])
 
   // テンプレート固有のシステムプロンプトを直接使用
   const systemPrompt = useMemo(() => {
