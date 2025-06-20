@@ -144,7 +144,7 @@ function WebsiteGeneratorPageInner() {
     // テンプレート固有のプロンプトを直接使用
     const templateSpecificPrompt = prompts.WebsiteGenerator.system[template]({
       styleType: styleType.value,
-      libraries: Object.keys(templates[template].customSetup.dependencies),
+      libraries: Object.keys(templates[template as SupportedTemplate['id']].customSetup.dependencies),
       ragEnabled: enableKnowledgeBase,
       tavilySearchEnabled: enableSearch
     })
@@ -232,7 +232,7 @@ function WebsiteGeneratorPageInner() {
   const handleRefresh = useCallback(async () => {
     refresh()
 
-    const c = templates[template].files[templates[template].mainFile]?.code
+    const c = templates[template as SupportedTemplate['id']].files[templates[template as SupportedTemplate['id']].mainFile]?.code
     updateCode(c)
     setUserInput('')
     setGeneratedCode('') // Clear generated code from context
@@ -351,7 +351,7 @@ function WebsiteGeneratorPageInner() {
                   {...fw}
                   key={fw.id}
                   isSelected={template === fw.id}
-                  onSelect={setTemplate}
+                  onSelect={_setTemplate}
                   onRefresh={handleRefresh}
                 />
               ))}

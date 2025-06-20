@@ -23,14 +23,6 @@ import {
   useStepFunctionsGenerator
 } from '@renderer/contexts/StepFunctionsGeneratorContext'
 
-export default function StepFunctionsGeneratorPage() {
-  return (
-    <StepFunctionsGeneratorProvider>
-      <StepFunctionsGeneratorPageContents />
-    </StepFunctionsGeneratorProvider>
-  )
-}
-
 function StepFunctionsGeneratorPageContents() {
   const {
     t,
@@ -296,4 +288,10 @@ function StepFunctionsGeneratorPageContents() {
   )
 }
 
-export default StepFunctionsGeneratorPage
+export default function StepFunctionsGeneratorPage() {
+  return (
+    <StepFunctionsGeneratorProvider>
+      <StepFunctionsGeneratorPageContents />
+    </StepFunctionsGeneratorProvider>
+  )
+}
