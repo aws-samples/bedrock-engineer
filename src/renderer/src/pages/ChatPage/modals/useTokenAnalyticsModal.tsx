@@ -692,293 +692,289 @@ export const TokenAnalyticsModal: React.FC<TokenAnalyticsModalProps> = ({
   }
 
   return (
-    <Modal
-      show={isOpen}
-      onClose={onClose}
-      size="6xl"
-      dismissible
-      className="dark:bg-gray-800 border border-gray-200 dark:border-gray-500 shadow-lg dark:shadow-gray-900/50 rounded-lg"
-    >
-      <Modal.Header className="dark:bg-gray-800 dark:border-gray-600 rounded-t-lg">
-        <h2 className="text-xl font-bold dark:text-white">{t('Token Usage Analytics')}</h2>
-      </Modal.Header>
-      <Modal.Body className="max-h-[80vh] overflow-y-auto dark:bg-gray-800 rounded-b-lg">
-        {/* セッション全体の統計 */}
-        <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700/80 rounded-lg border border-transparent dark:border-gray-600 shadow-sm">
-          <h3 className="text-lg font-semibold mb-2 dark:text-white">{t('Session Summary')}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-200">
-                {t('Total Tokens')}:{' '}
-                <span className="font-medium dark:text-white">
-                  {analytics.tokenUsage.totalTokens.toLocaleString()}
-                </span>
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-200">
-                {t('Total Cost')}:{' '}
-                <span className="font-medium dark:text-white">
-                  {formatCurrency(analytics.costAnalysis.totalCost)}
-                </span>
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-200">
-                {t('Model')}: <span className="font-medium dark:text-white">{modelId}</span>
-              </p>
-              <p className="text-sm text-gray-600 dark:text-gray-200">
-                {t('Messages')}:{' '}
-                <span className="font-medium dark:text-white">{messages.length}</span>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* タブナビゲーション */}
-        <div className="border-b border-gray-200 dark:border-gray-600 mb-6">
-          <nav className="flex space-x-8" aria-label="Tabs">
-            <button
-              onClick={() => handleTabChange('summary')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'summary'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-300'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:border-gray-500'
-              }`}
-            >
-              {t('Summary')}
-            </button>
-            <button
-              onClick={() => handleTabChange('timeSeries')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'timeSeries'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-300'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:border-gray-500'
-              }`}
-            >
-              {t('Time Series Analysis')}
-            </button>
-          </nav>
-        </div>
-
-        {/* サマリータブ */}
-        {activeTab === 'summary' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* トークン使用量の詳細 */}
-            <div className="p-4 border dark:border-gray-600 dark:bg-gray-700/20 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">{t('Token Usage')}</h3>
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-600/50">
-                  <span>{t('Input Tokens')}:</span>
-                  <span className="font-medium dark:text-blue-200">
-                    {analytics.tokenUsage.inputTokens.toLocaleString()}
+    <Modal show={isOpen} onClose={onClose} size="6xl" dismissible className="dark:bg-gray-900">
+      <div className="border-[0.5px] border-white dark:border-gray-100 rounded-lg shadow-xl dark:shadow-gray-900/80">
+        <Modal.Header className="border-b border-gray-200 dark:border-gray-700/50 dark:bg-gray-900 rounded-t-lg">
+          <h2 className="text-xl font-bold dark:text-white">{t('Token Usage Analytics')}</h2>
+        </Modal.Header>
+        <Modal.Body className="max-h-[80vh] overflow-y-auto dark:bg-gray-900 rounded-b-lg">
+          {/* セッション全体の統計 */}
+          <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-700/80 rounded-lg border border-transparent dark:border-gray-600 shadow-sm">
+            <h3 className="text-lg font-semibold mb-2 dark:text-white">{t('Session Summary')}</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-200">
+                  {t('Total Tokens')}:{' '}
+                  <span className="font-medium dark:text-white">
+                    {analytics.tokenUsage.totalTokens.toLocaleString()}
                   </span>
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-600/50">
-                  <span>{t('Output Tokens')}:</span>
-                  <span className="font-medium dark:text-teal-200">
-                    {analytics.tokenUsage.outputTokens.toLocaleString()}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-600/50">
-                  <span>{t('Cache Read Tokens')}:</span>
-                  <span className="font-medium dark:text-yellow-200">
-                    {analytics.tokenUsage.cacheReadTokens.toLocaleString()}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1">
-                  <span>{t('Cache Write Tokens')}:</span>
-                  <span className="font-medium dark:text-orange-200">
-                    {analytics.tokenUsage.cacheWriteTokens.toLocaleString()}
+                <p className="text-sm text-gray-600 dark:text-gray-200">
+                  {t('Total Cost')}:{' '}
+                  <span className="font-medium dark:text-white">
+                    {formatCurrency(analytics.costAnalysis.totalCost)}
                   </span>
                 </p>
               </div>
-              {/* トークン使用量の円グラフ */}
-              <div className="h-64">
-                {analytics.tokenUsage.totalTokens > 0 ? (
-                  <Pie data={tokenChartData} options={pieChartOptions} />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                    {t('No token usage data available')}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* コスト分析の詳細 */}
-            <div className="p-4 border dark:border-gray-700 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">{t('Cost Analysis')}</h3>
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {t('Input Cost')}:{' '}
-                  <span className="font-medium">
-                    {formatCurrency(analytics.costAnalysis.inputCost)}
-                  </span>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-200">
+                  {t('Model')}: <span className="font-medium dark:text-white">{modelId}</span>
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {t('Output Cost')}:{' '}
-                  <span className="font-medium">
-                    {formatCurrency(analytics.costAnalysis.outputCost)}
-                  </span>
+                <p className="text-sm text-gray-600 dark:text-gray-200">
+                  {t('Messages')}:{' '}
+                  <span className="font-medium dark:text-white">{messages.length}</span>
                 </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {t('Cache Read Cost')}:{' '}
-                  <span className="font-medium">
-                    {formatCurrency(analytics.costAnalysis.cacheReadCost)}
-                  </span>
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {t('Cache Write Cost')}:{' '}
-                  <span className="font-medium">
-                    {formatCurrency(analytics.costAnalysis.cacheWriteCost)}
-                  </span>
-                </p>
-                {analytics.costAnalysis.cacheSavings > 0 && (
-                  <p className="mt-3 text-sm text-green-600 dark:text-green-400 font-medium">
-                    {t('Saved approximately {{amount}} by using prompt cache', {
-                      amount: formatCurrency(analytics.costAnalysis.cacheSavings)
-                    })}
-                  </p>
-                )}
-              </div>
-              {/* コスト分析の円グラフ */}
-              <div className="h-64">
-                {analytics.costAnalysis.totalCost > 0 ? (
-                  <Pie data={costChartData} options={pieChartOptions} />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                    {t('No cost data available')}
-                  </div>
-                )}
               </div>
             </div>
           </div>
-        )}
 
-        {/* 時系列分析タブ */}
-        {activeTab === 'timeSeries' && (
-          <div className="space-y-6">
-            {/* 時系列トークン使用量グラフ */}
-            <div className="p-4 border dark:border-gray-700 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">
-                {t('Token Usage Over Time')}
-              </h3>
-              <div className="h-80">
-                {analytics.timeSeriesData.length > 0 ? (
-                  <Line
-                    data={tokenTimeSeriesData}
-                    options={{
-                      ...lineChartOptions,
-                      plugins: {
-                        ...lineChartOptions.plugins,
-                        title: {
-                          display: true,
-                          text: t('Token Usage Trend')
-                        }
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                    {t('No time series data available')}
-                  </div>
-                )}
-              </div>
-            </div>
+          {/* タブナビゲーション */}
+          <div className="border-b border-gray-200 dark:border-gray-600 mb-6">
+            <nav className="flex space-x-8" aria-label="Tabs">
+              <button
+                onClick={() => handleTabChange('summary')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'summary'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:border-gray-500'
+                }`}
+              >
+                {t('Summary')}
+              </button>
+              <button
+                onClick={() => handleTabChange('timeSeries')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'timeSeries'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-300'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:border-gray-500'
+                }`}
+              >
+                {t('Time Series Analysis')}
+              </button>
+            </nav>
+          </div>
 
-            {/* 時系列コスト分析グラフ */}
-            <div className="p-4 border dark:border-gray-700 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">
-                {t('Cost Analysis Over Time')}
-              </h3>
-              <div className="h-80">
-                {analytics.timeSeriesData.length > 0 ? (
-                  <Line
-                    data={costTimeSeriesData}
-                    options={{
-                      ...lineChartOptions,
-                      plugins: {
-                        ...lineChartOptions.plugins,
-                        title: {
-                          display: true,
-                          text: t('Cost Trend')
-                        }
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                    {t('No time series data available')}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 累積トークン使用量とコスト */}
-            <div className="p-4 border dark:border-gray-600 dark:bg-gray-700/20 rounded-lg shadow-sm">
-              <h3 className="text-lg font-semibold mb-4 dark:text-white">
-                {t('Cumulative Usage')}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+          {/* サマリータブ */}
+          {activeTab === 'summary' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* トークン使用量の詳細 */}
+              <div className="p-4 border dark:border-gray-600 dark:bg-gray-700/20 rounded-lg shadow-sm">
+                <h3 className="text-lg font-semibold mb-4 dark:text-white">{t('Token Usage')}</h3>
+                <div className="mb-4">
                   <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-600/50">
-                    <span>{t('Average Tokens per Message')}:</span>
+                    <span>{t('Input Tokens')}:</span>
                     <span className="font-medium dark:text-blue-200">
-                      {analytics.timeSeriesData.length > 0
-                        ? Math.round(
-                            analytics.tokenUsage.totalTokens / analytics.timeSeriesData.length
-                          ).toLocaleString()
-                        : '0'}
+                      {analytics.tokenUsage.inputTokens.toLocaleString()}
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-600/50">
+                    <span>{t('Output Tokens')}:</span>
+                    <span className="font-medium dark:text-teal-200">
+                      {analytics.tokenUsage.outputTokens.toLocaleString()}
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-600/50">
+                    <span>{t('Cache Read Tokens')}:</span>
+                    <span className="font-medium dark:text-yellow-200">
+                      {analytics.tokenUsage.cacheReadTokens.toLocaleString()}
                     </span>
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1">
-                    <span>{t('Average Cost per Message')}:</span>
-                    <span className="font-medium dark:text-teal-200">
-                      {analytics.timeSeriesData.length > 0
-                        ? formatCurrency(
-                            analytics.costAnalysis.totalCost / analytics.timeSeriesData.length
-                          )
-                        : formatCurrency(0)}
+                    <span>{t('Cache Write Tokens')}:</span>
+                    <span className="font-medium dark:text-orange-200">
+                      {analytics.tokenUsage.cacheWriteTokens.toLocaleString()}
                     </span>
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-600/50">
-                    <span>{t('Token Usage Efficiency')}:</span>
-                    <span className="font-medium dark:text-orange-200">
-                      {analytics.tokenUsage.inputTokens > 0
-                        ? `${((analytics.tokenUsage.outputTokens / analytics.tokenUsage.inputTokens) * 100).toFixed(1)}%`
-                        : '0%'}
+                {/* トークン使用量の円グラフ */}
+                <div className="h-64">
+                  {analytics.tokenUsage.totalTokens > 0 ? (
+                    <Pie data={tokenChartData} options={pieChartOptions} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                      {t('No token usage data available')}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* コスト分析の詳細 */}
+              <div className="p-4 border dark:border-gray-700 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4 dark:text-white">{t('Cost Analysis')}</h3>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {t('Input Cost')}:{' '}
+                    <span className="font-medium">
+                      {formatCurrency(analytics.costAnalysis.inputCost)}
                     </span>
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1">
-                    <span>{t('Cache Efficiency')}:</span>
-                    <span className="font-medium dark:text-yellow-200">
-                      {analytics.tokenUsage.inputTokens + analytics.tokenUsage.outputTokens > 0
-                        ? `${((analytics.tokenUsage.cacheReadTokens / (analytics.tokenUsage.inputTokens + analytics.tokenUsage.outputTokens)) * 100).toFixed(1)}%`
-                        : '0%'}
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {t('Output Cost')}:{' '}
+                    <span className="font-medium">
+                      {formatCurrency(analytics.costAnalysis.outputCost)}
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {t('Cache Read Cost')}:{' '}
+                    <span className="font-medium">
+                      {formatCurrency(analytics.costAnalysis.cacheReadCost)}
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {t('Cache Write Cost')}:{' '}
+                    <span className="font-medium">
+                      {formatCurrency(analytics.costAnalysis.cacheWriteCost)}
                     </span>
                   </p>
                   {analytics.costAnalysis.cacheSavings > 0 && (
-                    <p className="mt-3 text-sm font-medium py-2 px-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="mt-3 text-sm text-green-600 dark:text-green-400 font-medium">
                       {t('Saved approximately {{amount}} by using prompt cache', {
                         amount: formatCurrency(analytics.costAnalysis.cacheSavings)
                       })}
                     </p>
                   )}
                 </div>
+                {/* コスト分析の円グラフ */}
+                <div className="h-64">
+                  {analytics.costAnalysis.totalCost > 0 ? (
+                    <Pie data={costChartData} options={pieChartOptions} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                      {t('No cost data available')}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* 注意書き */}
-        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-          <p>
-            {t(
-              'Note: Token usage and cost calculations are estimates based on the available metadata.'
-            )}
-          </p>
-        </div>
-      </Modal.Body>
+          {/* 時系列分析タブ */}
+          {activeTab === 'timeSeries' && (
+            <div className="space-y-6">
+              {/* 時系列トークン使用量グラフ */}
+              <div className="p-4 border dark:border-gray-700 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4 dark:text-white">
+                  {t('Token Usage Over Time')}
+                </h3>
+                <div className="h-80">
+                  {analytics.timeSeriesData.length > 0 ? (
+                    <Line
+                      data={tokenTimeSeriesData}
+                      options={{
+                        ...lineChartOptions,
+                        plugins: {
+                          ...lineChartOptions.plugins,
+                          title: {
+                            display: true,
+                            text: t('Token Usage Trend')
+                          }
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                      {t('No time series data available')}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 時系列コスト分析グラフ */}
+              <div className="p-4 border dark:border-gray-700 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4 dark:text-white">
+                  {t('Cost Analysis Over Time')}
+                </h3>
+                <div className="h-80">
+                  {analytics.timeSeriesData.length > 0 ? (
+                    <Line
+                      data={costTimeSeriesData}
+                      options={{
+                        ...lineChartOptions,
+                        plugins: {
+                          ...lineChartOptions.plugins,
+                          title: {
+                            display: true,
+                            text: t('Cost Trend')
+                          }
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                      {t('No time series data available')}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 累積トークン使用量とコスト */}
+              <div className="p-4 border dark:border-gray-600 dark:bg-gray-700/20 rounded-lg shadow-sm">
+                <h3 className="text-lg font-semibold mb-4 dark:text-white">
+                  {t('Cumulative Usage')}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-600/50">
+                      <span>{t('Average Tokens per Message')}:</span>
+                      <span className="font-medium dark:text-blue-200">
+                        {analytics.timeSeriesData.length > 0
+                          ? Math.round(
+                              analytics.tokenUsage.totalTokens / analytics.timeSeriesData.length
+                            ).toLocaleString()
+                          : '0'}
+                      </span>
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1">
+                      <span>{t('Average Cost per Message')}:</span>
+                      <span className="font-medium dark:text-teal-200">
+                        {analytics.timeSeriesData.length > 0
+                          ? formatCurrency(
+                              analytics.costAnalysis.totalCost / analytics.timeSeriesData.length
+                            )
+                          : formatCurrency(0)}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1 border-b border-gray-100 dark:border-gray-600/50">
+                      <span>{t('Token Usage Efficiency')}:</span>
+                      <span className="font-medium dark:text-orange-200">
+                        {analytics.tokenUsage.inputTokens > 0
+                          ? `${((analytics.tokenUsage.outputTokens / analytics.tokenUsage.inputTokens) * 100).toFixed(1)}%`
+                          : '0%'}
+                      </span>
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-200 flex justify-between items-center py-1">
+                      <span>{t('Cache Efficiency')}:</span>
+                      <span className="font-medium dark:text-yellow-200">
+                        {analytics.tokenUsage.inputTokens + analytics.tokenUsage.outputTokens > 0
+                          ? `${((analytics.tokenUsage.cacheReadTokens / (analytics.tokenUsage.inputTokens + analytics.tokenUsage.outputTokens)) * 100).toFixed(1)}%`
+                          : '0%'}
+                      </span>
+                    </p>
+                    {analytics.costAnalysis.cacheSavings > 0 && (
+                      <p className="mt-3 text-sm font-medium py-2 px-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-800">
+                        {t('Saved approximately {{amount}} by using prompt cache', {
+                          amount: formatCurrency(analytics.costAnalysis.cacheSavings)
+                        })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 注意書き */}
+          <div className="mt-6 text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+            <p>
+              {t(
+                'Note: Token usage and cost calculations are estimates based on the available metadata.'
+              )}
+            </p>
+          </div>
+        </Modal.Body>
+      </div>
     </Modal>
   )
 }

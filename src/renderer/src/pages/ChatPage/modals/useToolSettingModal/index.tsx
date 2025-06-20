@@ -418,218 +418,218 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
   }
 
   return (
-    <Modal
-      dismissible
-      size="7xl"
-      show={isOpen}
-      onClose={onClose}
-      className="dark:bg-gray-800 border border-gray-200 dark:border-gray-500 shadow-lg dark:shadow-gray-900/50"
-    >
-      <Modal.Header className="border-b border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-t-lg">
-        {hasSelectedAgent ? (
-          <div className="flex items-center">
-            <span>Agent Tools: </span>
-            <span className="font-medium ml-3">{currentAgent?.name}</span>
-          </div>
-        ) : (
-          <div>
-            Agent Tools
-            <div className="text-sm font-normal text-gray-500 dark:text-gray-300 mt-1">
-              {t('Select an agent first to edit tool settings')}
+    <Modal dismissible size="7xl" show={isOpen} onClose={onClose} className="dark:bg-gray-800">
+      <div className="border-[0.5px] border-white dark:border-gray-100 rounded-lg shadow-xl dark:shadow-gray-900/80">
+        <Modal.Header className="border-b border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-t-lg">
+          {hasSelectedAgent ? (
+            <div className="flex items-center">
+              <span>Agent Tools: </span>
+              <span className="font-medium ml-3">{currentAgent?.name}</span>
             </div>
-          </div>
-        )}
-      </Modal.Header>
+          ) : (
+            <div>
+              Agent Tools
+              <div className="text-sm font-normal text-gray-500 dark:text-gray-300 mt-1">
+                {t('Select an agent first to edit tool settings')}
+              </div>
+            </div>
+          )}
+        </Modal.Header>
 
-      <Modal.Body className="p-0 h-[700px] dark:bg-gray-800 rounded-b-lg">
-        <div className="flex h-full w-full rounded-lg">
-          {/* 左側サイドバー：ツールリスト - fixed height with own scrollbar */}
-          <div className="lg:w-1/3 w-[60px] border-r border-gray-200 dark:border-gray-600 overflow-y-auto h-full max-h-[700px] flex-shrink-0 dark:bg-gray-800 rounded-bl-lg">
-            <div className="h-full">
-              {/* カテゴリごとのセクション */}
-              {categorizedTools.map((category) => (
-                <div key={category.id} className="mb-4">
-                  {/* カテゴリヘッダー - 背景色と影を追加して重なり防止 */}
-                  <div className="p-3 bg-gray-50 dark:bg-gray-700 font-medium sticky top-0 z-20 shadow-sm lg:block hidden">
-                    <div className="text-sm text-gray-700 dark:text-gray-100 font-semibold">
-                      {t(`Tool Categories.${category.name}`)}
+        <Modal.Body className="p-0 h-[700px] dark:bg-gray-800 rounded-b-lg">
+          <div className="flex h-full w-full rounded-lg">
+            {/* 左側サイドバー：ツールリスト - fixed height with own scrollbar */}
+            <div className="lg:w-1/3 w-[60px] border-r border-gray-200 dark:border-gray-600 overflow-y-auto h-full max-h-[700px] flex-shrink-0 dark:bg-gray-800 rounded-bl-lg">
+              <div className="h-full">
+                {/* カテゴリごとのセクション */}
+                {categorizedTools.map((category) => (
+                  <div key={category.id} className="mb-4">
+                    {/* カテゴリヘッダー - 背景色と影を追加して重なり防止 */}
+                    <div className="p-3 bg-gray-50 dark:bg-gray-700 font-medium sticky top-0 z-20 shadow-sm lg:block hidden">
+                      <div className="text-sm text-gray-700 dark:text-gray-100 font-semibold">
+                        {t(`Tool Categories.${category.name}`)}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-300 mt-1">
+                        {t(`Tool Categories.${category.name} Description`)}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-300 mt-1">
-                      {t(`Tool Categories.${category.name} Description`)}
+
+                    {/* ツールリスト */}
+                    <ul className="divide-y divide-gray-100 dark:divide-gray-600">
+                      {category.toolsData.map((tool) => {
+                        const toolName = tool.toolSpec?.name
+                        if (!toolName) return null
+
+                        const isSelected = selectedTool === toolName
+
+                        return (
+                          <ToolItem
+                            key={toolName}
+                            toolName={toolName}
+                            enabled={tool.enabled}
+                            onToggle={() => handleToggleTool(toolName)}
+                            onSelect={() => selectTool(toolName)}
+                            isSelected={isSelected}
+                          />
+                        )
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 右側: 設定コンテンツエリア - separate scrollable area */}
+            <div className="lg:w-2/3 flex-1 overflow-y-auto h-full max-h-[700px] dark:bg-gray-800 rounded-br-lg">
+              {selectedTool ? (
+                <div className="p-4">
+                  <div className="sticky top-0 pt-1 pb-3 bg-white dark:bg-gray-800 z-20 mb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium dark:text-white pb-3">{selectedTool}</h3>
+                      <button
+                        onClick={() => setShowJsonModal(true)}
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        title={t('View JSON Spec')}
+                      >
+                        <CodeBracketIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      </button>
                     </div>
                   </div>
 
-                  {/* ツールリスト */}
-                  <ul className="divide-y divide-gray-100 dark:divide-gray-600">
-                    {category.toolsData.map((tool) => {
-                      const toolName = tool.toolSpec?.name
-                      if (!toolName) return null
+                  {isMcpTool(selectedTool) ? (
+                    // MCP ツールの詳細表示
+                    <div className="prose dark:prose-invert max-w-none">
+                      <div className="flex items-center gap-2 mb-4">
+                        <p className="text-gray-700 dark:text-gray-100 font-bold mb-0">
+                          {selectedTool}
+                        </p>
+                        <span className="bg-cyan-100 text-cyan-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-cyan-800/50 dark:text-cyan-200">
+                          MCP
+                        </span>
+                      </div>
 
-                      const isSelected = selectedTool === toolName
+                      <p className="mb-4 text-gray-700 dark:text-gray-200">
+                        {selectedToolBody?.toolSpec?.description ?? ''}
+                      </p>
 
-                      return (
-                        <ToolItem
-                          key={toolName}
-                          toolName={toolName}
-                          enabled={tool.enabled}
-                          onToggle={() => handleToggleTool(toolName)}
-                          onSelect={() => selectTool(toolName)}
-                          isSelected={isSelected}
+                      <div className="bg-cyan-50 dark:bg-gray-800/80 dark:border dark:border-cyan-700 p-4 rounded-md mt-4">
+                        <h5 className="font-medium mb-2 dark:text-cyan-300">
+                          {t('MCP Tool Info')}
+                        </h5>
+                        <p className="text-sm text-gray-700 dark:text-gray-200">
+                          {t(
+                            'MCP tools are provided by Model Context Protocol servers. Click the JSON button above to view the full tool specification.'
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  ) : TOOLS_WITH_SETTINGS.includes(selectedTool) ? (
+                    <div className="w-full">
+                      <div className="prose dark:prose-invert max-w-none mb-4">
+                        <div className="flex items-center gap-2 mb-4">
+                          <p className="text-gray-700 dark:text-gray-100 font-bold mb-0">
+                            {t(`tool descriptions.${selectedTool}`, '')}
+                          </p>
+                          <PlanModeCompatibilityBadge toolName={selectedTool} />
+                        </div>
+                      </div>
+                      {selectedTool === 'retrieve' && selectedAgentId && (
+                        <KnowledgeBaseSettingForm
+                          knowledgeBases={getAgentKnowledgeBases(selectedAgentId)}
+                          setKnowledgeBases={(kbs) =>
+                            updateAgentKnowledgeBases(selectedAgentId, kbs)
+                          }
                         />
-                      )
-                    })}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* 右側: 設定コンテンツエリア - separate scrollable area */}
-          <div className="lg:w-2/3 flex-1 overflow-y-auto h-full max-h-[700px] dark:bg-gray-800 rounded-br-lg">
-            {selectedTool ? (
-              <div className="p-4">
-                <div className="sticky top-0 pt-1 pb-3 bg-white dark:bg-gray-800 z-20 mb-4 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium dark:text-white pb-3">{selectedTool}</h3>
-                    <button
-                      onClick={() => setShowJsonModal(true)}
-                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      title={t('View JSON Spec')}
-                    >
-                      <CodeBracketIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                    </button>
-                  </div>
-                </div>
-
-                {isMcpTool(selectedTool) ? (
-                  // MCP ツールの詳細表示
-                  <div className="prose dark:prose-invert max-w-none">
-                    <div className="flex items-center gap-2 mb-4">
-                      <p className="text-gray-700 dark:text-gray-100 font-bold mb-0">
-                        {selectedTool}
-                      </p>
-                      <span className="bg-cyan-100 text-cyan-800 text-xs font-medium px-2 py-0.5 rounded dark:bg-cyan-800/50 dark:text-cyan-200">
-                        MCP
-                      </span>
+                      )}
+                      {selectedTool === 'executeCommand' && selectedAgentId && (
+                        <CommandForm
+                          allowedCommands={getAgentAllowedCommands(selectedAgentId)}
+                          setAllowedCommands={(commands) =>
+                            updateAgentAllowedCommands(selectedAgentId, commands)
+                          }
+                          shell={shell}
+                          setShell={setShell}
+                        />
+                      )}
+                      {selectedTool === 'invokeBedrockAgent' && selectedAgentId && (
+                        <BedrockAgentSettingForm
+                          bedrockAgents={getAgentBedrockAgents(selectedAgentId)}
+                          setBedrockAgents={(agents) =>
+                            updateAgentBedrockAgents(selectedAgentId, agents)
+                          }
+                        />
+                      )}
+                      {selectedTool === 'tavilySearch' && (
+                        <TavilySearchSettingForm
+                          tavilySearchApiKey={tavilySearchApiKey}
+                          setTavilySearchApiKey={setTavilySearchApiKey}
+                        />
+                      )}
+                      {selectedTool === 'recognizeImage' && <RecognizeImageSettingForm />}
+                      {selectedTool === 'generateImage' && <GenerateImageSettingForm />}
+                      {(selectedTool === 'generateVideo' ||
+                        selectedTool === 'checkVideoStatus' ||
+                        selectedTool === 'downloadVideo') && <GenerateVideoSettingForm />}
+                      {selectedTool === 'think' && <ThinkToolSettingForm />}
+                      {selectedTool === 'invokeFlow' && selectedAgentId && (
+                        <FlowSettingForm
+                          flows={getAgentFlows(selectedAgentId)}
+                          setFlows={(flows) => updateAgentFlows(selectedAgentId, flows)}
+                        />
+                      )}
+                      {selectedTool === 'codeInterpreter' && <CodeInterpreterSettingForm />}
+                      {selectedTool === 'screenCapture' && <ScreenCaptureSettingForm />}
+                      {selectedTool === 'cameraCapture' && <CameraCaptureSettingForm />}
                     </div>
-
-                    <p className="mb-4 text-gray-700 dark:text-gray-200">
-                      {selectedToolBody?.toolSpec?.description ?? ''}
-                    </p>
-
-                    <div className="bg-cyan-50 dark:bg-gray-800/80 dark:border dark:border-cyan-700 p-4 rounded-md mt-4">
-                      <h5 className="font-medium mb-2 dark:text-cyan-300">{t('MCP Tool Info')}</h5>
-                      <p className="text-sm text-gray-700 dark:text-gray-200">
-                        {t(
-                          'MCP tools are provided by Model Context Protocol servers. Click the JSON button above to view the full tool specification.'
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                ) : TOOLS_WITH_SETTINGS.includes(selectedTool) ? (
-                  <div className="w-full">
-                    <div className="prose dark:prose-invert max-w-none mb-4">
+                  ) : (
+                    <div className="prose dark:prose-invert max-w-none">
                       <div className="flex items-center gap-2 mb-4">
                         <p className="text-gray-700 dark:text-gray-100 font-bold mb-0">
                           {t(`tool descriptions.${selectedTool}`, '')}
                         </p>
                         <PlanModeCompatibilityBadge toolName={selectedTool} />
                       </div>
-                    </div>
-                    {selectedTool === 'retrieve' && selectedAgentId && (
-                      <KnowledgeBaseSettingForm
-                        knowledgeBases={getAgentKnowledgeBases(selectedAgentId)}
-                        setKnowledgeBases={(kbs) => updateAgentKnowledgeBases(selectedAgentId, kbs)}
-                      />
-                    )}
-                    {selectedTool === 'executeCommand' && selectedAgentId && (
-                      <CommandForm
-                        allowedCommands={getAgentAllowedCommands(selectedAgentId)}
-                        setAllowedCommands={(commands) =>
-                          updateAgentAllowedCommands(selectedAgentId, commands)
-                        }
-                        shell={shell}
-                        setShell={setShell}
-                      />
-                    )}
-                    {selectedTool === 'invokeBedrockAgent' && selectedAgentId && (
-                      <BedrockAgentSettingForm
-                        bedrockAgents={getAgentBedrockAgents(selectedAgentId)}
-                        setBedrockAgents={(agents) =>
-                          updateAgentBedrockAgents(selectedAgentId, agents)
-                        }
-                      />
-                    )}
-                    {selectedTool === 'tavilySearch' && (
-                      <TavilySearchSettingForm
-                        tavilySearchApiKey={tavilySearchApiKey}
-                        setTavilySearchApiKey={setTavilySearchApiKey}
-                      />
-                    )}
-                    {selectedTool === 'recognizeImage' && <RecognizeImageSettingForm />}
-                    {selectedTool === 'generateImage' && <GenerateImageSettingForm />}
-                    {(selectedTool === 'generateVideo' ||
-                      selectedTool === 'checkVideoStatus' ||
-                      selectedTool === 'downloadVideo') && <GenerateVideoSettingForm />}
-                    {selectedTool === 'think' && <ThinkToolSettingForm />}
-                    {selectedTool === 'invokeFlow' && selectedAgentId && (
-                      <FlowSettingForm
-                        flows={getAgentFlows(selectedAgentId)}
-                        setFlows={(flows) => updateAgentFlows(selectedAgentId, flows)}
-                      />
-                    )}
-                    {selectedTool === 'codeInterpreter' && <CodeInterpreterSettingForm />}
-                    {selectedTool === 'screenCapture' && <ScreenCaptureSettingForm />}
-                    {selectedTool === 'cameraCapture' && <CameraCaptureSettingForm />}
-                  </div>
-                ) : (
-                  <div className="prose dark:prose-invert max-w-none">
-                    <div className="flex items-center gap-2 mb-4">
-                      <p className="text-gray-700 dark:text-gray-100 font-bold mb-0">
-                        {t(`tool descriptions.${selectedTool}`, '')}
-                      </p>
-                      <PlanModeCompatibilityBadge toolName={selectedTool} />
-                    </div>
 
-                    <p className="mb-2 text-gray-700 dark:text-gray-200">
-                      {t(
-                        `tool usage.${selectedTool}.description`,
-                        `This tool can be used by the AI assistant when enabled.`
-                      )}
-                    </p>
-
-                    <div className="bg-blue-50 dark:bg-gray-800/80 dark:border dark:border-blue-700 p-4 rounded-md mt-4">
-                      <h5 className="font-medium mb-2 dark:text-blue-300">{t('Tip')}</h5>
-                      <p className="text-sm text-gray-700 dark:text-gray-200">
+                      <p className="mb-2 text-gray-700 dark:text-gray-200">
                         {t(
-                          `tool usage.${selectedTool}.tip`,
-                          `Toggle the switch to enable or disable this tool.`
+                          `tool usage.${selectedTool}.description`,
+                          `This tool can be used by the AI assistant when enabled.`
                         )}
                       </p>
+
+                      <div className="bg-blue-50 dark:bg-gray-800/80 dark:border dark:border-blue-700 p-4 rounded-md mt-4">
+                        <h5 className="font-medium mb-2 dark:text-blue-300">{t('Tip')}</h5>
+                        <p className="text-sm text-gray-700 dark:text-gray-200">
+                          {t(
+                            `tool usage.${selectedTool}.tip`,
+                            `Toggle the switch to enable or disable this tool.`
+                          )}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-[700px] text-center text-gray-500 dark:text-gray-200 p-4">
-                <div className="text-5xl mb-4">🛠️</div>
-                <p className="text-base">{t('Select a tool from the list')}</p>
-                <p className="text-sm mt-2">
-                  {t('Click on any tool to view details and configuration options')}
-                </p>
-              </div>
-            )}
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-[700px] text-center text-gray-500 dark:text-gray-200 p-4">
+                  <div className="text-5xl mb-4">🛠️</div>
+                  <p className="text-base">{t('Select a tool from the list')}</p>
+                  <p className="text-sm mt-2">
+                    {t('Click on any tool to view details and configuration options')}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </Modal.Body>
-      <Modal.Footer className="dark:bg-gray-800 dark:border-t dark:border-gray-600 rounded-b-lg">
-        <Button
-          onClick={onClose}
-          className="dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
-        >
-          {t('Close')}
-        </Button>
-      </Modal.Footer>
+        </Modal.Body>
+        <Modal.Footer className="dark:bg-gray-800 dark:border-t dark:border-gray-600 rounded-b-lg">
+          <Button
+            onClick={onClose}
+            className="dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
+          >
+            {t('Close')}
+          </Button>
+        </Modal.Footer>
+      </div>
 
       {/* JSON Spec モーダル */}
       {selectedTool && (

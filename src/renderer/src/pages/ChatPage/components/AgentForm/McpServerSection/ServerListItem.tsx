@@ -32,15 +32,15 @@ export const ServerListItem: React.FC<ServerListItemProps> = ({
       {/* サーバー情報表示 */}
       <div className="flex justify-between items-start">
         <div>
-          <h5 className="font-medium text-sm flex items-center">
+          <h5 className="font-medium text-sm flex items-center text-gray-900 dark:text-gray-100">
             {server.name}
             {testingConnection === server.name && (
               <div className="ml-2 w-3 h-3 border-2 border-t-transparent border-blue-500 rounded-full animate-spin"></div>
             )}
           </h5>
           <p className="text-xs text-gray-500 dark:text-gray-400">{server.description}</p>
-          <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-1">
-            <code>
+          <p className="text-xs font-mono text-gray-600 dark:text-gray-300 mt-1">
+            <code className="text-gray-600 dark:text-gray-300">
               {server.command} {server.args.join(' ')}
             </code>
           </p>

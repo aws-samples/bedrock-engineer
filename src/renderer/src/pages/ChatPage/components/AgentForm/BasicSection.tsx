@@ -202,12 +202,12 @@ export const BasicSection: React.FC<BasicSectionProps> = ({
                   React.cloneElement(
                     AGENT_ICONS.find((opt) => opt.value === icon)?.icon as React.ReactElement,
                     {
-                      className: 'w-5 h-5',
+                      className: `w-5 h-5 ${!iconColor ? 'text-gray-700 dark:text-gray-300' : ''}`,
                       style: iconColor ? { color: iconColor } : undefined
                     }
                   )
                 ) : (
-                  <TbRobot className="w-5 h-5" />
+                  <TbRobot className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 )}
               </button>
 
