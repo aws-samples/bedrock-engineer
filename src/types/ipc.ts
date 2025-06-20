@@ -190,6 +190,15 @@ export interface IPCChannelDefinitions {
       data: any
     }
   }
+  'check-docker-availability': {
+    params: void
+    result: {
+      available: boolean
+      version?: string
+      error?: string
+      lastChecked: Date
+    }
+  }
 
   // エージェント関連
   'read-shared-agents': {

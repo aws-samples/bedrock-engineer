@@ -145,6 +145,17 @@ export interface SettingsContextType {
   awsProfile: string
   setAwsProfile: (profile: string) => void
 
+  // Proxy Settings
+  proxySettings: {
+    enabled: boolean
+    host: string
+    port: number
+    username: string
+    password: string
+    protocol: 'http' | 'https'
+  }
+  setProxySettings: (settings: Partial<SettingsContextType['proxySettings']>) => void
+
   // Custom Agents Settings
   customAgents: CustomAgent[]
   saveCustomAgents: (agents: CustomAgent[]) => void
@@ -330,6 +341,23 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [useAwsProfile, setStateUseAwsProfile] = useState<boolean>(false)
   const [awsProfile, setStateAwsProfile] = useState<string>('default')
 
+  // Proxy Settings
+  const [proxySettings, setStateProxySettings] = useState<{
+    enabled: boolean
+    host: string
+    port: number
+    username: string
+    password: string
+    protocol: 'http' | 'https'
+  }>({
+    enabled: false,
+    host: '',
+    port: 8080,
+    username: '',
+    password: '',
+    protocol: 'http'
+  })
+
   // Custom Agents Settings
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>([])
   const [sharedAgents, setSharedAgents] = useState<CustomAgent[]>([])
@@ -491,6 +519,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setStateAwsSessionToken(awsConfig.sessionToken || '')
       setStateUseAwsProfile(awsConfig.useProfile || false)
       setStateAwsProfile(awsConfig.profile || 'default')
+
+      // Load Proxy Settings
+      if (awsConfig.proxyConfig) {
+        setStateProxySettings({
+          enabled: awsConfig.proxyConfig.enabled || false,
+          host: awsConfig.proxyConfig.host || '',
+          port: awsConfig.proxyConfig.port || 8080,
+          username: awsConfig.proxyConfig.username || '',
+          password: awsConfig.proxyConfig.password || '',
+          protocol: awsConfig.proxyConfig.protocol || 'http'
+        })
+      }
     }
 
     // Load Custom Agents
@@ -984,14 +1024,41 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
   }
 
-  const saveAwsConfig = (credentials: AwsCredentialIdentity, region: string) => {
+  const setProxySettings = (settings: Partial<typeof proxySettings>) => {
+    const newSettings = { ...proxySettings, ...settings }
+    setStateProxySettings(newSettings)
+
+    const credentials: AwsCredentialIdentity = {
+      accessKeyId: awsAccessKeyId,
+      secretAccessKey: awsSecretAccessKey,
+      sessionToken: !awsSessionToken ? undefined : awsSessionToken
+    }
+    saveAwsConfig(credentials, awsRegion, newSettings)
+  }
+
+  const saveAwsConfig = (
+    credentials: AwsCredentialIdentity,
+    region: string,
+    proxy?: typeof proxySettings
+  ) => {
+    const proxyConfig = proxy || proxySettings
     window.store.set('aws', {
       accessKeyId: credentials.accessKeyId,
       secretAccessKey: credentials.secretAccessKey,
       sessionToken: credentials.sessionToken,
       region,
       useProfile: useAwsProfile,
-      profile: awsProfile
+      profile: awsProfile,
+      proxyConfig: proxyConfig.enabled
+        ? {
+            enabled: proxyConfig.enabled,
+            host: proxyConfig.host,
+            port: proxyConfig.port,
+            username: proxyConfig.username,
+            password: proxyConfig.password,
+            protocol: proxyConfig.protocol
+          }
+        : undefined
     })
   }
 
@@ -1611,6 +1678,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setUseAwsProfile,
     awsProfile,
     setAwsProfile,
+
+    // Proxy Settings
+    proxySettings,
+    setProxySettings,
 
     // Custom Agents Settings
     customAgents,
