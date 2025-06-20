@@ -174,13 +174,13 @@ const AgentSettingsModal = React.memo(
             )}
           </Modal.Header>
           <Modal.Body
-            className="p-0 dark:bg-gray-900 rounded-b-lg"
+            className="p-0 bg-white dark:bg-gray-900 rounded-b-lg"
             onClick={(e) => {
               // モーダルボディのクリックイベントは伝播させない
               e.stopPropagation()
             }}
           >
-            <div className="space-y-6 min-h-[1100px]">
+            <div className="space-y-6 min-h-[1100px] bg-white dark:bg-gray-900">
               {editingAgent ? (
                 <AgentForm
                   agent={editingAgent}
