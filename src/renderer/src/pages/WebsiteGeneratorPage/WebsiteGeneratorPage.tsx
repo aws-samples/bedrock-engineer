@@ -142,9 +142,13 @@ function WebsiteGeneratorPageInner() {
   // テンプレート固有のシステムプロンプトを直接使用
   const systemPrompt = useMemo(() => {
     // テンプレート固有のプロンプトを直接使用
-    const templateSpecificPrompt = prompts.WebsiteGenerator.system[template]({
+    const templateSpecificPrompt = prompts.WebsiteGenerator.system[
+      template as SupportedTemplate['id']
+    ]({
       styleType: styleType.value,
-      libraries: Object.keys(templates[template as SupportedTemplate['id']].customSetup.dependencies),
+      libraries: Object.keys(
+        templates[template as SupportedTemplate['id']].customSetup.dependencies
+      ),
       ragEnabled: enableKnowledgeBase,
       tavilySearchEnabled: enableSearch
     })
@@ -232,7 +236,10 @@ function WebsiteGeneratorPageInner() {
   const handleRefresh = useCallback(async () => {
     refresh()
 
-    const c = templates[template as SupportedTemplate['id']].files[templates[template as SupportedTemplate['id']].mainFile]?.code
+    const c =
+      templates[template as SupportedTemplate['id']].files[
+        templates[template as SupportedTemplate['id']].mainFile
+      ]?.code
     updateCode(c)
     setUserInput('')
     setGeneratedCode('') // Clear generated code from context
@@ -267,7 +274,7 @@ function WebsiteGeneratorPageInner() {
       // プロンプト生成
       const prompt = generateContinueDevelopmentPrompt(
         sandpack.files,
-        template,
+        template as SupportedTemplate['id'],
         styleType,
         userInput
       )
