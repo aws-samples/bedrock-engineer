@@ -42,8 +42,6 @@ import { generateContinueDevelopmentPrompt } from './utils/promptGenerator'
 import { useNavigate } from 'react-router'
 
 export default function WebsiteGeneratorPage() {
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-
   return (
     <WebsiteGeneratorProvider>
       <WebsiteGeneratorPageContents />
