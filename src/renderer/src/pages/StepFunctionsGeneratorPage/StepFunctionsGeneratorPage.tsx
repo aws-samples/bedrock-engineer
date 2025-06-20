@@ -44,7 +44,7 @@ function StepFunctionsGeneratorPageContents() {
   const {
     userInput,
     setUserInput,
-    aslDefinition,
+    aslDefinition: _aslDefinition,
     setAslDefinition,
     editorValue,
     setEditorValue,

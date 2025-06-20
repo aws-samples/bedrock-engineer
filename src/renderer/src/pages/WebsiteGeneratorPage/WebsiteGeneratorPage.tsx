@@ -52,7 +52,7 @@ export default function WebsiteGeneratorPage() {
 }
 
 function WebsiteGeneratorPageContents() {
-  const { template, setTemplate } = useWebsiteGeneratorSetting()
+  const { template, setTemplate: _setTemplateFromCtx } = useWebsiteGeneratorSetting()
   const _isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   return (
