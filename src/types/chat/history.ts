@@ -17,7 +17,14 @@ export interface ChatMessage {
     tools?: ToolState[]
     images?: AttachedImage[]
     converseMetadata?: Record<string, any> // BedrockのConverseStreamMetadataEvent型のデータを保存するフィールド
+    diagram?: DiagramMetadata // ダイアグラム関連のメタデータ
   }
+}
+
+export interface DiagramMetadata {
+  xml?: string
+  explanation?: string
+  diagramMode?: 'aws' | 'software-architecture' | 'business-process'
 }
 
 export interface SessionMetadata {

@@ -36,6 +36,9 @@ import { useNavigate } from 'react-router'
 import { generateCDKPrompt } from './utils/awsDetector'
 import { DiagramModeSelector, DiagramMode } from './components/DiagramModeSelector'
 import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
+import { DiagramHistoryModal } from './components/DiagramHistoryModal'
+import { useDiagramHistory } from './hooks/useDiagramHistory'
+import { HistoryButton } from '@renderer/components/HistoryButton'
 
 export default function DiagramGeneratorPage() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -73,6 +76,9 @@ export default function DiagramGeneratorPage() {
   const [xmlLoading, setXmlLoading] = useState(false)
   const [hasValidXml, setHasValidXml] = useState(false)
 
+  // 履歴モーダルの状態管理
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
+
   const {
     recommendDiagrams,
     recommendLoading,
@@ -86,6 +92,9 @@ export default function DiagramGeneratorPage() {
     t,
     i18n: { language }
   } = useTranslation()
+
+  // ダイアグラム履歴管理
+  const { saveDiagramSession } = useDiagramHistory()
 
   // システムプロンプトモーダル
   const {
@@ -159,16 +168,18 @@ export default function DiagramGeneratorPage() {
     return agentTools
   }, [enableSearch, getAgentTools, diagramAgentId])
 
-  const { messages, loading, handleSubmit, executingTool, latestReasoningText } = useAgentChat(
-    llm?.modelId,
-    systemPrompt,
-    diagramAgentId,
-    undefined,
-    {
-      enableHistory: false,
-      tools: diagramAgentTools // 明示的にツール設定を渡す
-    }
-  )
+  const {
+    messages,
+    loading,
+    handleSubmit,
+    executingTool,
+    latestReasoningText,
+    setCurrentSessionId,
+    currentSessionId
+  } = useAgentChat(llm?.modelId, systemPrompt, diagramAgentId, undefined, {
+    enableHistory: true, // 履歴保存を有効にする
+    tools: diagramAgentTools // 明示的にツール設定を渡す
+  })
 
   const onSubmit = (input: string, images?: AttachedImage[]) => {
     handleSubmit(input, images)
@@ -196,23 +207,14 @@ export default function DiagramGeneratorPage() {
   // モード変更時の処理
   const handleModeChange = useCallback(
     async (newMode: DiagramMode) => {
-      console.log('[DEBUG] Mode change initiated:', { from: diagramMode, to: newMode })
-
       setDiagramMode(newMode)
       // モード変更時にexampleDiagramを切り替える
       const newXml = exampleDiagrams[newMode] || exampleDiagrams['aws']
-
-      console.log('[DEBUG] Loading new XML for mode:', {
-        mode: newMode,
-        xmlLength: newXml.length,
-        xmlPreview: newXml.substring(0, 100) + '...'
-      })
 
       // DrawIOを明示的に更新してからステートを設定
       if (drawioRef.current) {
         try {
           await drawioRef.current.load({ xml: newXml })
-          console.log('[DEBUG] DrawIO load successful for new mode')
           setXml(newXml) // 成功後にステート更新
         } catch (error) {
           console.error('[DEBUG] Failed to load diagram for new mode:', error)
@@ -220,7 +222,6 @@ export default function DiagramGeneratorPage() {
           setXml(newXml)
         }
       } else {
-        console.log('[DEBUG] DrawIO ref not ready, setting XML state only')
         setXml(newXml)
       }
 
@@ -257,24 +258,12 @@ export default function DiagramGeneratorPage() {
         // ストリーミング中にXMLが利用可能になったら即座に反映
         if (xmlLoading && !hasValidXml && drawioRef.current) {
           const extractedXml = extractDrawioXml(currentText)
-          console.log('[DEBUG] XML extraction attempt:', {
-            xmlLoading,
-            hasValidXml,
-            drawioRefExists: !!drawioRef.current,
-            extractedXmlLength: extractedXml?.length || 0,
-            containsXmlTags: containsXmlTags(currentText),
-            isXmlComplete: isXmlComplete(currentText),
-            textPreview: currentText.substring(0, 200) + '...'
-          })
-
           if (extractedXml) {
             try {
-              console.log('[DEBUG] Loading XML to drawio:', extractedXml.substring(0, 200) + '...')
               drawioRef.current.load({ xml: extractedXml })
               setXml(extractedXml)
               setHasValidXml(true)
               setXmlLoading(false)
-              console.log('[DEBUG] XML loaded successfully, updated states')
             } catch (error) {
               console.error('Failed to load streaming XML:', error)
             }
@@ -298,26 +287,17 @@ export default function DiagramGeneratorPage() {
       return
     }
 
-    console.log('[DEBUG] XML state changed, scheduling drawio update:', {
-      xmlLength: xml.length,
-      xmlPreview: xml.substring(0, 200) + '...',
-      drawioExists: !!drawioRef.current
-    })
-
     // デバウンス処理で頻繁な更新を制御
     const timeoutId = setTimeout(async () => {
       if (drawioRef.current) {
         try {
           await drawioRef.current.load({ xml })
-          console.log('[DEBUG] DrawIO updated successfully via useEffect')
         } catch (error) {
-          console.error('[DEBUG] Failed to update DrawIO with new XML via useEffect:', error)
           // リトライ処理
           setTimeout(() => {
             if (drawioRef.current) {
               try {
                 drawioRef.current.load({ xml })
-                console.log('[DEBUG] DrawIO retry successful')
               } catch (retryError) {
                 console.error('[DEBUG] DrawIO retry failed:', retryError)
               }
@@ -409,6 +389,14 @@ export default function DiagramGeneratorPage() {
               return newHistory.slice(-10)
             })
           }
+
+          // メタデータを永続化（ローカルストレージ）
+          if (currentSessionId && lastUserMessage?.content) {
+            const userPrompt = lastUserMessage.content
+              .map((c) => ('text' in c ? c.text : ''))
+              .join('')
+            saveDiagramSession(currentSessionId, userPrompt, explanation, diagramMode)
+          }
         } catch (error) {
           console.error('Failed to load diagram:', error)
           // XMLの解析に失敗した場合、エラーメッセージをコンソールに表示
@@ -453,6 +441,11 @@ export default function DiagramGeneratorPage() {
     navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
   }, [xml, diagramExplanation, filteredExplanation, loading, navigate])
 
+  // 履歴セッション選択ハンドラー
+  const handleSelectHistorySession = (sessionId: string) => {
+    setCurrentSessionId(sessionId)
+  }
+
   return (
     <div className="flex flex-col p-3 h-[calc(100vh-14rem)]">
       {/* SystemPromptModal */}
@@ -460,6 +453,13 @@ export default function DiagramGeneratorPage() {
         isOpen={showSystemPromptModal}
         onClose={handleCloseSystemPromptModal}
         systemPrompt={systemPrompt}
+      />
+
+      {/* DiagramHistoryModal */}
+      <DiagramHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        onSelectSession={handleSelectHistorySession}
       />
 
       {/* Header */}
@@ -602,6 +602,11 @@ export default function DiagramGeneratorPage() {
                   handleToggleDeepSearch={() => setEnableSearch(!enableSearch)}
                 />
               )}
+              {/* Historyボタン */}
+              <HistoryButton
+                isActive={showHistoryModal}
+                onClick={() => setShowHistoryModal(true)}
+              />
               {/* 説明文表示切り替えボタン */}
               <Tooltip content={showExplanation ? 'Hide' : 'Show'} animation="duration-500">
                 <button
