@@ -53,12 +53,12 @@ export default function WebsiteGeneratorPage() {
 
 function WebsiteGeneratorPageContents() {
   const { template, setTemplate: _setTemplateFromCtx } = useWebsiteGeneratorSetting()
-  const _isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   return (
     <SandpackProvider
       template={template as SupportedTemplate['id']}
-      theme={_isDark ? 'dark' : 'light'}
+      theme={isDark ? 'dark' : 'light'}
       files={templates[template as SupportedTemplate['id']].files}
       style={{
         height: 'calc(100vh - 16rem)'
