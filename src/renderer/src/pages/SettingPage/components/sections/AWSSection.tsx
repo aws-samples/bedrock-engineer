@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FcKey, FcElectronics, FcMindMap } from 'react-icons/fc'
 import { IoMdClose } from 'react-icons/io'
-import { FiRefreshCw, FiCheckCircle, FiX } from 'react-icons/fi'
 import { SettingSection } from '../SettingSection'
 import { SettingInput } from '../SettingInput'
 import { SettingSelect } from '../SettingSelect'
@@ -89,9 +88,6 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
 }) => {
   const { t } = useTranslation()
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false)
-  const [isTestingProxy, setIsTestingProxy] = useState(false)
-  const [proxyTestResult, setProxyTestResult] = useState<{ success: boolean; message?: string } | null>(null)
-  const [isDetectingProxy, setIsDetectingProxy] = useState(false)
 
   const regionGroups = [
     {
@@ -133,59 +129,6 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
         (region) => region !== regionToRemove
       )
     })
-  }
-
-  // プロキシ接続テスト
-  const handleTestProxy = async () => {
-    setIsTestingProxy(true)
-    setProxyTestResult(null)
-    
-    try {
-      const result = await window.electron.ipcRenderer.invoke('proxy:test-connection', {
-        enabled: proxySettings.enabled,
-        host: proxySettings.host,
-        port: proxySettings.port,
-        username: proxySettings.username,
-        password: proxySettings.password,
-        protocol: proxySettings.protocol
-      })
-      
-      setProxyTestResult({
-        success: result.connected,
-        message: result.connected ? t('Proxy connection successful') : t('Proxy connection failed')
-      })
-    } catch (error) {
-      setProxyTestResult({
-        success: false,
-        message: t('Error testing proxy connection')
-      })
-    } finally {
-      setIsTestingProxy(false)
-    }
-  }
-
-  // OSプロキシ自動検出
-  const handleDetectSystemProxy = async () => {
-    setIsDetectingProxy(true)
-    
-    try {
-      const result = await window.electron.ipcRenderer.invoke('proxy:detect-system')
-      
-      if (result.success && result.proxy) {
-        onUpdateProxySettings({
-          enabled: true,
-          host: result.proxy.host || '',
-          port: result.proxy.port || 8080,
-          username: result.proxy.username || '',
-          password: result.proxy.password || '',
-          protocol: result.proxy.protocol || 'http'
-        })
-      }
-    } catch (error) {
-      console.error('Failed to detect system proxy:', error)
-    } finally {
-      setIsDetectingProxy(false)
-    }
   }
 
   const handleFailoverToggle = (checked: boolean) => {
