@@ -418,9 +418,9 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
   }
 
   return (
-    <Modal dismissible size="7xl" show={isOpen} onClose={onClose} className="dark:bg-gray-800">
+    <Modal dismissible size="7xl" show={isOpen} onClose={onClose} className="dark:bg-gray-900">
       <div className="border-[0.5px] border-white dark:border-gray-100 rounded-lg shadow-xl dark:shadow-gray-900/80">
-        <Modal.Header className="border-b border-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-t-lg">
+        <Modal.Header className="border-b border-gray-200 dark:border-gray-600 dark:bg-gray-900 dark:text-white rounded-t-lg">
           {hasSelectedAgent ? (
             <div className="flex items-center">
               <span>Agent Tools: </span>
@@ -436,16 +436,16 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
           )}
         </Modal.Header>
 
-        <Modal.Body className="p-0 h-[700px] dark:bg-gray-800 rounded-b-lg">
+        <Modal.Body className="p-0 h-[700px] dark:bg-gray-900 rounded-b-lg">
           <div className="flex h-full w-full rounded-lg">
             {/* 左側サイドバー：ツールリスト - fixed height with own scrollbar */}
-            <div className="lg:w-1/3 w-[60px] border-r border-gray-200 dark:border-gray-600 overflow-y-auto h-full max-h-[700px] flex-shrink-0 dark:bg-gray-800 rounded-bl-lg">
+            <div className="lg:w-1/3 w-[60px] border-r border-gray-200 dark:border-gray-600 overflow-y-auto h-full max-h-[700px] flex-shrink-0 dark:bg-gray-900 rounded-bl-lg">
               <div className="h-full">
                 {/* カテゴリごとのセクション */}
                 {categorizedTools.map((category) => (
                   <div key={category.id} className="mb-4">
                     {/* カテゴリヘッダー - 背景色と影を追加して重なり防止 */}
-                    <div className="p-3 bg-gray-50 dark:bg-gray-700 font-medium sticky top-0 z-20 shadow-sm lg:block hidden">
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800 font-medium sticky top-0 z-20 shadow-sm lg:block hidden">
                       <div className="text-sm text-gray-700 dark:text-gray-100 font-semibold">
                         {t(`Tool Categories.${category.name}`)}
                       </div>
@@ -480,10 +480,10 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
             </div>
 
             {/* 右側: 設定コンテンツエリア - separate scrollable area */}
-            <div className="lg:w-2/3 flex-1 overflow-y-auto h-full max-h-[700px] dark:bg-gray-800 rounded-br-lg">
+            <div className="lg:w-2/3 flex-1 overflow-y-auto h-full max-h-[700px] dark:bg-gray-900 rounded-br-lg">
               {selectedTool ? (
                 <div className="p-4">
-                  <div className="sticky top-0 pt-1 pb-3 bg-white dark:bg-gray-800 z-20 mb-4 border-b border-gray-200 dark:border-gray-700">
+                  <div className="sticky top-0 pt-1 pb-3 bg-white dark:bg-gray-900 z-20 mb-4 border-b border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-medium dark:text-white pb-3">{selectedTool}</h3>
                       <button
@@ -621,7 +621,7 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
             </div>
           </div>
         </Modal.Body>
-        <Modal.Footer className="dark:bg-gray-800 dark:border-t dark:border-gray-600 rounded-b-lg">
+        <Modal.Footer className="dark:bg-gray-900 dark:border-t dark:border-gray-600 rounded-b-lg">
           <Button
             onClick={onClose}
             className="dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
