@@ -25,6 +25,11 @@ export type ProxyConfiguration = {
   protocol?: 'http' | 'https'
 }
 
+export type ProxySettings = {
+  proxyConfig?: ProxyConfiguration
+  autoDetectProxy?: boolean // OSプロキシ自動検出を有効にするか
+}
+
 export type AWSCredentials = {
   accessKeyId: string
   secretAccessKey: string
@@ -33,6 +38,7 @@ export type AWSCredentials = {
   profile?: string
   useProfile?: boolean
   proxyConfig?: ProxyConfiguration
+  autoDetectProxy?: boolean
 }
 
 export interface ThinkingMode {

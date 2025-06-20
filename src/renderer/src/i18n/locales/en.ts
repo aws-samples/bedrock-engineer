@@ -52,7 +52,17 @@ const Translation = {
   'auto-detect': 'Auto Detect',
   clearCache: 'Clear Translation Cache',
   cacheStats: 'Cache Statistics',
-  translationSettings: 'Translation Settings'
+  translationSettings: 'Translation Settings',
+
+  // Proxy settings
+  'Auto Detect': 'Auto Detect',
+  'Auto-detect system proxy when manual proxy is disabled':
+    'Auto-detect system proxy when manual proxy is disabled',
+  'Test Connection': 'Test Connection',
+  'Testing...': 'Testing...',
+  'Proxy connection successful': 'Proxy connection successful',
+  'Proxy connection failed': 'Proxy connection failed',
+  'Error testing proxy connection': 'Error testing proxy connection'
 }
 
 const SettingPage = {
@@ -66,8 +76,8 @@ const SettingPage = {
   'Password (optional)': 'Password (optional)',
   'Enter username': 'Enter username',
   'Enter password': 'Enter password',
-  'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.':
-    'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.',
+  'Proxy settings will be applied to both AWS SDK connections and browser sessions. Please test your configuration to ensure proper connectivity.':
+    'Proxy settings will be applied to both AWS SDK connections and browser sessions. Please test your configuration to ensure proper connectivity.',
   'Config Directory': 'Config Directory',
   'Config Directory Description':
     'This is the directory where the application settings are stored.',

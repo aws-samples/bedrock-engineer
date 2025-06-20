@@ -4,12 +4,19 @@ import { BedrockAgentRuntimeClient } from '@aws-sdk/client-bedrock-agent-runtime
 import { TranslateClient } from '@aws-sdk/client-translate'
 import { fromIni } from '@aws-sdk/credential-providers'
 import { NovaSonicBidirectionalStreamClient } from '../sonic/client'
-import type { AWSCredentials, ProxyConfiguration } from './types'
+import type { AWSCredentials } from './types'
 import { S3Client } from '@aws-sdk/client-s3'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { NodeHttpHandler } from '@smithy/node-http-handler'
 
-function createHttpOptions(proxyConfig?: ProxyConfiguration) {
+function createHttpOptions(awsCredentials: AWSCredentials) {
+  // プロキシ設定の優先順位に従って決定
+  const { resolveProxyConfig } = require('../../lib/proxy-utils')
+  const proxyConfig = resolveProxyConfig(
+    awsCredentials.proxyConfig,
+    awsCredentials.autoDetectProxy ?? true
+  )
+
   if (!proxyConfig?.enabled || !proxyConfig.host) {
     return {}
   }
@@ -33,8 +40,8 @@ function createHttpOptions(proxyConfig?: ProxyConfiguration) {
 }
 
 export function createS3Client(awsCredentials: AWSCredentials) {
-  const { region, useProfile, profile, proxyConfig, ...credentials } = awsCredentials
-  const httpOptions = createHttpOptions(proxyConfig)
+  const { region, useProfile, profile, ...credentials } = awsCredentials
+  const httpOptions = createHttpOptions(awsCredentials)
 
   if (useProfile) {
     return new S3Client({
@@ -52,8 +59,8 @@ export function createS3Client(awsCredentials: AWSCredentials) {
 }
 
 export function createRuntimeClient(awsCredentials: AWSCredentials) {
-  const { region, useProfile, profile, proxyConfig, ...credentials } = awsCredentials
-  const httpOptions = createHttpOptions(proxyConfig)
+  const { region, useProfile, profile, ...credentials } = awsCredentials
+  const httpOptions = createHttpOptions(awsCredentials)
 
   if (useProfile) {
     return new BedrockRuntimeClient({
@@ -71,8 +78,8 @@ export function createRuntimeClient(awsCredentials: AWSCredentials) {
 }
 
 export function createBedrockClient(awsCredentials: AWSCredentials) {
-  const { region, useProfile, profile, proxyConfig, ...credentials } = awsCredentials
-  const httpOptions = createHttpOptions(proxyConfig)
+  const { region, useProfile, profile, ...credentials } = awsCredentials
+  const httpOptions = createHttpOptions(awsCredentials)
 
   if (useProfile) {
     return new BedrockClient({
@@ -90,8 +97,8 @@ export function createBedrockClient(awsCredentials: AWSCredentials) {
 }
 
 export function createAgentRuntimeClient(awsCredentials: AWSCredentials) {
-  const { region, useProfile, profile, proxyConfig, ...credentials } = awsCredentials
-  const httpOptions = createHttpOptions(proxyConfig)
+  const { region, useProfile, profile, ...credentials } = awsCredentials
+  const httpOptions = createHttpOptions(awsCredentials)
 
   if (useProfile) {
     return new BedrockAgentRuntimeClient({
@@ -109,8 +116,8 @@ export function createAgentRuntimeClient(awsCredentials: AWSCredentials) {
 }
 
 export function createNovaSonicClient(awsCredentials: AWSCredentials) {
-  const { region, useProfile, profile, proxyConfig, ...credentials } = awsCredentials
-  const httpOptions = createHttpOptions(proxyConfig)
+  const { region, useProfile, profile, ...credentials } = awsCredentials
+  const httpOptions = createHttpOptions(awsCredentials)
 
   const clientConfig = useProfile
     ? { region, credentials: fromIni({ profile }), ...httpOptions }
@@ -125,8 +132,8 @@ export function createNovaSonicClient(awsCredentials: AWSCredentials) {
 }
 
 export function createTranslateClient(awsCredentials: AWSCredentials) {
-  const { region, useProfile, profile, proxyConfig, ...credentials } = awsCredentials
-  const httpOptions = createHttpOptions(proxyConfig)
+  const { region, useProfile, profile, ...credentials } = awsCredentials
+  const httpOptions = createHttpOptions(awsCredentials)
 
   if (useProfile) {
     return new TranslateClient({

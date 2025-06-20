@@ -6,6 +6,7 @@ import { server } from './api'
 import Store from 'electron-store'
 import getRandomPort from '../preload/lib/random-port'
 import { store } from '../preload/store'
+import { resolveProxyConfig, convertToElectronProxyConfig } from './lib/proxy-utils'
 import {
   initLoggerConfig,
   initLogger,
@@ -21,6 +22,7 @@ import { agentHandlers } from './handlers/agent-handlers'
 import { utilHandlers } from './handlers/util-handlers'
 import { screenHandlers } from './handlers/screen-handlers'
 import { cameraHandlers } from './handlers/camera-handlers'
+import { registerProxyHandlers } from './handlers/proxy-handlers'
 // 動的インポートを使用してfix-pathパッケージを読み込む
 import('fix-path')
   .then((fixPathModule) => {
@@ -35,6 +37,50 @@ Store.initRenderer()
 // Initialize category loggers
 const apiLogger = createCategoryLogger('api')
 const agentsLogger = createCategoryLogger('agents')
+
+/**
+ * BrowserWindow Session のプロキシ設定を適用
+ */
+async function setupSessionProxy(window: BrowserWindow): Promise<void> {
+  try {
+    // ストアからAWS設定を読み取り
+    const awsConfig = store.get('aws') as any
+
+    // プロキシ設定を決定
+    const proxyConfig = resolveProxyConfig(
+      awsConfig?.proxyConfig,
+      awsConfig?.autoDetectProxy ?? true
+    )
+
+    if (proxyConfig) {
+      const electronProxyRules = convertToElectronProxyConfig(proxyConfig)
+
+      if (electronProxyRules) {
+        await window.webContents.session.setProxy({
+          mode: 'fixed_servers',
+          proxyRules: electronProxyRules
+        })
+
+        log.info('Session proxy configured', {
+          host: proxyConfig.host,
+          port: proxyConfig.port,
+          proxyRules: electronProxyRules
+        })
+      }
+    } else {
+      // プロキシなしの場合は直接接続
+      await window.webContents.session.setProxy({
+        mode: 'direct'
+      })
+
+      log.debug('Session proxy disabled - using direct connection')
+    }
+  } catch (error) {
+    log.error('Failed to setup session proxy', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+  }
+}
 
 function createMenu(window: BrowserWindow) {
   const isMac = process.platform === 'darwin'
@@ -173,6 +219,9 @@ async function createWindow(): Promise<void> {
   // Create menu with mainWindow
   createMenu(mainWindow)
 
+  // セッションレベルでプロキシを設定
+  await setupSessionProxy(mainWindow)
+
   // Add zoom-related shortcut keys
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.control || input.meta) {
@@ -303,6 +352,9 @@ app.whenReady().then(async () => {
   registerIpcHandlers(screenHandlers, { loggerCategory: 'screen:ipc' })
   registerIpcHandlers(cameraHandlers, { loggerCategory: 'camera:ipc' })
 
+  // プロキシ関連IPCハンドラーの登録
+  registerProxyHandlers()
+
   // ログハンドラーの登録
   registerLogHandler()
 
@@ -351,6 +403,29 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+/**
+ * プロキシ設定変更時の動的適用（再起動不要）
+ */
+export async function updateProxySettings(): Promise<void> {
+  if (!mainWindow) {
+    log.warn('Cannot update proxy settings: mainWindow is null')
+    return
+  }
+
+  try {
+    // セッションプロキシを再設定
+    await setupSessionProxy(mainWindow)
+
+    // AWS SDKクライアントは次回作成時に新しい設定が適用される
+    log.info('Proxy settings updated successfully')
+  } catch (error) {
+    log.error('Failed to update proxy settings', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+    throw error
+  }
+}
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
