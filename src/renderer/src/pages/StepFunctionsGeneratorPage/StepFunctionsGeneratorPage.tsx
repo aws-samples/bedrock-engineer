@@ -18,8 +18,17 @@ import {
   generateCDKImplementPromptJa
 } from './utils/cdkPromptGenerator'
 import { useNavigate } from 'react-router'
+import { StepFunctionsGeneratorProvider, useStepFunctionsGenerator } from '@renderer/contexts/StepFunctionsGeneratorContext'
 
-function StepFunctionsGeneratorPage() {
+export default function StepFunctionsGeneratorPage() {
+  return (
+    <StepFunctionsGeneratorProvider>
+      <StepFunctionsGeneratorPageContents />
+    </StepFunctionsGeneratorProvider>
+  )
+}
+
+function StepFunctionsGeneratorPageContents() {
   const {
     t,
     i18n: { language: lng }
@@ -29,18 +38,41 @@ function StepFunctionsGeneratorPage() {
 
   const systemPrompt = prompts.StepFunctonsGenerator.system(lng)
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_asl, setAsl] = useState(SAMPLE_ASL_PARALLEL)
-  const [editorValue, setEditorValue] = useState(JSON.stringify(SAMPLE_ASL_PARALLEL, null, 2))
-  const [userInput, setUserInput] = useState('')
-  // ステートマシン生成完了フラグ
-  const [hasValidStateMachine, setHasValidStateMachine] = useState(false)
+  const {
+    userInput,
+    setUserInput,
+    aslDefinition,
+    setAslDefinition,
+    editorValue,
+    setEditorValue,
+    hasValidStateMachine,
+    setHasValidStateMachine,
+    attachedImages,
+    setAttachedImages,
+    generatedExplanation,
+    setGeneratedExplanation
+  } = useStepFunctionsGenerator()
+
   const { currentLLM: llm, sendMsgKey } = useSetting()
   const { messages, handleSubmit, loading, lastText } = useChat({
     systemPrompt,
     modelId: llm.modelId
   })
+
+  // Initialize with saved state if available
+  useEffect(() => {
+    if (editorValue && !messages.length) {
+      // If we have saved editor value but no messages, restore the visualization
+      try {
+        const json = JSON.parse(editorValue)
+        setAslDefinition(json)
+      } catch (e) {
+        // If parsing fails, ignore - will use default
+      }
+    }
+  }, [])
   const onSubmit = (input: string, images: AttachedImage[]) => {
+    setAttachedImages(images)
     handleSubmit(input, images)
     setUserInput('')
   }
@@ -102,7 +134,7 @@ function StepFunctionsGeneratorPage() {
         if (lastMessageText && lastMessageText.trim()) {
           const json = JSON.parse(lastMessageText)
           console.log(json)
-          setAsl(json)
+          setAslDefinition(json)
           // ステートマシンが正常に生成された場合、フラグをセット
           setHasValidStateMachine(true)
         }
@@ -111,7 +143,7 @@ function StepFunctionsGeneratorPage() {
         console.error(lastMessageText)
       }
     }
-  }, [messages, loading])
+  }, [messages, loading, setEditorValue, setAslDefinition, setHasValidStateMachine])
 
   const [isComposing, setIsComposing] = useState(false)
 

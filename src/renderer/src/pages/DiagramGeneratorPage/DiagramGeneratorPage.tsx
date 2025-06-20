@@ -36,18 +36,37 @@ import { useNavigate } from 'react-router'
 import { generateCDKPrompt } from './utils/awsDetector'
 import { DiagramModeSelector, DiagramMode } from './components/DiagramModeSelector'
 import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
+import { DiagramGeneratorProvider, useDiagramGenerator } from '@renderer/contexts/DiagramGeneratorContext'
 
 export default function DiagramGeneratorPage() {
+  return (
+    <DiagramGeneratorProvider>
+      <DiagramGeneratorPageContents />
+    </DiagramGeneratorProvider>
+  )
+}
+
+function DiagramGeneratorPageContents() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
-  const [userInput, setUserInput] = useState('')
-  const [xml, setXml] = useState(exampleDiagrams['aws'])
+  const {
+    userInput,
+    setUserInput,
+    xml,
+    setXml,
+    diagramMode,
+    setDiagramMode,
+    attachedImages,
+    setAttachedImages,
+    generatedExplanation,
+    setGeneratedExplanation,
+    showExplanation,
+    setShowExplanation
+  } = useDiagramGenerator()
+
   const [isComposing, setIsComposing] = useState(false)
   const drawioRef = useRef<DrawIoEmbedRef>(null)
   const { currentLLM: llm, sendMsgKey, getAgentTools, enabledTavilySearch } = useSetting()
-
-  // ダイアグラムモードの状態
-  const [diagramMode, setDiagramMode] = useState<DiagramMode>('aws')
 
   // 検索機能の状態
   const [enableSearch, setEnableSearch] = useState(false)
@@ -56,11 +75,7 @@ export default function DiagramGeneratorPage() {
   const [diagramHistory, setDiagramHistory] = useState<
     { xml: string; explanation: string; prompt: string }[]
   >([])
-  // 説明文の表示・非表示を切り替えるためのフラグ
-  const [showExplanation, setShowExplanation] = useState(true)
-  // 説明文を保持する状態
-  const [diagramExplanation, setDiagramExplanation] = useState<string>('')
-  // ストリーミング中の説明文を保持する状態
+  // ストリーミング中の説明文を保持する状態（一時的）
   const [streamingExplanation, setStreamingExplanation] = useState<string>('')
   const [selectedHistoryIndex, setSelectedHistoryIndex] = useState<number | null>(null)
 
@@ -171,6 +186,7 @@ export default function DiagramGeneratorPage() {
   )
 
   const onSubmit = (input: string, images?: AttachedImage[]) => {
+    setAttachedImages(images || [])
     handleSubmit(input, images)
     setUserInput('')
     // 履歴から選択していた場合はリセット
@@ -185,8 +201,24 @@ export default function DiagramGeneratorPage() {
 
     // 既存のダイアグラムをクリアして即座にローダーを表示
     setXml('')
-    setDiagramExplanation('')
+    setGeneratedExplanation('')
   }
+
+  // Initialize diagram with saved state or example
+  useEffect(() => {
+    if (!xml) {
+      // No saved state, use example diagram
+      setXml(exampleDiagrams[diagramMode])
+      if (drawioRef.current) {
+        drawioRef.current.load({ xml: exampleDiagrams[diagramMode] })
+      }
+    } else {
+      // Restore saved diagram
+      if (drawioRef.current) {
+        drawioRef.current.load({ xml })
+      }
+    }
+  }, [diagramMode]) // Run when diagram mode changes
 
   // システムプロンプトを検索状態やモード変更に応じて更新
   useEffect(() => {
@@ -234,13 +266,13 @@ export default function DiagramGeneratorPage() {
   const handleModeRefresh = useCallback(() => {
     // 現在の図をクリア
     setXml('')
-    setDiagramExplanation('')
+    setGeneratedExplanation('')
     setStreamingExplanation('')
     setUserInput('')
     // 履歴もクリア
     setDiagramHistory([])
     setSelectedHistoryIndex(null)
-  }, [])
+  }, [setXml, setGeneratedExplanation, setUserInput])
 
   // ストリーミング中の説明文を抽出・更新
   useEffect(() => {
@@ -394,7 +426,7 @@ export default function DiagramGeneratorPage() {
           drawioRef.current.load({ xml: validXml })
           setXml(validXml)
           // 説明文を設定
-          setDiagramExplanation(explanation)
+          setGeneratedExplanation(explanation)
           // Generate new recommendations based on the current diagram
           getRecommendDiagrams(validXml)
 
@@ -426,7 +458,7 @@ export default function DiagramGeneratorPage() {
         try {
           drawioRef.current.load({ xml: historyItem.xml })
           setXml(historyItem.xml)
-          setDiagramExplanation(historyItem.explanation)
+          setGeneratedExplanation(historyItem.explanation)
           setUserInput(historyItem.prompt)
           setSelectedHistoryIndex(index)
         } catch (error) {
@@ -444,14 +476,14 @@ export default function DiagramGeneratorPage() {
   // AWS CDK変換ハンドラー
   const handleCDKConversion = useCallback(() => {
     const currentExplanation =
-      loading && filteredExplanation ? filteredExplanation : diagramExplanation || ''
+      loading && filteredExplanation ? filteredExplanation : generatedExplanation || ''
 
     const prompt = generateCDKPrompt(xml, currentExplanation)
 
     // Agent Chat画面に遷移し、プロンプトをクエリパラメータで渡す
     // CDK Developer エージェントを指定
     navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
-  }, [xml, diagramExplanation, filteredExplanation, loading, navigate])
+  }, [xml, generatedExplanation, filteredExplanation, loading, navigate])
 
   return (
     <div className="flex flex-col p-3 h-[calc(100vh-14rem)]">
@@ -568,7 +600,7 @@ export default function DiagramGeneratorPage() {
                 explanation={
                   loading && filteredExplanation
                     ? filteredExplanation
-                    : diagramExplanation || 'ダイアグラムの説明がここに表示されます。'
+                    : generatedExplanation || 'ダイアグラムの説明がここに表示されます。'
                 }
                 isStreaming={loading && filteredExplanation.length > 0}
                 isVisible={showExplanation}

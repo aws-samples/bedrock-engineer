@@ -23,7 +23,7 @@ import useSetting from '@renderer/hooks/useSetting'
 import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
 import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
 import { extractCode, extractCodeBlock, replacePlaceholders } from './util'
-import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
+import { useWebsiteGeneratorSetting } from '@renderer/contexts/WebsiteGeneratorContext'
 import { WebsiteGeneratorProvider } from '@renderer/contexts/WebsiteGeneratorContext'
 import { TemplateButton } from './components/TemplateButton'
 import { Preview } from './components/Preview'
@@ -42,44 +42,61 @@ import { generateContinueDevelopmentPrompt } from './utils/promptGenerator'
 import { useNavigate } from 'react-router'
 
 export default function WebsiteGeneratorPage() {
-  const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
-
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   return (
     <WebsiteGeneratorProvider>
-      <SandpackProvider
-        template={template}
-        theme={isDark ? 'dark' : 'light'}
-        files={templates[template].files}
-        style={{
-          height: 'calc(100vh - 16rem)'
-        }}
-        options={{
-          externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
-          initMode: 'user-visible',
-          recompileMode: 'immediate',
-          recompileDelay: 500,
-          autorun: true,
-          autoReload: true
-        }}
-        customSetup={{
-          dependencies: templates[template].customSetup.dependencies
-        }}
-      >
-        <WebsiteGeneratorPageContents template={template} setTemplate={setTemplate} />
-      </SandpackProvider>
+      <WebsiteGeneratorPageContents />
     </WebsiteGeneratorProvider>
   )
 }
 
-type WebsiteGeneratorPageContentsProps = {
-  template: SupportedTemplate['id']
-  setTemplate: (template: SupportedTemplate['id']) => void
+function WebsiteGeneratorPageContents() {
+  const { template, setTemplate } = useWebsiteGeneratorSetting()
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
+  return (
+    <SandpackProvider
+      template={template as SupportedTemplate['id']}
+      theme={isDark ? 'dark' : 'light'}
+      files={templates[template as SupportedTemplate['id']].files}
+      style={{
+        height: 'calc(100vh - 16rem)'
+      }}
+      options={{
+        externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
+        initMode: 'user-visible',
+        recompileMode: 'immediate',
+        recompileDelay: 500,
+        autorun: true,
+        autoReload: true
+      }}
+      customSetup={{
+        dependencies: templates[template as SupportedTemplate['id']].customSetup.dependencies
+      }}
+    >
+      <WebsiteGeneratorPageInner />
+    </SandpackProvider>
+  )
 }
 
-function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) {
-  const { template, setTemplate } = props
+function WebsiteGeneratorPageInner() {
+  const { 
+    template, 
+    setTemplate, 
+    userInput, 
+    setUserInput, 
+    generatedCode, 
+    setGeneratedCode, 
+    xml, 
+    setXml, 
+    attachedImages, 
+    setAttachedImages,
+    knowledgeBases,
+    enableKnowledgeBase,
+    enableSearch,
+    setEnableSearch
+  } = useWebsiteGeneratorSetting()
   const { sandpack } = useSandpack()
   const { runSandpack } = sandpack
   const { updateCode, code } = useActiveCode()
@@ -90,7 +107,6 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     useRecommendChanges()
 
   const [showCode, setShowCode] = useState(false)
-  const [userInput, setUserInput] = useState('')
   const { currentLLM: llm, sendMsgKey, getAgentTools } = useSetting()
   // 継続開発ボタン表示の制御状態
   const [showContinueDevelopmentButton, setShowContinueDevelopmentButton] = useState(false)
@@ -110,8 +126,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     handleOpen: handleOpenDataSourceConnectModal,
     DataSourceConnectModal
   } = useDataSourceConnectModal()
-  const { knowledgeBases, enableKnowledgeBase, enableSearch, setEnableSearch } =
-    useWebsiteGeneratorSettings()
+  // Knowledge Base settings are already available from useWebsiteGeneratorSetting above
 
   // テンプレートに応じたエージェントIDの選択
   const getAgentIdForTemplate = (template: SupportedTemplate['id']): string => {
@@ -180,12 +195,21 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     clearChat: initChat
   } = useAgentChat(llm?.modelId, systemPrompt, websiteAgentId, sessionId, options)
 
+  // Initialize with saved state from context
+  useEffect(() => {
+    if (generatedCode) {
+      updateCode(generatedCode)
+      runSandpack()
+    }
+  }, [template]) // Run when template changes to restore saved code
+
   // テンプレート変更時にチャットをリセット
   useEffect(() => {
     initChat() // エージェントが変わったらチャット履歴をクリア
   }, [websiteAgentId, initChat])
 
   const onSubmit = (input: string, images: AttachedImage[]) => {
+    setAttachedImages(images)
     handleSubmit(input, images)
     setUserInput('')
   }
@@ -213,6 +237,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     const c = templates[template].files[templates[template].mainFile]?.code
     updateCode(c)
     setUserInput('')
+    setGeneratedCode('') // Clear generated code from context
     setStyleType({
       label: 'Tailwind.css',
       value: 'tailwind'
@@ -220,18 +245,19 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     refleshRecommendChanges()
     initChat()
     runSandpack()
-  }, [template, updateCode, initChat, runSandpack])
+  }, [template, updateCode, initChat, runSandpack, setGeneratedCode])
 
   useEffect(() => {
     if (messages?.length > 0) {
       updateCode(lastText)
+      setGeneratedCode(lastText) // Save generated code to context
       if (!loading) {
         runSandpack()
         // ウェブサイトの生成が完了したら継続開発ボタンを表示する
         setShowContinueDevelopmentButton(true)
       }
     }
-  }, [loading, lastText])
+  }, [loading, lastText, setGeneratedCode])
 
   const [isComposing, setIsComposing] = useState(false)
 
@@ -347,6 +373,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
                           )
                           if (code) {
                             updateCode(code[0], true)
+                            setGeneratedCode(code[0]) // Save to context
                             setUserInput(
                               filterdMessages[index - 1]?.content?.map((i) => i.text).join('') ?? ''
                             )
