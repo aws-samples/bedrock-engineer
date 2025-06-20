@@ -22,25 +22,20 @@ export class AgentManager {
   }
 
   async listAgents(): Promise<CustomAgent[]> {
-    return [
-      ...DEFAULT_AGENTS,
-      ...this.customAgents,
-      ...this.sharedAgents,
-      ...this.directoryAgents
-    ]
+    return [...DEFAULT_AGENTS, ...this.customAgents, ...this.sharedAgents, ...this.directoryAgents]
   }
 
   async getAgent(idOrName: string): Promise<CustomAgent | null> {
     const agents = await this.listAgents()
-    
+
     // Try to find by ID first
-    let agent = agents.find(a => a.id === idOrName)
-    
+    let agent = agents.find((a) => a.id === idOrName)
+
     // If not found by ID, try to find by name (case-insensitive)
     if (!agent) {
-      agent = agents.find(a => a.name.toLowerCase() === idOrName.toLowerCase())
+      agent = agents.find((a) => a.name.toLowerCase() === idOrName.toLowerCase())
     }
-    
+
     return agent || null
   }
 
@@ -61,11 +56,11 @@ export class AgentManager {
       system: config.system,
       scenarios: [],
       isCustom: true,
-      category: config.category as any || 'custom',
-      icon: config.icon as any || 'robot',
+      category: (config.category as any) || 'custom',
+      icon: (config.icon as any) || 'robot',
       iconColor: config.iconColor || '#3B82F6',
       tags: config.tags || [],
-      tools: config.tools as any || []
+      tools: (config.tools as any) || []
     }
 
     // Validate the agent
@@ -76,22 +71,22 @@ export class AgentManager {
 
     // Add to custom agents
     this.customAgents.push(agent)
-    
+
     // Save to config
     await this.saveCustomAgents()
-    
+
     logger.success(`Created agent: ${agent.name}`)
     return agent
   }
 
   async updateAgent(id: string, updates: Partial<CustomAgent>): Promise<CustomAgent> {
-    const agentIndex = this.customAgents.findIndex(a => a.id === id)
+    const agentIndex = this.customAgents.findIndex((a) => a.id === id)
     if (agentIndex === -1) {
       throw new Error(`Agent not found: ${id}`)
     }
 
     const updatedAgent = { ...this.customAgents[agentIndex], ...updates }
-    
+
     // Validate the updated agent
     const validation = await this.validateAgent(updatedAgent)
     if (!validation.isValid) {
@@ -100,13 +95,13 @@ export class AgentManager {
 
     this.customAgents[agentIndex] = updatedAgent
     await this.saveCustomAgents()
-    
+
     logger.success(`Updated agent: ${updatedAgent.name}`)
     return updatedAgent
   }
 
   async deleteAgent(id: string): Promise<boolean> {
-    const agentIndex = this.customAgents.findIndex(a => a.id === id)
+    const agentIndex = this.customAgents.findIndex((a) => a.id === id)
     if (agentIndex === -1) {
       return false
     }
@@ -114,7 +109,7 @@ export class AgentManager {
     const agent = this.customAgents[agentIndex]
     this.customAgents.splice(agentIndex, 1)
     await this.saveCustomAgents()
-    
+
     logger.success(`Deleted agent: ${agent.name}`)
     return true
   }
@@ -147,13 +142,29 @@ export class AgentManager {
       // Here we could validate that the tools exist in the system
       // For now, just warn about unknown tools
       const knownTools = [
-        'createFolder', 'writeToFile', 'readFiles', 'listFiles', 'moveFile', 'copyFile',
-        'tavilySearch', 'fetchWebsite', 'generateImage', 'recognizeImage', 'executeCommand',
-        'codeInterpreter', 'screenCapture', 'cameraCapture', 'retrieve', 'invokeBedrockAgent',
-        'invokeFlow', 'generateVideo', 'checkVideoStatus', 'downloadVideo'
+        'createFolder',
+        'writeToFile',
+        'readFiles',
+        'listFiles',
+        'moveFile',
+        'copyFile',
+        'tavilySearch',
+        'fetchWebsite',
+        'generateImage',
+        'recognizeImage',
+        'executeCommand',
+        'codeInterpreter',
+        'screenCapture',
+        'cameraCapture',
+        'retrieve',
+        'invokeBedrockAgent',
+        'invokeFlow',
+        'generateVideo',
+        'checkVideoStatus',
+        'downloadVideo'
       ]
-      
-      const unknownTools = agent.tools.filter(tool => !knownTools.includes(tool))
+
+      const unknownTools = agent.tools.filter((tool) => !knownTools.includes(tool))
       if (unknownTools.length > 0) {
         warnings.push(`Unknown tools specified: ${unknownTools.join(', ')}`)
       }
@@ -212,14 +223,14 @@ export class AgentManager {
 
     const agent = agentData as CustomAgent
     const validation = await this.validateAgent(agent)
-    
+
     if (!validation.isValid) {
       throw new Error(`Invalid agent data: ${validation.errors.join(', ')}`)
     }
 
     this.customAgents.push(agent)
     await this.saveCustomAgents()
-    
+
     logger.success(`Imported agent: ${agent.name}`)
     return agent
   }
@@ -247,14 +258,14 @@ export class AgentManager {
     try {
       const config = await this.configService.load()
       const projectPath = config.project?.path
-      
+
       if (!projectPath) {
         this.sharedAgents = []
         return
       }
 
       const agentsDir = resolve(projectPath, '.bedrock-engineer/agents')
-      
+
       try {
         await fs.access(agentsDir)
       } catch {
@@ -263,38 +274,38 @@ export class AgentManager {
       }
 
       const files = (await fs.readdir(agentsDir)).filter(
-        file => file.endsWith('.json') || file.endsWith('.yml') || file.endsWith('.yaml')
+        (file) => file.endsWith('.json') || file.endsWith('.yml') || file.endsWith('.yaml')
       )
 
       const agents: CustomAgent[] = []
-      
+
       for (const file of files) {
         try {
           const filePath = resolve(agentsDir, file)
           const content = await fs.readFile(filePath, 'utf-8')
-          
+
           let agent: CustomAgent
           if (file.endsWith('.json')) {
             agent = JSON.parse(content)
           } else {
             agent = yaml.load(content) as CustomAgent
           }
-          
+
           // Ensure unique ID
           if (!agent.id || !agent.id.startsWith('shared-')) {
             const safeName = file.replace(/\.(json|ya?ml)$/, '').toLowerCase()
             agent.id = `shared-${safeName}-${Math.random().toString(36).substring(2, 9)}`
           }
-          
+
           agent.isShared = true
           delete agent.mcpTools // Will be regenerated
-          
+
           agents.push(agent)
         } catch (error) {
           logger.warn(`Failed to load shared agent from ${file}:`, error)
         }
       }
-      
+
       this.sharedAgents = agents
       logger.debug(`Loaded ${this.sharedAgents.length} shared agents`)
     } catch (error) {

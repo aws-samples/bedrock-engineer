@@ -3,12 +3,10 @@ import { ConfigService } from '../services/ConfigService'
 import { AgentManager } from '../core/AgentManager'
 import { AgentCommandOptions } from '../types/commands'
 import { logger } from '../utils/logger'
-import { CustomAgent } from '../../types/agent-chat'
 import inquirer from 'inquirer'
 import chalk from 'chalk'
 
-export const agentCommand = new Command('agent')
-  .description('Manage AI agents')
+export const agentCommand = new Command('agent').description('Manage AI agents')
 
 // List agents command
 agentCommand
@@ -21,14 +19,14 @@ agentCommand
     try {
       const configService = new ConfigService()
       const agentManager = new AgentManager(configService)
-      
+
       if (options.verbose) {
         logger.setVerbose(true)
       }
-      
+
       await agentManager.initialize()
       const agents = await agentManager.listAgents()
-      
+
       if (options.format === 'json') {
         console.log(JSON.stringify(agents, null, 2))
       } else if (options.format === 'yaml') {
@@ -36,15 +34,15 @@ agentCommand
         console.log(yaml.dump(agents, { indent: 2 }))
       } else {
         logger.printHeader(`Available Agents (${agents.length})`)
-        
+
         // Group agents by type
-        const defaultAgents = agents.filter(a => !a.isCustom && !a.isShared)
-        const customAgents = agents.filter(a => a.isCustom)
-        const sharedAgents = agents.filter(a => a.isShared)
-        
+        const defaultAgents = agents.filter((a) => !a.isCustom && !a.isShared)
+        const customAgents = agents.filter((a) => a.isCustom)
+        const sharedAgents = agents.filter((a) => a.isShared)
+
         if (defaultAgents.length > 0) {
           logger.info(chalk.bold('Default Agents:'))
-          defaultAgents.forEach(agent => {
+          defaultAgents.forEach((agent) => {
             const icon = agent.icon ? `${agent.icon} ` : '🤖 '
             const tools = agent.tools ? ` (${agent.tools.length} tools)` : ''
             logger.info(`  ${icon}${chalk.cyan(agent.name)}${tools}`)
@@ -55,10 +53,10 @@ agentCommand
           })
           logger.info('')
         }
-        
+
         if (customAgents.length > 0) {
           logger.info(chalk.bold('Custom Agents:'))
-          customAgents.forEach(agent => {
+          customAgents.forEach((agent) => {
             const icon = agent.icon ? `${agent.icon} ` : '⚙️ '
             const tools = agent.tools ? ` (${agent.tools.length} tools)` : ''
             logger.info(`  ${icon}${chalk.yellow(agent.name)}${tools}`)
@@ -69,10 +67,10 @@ agentCommand
           })
           logger.info('')
         }
-        
+
         if (sharedAgents.length > 0) {
           logger.info(chalk.bold('Shared Agents:'))
-          sharedAgents.forEach(agent => {
+          sharedAgents.forEach((agent) => {
             const icon = agent.icon ? `${agent.icon} ` : '📁 '
             const tools = agent.tools ? ` (${agent.tools.length} tools)` : ''
             logger.info(`  ${icon}${chalk.green(agent.name)}${tools}`)
@@ -83,7 +81,6 @@ agentCommand
           })
         }
       }
-      
     } catch (error) {
       logger.error('Failed to list agents:', error)
       process.exit(1)
@@ -99,15 +96,15 @@ agentCommand
     try {
       const configService = new ConfigService()
       const agentManager = new AgentManager(configService)
-      
+
       await agentManager.initialize()
       const agent = await agentManager.getAgent(agentIdOrName)
-      
+
       if (!agent) {
         logger.error(`Agent not found: ${agentIdOrName}`)
         process.exit(1)
       }
-      
+
       if (options.format === 'json') {
         console.log(JSON.stringify(agent, null, 2))
       } else if (options.format === 'yaml') {
@@ -116,39 +113,39 @@ agentCommand
       } else {
         const icon = agent.icon ? `${agent.icon} ` : '🤖 '
         logger.printHeader(`${icon}${agent.name}`)
-        
+
         logger.info(chalk.bold('Description:'))
         logger.info(`  ${agent.description}`)
         logger.info('')
-        
+
         logger.info(chalk.bold('Details:'))
         logger.info(`  ID: ${agent.id}`)
         logger.info(`  Category: ${agent.category || 'general'}`)
         logger.info(`  Type: ${agent.isCustom ? 'Custom' : agent.isShared ? 'Shared' : 'Default'}`)
-        
+
         if (agent.tags && agent.tags.length > 0) {
           logger.info(`  Tags: ${agent.tags.join(', ')}`)
         }
-        
+
         if (agent.author) {
           logger.info(`  Author: ${agent.author}`)
         }
         logger.info('')
-        
+
         if (agent.tools && agent.tools.length > 0) {
           logger.info(chalk.bold('Available Tools:'))
-          agent.tools.forEach(tool => {
+          agent.tools.forEach((tool) => {
             logger.info(`  - ${tool}`)
           })
           logger.info('')
         }
-        
+
         logger.info(chalk.bold('System Prompt:'))
         const systemLines = agent.system.split('\n')
-        systemLines.forEach(line => {
+        systemLines.forEach((line) => {
           logger.info(`  ${line}`)
         })
-        
+
         if (agent.scenarios && agent.scenarios.length > 0) {
           logger.info('')
           logger.info(chalk.bold('Example Scenarios:'))
@@ -158,7 +155,6 @@ agentCommand
           })
         }
       }
-      
     } catch (error) {
       logger.error('Failed to show agent:', error)
       process.exit(1)
@@ -181,9 +177,9 @@ agentCommand
     try {
       const configService = new ConfigService()
       const agentManager = new AgentManager(configService)
-      
+
       await agentManager.initialize()
-      
+
       // Interactive prompts for missing options
       const answers = await inquirer.prompt([
         {
@@ -235,7 +231,7 @@ agentCommand
           when: !options.tools
         }
       ])
-      
+
       const config = {
         name: options.name || answers.name,
         description: options.description || answers.description,
@@ -243,15 +239,22 @@ agentCommand
         category: options.category || answers.category,
         icon: options.icon || answers.icon,
         iconColor: options.color || answers.color,
-        tags: (options.tags || answers.tags)?.split(',').map((t: string) => t.trim()).filter(Boolean) || [],
-        tools: (options.tools || answers.tools)?.split(',').map((t: string) => t.trim()).filter(Boolean) || []
+        tags:
+          (options.tags || answers.tags)
+            ?.split(',')
+            .map((t: string) => t.trim())
+            .filter(Boolean) || [],
+        tools:
+          (options.tools || answers.tools)
+            ?.split(',')
+            .map((t: string) => t.trim())
+            .filter(Boolean) || []
       }
-      
+
       const agent = await agentManager.createAgent(config)
-      
+
       logger.success(`Created agent: ${agent.name}`)
       logger.info(`Agent ID: ${agent.id}`)
-      
     } catch (error) {
       logger.error('Failed to create agent:', error)
       process.exit(1)
@@ -268,17 +271,17 @@ agentCommand
     try {
       const configService = new ConfigService()
       const agentManager = new AgentManager(configService)
-      
+
       await agentManager.initialize()
       const agent = await agentManager.getAgent(agentIdOrName)
-      
+
       if (!agent) {
         logger.error(`Agent not found: ${agentIdOrName}`)
         process.exit(1)
       }
-      
+
       const exportData = await agentManager.exportAgent(agent.id, options.format)
-      
+
       if (options.output) {
         const fs = require('fs').promises
         await fs.writeFile(options.output, exportData, 'utf-8')
@@ -286,7 +289,6 @@ agentCommand
       } else {
         console.log(exportData)
       }
-      
     } catch (error) {
       logger.error('Failed to export agent:', error)
       process.exit(1)
@@ -302,17 +304,16 @@ agentCommand
     try {
       const configService = new ConfigService()
       const agentManager = new AgentManager(configService)
-      
+
       await agentManager.initialize()
-      
+
       const fs = require('fs').promises
       const data = await fs.readFile(filePath, 'utf-8')
-      
+
       const agent = await agentManager.importAgent(data, options.format)
-      
+
       logger.success(`Imported agent: ${agent.name}`)
       logger.info(`Agent ID: ${agent.id}`)
-      
     } catch (error) {
       logger.error('Failed to import agent:', error)
       process.exit(1)
@@ -329,20 +330,20 @@ agentCommand
     try {
       const configService = new ConfigService()
       const agentManager = new AgentManager(configService)
-      
+
       await agentManager.initialize()
       const agent = await agentManager.getAgent(agentIdOrName)
-      
+
       if (!agent) {
         logger.error(`Agent not found: ${agentIdOrName}`)
         process.exit(1)
       }
-      
+
       if (!agent.isCustom) {
         logger.error('Only custom agents can be deleted')
         process.exit(1)
       }
-      
+
       // Confirm deletion
       if (!options.force) {
         const { confirm } = await inquirer.prompt([
@@ -353,22 +354,21 @@ agentCommand
             default: false
           }
         ])
-        
+
         if (!confirm) {
           logger.info('Deletion cancelled')
           return
         }
       }
-      
+
       const deleted = await agentManager.deleteAgent(agent.id)
-      
+
       if (deleted) {
         logger.success(`Deleted agent: ${agent.name}`)
       } else {
         logger.error('Failed to delete agent')
         process.exit(1)
       }
-      
     } catch (error) {
       logger.error('Failed to delete agent:', error)
       process.exit(1)

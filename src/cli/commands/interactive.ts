@@ -19,19 +19,19 @@ export const interactiveCommand = new Command('interactive')
       // Initialize services
       const configService = new ConfigService()
       const agentManager = new AgentManager(configService)
-      
+
       // Set up logging
       if (options.verbose) {
         logger.setVerbose(true)
       }
-      
+
       // Load configuration
       const config = await configService.load()
       logger.debug('Configuration loaded')
-      
+
       // Initialize agent manager
       await agentManager.initialize()
-      
+
       // Get agent
       let agent
       if (options.agent) {
@@ -40,7 +40,7 @@ export const interactiveCommand = new Command('interactive')
           logger.error(`Agent not found: ${options.agent}`)
           const agents = await agentManager.listAgents()
           logger.info('Available agents:')
-          agents.forEach(a => logger.info(`  - ${a.name} (${a.id})`))
+          agents.forEach((a) => logger.info(`  - ${a.name} (${a.id})`))
           process.exit(1)
         }
       } else {
@@ -51,29 +51,32 @@ export const interactiveCommand = new Command('interactive')
             type: 'list',
             name: 'selectedAgent',
             message: 'Select an agent:',
-            choices: agents.map(a => ({
+            choices: agents.map((a) => ({
               name: `${a.name} - ${a.description}`,
               value: a.id
             }))
           }
         ])
-        
+
         agent = await agentManager.getAgent(selectedAgent)
         if (!agent) {
           logger.error('Failed to load selected agent')
           process.exit(1)
         }
       }
-      
+
       // Get model
-      const modelId = options.model || config.model?.defaultModel?.id || 'anthropic.claude-3-5-sonnet-20241022-v2:0'
-      
+      const modelId =
+        options.model ||
+        config.model?.defaultModel?.id ||
+        'anthropic.claude-3-5-sonnet-20241022-v2:0'
+
       logger.debug(`Using agent: ${agent.name}`)
       logger.debug(`Using model: ${modelId}`)
-      
+
       // Start interactive session
       const sessionId = `session-${Date.now()}`
-      
+
       logger.printHeader(`Interactive Chat with ${agent.name}`)
       logger.info('Type your messages and press Enter. Use special commands:')
       logger.info('  /help     - Show help')
@@ -84,7 +87,7 @@ export const interactiveCommand = new Command('interactive')
       logger.info('  /clear    - Clear conversation history')
       logger.info('  /exit     - Exit interactive mode')
       logger.printSeparator()
-      
+
       // Initialize chat
       const chat = new HeadlessAgentChat({
         agent,
@@ -107,7 +110,7 @@ export const interactiveCommand = new Command('interactive')
           logger.error('Chat error:', error)
         }
       })
-      
+
       // Interactive loop
       let running = true
       while (running) {
@@ -125,13 +128,13 @@ export const interactiveCommand = new Command('interactive')
               }
             }
           ])
-          
+
           const trimmedInput = input.trim()
-          
+
           // Handle special commands
           if (trimmedInput.startsWith('/')) {
             const command = trimmedInput.toLowerCase()
-            
+
             switch (command) {
               case '/help':
                 logger.info('Available commands:')
@@ -143,17 +146,18 @@ export const interactiveCommand = new Command('interactive')
                 logger.info('  /clear    - Clear conversation history')
                 logger.info('  /exit     - Exit interactive mode')
                 break
-                
-              case '/agents':
+
+              case '/agents': {
                 const agents = await agentManager.listAgents()
                 logger.info('Available agents:')
-                agents.forEach(a => {
+                agents.forEach((a) => {
                   const current = a.id === agent.id ? ' (current)' : ''
                   logger.info(`  - ${a.name}${current} - ${a.description}`)
                 })
                 break
-                
-              case '/switch':
+              }
+
+              case '/switch': {
                 const allAgents = await agentManager.listAgents()
                 const { newAgent } = await inquirer.prompt([
                   {
@@ -161,14 +165,14 @@ export const interactiveCommand = new Command('interactive')
                     name: 'newAgent',
                     message: 'Select a new agent:',
                     choices: allAgents
-                      .filter(a => a.id !== agent.id)
-                      .map(a => ({
+                      .filter((a) => a.id !== agent.id)
+                      .map((a) => ({
                         name: `${a.name} - ${a.description}`,
                         value: a.id
                       }))
                   }
                 ])
-                
+
                 const selectedAgent = await agentManager.getAgent(newAgent)
                 if (selectedAgent) {
                   agent = selectedAgent
@@ -190,18 +194,20 @@ export const interactiveCommand = new Command('interactive')
                   logger.printSeparator()
                 }
                 break
-                
-              case '/tools':
+              }
+
+              case '/tools': {
                 const tools = chat.getTools()
                 if (tools.length > 0) {
                   logger.info(`Available tools for ${agent.name}:`)
-                  tools.forEach(tool => logger.info(`  - ${tool}`))
+                  tools.forEach((tool) => logger.info(`  - ${tool}`))
                 } else {
                   logger.info('No tools available for this agent')
                 }
                 break
-                
-              case '/history':
+              }
+
+              case '/history': {
                 const messages = chat.getMessages()
                 if (messages.length === 0) {
                   logger.info('No conversation history')
@@ -209,57 +215,59 @@ export const interactiveCommand = new Command('interactive')
                   logger.info('Conversation history:')
                   messages.forEach((msg, index) => {
                     const role = msg.role === 'user' ? '👤' : '🤖'
-                    const content = msg.content?.map(c => 'text' in c ? c.text : '[tool]').join(' ') || ''
-                    logger.info(`  ${index + 1}. ${role}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`)
+                    const content =
+                      msg.content?.map((c) => ('text' in c ? c.text : '[tool]')).join(' ') || ''
+                    logger.info(
+                      `  ${index + 1}. ${role}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`
+                    )
                   })
                 }
                 break
-                
+              }
+
               case '/clear':
                 chat.clearMessages()
                 logger.success('Conversation history cleared')
                 break
-                
+
               case '/exit':
                 running = false
                 logger.success('Goodbye!')
                 break
-                
+
               default:
                 logger.warn(`Unknown command: ${command}`)
                 logger.info('Type /help for available commands')
             }
-            
+
             continue
           }
-          
+
           // Send regular message
           logger.printUserMessage(trimmedInput)
-          
+
           const stopSpinner = logger.startSpinner('Thinking...')
-          
+
           try {
             process.stdout.write(chalk.green('🤖: '))
-            
+
             // Use streaming for better UX
-            let responseText = ''
+            let _responseText = ''
             for await (const delta of chat.streamMessage(trimmedInput)) {
               if (delta.type === 'text') {
-                responseText += delta.content
+                _responseText += delta.content
                 // Text is already printed via onMessage callback
               }
             }
-            
+
             process.stdout.write('\n')
             stopSpinner()
-            
+
             logger.printSeparator()
-            
           } catch (error) {
             stopSpinner()
             logger.error('Failed to get response:', error)
           }
-          
         } catch (error) {
           if (error.name === 'ExitPromptError') {
             // User cancelled with Ctrl+C
@@ -270,7 +278,6 @@ export const interactiveCommand = new Command('interactive')
           }
         }
       }
-      
     } catch (error) {
       logger.error('Interactive command failed:', error)
       process.exit(1)

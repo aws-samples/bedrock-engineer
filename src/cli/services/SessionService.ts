@@ -42,9 +42,7 @@ export class FileSessionStorage implements SessionStorage {
     try {
       await this.ensureSessionsDir()
       const files = await fs.readdir(this.sessionsDir)
-      return files
-        .filter(file => file.endsWith('.json'))
-        .map(file => file.replace('.json', ''))
+      return files.filter((file) => file.endsWith('.json')).map((file) => file.replace('.json', ''))
     } catch (error) {
       logger.debug('Failed to list sessions:', error)
       return []
@@ -65,7 +63,7 @@ export class FileSessionStorage implements SessionStorage {
   async clear(): Promise<void> {
     try {
       const sessionIds = await this.list()
-      await Promise.all(sessionIds.map(id => this.delete(id)))
+      await Promise.all(sessionIds.map((id) => this.delete(id)))
     } catch (error) {
       logger.debug('Failed to clear sessions:', error)
     }
@@ -99,7 +97,7 @@ export class CLISessionManager implements SessionManager {
 
     this.sessions.set(session.id, session)
     await this.storage.save(session)
-    
+
     logger.debug(`Created session: ${session.id}`)
     return session
   }
@@ -133,18 +131,18 @@ export class CLISessionManager implements SessionManager {
 
     this.sessions.set(sessionId, updatedSession)
     await this.storage.save(updatedSession)
-    
+
     logger.debug(`Updated session: ${sessionId}`)
   }
 
   async deleteSession(sessionId: string): Promise<boolean> {
     this.sessions.delete(sessionId)
     const deleted = await this.storage.delete(sessionId)
-    
+
     if (deleted) {
       logger.debug(`Deleted session: ${sessionId}`)
     }
-    
+
     return deleted
   }
 
@@ -180,7 +178,7 @@ export class CLISessionManager implements SessionManager {
 
     // Update metadata
     if (message.toolUses) {
-      message.toolUses.forEach(toolUse => {
+      message.toolUses.forEach((toolUse) => {
         if (!session.metadata.toolsUsed.includes(toolUse.name)) {
           session.metadata.toolsUsed.push(toolUse.name)
         }
@@ -189,7 +187,7 @@ export class CLISessionManager implements SessionManager {
 
     this.sessions.set(sessionId, session)
     await this.storage.save(session)
-    
+
     logger.debug(`Added message to session: ${sessionId}`)
   }
 
@@ -237,13 +235,13 @@ export class CLISessionManager implements SessionManager {
       output += `Created: ${new Date(session.createdAt).toLocaleString()}\n`
       output += `Updated: ${new Date(session.updatedAt).toLocaleString()}\n`
       output += `Messages: ${session.messages.length}\n`
-      
+
       if (session.metadata.toolsUsed.length > 0) {
         output += `Tools Used: ${session.metadata.toolsUsed.join(', ')}\n`
       }
-      
+
       output += '\n--- Messages ---\n\n'
-      
+
       session.messages.forEach((message, index) => {
         const role = message.role === 'user' ? 'User' : 'Assistant'
         output += `${index + 1}. ${role} (${new Date(message.timestamp).toLocaleString()}):\n`

@@ -3,7 +3,7 @@ import { LLM } from '../../types/llm'
 
 export interface CLIConfig {
   version: string
-  
+
   // AWS Settings
   aws?: {
     region?: string
@@ -13,19 +13,19 @@ export interface CLIConfig {
     profile?: string
     useProfile?: boolean
   }
-  
+
   // Project Settings
   project?: {
     path?: string
     ignoreFiles?: string[]
   }
-  
+
   // Agent Settings
   agents?: {
     defaultAgentId?: string
     customAgents?: CustomAgent[]
   }
-  
+
   // Model Settings
   model?: {
     defaultModel?: LLM
@@ -36,13 +36,13 @@ export interface CLIConfig {
       topP?: number
     }
   }
-  
+
   // Tool Settings
   tools?: {
     tavilyApiKey?: string
     enabledTools?: string[]
   }
-  
+
   // CLI Settings
   cli?: {
     defaultOutput?: 'text' | 'json'
@@ -50,13 +50,13 @@ export interface CLIConfig {
     colorOutput?: boolean
     showProgress?: boolean
   }
-  
+
   // Cache Settings
   cache?: {
     enablePromptCache?: boolean
     contextLength?: number
   }
-  
+
   // Guardrail Settings
   guardrail?: {
     enabled?: boolean

@@ -5,26 +5,24 @@ import { logger } from '../utils/logger'
 import inquirer from 'inquirer'
 import chalk from 'chalk'
 
-export const configCommand = new Command('config')
-  .description('Manage CLI configuration')
+export const configCommand = new Command('config').description('Manage CLI configuration')
 
 // Initialize config command
 configCommand
   .command('init')
   .description('Initialize configuration')
   .option('-g, --global', 'Initialize global configuration', false)
-  .action(async (options: ConfigCommandOptions) => {
+  .action(async (_options: ConfigCommandOptions) => {
     try {
       const configService = new ConfigService()
-      
+
       await configService.init()
       logger.success('Configuration initialized')
-      
+
       const paths = configService.getPaths()
       logger.info(`Global config: ${paths.globalConfig}`)
       logger.info(`Local config: ${paths.localConfig}`)
       logger.info(`Data directory: ${paths.userDataDir}`)
-      
     } catch (error) {
       logger.error('Failed to initialize configuration:', error)
       process.exit(1)
@@ -36,14 +34,14 @@ configCommand
   .command('show')
   .description('Show current configuration')
   .option('-g, --global', 'Show only global configuration', false)
-  .action(async (options: ConfigCommandOptions) => {
+  .action(async (_options: ConfigCommandOptions) => {
     try {
       const configService = new ConfigService()
       const config = await configService.load()
-      
+
       logger.printHeader('Current Configuration')
       console.log(JSON.stringify(config, null, 2))
-      
+
       const paths = configService.getPaths()
       logger.info('')
       logger.info(chalk.bold('Configuration Paths:'))
@@ -52,7 +50,6 @@ configCommand
       logger.info(`  Data: ${paths.userDataDir}`)
       logger.info(`  Cache: ${paths.cacheDir}`)
       logger.info(`  Logs: ${paths.logsDir}`)
-      
     } catch (error) {
       logger.error('Failed to show configuration:', error)
       process.exit(1)
@@ -67,7 +64,7 @@ configCommand
     try {
       const configService = new ConfigService()
       const value = await configService.get(key)
-      
+
       if (value !== undefined) {
         if (typeof value === 'object') {
           console.log(JSON.stringify(value, null, 2))
@@ -78,7 +75,6 @@ configCommand
         logger.warn(`Configuration key not found: ${key}`)
         process.exit(1)
       }
-      
     } catch (error) {
       logger.error('Failed to get configuration value:', error)
       process.exit(1)
@@ -93,7 +89,7 @@ configCommand
   .action(async (key: string, value: string, options: ConfigCommandOptions) => {
     try {
       const configService = new ConfigService()
-      
+
       // Try to parse value as JSON, fallback to string
       let parsedValue: any = value
       try {
@@ -101,10 +97,9 @@ configCommand
       } catch {
         // Keep as string if not valid JSON
       }
-      
+
       await configService.set(key, parsedValue, options.global)
       logger.success(`Set ${key} = ${value}`)
-      
     } catch (error) {
       logger.error('Failed to set configuration value:', error)
       process.exit(1)
@@ -119,12 +114,12 @@ configCommand
     try {
       const configService = new ConfigService()
       const currentConfig = await configService.load()
-      
+
       logger.printHeader('Configuration Setup Wizard')
       logger.info('This wizard will help you configure Ben CLI for first-time use.')
       logger.info('Press Enter to keep current values or type new ones.')
       logger.printSeparator()
-      
+
       const answers = await inquirer.prompt([
         {
           name: 'awsRegion',
@@ -176,7 +171,8 @@ configCommand
             'amazon.nova-lite-v1:0',
             'amazon.nova-micro-v1:0'
           ],
-          default: currentConfig.model?.defaultModel?.id || 'anthropic.claude-3-5-sonnet-20241022-v2:0'
+          default:
+            currentConfig.model?.defaultModel?.id || 'anthropic.claude-3-5-sonnet-20241022-v2:0'
         },
         {
           name: 'tavilyApiKey',
@@ -196,7 +192,7 @@ configCommand
           default: currentConfig.cli?.colorOutput !== false
         }
       ])
-      
+
       // Update configuration
       const updatedConfig = {
         ...currentConfig,
@@ -229,32 +225,31 @@ configCommand
           colorOutput: answers.enableColors
         }
       }
-      
+
       await configService.save(updatedConfig, true)
-      
+
       logger.printSeparator()
       logger.success('Configuration saved successfully!')
-      
+
       // Validate configuration
       const validation = await configService.validate(updatedConfig)
       if (validation.warnings.length > 0) {
         logger.info('')
         logger.warn('Configuration warnings:')
-        validation.warnings.forEach(warning => logger.warn(`  - ${warning}`))
+        validation.warnings.forEach((warning) => logger.warn(`  - ${warning}`))
       }
-      
+
       if (validation.errors.length > 0) {
         logger.info('')
         logger.error('Configuration errors:')
-        validation.errors.forEach(error => logger.error(`  - ${error}`))
+        validation.errors.forEach((error) => logger.error(`  - ${error}`))
       }
-      
+
       logger.info('')
       logger.info('You can now use Ben CLI! Try:')
       logger.info('  ben agent list          - List available agents')
       logger.info('  ben chat -p "Hello"     - Quick chat')
       logger.info('  ben interactive         - Start interactive mode')
-      
     } catch (error) {
       logger.error('Setup wizard failed:', error)
       process.exit(1)
@@ -270,23 +265,22 @@ configCommand
       const configService = new ConfigService()
       const config = await configService.load()
       const validation = await configService.validate(config)
-      
+
       if (validation.isValid) {
         logger.success('Configuration is valid')
       } else {
         logger.error('Configuration validation failed:')
-        validation.errors.forEach(error => logger.error(`  - ${error}`))
+        validation.errors.forEach((error) => logger.error(`  - ${error}`))
       }
-      
+
       if (validation.warnings.length > 0) {
         logger.warn('Configuration warnings:')
-        validation.warnings.forEach(warning => logger.warn(`  - ${warning}`))
+        validation.warnings.forEach((warning) => logger.warn(`  - ${warning}`))
       }
-      
+
       if (!validation.isValid) {
         process.exit(1)
       }
-      
     } catch (error) {
       logger.error('Failed to validate configuration:', error)
       process.exit(1)
@@ -310,18 +304,17 @@ configCommand
             default: false
           }
         ])
-        
+
         if (!confirm) {
           logger.info('Reset cancelled')
           return
         }
       }
-      
+
       const configService = new ConfigService()
       await configService.init() // This will create default config
-      
+
       logger.success('Configuration reset to defaults')
-      
     } catch (error) {
       logger.error('Failed to reset configuration:', error)
       process.exit(1)

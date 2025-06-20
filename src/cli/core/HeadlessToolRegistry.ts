@@ -60,7 +60,10 @@ export class HeadlessToolRegistry {
         this.registerTool('generateImage', new GenerateImageTool(this.createToolDependencies()))
         this.registerTool('recognizeImage', new RecognizeImageTool(this.createToolDependencies()))
         this.registerTool('retrieve', new RetrieveTool(this.createToolDependencies()))
-        this.registerTool('invokeBedrockAgent', new InvokeBedrockAgentTool(this.createToolDependencies()))
+        this.registerTool(
+          'invokeBedrockAgent',
+          new InvokeBedrockAgentTool(this.createToolDependencies())
+        )
         this.registerTool('invokeFlow', new InvokeFlowTool(this.createToolDependencies()))
       }
 
@@ -177,6 +180,6 @@ export class HeadlessToolRegistry {
   }
 
   getCompatibleTools(): string[] {
-    return this.getAvailableTools().filter(tool => this.isToolAvailable(tool))
+    return this.getAvailableTools().filter((tool) => this.isToolAvailable(tool))
   }
 }

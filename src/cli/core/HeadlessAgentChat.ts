@@ -1,12 +1,10 @@
-import { ConversationRole, ContentBlock, Message, ToolUseBlockStart, ImageFormat } from '@aws-sdk/client-bedrock-runtime'
+import { ContentBlock, Message, ToolUseBlockStart } from '@aws-sdk/client-bedrock-runtime'
 import { CustomAgent, ToolState } from '../../types/agent-chat'
-import { LLM } from '../../types/llm'
-import { ChatMessage, ChatResponse, ChatDelta, ToolUse, ToolResult } from '../types/commands'
+import { ChatResponse, ChatDelta, ToolUse, ToolResult } from '../types/commands'
 import { CLIConfig } from '../types/config'
 import { logger } from '../utils/logger'
 import { streamChatCompletion, StreamChatCompletionProps } from '../../renderer/lib/api'
 import { ToolMetadataCollector } from '../../preload/tools/registry'
-import { generateMessageId } from '../../types/chat/metadata'
 import { limitContextLength } from '../../renderer/lib/contextLength'
 import { calculateCost } from '../../renderer/lib/pricing/modelPricing'
 
@@ -47,31 +45,31 @@ export class HeadlessAgentChat {
     this.onToolUse = options.onToolUse
     this.onToolResult = options.onToolResult
     this.onError = options.onError
-    
+
     this.initializeTools()
   }
 
   private initializeTools(): void {
     // Get available tools from the tool registry
     const allToolSpecs = ToolMetadataCollector.getToolSpecs()
-    
+
     // Filter tools based on agent configuration
     const agentTools = this.agent.tools || []
-    
+
     this.enabledTools = allToolSpecs
-      .filter(toolSpec => {
+      .filter((toolSpec) => {
         const toolName = toolSpec.toolSpec?.name
         if (!toolName) return false
-        
+
         // If agent has specific tools configured, only include those
         if (agentTools.length > 0) {
           return agentTools.includes(toolName as any)
         }
-        
+
         // Otherwise include all tools by default
         return true
       })
-      .map(toolSpec => ({
+      .map((toolSpec) => ({
         enabled: true,
         ...toolSpec
       }))
@@ -141,11 +139,13 @@ export class HeadlessAgentChat {
       modelId: this.modelId,
       system: this.agent.system ? [{ text: this.agent.system }] : undefined,
       toolConfig: this.enabledTools.length ? { tools: this.enabledTools } : undefined,
-      inferenceConfig: this.config.model?.inferenceParams ? {
-        maxTokens: this.config.model.inferenceParams.maxTokens,
-        temperature: this.config.model.inferenceParams.temperature,
-        topP: this.config.model.inferenceParams.topP
-      } : undefined
+      inferenceConfig: this.config.model?.inferenceParams
+        ? {
+            maxTokens: this.config.model.inferenceParams.maxTokens,
+            temperature: this.config.model.inferenceParams.temperature,
+            topP: this.config.model.inferenceParams.topP
+          }
+        : undefined
     }
 
     this.abortController = new AbortController()
@@ -207,27 +207,28 @@ export class HeadlessAgentChat {
     if (this.messages.length > 0) {
       const lastMessage = this.messages[this.messages.length - 1]
       if (lastMessage.content) {
-        const toolUseBlocks = lastMessage.content.filter(block => 'toolUse' in block)
+        const toolUseBlocks = lastMessage.content.filter((block) => 'toolUse' in block)
         if (toolUseBlocks.length > 0) {
           const toolResultsProcessed = await this.executeTools(toolUseBlocks as any)
           toolResults = toolResultsProcessed
-          
+
           // Add tool results to messages and continue conversation
           const toolResultMessage: Message = {
             role: 'user',
-            content: toolResultsProcessed.map(result => ({
+            content: toolResultsProcessed.map((result) => ({
               toolResult: {
                 toolUseId: result.id,
-                content: typeof result.content === 'string' 
-                  ? [{ text: result.content }] 
-                  : [{ json: result.content }],
+                content:
+                  typeof result.content === 'string'
+                    ? [{ text: result.content }]
+                    : [{ json: result.content }],
                 status: result.status
               }
             }))
           }
-          
+
           this.messages.push(toolResultMessage)
-          
+
           // Continue conversation after tool execution
           const followUpResponse = await this.processMessage()
           responseText += followUpResponse.message
@@ -241,12 +242,14 @@ export class HeadlessAgentChat {
       message: responseText,
       toolUses,
       toolResults,
-      metadata: metadata ? {
-        modelId: this.modelId,
-        inputTokens: metadata.usage?.inputTokens,
-        outputTokens: metadata.usage?.outputTokens,
-        cost: this.calculateCost(metadata)
-      } : undefined
+      metadata: metadata
+        ? {
+            modelId: this.modelId,
+            inputTokens: metadata.usage?.inputTokens,
+            outputTokens: metadata.usage?.outputTokens,
+            cost: this.calculateCost(metadata)
+          }
+        : undefined
     }
   }
 
@@ -259,11 +262,13 @@ export class HeadlessAgentChat {
       modelId: this.modelId,
       system: this.agent.system ? [{ text: this.agent.system }] : undefined,
       toolConfig: this.enabledTools.length ? { tools: this.enabledTools } : undefined,
-      inferenceConfig: this.config.model?.inferenceParams ? {
-        maxTokens: this.config.model.inferenceParams.maxTokens,
-        temperature: this.config.model.inferenceParams.temperature,
-        topP: this.config.model.inferenceParams.topP
-      } : undefined
+      inferenceConfig: this.config.model?.inferenceParams
+        ? {
+            maxTokens: this.config.model.inferenceParams.maxTokens,
+            temperature: this.config.model.inferenceParams.temperature,
+            topP: this.config.model.inferenceParams.topP
+          }
+        : undefined
     }
 
     this.abortController = new AbortController()
@@ -351,15 +356,15 @@ export class HeadlessAgentChat {
         try {
           // Execute tool using the existing tool system
           const toolResult = await this.executeTool(toolName, toolInput)
-          
+
           const result: ToolResult = {
             id: toolUse.toolUseId || '',
             content: toolResult,
             status: 'success'
           }
-          
+
           results.push(result)
-          
+
           if (this.onToolResult) {
             this.onToolResult(toolName, toolResult)
           }
@@ -369,9 +374,9 @@ export class HeadlessAgentChat {
             content: error instanceof Error ? error.message : String(error),
             status: 'error'
           }
-          
+
           results.push(result)
-          
+
           if (this.onToolResult) {
             this.onToolResult(toolName, error)
           }
@@ -390,18 +395,20 @@ export class HeadlessAgentChat {
         projectPath: this.config.project?.path,
         config: this.config,
         tavilyApiKey: this.config.tools?.tavilyApiKey,
-        awsConfig: this.config.aws ? {
-          region: this.config.aws.region || 'us-east-1',
-          accessKeyId: this.config.aws.accessKeyId,
-          secretAccessKey: this.config.aws.secretAccessKey,
-          sessionToken: this.config.aws.sessionToken,
-          profile: this.config.aws.profile
-        } : undefined
+        awsConfig: this.config.aws
+          ? {
+              region: this.config.aws.region || 'us-east-1',
+              accessKeyId: this.config.aws.accessKeyId,
+              secretAccessKey: this.config.aws.secretAccessKey,
+              sessionToken: this.config.aws.sessionToken,
+              profile: this.config.aws.profile
+            }
+          : undefined
       })
     }
-    
+
     logger.debug(`Executing tool: ${toolName}`, input)
-    
+
     try {
       const result = await this.toolRegistry.executeTool({ type: toolName, ...input })
       return result
@@ -413,7 +420,7 @@ export class HeadlessAgentChat {
 
   private calculateCost(metadata: any): number | undefined {
     if (!metadata?.usage) return undefined
-    
+
     try {
       return calculateCost(
         this.modelId,

@@ -14,7 +14,7 @@ export class ConfigService {
   private initializePaths(): ConfigPaths {
     const userHome = homedir()
     const userDataDir = join(userHome, '.ben')
-    
+
     return {
       globalConfig: join(userDataDir, 'config.json'),
       localConfig: join(process.cwd(), '.ben.config.json'),
@@ -27,7 +27,7 @@ export class ConfigService {
   async ensureDirectories(): Promise<void> {
     const dirs = [
       this.paths.userDataDir,
-      this.paths.cacheDir, 
+      this.paths.cacheDir,
       this.paths.logsDir,
       dirname(this.paths.globalConfig)
     ]
@@ -46,7 +46,7 @@ export class ConfigService {
 
     // Load global config first
     let config: CLIConfig = this.getDefaultConfig()
-    
+
     try {
       const globalConfigData = await fs.readFile(this.paths.globalConfig, 'utf-8')
       const globalConfig = JSON.parse(globalConfigData) as CLIConfig
@@ -69,10 +69,10 @@ export class ConfigService {
 
   async save(config: CLIConfig, global: boolean = true): Promise<void> {
     await this.ensureDirectories()
-    
+
     const configPath = global ? this.paths.globalConfig : this.paths.localConfig
     const configData = JSON.stringify(config, null, 2)
-    
+
     try {
       await fs.writeFile(configPath, configData, 'utf-8')
       logger.debug(`Config saved to ${configPath}`)
@@ -83,9 +83,9 @@ export class ConfigService {
 
   async init(): Promise<void> {
     await this.ensureDirectories()
-    
+
     const defaultConfig = this.getDefaultConfig()
-    
+
     // Check if global config already exists
     try {
       await fs.access(this.paths.globalConfig)
@@ -113,7 +113,7 @@ export class ConfigService {
       if (config.aws.useProfile && !config.aws.profile) {
         errors.push('AWS profile name is required when useProfile is true')
       }
-      
+
       if (!config.aws.useProfile && !config.aws.region) {
         warnings.push('AWS region is not specified')
       }
@@ -198,8 +198,8 @@ export class ConfigService {
       aws: { ...base.aws, ...override.aws },
       project: { ...base.project, ...override.project },
       agents: { ...base.agents, ...override.agents },
-      model: { 
-        ...base.model, 
+      model: {
+        ...base.model,
         ...override.model,
         inferenceParams: { ...base.model?.inferenceParams, ...override.model?.inferenceParams }
       },
@@ -217,7 +217,7 @@ export class ConfigService {
   private setNestedValue(obj: any, key: string, value: any): void {
     const keys = key.split('.')
     let current = obj
-    
+
     for (let i = 0; i < keys.length - 1; i++) {
       const k = keys[i]
       if (!(k in current) || typeof current[k] !== 'object' || current[k] === null) {
@@ -225,7 +225,7 @@ export class ConfigService {
       }
       current = current[k]
     }
-    
+
     current[keys[keys.length - 1]] = value
   }
 }

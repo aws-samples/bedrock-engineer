@@ -16,14 +16,8 @@ export class CLILogger {
 
     this.logger = createLogger({
       level: this.verbose ? 'debug' : 'info',
-      format: format.combine(
-        format.timestamp(),
-        format.errors({ stack: true }),
-        format.json()
-      ),
-      transports: [
-        new transports.File({ filename: logFile })
-      ]
+      format: format.combine(format.timestamp(), format.errors({ stack: true }), format.json()),
+      transports: [new transports.File({ filename: logFile })]
     })
   }
 
@@ -79,7 +73,7 @@ export class CLILogger {
 
     const ora = require('ora')
     const spinner = ora(message).start()
-    
+
     return () => {
       spinner.stop()
     }
@@ -127,8 +121,14 @@ export class CLILogger {
   printToolResult(toolName: string, success: boolean, result?: any): void {
     if (this.verbose) {
       const status = success ? chalk.green('✓') : chalk.red('✗')
-      const resultStr = result ? ` - ${typeof result === 'string' ? result.substring(0, 100) : JSON.stringify(result).substring(0, 100)}` : ''
-      console.log(this.colorOutput ? `${status} Tool ${toolName} completed${resultStr}` : `${success ? '✓' : '✗'} Tool ${toolName} completed${resultStr}`)
+      const resultStr = result
+        ? ` - ${typeof result === 'string' ? result.substring(0, 100) : JSON.stringify(result).substring(0, 100)}`
+        : ''
+      console.log(
+        this.colorOutput
+          ? `${status} Tool ${toolName} completed${resultStr}`
+          : `${success ? '✓' : '✗'} Tool ${toolName} completed${resultStr}`
+      )
     }
   }
 }
