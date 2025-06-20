@@ -34,9 +34,6 @@ export const ThinkingModeSettings = () => {
         <label className="block text-sm font-medium text-gray-900 dark:text-white">
           {t('Thinking Budget')}
         </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {t('Available only with Claude 3.7 Sonnet.')}
-        </p>
         <select
           value={thinkingMode?.budget_tokens?.toString() || ThinkingModeBudget.NORMAL.toString()}
           onChange={handleBudgetChange}

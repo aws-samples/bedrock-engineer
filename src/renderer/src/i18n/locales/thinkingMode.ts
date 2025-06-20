@@ -10,7 +10,6 @@ export const thinkingMode = {
     'Deeper (32K tokens)': 'Deeper (32K tokens)',
     'Thinking mode allows Claude to work through complex problems step by step.':
       'Thinking mode allows Claude to work through complex problems step by step.',
-    'Available only with Claude 3.7 Sonnet.': 'Available only with Claude 3.7 Sonnet.',
     'thinkingMode.none': 'None (0 tokens)',
     'thinkingMode.quick': 'Quick (1K tokens)',
     'thinkingMode.normal': 'Normal (4K tokens)',
@@ -50,7 +49,6 @@ export const thinkingMode = {
     'Deeper (32K tokens)': 'より深い思考 (32K トークン)',
     'The think tool gives the AI a dedicated space to reason through complex problems during a conversation, without changing data or fetching new information.':
       '思考ツールは、AIが会話中に複雑な問題を推論するための専用スペースを提供し、データを変更したり新しい情報を取得したりすることなく思考できます。',
-    'Available only with Claude 3.7 Sonnet.': 'Claude 3.7 Sonnetのみで利用可能です。',
     'thinkingMode.none': '拡張思考なし (0 トークン)',
     'thinkingMode.quick': 'クイック (1K トークン)',
     'thinkingMode.normal': '通常 (4K トークン)',
