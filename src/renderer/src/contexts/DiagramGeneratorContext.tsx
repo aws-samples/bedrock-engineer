@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 
 export type DiagramMode = 'aws' | 'software-architecture' | 'business-process'
 
@@ -6,12 +6,12 @@ interface DiagramGeneratorSession {
   // User interaction
   userInput: string
   attachedImages: any[]
-  
+
   // Diagram content
   xml: string
   diagramMode: DiagramMode
   generatedExplanation?: string
-  
+
   // UI state
   showExplanation: boolean
 }
@@ -19,13 +19,13 @@ interface DiagramGeneratorSession {
 interface DiagramGeneratorContextType {
   // Session state
   currentSession: DiagramGeneratorSession
-  
+
   // User interaction
   userInput: string
   setUserInput: (input: string) => void
   attachedImages: any[]
   setAttachedImages: (images: any[]) => void
-  
+
   // Diagram content
   xml: string
   setXml: (xml: string) => void
@@ -33,11 +33,11 @@ interface DiagramGeneratorContextType {
   setDiagramMode: (mode: DiagramMode) => void
   generatedExplanation?: string
   setGeneratedExplanation: (explanation: string) => void
-  
+
   // UI state
   showExplanation: boolean
   setShowExplanation: (show: boolean) => void
-  
+
   // Session management
   clearSession: () => void
   updateSession: (updates: Partial<DiagramGeneratorSession>) => void
@@ -60,7 +60,7 @@ export const DiagramGeneratorProvider: React.FC<{ children: React.ReactNode }> =
 
   // Session management helpers
   const updateSession = (updates: Partial<DiagramGeneratorSession>) => {
-    setCurrentSession(prev => ({ ...prev, ...updates }))
+    setCurrentSession((prev) => ({ ...prev, ...updates }))
   }
 
   const clearSession = () => {
@@ -97,13 +97,13 @@ export const DiagramGeneratorProvider: React.FC<{ children: React.ReactNode }> =
   const value = {
     // Session state
     currentSession,
-    
+
     // User interaction
     userInput: currentSession.userInput,
     setUserInput,
     attachedImages: currentSession.attachedImages,
     setAttachedImages,
-    
+
     // Diagram content
     xml: currentSession.xml,
     setXml,
@@ -111,11 +111,11 @@ export const DiagramGeneratorProvider: React.FC<{ children: React.ReactNode }> =
     setDiagramMode,
     generatedExplanation: currentSession.generatedExplanation,
     setGeneratedExplanation,
-    
+
     // UI state
     showExplanation: currentSession.showExplanation,
     setShowExplanation,
-    
+
     // Session management
     clearSession,
     updateSession

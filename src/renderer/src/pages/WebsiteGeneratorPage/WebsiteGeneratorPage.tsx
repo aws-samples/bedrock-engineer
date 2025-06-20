@@ -53,12 +53,12 @@ export default function WebsiteGeneratorPage() {
 
 function WebsiteGeneratorPageContents() {
   const { template, setTemplate } = useWebsiteGeneratorSetting()
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const _isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   return (
     <SandpackProvider
       template={template as SupportedTemplate['id']}
-      theme={isDark ? 'dark' : 'light'}
+      theme={_isDark ? 'dark' : 'light'}
       files={templates[template as SupportedTemplate['id']].files}
       style={{
         height: 'calc(100vh - 16rem)'
@@ -81,16 +81,16 @@ function WebsiteGeneratorPageContents() {
 }
 
 function WebsiteGeneratorPageInner() {
-  const { 
-    template, 
-    setTemplate, 
-    userInput, 
-    setUserInput, 
-    generatedCode, 
-    setGeneratedCode, 
-    xml, 
-    setXml, 
-    attachedImages, 
+  const {
+    template,
+    setTemplate: _setTemplate,
+    userInput,
+    setUserInput,
+    generatedCode,
+    setGeneratedCode,
+    xml: _xml,
+    setXml: _setXml,
+    attachedImages: _attachedImages,
     setAttachedImages,
     knowledgeBases,
     enableKnowledgeBase,

@@ -8,7 +8,7 @@ interface WebsiteGeneratorSession {
   generatedCode: string
   xml: string
   attachedImages: any[]
-  
+
   // Knowledge Base Settings
   knowledgeBases: KnowledgeBase[]
   enableKnowledgeBase: boolean
@@ -18,11 +18,11 @@ interface WebsiteGeneratorSession {
 interface WebsiteGeneratorContextType {
   // Session state
   currentSession: WebsiteGeneratorSession
-  
+
   // Template management
   template: string
   setTemplate: (template: string) => void
-  
+
   // User input and generated content
   userInput: string
   setUserInput: (input: string) => void
@@ -32,7 +32,7 @@ interface WebsiteGeneratorContextType {
   setXml: (xml: string) => void
   attachedImages: any[]
   setAttachedImages: (images: any[]) => void
-  
+
   // Knowledge Base Settings
   knowledgeBases: KnowledgeBase[]
   setKnowledgeBases: (knowledgeBases: KnowledgeBase[]) => void
@@ -40,7 +40,7 @@ interface WebsiteGeneratorContextType {
   setEnableKnowledgeBase: (bool: boolean) => void
   enableSearch: boolean
   setEnableSearch: (bool: boolean) => void
-  
+
   // Session management
   clearSession: () => void
   updateSession: (updates: Partial<WebsiteGeneratorSession>) => void
@@ -79,7 +79,7 @@ export const WebsiteGeneratorProvider: React.FC<{ children: React.ReactNode }> =
 
   // Session management helpers
   const updateSession = (updates: Partial<WebsiteGeneratorSession>) => {
-    setCurrentSession(prev => ({ ...prev, ...updates }))
+    setCurrentSession((prev) => ({ ...prev, ...updates }))
   }
 
   const clearSession = () => {
@@ -139,11 +139,11 @@ export const WebsiteGeneratorProvider: React.FC<{ children: React.ReactNode }> =
   const value = {
     // Session state
     currentSession,
-    
+
     // Template management
     template: currentSession.template,
     setTemplate,
-    
+
     // User input and generated content
     userInput: currentSession.userInput,
     setUserInput,
@@ -153,7 +153,7 @@ export const WebsiteGeneratorProvider: React.FC<{ children: React.ReactNode }> =
     setXml,
     attachedImages: currentSession.attachedImages,
     setAttachedImages,
-    
+
     // Knowledge Base Settings
     knowledgeBases: currentSession.knowledgeBases,
     setKnowledgeBases,
@@ -161,7 +161,7 @@ export const WebsiteGeneratorProvider: React.FC<{ children: React.ReactNode }> =
     setEnableKnowledgeBase,
     enableSearch: currentSession.enableSearch,
     setEnableSearch,
-    
+
     // Session management
     clearSession,
     updateSession

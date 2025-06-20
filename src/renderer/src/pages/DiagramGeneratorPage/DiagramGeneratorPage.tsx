@@ -36,7 +36,10 @@ import { useNavigate } from 'react-router'
 import { generateCDKPrompt } from './utils/awsDetector'
 import { DiagramModeSelector, DiagramMode } from './components/DiagramModeSelector'
 import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
-import { DiagramGeneratorProvider, useDiagramGenerator } from '@renderer/contexts/DiagramGeneratorContext'
+import {
+  DiagramGeneratorProvider,
+  useDiagramGenerator
+} from '@renderer/contexts/DiagramGeneratorContext'
 
 export default function DiagramGeneratorPage() {
   return (
@@ -56,7 +59,7 @@ function DiagramGeneratorPageContents() {
     setXml,
     diagramMode,
     setDiagramMode,
-    attachedImages,
+    attachedImages: _attachedImages,
     setAttachedImages,
     generatedExplanation,
     setGeneratedExplanation,

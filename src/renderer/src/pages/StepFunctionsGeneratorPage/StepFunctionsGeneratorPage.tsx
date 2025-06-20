@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { SAMPLE_ASL_PARALLEL } from './SAMPLE_ASL'
+// SAMPLE_ASL_PARALLEL is now defined in context
 import AWSSfnGraph from '@tshepomgaga/aws-sfn-graph'
 import '@tshepomgaga/aws-sfn-graph/index.css'
 import { ASLEditor } from './ASLEditor'
@@ -18,7 +18,10 @@ import {
   generateCDKImplementPromptJa
 } from './utils/cdkPromptGenerator'
 import { useNavigate } from 'react-router'
-import { StepFunctionsGeneratorProvider, useStepFunctionsGenerator } from '@renderer/contexts/StepFunctionsGeneratorContext'
+import {
+  StepFunctionsGeneratorProvider,
+  useStepFunctionsGenerator
+} from '@renderer/contexts/StepFunctionsGeneratorContext'
 
 export default function StepFunctionsGeneratorPage() {
   return (
@@ -47,10 +50,10 @@ function StepFunctionsGeneratorPageContents() {
     setEditorValue,
     hasValidStateMachine,
     setHasValidStateMachine,
-    attachedImages,
+    attachedImages: _attachedImages,
     setAttachedImages,
-    generatedExplanation,
-    setGeneratedExplanation
+    generatedExplanation: _generatedExplanation,
+    setGeneratedExplanation: _setGeneratedExplanation
   } = useStepFunctionsGenerator()
 
   const { currentLLM: llm, sendMsgKey } = useSetting()
