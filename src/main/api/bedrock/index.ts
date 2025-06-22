@@ -10,9 +10,11 @@ import {
   TranslationResult
 } from './services/translateService'
 import { VideoService } from './services/movieService'
+import { InferenceProfileService } from './services/inferenceProfileService'
 import type { ServiceContext } from './types'
 import type { GenerateImageRequest, GeneratedImage } from './types/image'
 import type { GenerateMovieRequest, GeneratedMovie } from './types/movie'
+import type { ApplicationInferenceProfile } from '../../../types/llm'
 import { GuardrailService } from './services/guardrailService'
 import { ApplyGuardrailRequest } from '@aws-sdk/client-bedrock-runtime'
 
@@ -26,6 +28,7 @@ export class BedrockService {
   private flowService: FlowService
   private translateService: TranslateService
   private videoService: VideoService
+  private inferenceProfileService: InferenceProfileService
 
   constructor(context: ServiceContext) {
     this.converseService = new ConverseService(context)
@@ -37,6 +40,7 @@ export class BedrockService {
     this.flowService = new FlowService(context)
     this.translateService = new TranslateService(context.store.get('aws'))
     this.videoService = new VideoService(context)
+    this.inferenceProfileService = new InferenceProfileService(context)
   }
 
   async listModels() {
@@ -127,6 +131,20 @@ export class BedrockService {
 
   async downloadVideoFromS3(s3Uri: string, localPath: string): Promise<string> {
     return this.videoService.downloadVideoFromS3(s3Uri, localPath)
+  }
+
+  async listApplicationInferenceProfiles(): Promise<ApplicationInferenceProfile[]> {
+    return this.inferenceProfileService.listApplicationInferenceProfiles()
+  }
+
+  async getApplicationInferenceProfile(
+    inferenceProfileArn: string
+  ): Promise<ApplicationInferenceProfile | null> {
+    return this.inferenceProfileService.getApplicationInferenceProfile(inferenceProfileArn)
+  }
+
+  convertInferenceProfileToLLM(profile: ApplicationInferenceProfile) {
+    return this.inferenceProfileService.convertProfileToLLM(profile)
   }
 }
 

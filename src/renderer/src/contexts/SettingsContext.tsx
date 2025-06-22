@@ -13,7 +13,13 @@ import { listModels } from '@renderer/lib/api'
 import { CustomAgent } from '@/types/agent-chat'
 import { replacePlaceholders } from '@renderer/pages/ChatPage/utils/placeholder'
 import { DEFAULT_AGENTS } from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
-import { InferenceParameters, LLM, BEDROCK_SUPPORTED_REGIONS, ThinkingMode } from '@/types/llm'
+import {
+  InferenceParameters,
+  LLM,
+  BEDROCK_SUPPORTED_REGIONS,
+  ThinkingMode,
+  ApplicationInferenceProfile
+} from '@/types/llm'
 import type { AwsCredentialIdentity } from '@smithy/types'
 import { BedrockAgent } from '@/types/agent'
 import { AgentCategory } from '@/types/agent-chat'
@@ -94,13 +100,20 @@ export interface SettingsContextType {
   bedrockSettings: {
     enableRegionFailover: boolean
     availableFailoverRegions: string[]
+    enableInferenceProfiles: boolean
   }
   updateBedrockSettings: (
     settings: Partial<{
       enableRegionFailover: boolean
       availableFailoverRegions: string[]
+      enableInferenceProfiles: boolean
     }>
   ) => void
+
+  // Application Inference Profiles
+  availableInferenceProfiles: ApplicationInferenceProfile[]
+  refreshInferenceProfiles: () => Promise<ApplicationInferenceProfile[]>
+  isLoadingInferenceProfiles: boolean
 
   // Guardrail Settings
   guardrailSettings: {
@@ -296,10 +309,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [bedrockSettings, setBedrockSettings] = useState<{
     enableRegionFailover: boolean
     availableFailoverRegions: string[]
+    enableInferenceProfiles: boolean
   }>({
     enableRegionFailover: false,
-    availableFailoverRegions: []
+    availableFailoverRegions: [],
+    enableInferenceProfiles: false
   })
+
+  // Application Inference Profiles state
+  const [availableInferenceProfiles, setAvailableInferenceProfiles] = useState<
+    ApplicationInferenceProfile[]
+  >([])
+  const [isLoadingInferenceProfiles, setIsLoadingInferenceProfiles] = useState<boolean>(false)
 
   // Guardrail Settings
   const [guardrailSettings, setGuardrailSettings] = useState<{
@@ -459,9 +480,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // Load Bedrock Settings
-    const storedBedrockSettings = window.store.get('bedrockSettings')
+    const storedBedrockSettings = window.store.get('bedrockSettings') as any
     if (storedBedrockSettings) {
-      setBedrockSettings(storedBedrockSettings)
+      setBedrockSettings({
+        enableRegionFailover: storedBedrockSettings.enableRegionFailover || false,
+        availableFailoverRegions: storedBedrockSettings.availableFailoverRegions || [],
+        enableInferenceProfiles: storedBedrockSettings.enableInferenceProfiles || false
+      })
     }
 
     // Load Guardrail Settings
@@ -793,7 +818,25 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
           return model
         })
-        setAvailableModels(enhancedModels)
+
+        // If inference profiles are enabled, fetch and merge them
+        if (bedrockSettings.enableInferenceProfiles) {
+          try {
+            const inferenceProfiles = await refreshInferenceProfiles()
+            const profileModels = inferenceProfiles.map((profile) =>
+              window.api.bedrock.convertInferenceProfileToLLM(profile)
+            )
+            setAvailableModels([...enhancedModels, ...profileModels])
+          } catch (profileError) {
+            console.warn(
+              'Failed to fetch inference profiles, using standard models only:',
+              profileError
+            )
+            setAvailableModels(enhancedModels)
+          }
+        } else {
+          setAvailableModels(enhancedModels)
+        }
       }
     } catch (e: any) {
       console.log(e)
@@ -801,6 +844,26 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       throw e
     }
   }
+
+  // Function to refresh application inference profiles
+  const refreshInferenceProfiles = useCallback(async (): Promise<ApplicationInferenceProfile[]> => {
+    if (!bedrockSettings.enableInferenceProfiles) {
+      return []
+    }
+
+    setIsLoadingInferenceProfiles(true)
+    try {
+      const profiles = await window.api.bedrock.listApplicationInferenceProfiles()
+      setAvailableInferenceProfiles(profiles)
+      return profiles
+    } catch (error) {
+      console.error('Failed to fetch inference profiles:', error)
+      setAvailableInferenceProfiles([])
+      return []
+    } finally {
+      setIsLoadingInferenceProfiles(false)
+    }
+  }, [bedrockSettings.enableInferenceProfiles])
 
   const updateLLM = (selectedModel: LLM) => {
     setCurrentLLM(selectedModel)
@@ -841,6 +904,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updatedSettings = { ...bedrockSettings, ...settings }
     setBedrockSettings(updatedSettings)
     window.store.set('bedrockSettings', updatedSettings)
+
+    // If inference profiles setting changed, refresh available models
+    if ('enableInferenceProfiles' in settings) {
+      fetchModels()
+    }
   }
 
   const updateGuardrailSettings = (settings: Partial<typeof guardrailSettings>) => {
@@ -1580,6 +1648,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Bedrock Settings
     bedrockSettings,
     updateBedrockSettings,
+
+    // Application Inference Profiles
+    availableInferenceProfiles,
+    refreshInferenceProfiles,
+    isLoadingInferenceProfiles,
 
     // Guardrail Settings
     guardrailSettings,
