@@ -149,6 +149,28 @@ export const api = {
     getAllToolMetadata: () => {
       return ToolMetadataCollector.getAllToolMetadata()
     }
+  },
+  update: {
+    checkVersion: async (forceCheck: boolean = false) => {
+      return ipcRenderer.invoke('update:check', forceCheck)
+    },
+    getSettings: async () => {
+      return ipcRenderer.invoke('update:getSettings')
+    },
+    setSettings: async (settings: any) => {
+      return ipcRenderer.invoke('update:setSettings', settings)
+    },
+    skipVersion: async (version: string) => {
+      return ipcRenderer.invoke('update:skipVersion', version)
+    },
+    openReleaseUrl: async (url: string) => {
+      return ipcRenderer.invoke('update:openReleaseUrl', url)
+    },
+    onUpdateAvailable: (callback: (updateInfo: any) => void) => {
+      const listener = (_event: any, updateInfo: any) => callback(updateInfo)
+      ipcRenderer.on('update:available', listener)
+      return () => ipcRenderer.removeListener('update:available', listener)
+    }
   }
 }
 

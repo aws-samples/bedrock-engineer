@@ -21,6 +21,7 @@ import { agentHandlers } from './handlers/agent-handlers'
 import { utilHandlers } from './handlers/util-handlers'
 import { screenHandlers } from './handlers/screen-handlers'
 import { cameraHandlers } from './handlers/camera-handlers'
+import { registerUpdateHandlers, performStartupUpdateCheck } from './handlers/update-handlers'
 // 動的インポートを使用してfix-pathパッケージを読み込む
 import('fix-path')
   .then((fixPathModule) => {
@@ -306,6 +307,9 @@ app.whenReady().then(async () => {
   // ログハンドラーの登録
   registerLogHandler()
 
+  // アップデートハンドラーの登録
+  registerUpdateHandlers()
+
   // Initial load of shared agents (optional - for logging purposes only)
   agentHandlers['read-shared-agents'](null as any)
     .then((result) => {
@@ -326,6 +330,27 @@ app.whenReady().then(async () => {
     userDataDir: app.getPath('userData'),
     configFile: `${app.getPath('userData')}/config.json`
   })
+
+  // 起動時のアップデートチェック
+  performStartupUpdateCheck()
+    .then((updateInfo) => {
+      if (updateInfo?.hasUpdate) {
+        log.info('Update available at startup', {
+          currentVersion: updateInfo.currentVersion,
+          latestVersion: updateInfo.latestVersion,
+          releaseUrl: updateInfo.releaseUrl
+        })
+        // メインウィンドウにアップデート情報を送信
+        if (mainWindow) {
+          mainWindow.webContents.send('update:available', updateInfo)
+        }
+      } else {
+        log.debug('No update available at startup')
+      }
+    })
+    .catch((error) => {
+      log.error('Startup update check failed', { error: String(error) })
+    })
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the

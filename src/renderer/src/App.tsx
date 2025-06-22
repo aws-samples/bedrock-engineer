@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { FiGithub } from 'react-icons/fi'
 import { Tooltip } from 'flowbite-react'
 import { createHashRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
@@ -12,6 +12,8 @@ import { ChatHistoryProvider } from './contexts/ChatHistoryContext'
 import { AgentDirectoryProvider } from './contexts/AgentDirectoryContext'
 import { StepType, TourProvider } from '@reactour/tour'
 import { useTranslation } from 'react-i18next'
+import { useUpdateChecker } from './hooks/useUpdateChecker'
+import { UpdateNotificationDialog } from './components/UpdateNotificationDialog'
 
 const ListItem: React.FC<{
   children: any
@@ -111,6 +113,9 @@ const styles: any = {
 
 function App(): JSX.Element {
   const { t } = useTranslation()
+  const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false)
+  const { updateInfo, formatPublishedDate, openReleaseUrl, skipVersion, setSettings } =
+    useUpdateChecker()
 
   const steps: StepType[] = [
     {
@@ -120,6 +125,45 @@ function App(): JSX.Element {
     }
   ]
 
+  // Handle update dialog actions
+  const handleDownload = async () => {
+    if (updateInfo?.releaseUrl) {
+      await openReleaseUrl(updateInfo.releaseUrl)
+    }
+  }
+
+  const handleSkipVersion = async () => {
+    if (updateInfo?.latestVersion) {
+      await skipVersion(updateInfo.latestVersion)
+    }
+  }
+
+  const handleRemindLater = async () => {
+    // Set reminder for 1 week later by updating settings
+    const oneWeekLater = new Date()
+    oneWeekLater.setDate(oneWeekLater.getDate() + 7)
+
+    const currentSettings = await window.api?.update?.getSettings()
+    if (currentSettings) {
+      await setSettings({
+        ...currentSettings,
+        lastChecked: oneWeekLater.toISOString()
+      })
+    }
+  }
+
+  const handleOpenSettings = () => {
+    // Navigate to settings page - this will be implemented when settings integration is added
+    console.log('Navigate to settings page')
+  }
+
+  // Show update dialog when update is available
+  React.useEffect(() => {
+    if (updateInfo?.hasUpdate) {
+      setIsUpdateDialogOpen(true)
+    }
+  }, [updateInfo])
+
   return (
     <TourProvider steps={steps} styles={styles}>
       <SettingsProvider>
@@ -128,6 +172,18 @@ function App(): JSX.Element {
             <div>
               <Toaster position="top-right" />
               <RouterProvider router={router} />
+
+              {/* Update Notification Dialog */}
+              <UpdateNotificationDialog
+                isOpen={isUpdateDialogOpen}
+                onClose={() => setIsUpdateDialogOpen(false)}
+                updateInfo={updateInfo}
+                onDownload={handleDownload}
+                onSkipVersion={handleSkipVersion}
+                onRemindLater={handleRemindLater}
+                onOpenSettings={handleOpenSettings}
+                formatPublishedDate={formatPublishedDate}
+              />
             </div>
           </AgentDirectoryProvider>
         </ChatHistoryProvider>
