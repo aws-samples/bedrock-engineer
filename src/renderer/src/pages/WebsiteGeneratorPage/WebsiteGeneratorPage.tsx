@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ToggleSwitch, Tooltip } from 'flowbite-react'
 import { GrClearOption } from 'react-icons/gr'
-import prompts from '../../prompts/prompts'
 import { AiOutlineReload } from 'react-icons/ai'
 import { autocompletion, completionKeymap } from '@codemirror/autocomplete'
 import {
@@ -17,25 +16,23 @@ import { Loader } from '@renderer/components/Loader'
 import useDataSourceConnectModal from './useDataSourceConnectModal'
 
 import { motion } from 'framer-motion'
-import { Style, SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
+import { SupportedTemplate, templates, TEMPLATES, supportedStyles } from './templates'
 import { useTranslation } from 'react-i18next'
 import useSetting from '@renderer/hooks/useSetting'
-import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
 import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
-import { extractCode, extractCodeBlock, replacePlaceholders } from './util'
-import useWebsiteGeneratorSettings from '@renderer/hooks/useWebsiteGeneratorSetting'
-import { WebsiteGeneratorProvider } from '@renderer/contexts/WebsiteGeneratorContext'
+import { extractCode, extractCodeBlock } from './util'
+import { useWebsiteGenerator } from '@renderer/contexts/WebsiteGeneratorContext'
 import { TemplateButton } from './components/TemplateButton'
 import { Preview } from './components/Preview'
 import { RecommendChanges } from './components/RecommendChanges'
 import { StyleSelector } from './components/StyleSelector'
 import { KnowledgeBaseConnectButton } from './components/KnowledgeBaseConnectButton'
 import { RagLoader } from './components/RagLoader'
-import { AttachedImage, TextArea } from '../ChatPage/components/InputForm/TextArea'
+import { TextArea } from '../ChatPage/components/InputForm/TextArea'
+import { AttachedImage } from '@/types/generator-contexts'
 import { useRecommendChanges } from './hooks/useRecommendChanges'
 import { WebLoader } from '../../components/WebLoader'
 import { DeepSearchButton } from '../../components/DeepSearchButton'
-import { ToolState } from '@/types/agent-chat'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
 import { ContinueDevelopmentButton } from './components/ContinueDevelopmentButton'
 import { generateContinueDevelopmentPrompt } from './utils/promptGenerator'
@@ -47,29 +44,27 @@ export default function WebsiteGeneratorPage() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   return (
-    <WebsiteGeneratorProvider>
-      <SandpackProvider
-        template={template}
-        theme={isDark ? 'dark' : 'light'}
-        files={templates[template].files}
-        style={{
-          height: 'calc(100vh - 16rem)'
-        }}
-        options={{
-          externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
-          initMode: 'user-visible',
-          recompileMode: 'immediate',
-          recompileDelay: 500,
-          autorun: true,
-          autoReload: true
-        }}
-        customSetup={{
-          dependencies: templates[template].customSetup.dependencies
-        }}
-      >
-        <WebsiteGeneratorPageContents template={template} setTemplate={setTemplate} />
-      </SandpackProvider>
-    </WebsiteGeneratorProvider>
+    <SandpackProvider
+      template={template}
+      theme={isDark ? 'dark' : 'light'}
+      files={templates[template].files}
+      style={{
+        height: 'calc(100vh - 16rem)'
+      }}
+      options={{
+        externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
+        initMode: 'user-visible',
+        recompileMode: 'immediate',
+        recompileDelay: 500,
+        autorun: true,
+        autoReload: true
+      }}
+      customSetup={{
+        dependencies: templates[template].customSetup.dependencies
+      }}
+    >
+      <WebsiteGeneratorPageContents template={template} setTemplate={setTemplate} />
+    </SandpackProvider>
   )
 }
 
@@ -86,23 +81,43 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const { t } = useTranslation()
   const navigate = useNavigate()
 
+  // 新しいContextから状態とアクションを取得
+  const {
+    // Chat State
+    messages,
+    loading,
+    executingTool,
+    latestReasoningText,
+    userInput,
+    setUserInput,
+    handleSubmit,
+    clearChat,
+
+    // Website Generator State
+    template: contextTemplate,
+    setTemplate: setContextTemplate,
+    styleType,
+    setStyleType,
+    showCode,
+    setShowCode,
+    showContinueDevelopmentButton,
+    setShowContinueDevelopmentButton,
+
+    // Knowledge Base Settings
+    knowledgeBases: _knowledgeBases,
+    enableKnowledgeBase,
+    enableSearch,
+    setEnableSearch
+  } = useWebsiteGenerator()
+
   const { recommendChanges, recommendLoading, getRecommendChanges, refleshRecommendChanges } =
     useRecommendChanges()
 
-  const [showCode, setShowCode] = useState(false)
-  const [userInput, setUserInput] = useState('')
-  const { currentLLM: llm, sendMsgKey, getAgentTools } = useSetting()
-  // 継続開発ボタン表示の制御状態
-  const [showContinueDevelopmentButton, setShowContinueDevelopmentButton] = useState(false)
+  const { sendMsgKey } = useSetting()
 
   const handleClickShowCode = () => {
     setShowCode(!showCode)
   }
-
-  const [styleType, setStyleType] = useState<Style>({
-    label: 'Tailwind.css',
-    value: 'tailwind'
-  })
 
   const {
     show: showDataSourceConnectModal,
@@ -110,84 +125,23 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     handleOpen: handleOpenDataSourceConnectModal,
     DataSourceConnectModal
   } = useDataSourceConnectModal()
-  const { knowledgeBases, enableKnowledgeBase, enableSearch, setEnableSearch } =
-    useWebsiteGeneratorSettings()
 
-  // テンプレートに応じたエージェントIDの選択
-  const getAgentIdForTemplate = (template: SupportedTemplate['id']): string => {
-    const agentMap = {
-      'react-ts': 'reactGeneratorAgent',
-      'vue-ts': 'vueGeneratorAgent',
-      svelte: 'svelteGeneratorAgent'
-    }
-    return agentMap[template]
-  }
-
-  // ウェブサイト生成用のエージェントID（テンプレートに応じて動的に変更）
-  const websiteAgentId = getAgentIdForTemplate(template)
-
-  // テンプレート固有のシステムプロンプトを直接使用
-  const systemPrompt = useMemo(() => {
-    // テンプレート固有のプロンプトを直接使用
-    const templateSpecificPrompt = prompts.WebsiteGenerator.system[template]({
-      styleType: styleType.value,
-      libraries: Object.keys(templates[template].customSetup.dependencies),
-      ragEnabled: enableKnowledgeBase,
-      tavilySearchEnabled: enableSearch
-    })
-
-    // Knowledge Basesのプレースホルダーを置換
-    return replacePlaceholders(templateSpecificPrompt, knowledgeBases)
-  }, [template, styleType.value, enableKnowledgeBase, enableSearch, knowledgeBases])
-  const sessionId = undefined
-
-  // Website Generator Agent で利用可能なツールを定義
-  const websiteAgentTools = useMemo(() => {
-    const tools: ToolState[] = []
-    // agentIdからツールを取得
-    const agentTools = getAgentTools(websiteAgentId)
-
-    // 検索機能が有効な場合、tavilySearch ツールを追加
-    if (enableSearch) {
-      const searchTools = agentTools.filter(
-        (tool) => tool.toolSpec?.name === 'tavilySearch' && tool.enabled
-      )
-      tools.push(...searchTools)
-    }
-
-    // Knowledge Base機能が有効な場合、retrieve ツールを追加
-    if (enableKnowledgeBase) {
-      const retrieveTools = agentTools.filter(
-        (tool) => tool.toolSpec?.name === 'retrieve' && tool.enabled
-      )
-      tools.push(...retrieveTools)
-    }
-
-    return tools
-  }, [enableSearch, enableKnowledgeBase, getAgentTools, websiteAgentId])
-
-  const options = {
-    enableHistory: false,
-    tools: websiteAgentTools // 明示的にツール設定を渡す
-  }
-
-  const {
-    messages,
-    loading,
-    executingTool,
-    latestReasoningText,
-    handleSubmit,
-    clearChat: initChat
-  } = useAgentChat(llm?.modelId, systemPrompt, websiteAgentId, sessionId, options)
-
-  // テンプレート変更時にチャットをリセット
+  // プロップスのテンプレート変更をContextに同期
   useEffect(() => {
-    initChat() // エージェントが変わったらチャット履歴をクリア
-  }, [websiteAgentId, initChat])
+    if (template !== contextTemplate) {
+      setContextTemplate(template as SupportedTemplate['id'])
+    }
+  }, [template, contextTemplate, setContextTemplate])
+
+  // Contextのテンプレート変更をプロップスに同期
+  useEffect(() => {
+    if (contextTemplate !== template) {
+      setTemplate(contextTemplate as SupportedTemplate['id'])
+    }
+  }, [contextTemplate, template, setTemplate])
 
   const onSubmit = (input: string, images: AttachedImage[]) => {
     handleSubmit(input, images)
-    setUserInput('')
   }
 
   const lastText = messages[messages.length - 1]?.role === 'assistant' ? extractCode(messages) : ''
@@ -218,9 +172,9 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
       value: 'tailwind'
     })
     refleshRecommendChanges()
-    initChat()
+    clearChat()
     runSandpack()
-  }, [template, updateCode, initChat, runSandpack])
+  }, [template, updateCode, clearChat, runSandpack])
 
   useEffect(() => {
     if (messages?.length > 0) {
@@ -294,6 +248,10 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     },
     [latestReasoningText]
   )
+
+  // SystemPromptModalのために一時的なシステムプロンプトを生成
+  // TODO: 将来的にはContextから取得するように改善
+  const systemPrompt = `Website Generator System Prompt for ${template} template`
 
   return (
     <div className={'flex flex-col p-3 h-[calc(100vh-11rem)] overflow-y-auto'}>

@@ -10,6 +10,9 @@ import ErrorPage from './pages/ErrorPage/ErrorPage'
 import { SettingsProvider } from './contexts/SettingsContext'
 import { ChatHistoryProvider } from './contexts/ChatHistoryContext'
 import { AgentDirectoryProvider } from './contexts/AgentDirectoryContext'
+import { WebsiteGeneratorProvider } from './contexts/WebsiteGeneratorContext'
+import { DiagramGeneratorProvider } from './contexts/DiagramGeneratorContext'
+import { StepFunctionsGeneratorProvider } from './contexts/StepFunctionsGeneratorContext'
 import { StepType, TourProvider } from '@reactour/tour'
 import { useTranslation } from 'react-i18next'
 
@@ -125,10 +128,16 @@ function App(): JSX.Element {
       <SettingsProvider>
         <ChatHistoryProvider>
           <AgentDirectoryProvider>
-            <div>
-              <Toaster position="top-right" />
-              <RouterProvider router={router} />
-            </div>
+            <WebsiteGeneratorProvider>
+              <DiagramGeneratorProvider>
+                <StepFunctionsGeneratorProvider>
+                  <div>
+                    <Toaster position="top-right" />
+                    <RouterProvider router={router} />
+                  </div>
+                </StepFunctionsGeneratorProvider>
+              </DiagramGeneratorProvider>
+            </WebsiteGeneratorProvider>
           </AgentDirectoryProvider>
         </ChatHistoryProvider>
       </SettingsProvider>

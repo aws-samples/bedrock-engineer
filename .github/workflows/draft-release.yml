@@ -129,16 +129,16 @@ jobs:
           cat > RELEASE_NOTES.md << EOF
           # Bedrock Engineer v$VERSION
 
-          ## 新機能
-          ${FEATURES:-"なし"}
+          ## New features
+          ${FEATURES:-"-"}
 
-          ## 修正
-          ${FIXES:-"なし"}
+          ## Fixes
+          ${FIXES:-"-"}
 
-          ## その他の変更
-          ${OTHERS:-"なし"}
+          ## Others
+          ${OTHERS:-"-"}
 
-          ## プラットフォーム
+          ## Platform
           - macOS (Universal)
           - Windows
           EOF

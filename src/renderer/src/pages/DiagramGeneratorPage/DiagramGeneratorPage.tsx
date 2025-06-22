@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useRef, useEffect, useMemo, useCallback } from 'react'
 import { DrawIoEmbed, DrawIoEmbedRef } from 'react-drawio'
-import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
-import { TextArea, AttachedImage } from '../ChatPage/components/InputForm/TextArea'
+import { TextArea } from '../ChatPage/components/InputForm/TextArea'
+import { AttachedImage } from '@/types/generator-contexts'
 import useSetting from '@renderer/hooks/useSetting'
 import { Loader } from '@renderer/components/Loader'
 import { exampleDiagrams } from './example-diagrams'
@@ -23,55 +23,78 @@ import {
   calculateTimeBasedProgress,
   getProgressMessage
 } from './utils/progressCalculator'
-import {
-  DIAGRAM_GENERATOR_SYSTEM_PROMPT,
-  SOFTWARE_ARCHITECTURE_SYSTEM_PROMPT,
-  BUSINESS_PROCESS_SYSTEM_PROMPT
-} from '../ChatPage/constants/DEFAULT_AGENTS'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
 import { DiagramExplanationView } from './components/DiagramExplanationView'
 import { MdOutlineArticle } from 'react-icons/md'
 import { Tooltip } from 'flowbite-react'
 import { useNavigate } from 'react-router'
 import { generateCDKPrompt } from './utils/awsDetector'
-import { DiagramModeSelector, DiagramMode } from './components/DiagramModeSelector'
+import { DiagramModeSelector } from './components/DiagramModeSelector'
 import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
+import { useDiagramGenerator, DiagramMode } from '@renderer/contexts/DiagramGeneratorContext'
 
+// Main component
 export default function DiagramGeneratorPage() {
+  return <DiagramGeneratorPageContent />
+}
+
+function DiagramGeneratorPageContent() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-
-  const [userInput, setUserInput] = useState('')
-  const [xml, setXml] = useState(exampleDiagrams['aws'])
-  const [isComposing, setIsComposing] = useState(false)
   const drawioRef = useRef<DrawIoEmbedRef>(null)
-  const { currentLLM: llm, sendMsgKey, getAgentTools, enabledTavilySearch } = useSetting()
+  const { sendMsgKey, enabledTavilySearch } = useSetting()
+  const navigate = useNavigate()
 
-  // ダイアグラムモードの状態
-  const [diagramMode, setDiagramMode] = useState<DiagramMode>('aws')
+  const {
+    t,
+    i18n: { language }
+  } = useTranslation()
 
-  // 検索機能の状態
-  const [enableSearch, setEnableSearch] = useState(false)
+  // Context から状態とアクションを取得
+  const {
+    // Chat State
+    messages,
+    loading,
+    executingTool,
+    latestReasoningText,
+    userInput,
+    setUserInput,
+    handleSubmit,
 
-  // 履歴管理用の状態
-  const [diagramHistory, setDiagramHistory] = useState<
-    { xml: string; explanation: string; prompt: string }[]
-  >([])
-  // 説明文の表示・非表示を切り替えるためのフラグ
-  const [showExplanation, setShowExplanation] = useState(true)
-  // 説明文を保持する状態
-  const [diagramExplanation, setDiagramExplanation] = useState<string>('')
-  // ストリーミング中の説明文を保持する状態
-  const [streamingExplanation, setStreamingExplanation] = useState<string>('')
-  const [selectedHistoryIndex, setSelectedHistoryIndex] = useState<number | null>(null)
+    // Diagram Generator State
+    diagramMode,
+    setDiagramMode,
+    xml,
+    setXml,
+    diagramExplanation,
+    setDiagramExplanation,
+    streamingExplanation,
+    setStreamingExplanation,
 
-  // 進捗管理用の状態
-  const [generationStartTime, setGenerationStartTime] = useState<number>(0)
-  const [xmlProgress, setXmlProgress] = useState<number>(0)
-  const [progressMessage, setProgressMessage] = useState<string>('')
+    // History Management
+    diagramHistory,
+    setDiagramHistory,
+    selectedHistoryIndex,
+    setSelectedHistoryIndex,
+    loadDiagramFromHistory,
 
-  // XML生成専用の状態管理
-  const [xmlLoading, setXmlLoading] = useState(false)
-  const [hasValidXml, setHasValidXml] = useState(false)
+    // UI State
+    showExplanation,
+    setShowExplanation,
+    enableSearch,
+    setEnableSearch,
+
+    // Progress State
+    generationStartTime,
+    setGenerationStartTime: _setGenerationStartTime,
+    xmlProgress,
+    setXmlProgress,
+    progressMessage,
+    setProgressMessage,
+    xmlLoading,
+    setXmlLoading,
+    hasValidXml,
+    setHasValidXml
+  } = useDiagramGenerator()
 
   const {
     recommendDiagrams,
@@ -79,13 +102,6 @@ export default function DiagramGeneratorPage() {
     getRecommendDiagrams,
     refreshRecommendDiagrams: _refreshRecommendDiagrams
   } = useRecommendDiagrams(diagramMode)
-
-  const navigate = useNavigate()
-
-  const {
-    t,
-    i18n: { language }
-  } = useTranslation()
 
   // システムプロンプトモーダル
   const {
@@ -95,103 +111,15 @@ export default function DiagramGeneratorPage() {
     SystemPromptModal
   } = useSystemPromptModal()
 
-  // カスタムシステムプロンプトを定義 - 言語設定と検索機能の有効化に対応
-  const getSystemPrompt = () => {
-    // モードに応じたベースプロンプトを選択
-    let basePrompt: string
-    switch (diagramMode) {
-      case 'aws':
-        basePrompt = DIAGRAM_GENERATOR_SYSTEM_PROMPT
-        break
-      case 'software-architecture':
-        basePrompt = SOFTWARE_ARCHITECTURE_SYSTEM_PROMPT
-        break
-      case 'business-process':
-        basePrompt = BUSINESS_PROCESS_SYSTEM_PROMPT
-        break
-      default:
-        basePrompt = DIAGRAM_GENERATOR_SYSTEM_PROMPT
-    }
-
-    // 言語設定を追加
-    basePrompt = basePrompt.replace(
-      'Respond in the following languages included in the user request.',
-      `Respond in the following languages: ${language}.`
-    )
-
-    // 検索機能が無効の場合、関連する部分を削除
-    if (!enableSearch) {
-      basePrompt = basePrompt.replace(
-        "* If the user's request requires specific information, use the tavilySearch tool to gather up-to-date information before creating the diagram.",
-        ''
-      )
-    }
-
-    return basePrompt
-  }
-
-  const systemPrompt = getSystemPrompt()
-
-  // ダイアグラム生成用のエージェントID（モードに応じて変更）
-  const diagramAgentId = useMemo(() => {
-    switch (diagramMode) {
-      case 'aws':
-        return 'diagramGeneratorAgent'
-      case 'software-architecture':
-        return 'softwareArchitectureAgent'
-      case 'business-process':
-        return 'businessProcessAgent'
-      default:
-        return 'diagramGeneratorAgent'
-    }
-  }, [diagramMode])
-
-  // Diagram Generator Agent で利用可能なツールを定義
-  // enableSearch が true の場合のみ tavilySearch ツールを有効にする
-  const diagramAgentTools = useMemo(() => {
-    const agentTools = getAgentTools(diagramAgentId)
-
-    if (!enableSearch) {
-      // diagramAgentIdからツールを取得し、tavilySearch ツールだけをフィルタリング
-      return agentTools.filter((tool) => tool.toolSpec?.name !== 'tavilySearch')
-    }
-
-    return agentTools
-  }, [enableSearch, getAgentTools, diagramAgentId])
-
-  const { messages, loading, handleSubmit, executingTool, latestReasoningText } = useAgentChat(
-    llm?.modelId,
-    systemPrompt,
-    diagramAgentId,
-    undefined,
-    {
-      enableHistory: false,
-      tools: diagramAgentTools // 明示的にツール設定を渡す
-    }
-  )
+  // 初期化：デフォルトのXMLを設定
+  useEffect(() => {
+    const defaultXml = exampleDiagrams[diagramMode] || exampleDiagrams['aws']
+    setXml(defaultXml)
+  }, [diagramMode, setXml])
 
   const onSubmit = (input: string, images?: AttachedImage[]) => {
     handleSubmit(input, images)
-    setUserInput('')
-    // 履歴から選択していた場合はリセット
-    setSelectedHistoryIndex(null)
-    // 生成開始時間を記録
-    setGenerationStartTime(Date.now())
-    setXmlProgress(0)
-    setProgressMessage('')
-    // XML生成状態をリセット
-    setXmlLoading(true)
-    setHasValidXml(false)
-
-    // 既存のダイアグラムをクリアして即座にローダーを表示
-    setXml('')
-    setDiagramExplanation('')
   }
-
-  // システムプロンプトを検索状態やモード変更に応じて更新
-  useEffect(() => {
-    // systemPromptは関数から取得するため、enableSearchやdiagramModeが変更されたときに再レンダリングされる
-  }, [enableSearch, diagramMode])
 
   // モード変更時の処理
   const handleModeChange = useCallback(
@@ -223,11 +151,8 @@ export default function DiagramGeneratorPage() {
         console.log('[DEBUG] DrawIO ref not ready, setting XML state only')
         setXml(newXml)
       }
-
-      // モード変更時にチャット履歴をクリア
-      // handleSubmit関数をクリアする代わりに、新しいセッションを開始
     },
-    [diagramMode]
+    [diagramMode, setDiagramMode, setXml]
   )
 
   // モード変更時のリフレッシュ処理
@@ -240,7 +165,14 @@ export default function DiagramGeneratorPage() {
     // 履歴もクリア
     setDiagramHistory([])
     setSelectedHistoryIndex(null)
-  }, [])
+  }, [
+    setXml,
+    setDiagramExplanation,
+    setStreamingExplanation,
+    setUserInput,
+    setDiagramHistory,
+    setSelectedHistoryIndex
+  ])
 
   // ストリーミング中の説明文を抽出・更新
   useEffect(() => {
@@ -290,7 +222,18 @@ export default function DiagramGeneratorPage() {
       setXmlLoading(false)
       setHasValidXml(false)
     }
-  }, [messages, loading, xmlLoading, hasValidXml])
+  }, [
+    messages,
+    loading,
+    xmlLoading,
+    hasValidXml,
+    setStreamingExplanation,
+    setXml,
+    setHasValidXml,
+    setXmlLoading,
+    setXmlProgress,
+    setProgressMessage
+  ])
 
   // XMLステートの変更を監視してdrawioに反映（デバウンス付き）
   useEffect(() => {
@@ -365,7 +308,15 @@ export default function DiagramGeneratorPage() {
         }, 1000)
       }
     }
-  }, [loading, isXmlGenerating, streamingExplanation, generationStartTime, xmlProgress])
+  }, [
+    loading,
+    isXmlGenerating,
+    streamingExplanation,
+    generationStartTime,
+    xmlProgress,
+    setXmlProgress,
+    setProgressMessage
+  ])
 
   // XMLタグを除去した説明文
   const filteredExplanation = useMemo(() => {
@@ -403,11 +354,12 @@ export default function DiagramGeneratorPage() {
             const userPrompt = lastUserMessage.content
               .map((c) => ('text' in c ? c.text : ''))
               .join('')
-            setDiagramHistory((prev) => {
-              const newHistory = [...prev, { xml: validXml, explanation, prompt: userPrompt }]
-              // 最大10つまで保持
-              return newHistory.slice(-10)
-            })
+            const newHistory = [
+              ...diagramHistory,
+              { xml: validXml, explanation, prompt: userPrompt }
+            ]
+            // 最大10つまで保持
+            setDiagramHistory(newHistory.slice(-10))
           }
         } catch (error) {
           console.error('Failed to load diagram:', error)
@@ -416,25 +368,7 @@ export default function DiagramGeneratorPage() {
         }
       }
     }
-  }, [messages, loading])
-
-  // 履歴からダイアグラムを読み込む関数
-  const loadDiagramFromHistory = (index: number) => {
-    if (diagramHistory[index]) {
-      const historyItem = diagramHistory[index]
-      if (drawioRef.current) {
-        try {
-          drawioRef.current.load({ xml: historyItem.xml })
-          setXml(historyItem.xml)
-          setDiagramExplanation(historyItem.explanation)
-          setUserInput(historyItem.prompt)
-          setSelectedHistoryIndex(index)
-        } catch (error) {
-          console.error('Failed to load diagram from history:', error)
-        }
-      }
-    }
-  }
+  }, [messages, loading, setXml, setDiagramExplanation, getRecommendDiagrams, setDiagramHistory])
 
   // 説明文表示の切り替え
   const toggleExplanationView = () => {
@@ -452,6 +386,9 @@ export default function DiagramGeneratorPage() {
     // CDK Developer エージェントを指定
     navigate(`/chat?prompt=${encodeURIComponent(prompt)}&agent=softwareAgent`)
   }, [xml, diagramExplanation, filteredExplanation, loading, navigate])
+
+  // システムプロンプトを取得（一時的な値）
+  const systemPrompt = `Diagram Generator System Prompt for ${diagramMode} mode`
 
   return (
     <div className="flex flex-col p-3 h-[calc(100vh-14rem)]">
@@ -621,8 +558,8 @@ export default function DiagramGeneratorPage() {
             onChange={setUserInput}
             disabled={loading}
             onSubmit={onSubmit}
-            isComposing={isComposing}
-            setIsComposing={setIsComposing}
+            isComposing={false}
+            setIsComposing={() => {}}
             sendMsgKey={sendMsgKey}
           />
         </div>
