@@ -291,6 +291,14 @@ The diagrams are created using draw.io compatible XML format, allowing for furth
 
 ![diagram-generator](./assets/diagram-generator.png)
 
+## Application Inference Profiles
+
+Bedrock Engineer supports AWS Bedrock Application Inference Profiles for detailed cost tracking and allocation. You can create custom inference profiles with tags to track costs by project, department, or use case.
+
+For detailed setup instructions and examples, see:
+
+- [Application Inference Profile Guide (English)](./docs/INFERENCE_PROFILE.md)
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=aws-samples/bedrock-engineer&type=Date)](https://star-history.com/#aws-samples/bedrock-engineer&Date)

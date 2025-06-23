@@ -31,6 +31,8 @@ export interface LLM {
   readonly regions: readonly BedrockSupportRegion[] // Use the specific region type
   readonly maxTokensLimit?: number // Optional parameter for model-specific limits
   readonly supportsThinking?: boolean // Whether the model supports extended thinking
+  readonly isInferenceProfile?: boolean // Whether this is an inference profile
+  readonly inferenceProfileArn?: string // ARN of the inference profile if applicable
 }
 
 // Type guard for LLM validation
@@ -48,4 +50,18 @@ export interface InferenceParameters {
   maxTokens: number
   temperature: number
   topP?: number
+}
+
+// Application Inference Profile for cost allocation
+export interface ApplicationInferenceProfile {
+  readonly inferenceProfileArn: string
+  readonly inferenceProfileName: string
+  readonly description?: string
+  readonly status: string
+  readonly createdAt: Date
+  readonly updatedAt: Date
+  readonly modelSource: {
+    copyFrom: string
+  }
+  readonly type: string
 }

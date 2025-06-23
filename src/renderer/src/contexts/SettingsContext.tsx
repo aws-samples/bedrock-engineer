@@ -9,11 +9,18 @@ import {
   CameraConfig
 } from 'src/types/agent-chat'
 import { ToolName } from 'src/types/tools'
-import { listModels } from '@renderer/lib/api'
+
 import { CustomAgent } from '@/types/agent-chat'
 import { replacePlaceholders } from '@renderer/pages/ChatPage/utils/placeholder'
 import { DEFAULT_AGENTS } from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
-import { InferenceParameters, LLM, BEDROCK_SUPPORTED_REGIONS, ThinkingMode } from '@/types/llm'
+import {
+  InferenceParameters,
+  LLM,
+  BEDROCK_SUPPORTED_REGIONS,
+  ThinkingMode,
+  ApplicationInferenceProfile
+} from '@/types/llm'
+import { useModelManagement } from '@renderer/hooks/useModelManagement'
 import type { AwsCredentialIdentity } from '@smithy/types'
 import { BedrockAgent } from '@/types/agent'
 import { AgentCategory } from '@/types/agent-chat'
@@ -94,13 +101,20 @@ export interface SettingsContextType {
   bedrockSettings: {
     enableRegionFailover: boolean
     availableFailoverRegions: string[]
+    enableInferenceProfiles: boolean
   }
   updateBedrockSettings: (
     settings: Partial<{
       enableRegionFailover: boolean
       availableFailoverRegions: string[]
+      enableInferenceProfiles: boolean
     }>
   ) => void
+
+  // Application Inference Profiles
+  availableInferenceProfiles: ApplicationInferenceProfile[]
+  refreshInferenceProfiles: () => Promise<ApplicationInferenceProfile[]>
+  isLoadingInferenceProfiles: boolean
 
   // Guardrail Settings
   guardrailSettings: {
@@ -272,7 +286,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
 
   // LLM Settings
-  const [llmError, setLLMError] = useState<any>()
   const defaultModel = {
     modelId: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
     modelName: 'Claude 3.5 Sonnet v2',
@@ -281,7 +294,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     supportsThinking: false
   }
   const [currentLLM, setCurrentLLM] = useState<LLM>(defaultModel)
-  const [availableModels, setAvailableModels] = useState<LLM[]>([])
   const [inferenceParams, setInferenceParams] =
     useState<InferenceParameters>(DEFAULT_INFERENCE_PARAMS)
 
@@ -296,9 +308,25 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [bedrockSettings, setBedrockSettings] = useState<{
     enableRegionFailover: boolean
     availableFailoverRegions: string[]
+    enableInferenceProfiles: boolean
   }>({
     enableRegionFailover: false,
-    availableFailoverRegions: []
+    availableFailoverRegions: [],
+    enableInferenceProfiles: false
+  })
+
+  // Model Management Hook
+  const {
+    availableModels,
+    modelError: llmError,
+    availableInferenceProfiles,
+    isLoadingInferenceProfiles,
+    fetchModels,
+    refreshInferenceProfiles
+  } = useModelManagement({
+    bedrockSettings,
+    currentLLM,
+    onModelUpdate: setCurrentLLM
   })
 
   // Guardrail Settings
@@ -459,9 +487,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     // Load Bedrock Settings
-    const storedBedrockSettings = window.store.get('bedrockSettings')
+    const storedBedrockSettings = window.store.get('bedrockSettings') as any
     if (storedBedrockSettings) {
-      setBedrockSettings(storedBedrockSettings)
+      setBedrockSettings({
+        enableRegionFailover: storedBedrockSettings.enableRegionFailover || false,
+        availableFailoverRegions: storedBedrockSettings.availableFailoverRegions || [],
+        enableInferenceProfiles: storedBedrockSettings.enableInferenceProfiles || false
+      })
     }
 
     // Load Guardrail Settings
@@ -762,6 +794,29 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [currentLLM])
 
+  // Initialize models on app startup
+  useEffect(() => {
+    let isMounted = true
+
+    const initializeModels = async () => {
+      try {
+        if (isMounted) {
+          await fetchModels()
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to initialize models:', error)
+        }
+      }
+    }
+
+    initializeModels()
+
+    return () => {
+      isMounted = false
+    }
+  }, []) // 初期化は一度だけ実行
+
   // Methods
   const updateSendMsgKey = (key: SendMsgKey) => {
     setSendMsgKey(key)
@@ -777,29 +832,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ...agentChatConfig,
       contextLength: length
     })
-  }
-
-  const fetchModels = async () => {
-    try {
-      const models = await listModels()
-      if (models) {
-        // Add thinking mode support to Claude 3.7 Sonnet
-        const enhancedModels = (models as LLM[]).map((model) => {
-          if (model.modelId.includes('anthropic.claude-3-7-sonnet')) {
-            return {
-              ...model,
-              supportsThinking: true
-            }
-          }
-          return model
-        })
-        setAvailableModels(enhancedModels)
-      }
-    } catch (e: any) {
-      console.log(e)
-      setLLMError(e)
-      throw e
-    }
   }
 
   const updateLLM = (selectedModel: LLM) => {
@@ -841,6 +873,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const updatedSettings = { ...bedrockSettings, ...settings }
     setBedrockSettings(updatedSettings)
     window.store.set('bedrockSettings', updatedSettings)
+
+    // If inference profiles setting changed, refresh available models with new settings
+    if ('enableInferenceProfiles' in settings) {
+      fetchModels({ overrideSettings: updatedSettings })
+    }
   }
 
   const updateGuardrailSettings = (settings: Partial<typeof guardrailSettings>) => {
@@ -1580,6 +1617,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Bedrock Settings
     bedrockSettings,
     updateBedrockSettings,
+
+    // Application Inference Profiles
+    availableInferenceProfiles,
+    refreshInferenceProfiles,
+    isLoadingInferenceProfiles,
 
     // Guardrail Settings
     guardrailSettings,

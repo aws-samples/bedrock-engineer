@@ -32,6 +32,18 @@ export const api = {
     getImageGenerationModelsForRegion: (region: BedrockSupportRegion) => {
       return getImageGenerationModelsForRegion(region)
     },
+    listApplicationInferenceProfiles: async () => {
+      const bedrock = new BedrockService({ store })
+      return bedrock.listApplicationInferenceProfiles()
+    },
+    getApplicationInferenceProfile: async (inferenceProfileArn: string) => {
+      const bedrock = new BedrockService({ store })
+      return bedrock.getApplicationInferenceProfile(inferenceProfileArn)
+    },
+    convertInferenceProfileToLLM: (profile: any) => {
+      const bedrock = new BedrockService({ store })
+      return bedrock.convertInferenceProfileToLLM(profile)
+    },
     translateText: async (params: {
       text: string
       sourceLanguage?: string
