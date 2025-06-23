@@ -291,6 +291,14 @@ AWS Step Functions の ASL 定義を生成し、リアルタイムにプレビ�
 
 ![diagram-generator](./assets/diagram-generator.png)
 
+## アプリケーション推論プロファイル
+
+Bedrock Engineer は、詳細なコスト追跡と配分のためのAWS Bedrockアプリケーション推論プロファイルをサポートしています。タグ付きのカスタム推論プロファイルを作成して、プロジェクト、部門、またはユースケース別にコストを追跡できます。
+
+詳細なセットアップ手順と例については、以下を参照してください：
+
+- [アプリケーション推論プロファイルガイド (日本語)](./docs/INFERENCE_PROFILE-ja.md)
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=aws-samples/bedrock-engineer&type=Date)](https://star-history.com/#aws-samples/bedrock-engineer&Date)

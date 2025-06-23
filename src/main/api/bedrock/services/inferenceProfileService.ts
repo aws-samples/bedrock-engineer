@@ -31,7 +31,9 @@ export class InferenceProfileService {
         region: awsConfig.region
       })
 
-      const command = new ListInferenceProfilesCommand({})
+      const command = new ListInferenceProfilesCommand({
+        typeEquals: 'APPLICATION' // 自作のプロファイルのみ取得する
+      })
       const response: ListInferenceProfilesCommandOutput = await bedrockClient.send(command)
 
       const profiles: ApplicationInferenceProfile[] = (response.inferenceProfileSummaries || [])
