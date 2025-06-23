@@ -133,20 +133,34 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
     const tavilyConfig = this.storeManager.get('tavilySearch') as { apikey?: string } | undefined
     const apiKey = tavilyConfig?.apikey
 
+    this.logger.debug('Tavily API key configuration check', {
+      hasTavilyConfig: !!tavilyConfig,
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey ? apiKey.length : 0,
+      apiKeyPrefix: apiKey ? apiKey.substring(0, 8) + '...' : undefined
+    })
+
     if (!apiKey) {
+      this.logger.error('Tavily API key not configured', {
+        tavilyConfig,
+        query
+      })
       throw new ExecutionError('Tavily API key not configured', this.name, undefined, { query })
     }
 
     try {
       this.logger.verbose('Sending request to Tavily API')
 
-      const response = await fetch('https://api.tavily.com/search', {
+      // Use IPC to make the request through main process (which has proxy support)
+      const { ipc } = await import('../../../ipc-client')
+
+      const fetchOptions = {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          api_key: apiKey,
           query,
           search_depth: 'advanced',
           include_answer: true,
@@ -156,13 +170,15 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
           include_domains: [],
           exclude_domains: []
         })
-      })
+      }
+
+      const response = await ipc('fetch-website', ['https://api.tavily.com/search', fetchOptions])
 
       this.logger.verbose('Received response from Tavily API')
 
-      const body = await response.json()
+      const body = response.data
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         this.logger.error('Tavily API error', {
           statusCode: response.status,
           query,
@@ -170,7 +186,7 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
         })
 
         throw new NetworkError(
-          `Tavily API error: ${response.status} ${response.statusText}`,
+          `Tavily API error: ${response.status}`,
           this.name,
           'https://api.tavily.com/search',
           response.status

@@ -52,11 +52,32 @@ const Translation = {
   'auto-detect': '自動検出',
   clearCache: '翻訳キャッシュをクリア',
   cacheStats: 'キャッシュ統計',
-  translationSettings: '翻訳設定'
+  translationSettings: '翻訳設定',
+
+  // Proxy settings
+  'Auto Detect': '自動検出',
+  'Auto-detect system proxy when manual proxy is disabled':
+    '手動プロキシが無効の場合、システムプロキシを自動検出',
+  'Test Connection': '接続テスト',
+  'Testing...': 'テスト中...',
+  'Proxy connection successful': 'プロキシ接続成功',
+  'Proxy connection failed': 'プロキシ接続失敗',
+  'Error testing proxy connection': 'プロキシ接続テストエラー'
 }
 
 const SettingPage = {
   Setting: '設定',
+  'Proxy Settings': 'プロキシ設定',
+  'Enable Proxy': 'プロキシを有効にする',
+  'Proxy Host': 'プロキシホスト',
+  Port: 'ポート',
+  Protocol: 'プロトコル',
+  'Username (optional)': 'ユーザー名（オプション）',
+  'Password (optional)': 'パスワード（オプション）',
+  'Enter username': 'ユーザー名を入力',
+  'Enter password': 'パスワードを入力',
+  'Proxy settings will be applied to both AWS SDK connections and browser sessions. Please test your configuration to ensure proper connectivity.':
+    'プロキシ設定はAWS SDK接続とブラウザセッションの両方に適用されます。設定後は接続テストを行って正常性を確認してください。',
   'Config Directory': 'アプリの設定',
   'Config Directory Description': 'アプリの設定が保存されるディレクトリです。',
   'Project Setting': 'プロジェクト設定',
