@@ -11,6 +11,9 @@ export const bedrockSettings = {
     'Select regions to be used as failover targets when ThrottlingException occurs':
       'Select the failover destination region to be used when ThrottlingException occurs. If multiple failover destination regions are selected, they will be selected randomly. Please enable model access in the Amazon Bedrock management console.',
     'Add a failover region': 'Add a failover region',
+    // Application Inference Profiles
+    'Enable Application Inference Profiles': 'Enable Application Inference Profiles',
+    'Use Application Inference Profiles for cost allocation and tracking': 'Use Application Inference Profiles for cost allocation and tracking',
     // Guardrails
     'Amazon Bedrock Guardrails': 'Amazon Bedrock Guardrails',
     'Enable Guardrails': 'Enable Guardrails',
@@ -37,6 +40,9 @@ export const bedrockSettings = {
     'Select regions to be used as failover targets when ThrottlingException occurs':
       'ThrottlingException 発生時に使用するフェイルオーバー先のリージョンを選択してください。フェイルオーバー先のリージョンが複数選択されている場合、ランダムに採用されます。Amazon Bedrock のマネジメントコンソールにてモデルアクセスの有効化を行ってください。',
     'Add a failover region': 'Failover Region を追加',
+    // Application Inference Profiles
+    'Enable Application Inference Profiles': 'アプリケーション推論プロファイルを有効にする',
+    'Use Application Inference Profiles for cost allocation and tracking': 'コスト配分とトラッキングのためのアプリケーション推論プロファイルを使用',
     // Guardrails
     'Amazon Bedrock Guardrails': 'Amazon Bedrock ガードレール',
     'Enable Guardrails': 'ガードレールを有効にする',

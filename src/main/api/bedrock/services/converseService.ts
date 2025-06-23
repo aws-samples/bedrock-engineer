@@ -144,13 +144,9 @@ export class ConverseService {
       system[0].text =
         system[0].text + '\n Do not run ToolUse in parallel, but proceed step by step.'
     }
-
-    // Use inferenceProfileArn if the model is an inference profile, otherwise use modelId
-    const modelIdentifier = modelId.startsWith('arn:aws:bedrock:') ? modelId : modelId
-
     // コマンドパラメータを作成
     const commandParams: ConverseCommandInput | ConverseStreamCommandInput = {
-      modelId: modelIdentifier,
+      modelId,
       messages: sanitizedMessages,
       system,
       toolConfig,
