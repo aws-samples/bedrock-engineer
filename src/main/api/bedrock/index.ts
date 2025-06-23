@@ -3,6 +3,7 @@ import { ModelService } from './services/modelService'
 import { AgentService } from './services/agentService'
 import { ImageService } from './services/imageService'
 import { ImageRecognitionService } from './services/imageRecognitionService'
+import { VideoRecognitionService } from './services/videoRecognitionService'
 import { FlowService, InvokeFlowInput, InvokeFlowResult } from './services/flowService'
 import {
   TranslateService,
@@ -22,6 +23,7 @@ export class BedrockService {
   private agentService: AgentService
   private imageService: ImageService
   private imageRecognitionService: ImageRecognitionService
+  private videoRecognitionService: VideoRecognitionService
   private guardrailService: GuardrailService
   private flowService: FlowService
   private translateService: TranslateService
@@ -33,6 +35,7 @@ export class BedrockService {
     this.agentService = new AgentService(context)
     this.imageService = new ImageService(context)
     this.imageRecognitionService = new ImageRecognitionService(context)
+    this.videoRecognitionService = new VideoRecognitionService(context)
     this.guardrailService = new GuardrailService(context)
     this.flowService = new FlowService(context)
     this.translateService = new TranslateService(context.store.get('aws'))
@@ -73,6 +76,17 @@ export class BedrockService {
 
   async recognizeImage(props: { imagePath: string; prompt?: string; modelId?: string }) {
     return this.imageRecognitionService.recognizeImage(props)
+  }
+
+  async recognizeVideo(props: {
+    videoPath: string
+    prompt?: string
+    modelId?: string
+    s3BucketName?: string
+    s3Key?: string
+    cleanupS3?: boolean
+  }) {
+    return this.videoRecognitionService.recognizeVideo(props)
   }
 
   async applyGuardrail(props: ApplyGuardrailRequest) {

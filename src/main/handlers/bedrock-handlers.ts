@@ -33,6 +33,32 @@ export const bedrockHandlers = {
     return result
   },
 
+  'bedrock:recognizeVideo': async (_event: IpcMainInvokeEvent, params: any) => {
+    bedrockLogger.debug('Recognizing video', {
+      videoPath: params.videoPath,
+      hasPrompt: !!params.prompt,
+      modelId: params.modelId,
+      s3BucketName: params.s3BucketName
+    })
+
+    const result = await bedrock.recognizeVideo({
+      videoPath: params.videoPath,
+      prompt: params.prompt,
+      modelId: params.modelId,
+      s3BucketName: params.s3BucketName,
+      s3Key: params.s3Key,
+      cleanupS3: params.cleanupS3
+    })
+
+    bedrockLogger.info('Video recognized successfully', {
+      processingTime: result.processingTime,
+      modelUsed: result.modelUsed,
+      responseLength: result.description.length,
+      estimatedTokens: result.estimatedTokens
+    })
+    return result
+  },
+
   'bedrock:retrieve': async (_event: IpcMainInvokeEvent, params: any) => {
     bedrockLogger.debug('Retrieving from knowledge base', {
       knowledgeBaseId: params.knowledgeBaseId,

@@ -24,6 +24,24 @@ export interface IPCChannelDefinitions {
     }
     result: string
   }
+  'bedrock:recognizeVideo': {
+    params: {
+      videoPath: string
+      prompt?: string
+      modelId?: string
+      s3BucketName?: string
+      s3Key?: string
+      cleanupS3?: boolean
+    }
+    result: {
+      description: string
+      s3Uri?: string
+      processingTime: number
+      modelUsed: string
+      frameCount?: number
+      estimatedTokens?: number
+    }
+  }
   'bedrock:retrieve': {
     params: {
       knowledgeBaseId: string

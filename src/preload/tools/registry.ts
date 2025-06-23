@@ -21,6 +21,7 @@ import { GenerateVideoTool } from './handlers/bedrock/GenerateVideoTool'
 import { CheckVideoStatusTool } from './handlers/bedrock/CheckVideoStatusTool'
 import { DownloadVideoTool } from './handlers/bedrock/DownloadVideoTool'
 import { RecognizeImageTool } from './handlers/bedrock/RecognizeImageTool'
+import { RecognizeVideoTool } from './handlers/bedrock/RecognizeVideoTool'
 import { RetrieveTool } from './handlers/bedrock/RetrieveTool'
 import { InvokeBedrockAgentTool } from './handlers/bedrock/InvokeBedrockAgentTool'
 import { InvokeFlowTool } from './handlers/bedrock/InvokeFlowTool'
@@ -390,6 +391,10 @@ export class ToolMetadataCollector {
       specs.push({ toolSpec: RecognizeImageTool.toolSpec })
     }
 
+    if (RecognizeVideoTool.toolSpec) {
+      specs.push({ toolSpec: RecognizeVideoTool.toolSpec })
+    }
+
     if (RetrieveTool.toolSpec) {
       specs.push({ toolSpec: RetrieveTool.toolSpec })
     }
@@ -497,6 +502,10 @@ export class ToolMetadataCollector {
 
     if (RecognizeImageTool.systemPromptDescription) {
       descriptions.recognizeImage = RecognizeImageTool.systemPromptDescription
+    }
+
+    if (RecognizeVideoTool.systemPromptDescription) {
+      descriptions.recognizeVideo = RecognizeVideoTool.systemPromptDescription
     }
 
     if (RetrieveTool.systemPromptDescription) {
