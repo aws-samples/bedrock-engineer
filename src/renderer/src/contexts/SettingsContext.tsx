@@ -9,7 +9,7 @@ import {
   CameraConfig
 } from 'src/types/agent-chat'
 import { ToolName } from 'src/types/tools'
-import { listModels } from '@renderer/lib/api'
+
 import { CustomAgent } from '@/types/agent-chat'
 import { replacePlaceholders } from '@renderer/pages/ChatPage/utils/placeholder'
 import { DEFAULT_AGENTS } from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
@@ -20,6 +20,7 @@ import {
   ThinkingMode,
   ApplicationInferenceProfile
 } from '@/types/llm'
+import { useModelManagement } from '@renderer/hooks/useModelManagement'
 import type { AwsCredentialIdentity } from '@smithy/types'
 import { BedrockAgent } from '@/types/agent'
 import { AgentCategory } from '@/types/agent-chat'
@@ -285,7 +286,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
 
   // LLM Settings
-  const [llmError, setLLMError] = useState<any>()
   const defaultModel = {
     modelId: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
     modelName: 'Claude 3.5 Sonnet v2',
@@ -294,7 +294,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     supportsThinking: false
   }
   const [currentLLM, setCurrentLLM] = useState<LLM>(defaultModel)
-  const [availableModels, setAvailableModels] = useState<LLM[]>([])
   const [inferenceParams, setInferenceParams] =
     useState<InferenceParameters>(DEFAULT_INFERENCE_PARAMS)
 
@@ -316,11 +315,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     enableInferenceProfiles: false
   })
 
-  // Application Inference Profiles state
-  const [availableInferenceProfiles, setAvailableInferenceProfiles] = useState<
-    ApplicationInferenceProfile[]
-  >([])
-  const [isLoadingInferenceProfiles, setIsLoadingInferenceProfiles] = useState<boolean>(false)
+  // Model Management Hook
+  const {
+    availableModels,
+    modelError: llmError,
+    availableInferenceProfiles,
+    isLoadingInferenceProfiles,
+    fetchModels,
+    refreshInferenceProfiles
+  } = useModelManagement({
+    bedrockSettings,
+    currentLLM,
+    onModelUpdate: setCurrentLLM
+  })
 
   // Guardrail Settings
   const [guardrailSettings, setGuardrailSettings] = useState<{
@@ -787,6 +794,29 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [currentLLM])
 
+  // Initialize models on app startup
+  useEffect(() => {
+    let isMounted = true
+
+    const initializeModels = async () => {
+      try {
+        if (isMounted) {
+          await fetchModels()
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to initialize models:', error)
+        }
+      }
+    }
+
+    initializeModels()
+
+    return () => {
+      isMounted = false
+    }
+  }, []) // 初期化は一度だけ実行
+
   // Methods
   const updateSendMsgKey = (key: SendMsgKey) => {
     setSendMsgKey(key)
@@ -803,168 +833,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       contextLength: length
     })
   }
-
-  /**
-   * Fetches and updates the list of available models
-   *
-   * This function performs the following operations:
-   * 1. Retrieves base models from the API
-   * 2. Enhances models with additional features (e.g., thinking mode support)
-   * 3. Conditionally fetches and merges inference profiles based on settings
-   * 4. Handles automatic model switching when inference profiles are disabled
-   *
-   * @param overrideSettings - Optional settings to override current bedrockSettings
-   *                          Used when settings are being updated to ensure immediate UI updates
-   */
-  const fetchModels = async (overrideSettings?: Partial<typeof bedrockSettings>) => {
-    try {
-      // Step 1: Fetch base models from the API
-      const models = await listModels()
-      if (!models) {
-        return // Early return if no models are available
-      }
-
-      // Step 2: Enhance models with additional features
-      const enhancedModels = enhanceModelsWithFeatures(models as LLM[])
-
-      // Step 3: Determine effective settings (override takes precedence)
-      const effectiveSettings = { ...bedrockSettings, ...overrideSettings }
-
-      // Step 4: Handle inference profiles based on settings
-      if (effectiveSettings.enableInferenceProfiles) {
-        await handleInferenceProfilesEnabled(enhancedModels, overrideSettings)
-      } else {
-        await handleInferenceProfilesDisabled(enhancedModels, overrideSettings)
-      }
-    } catch (error: any) {
-      console.error('Failed to fetch models:', error)
-      setLLMError(error)
-      throw error
-    }
-  }
-
-  /**
-   * Enhances base models with additional features
-   * Currently adds thinking mode support to Claude 3.7 Sonnet
-   *
-   * @param models - Array of base LLM models
-   * @returns Enhanced models with additional features
-   */
-  const enhanceModelsWithFeatures = (models: LLM[]): LLM[] => {
-    return models.map((model) => {
-      // Add thinking mode support to Claude 3.7 Sonnet
-      if (model.modelId.includes('anthropic.claude-3-7-sonnet')) {
-        return {
-          ...model,
-          supportsThinking: true
-        }
-      }
-      return model
-    })
-  }
-
-  /**
-   * Handles the case when inference profiles are enabled
-   * Fetches inference profiles and merges them with standard models
-   *
-   * @param enhancedModels - Array of enhanced standard models
-   * @param overrideSettings - Optional settings override
-   */
-  const handleInferenceProfilesEnabled = async (
-    enhancedModels: LLM[],
-    overrideSettings?: Partial<typeof bedrockSettings>
-  ) => {
-    try {
-      // Fetch inference profiles from AWS
-      const inferenceProfiles = await refreshInferenceProfiles(overrideSettings)
-
-      // Convert inference profiles to LLM format
-      const profileModels = inferenceProfiles.map((profile) =>
-        window.api.bedrock.convertInferenceProfileToLLM(profile)
-      )
-
-      // Merge standard models with inference profile models
-      setAvailableModels([...enhancedModels, ...profileModels])
-    } catch (profileError) {
-      console.warn(
-        'Failed to fetch inference profiles, falling back to standard models only:',
-        profileError
-      )
-      // Fallback to standard models only if inference profiles fail
-      setAvailableModels(enhancedModels)
-    }
-  }
-
-  /**
-   * Handles the case when inference profiles are disabled
-   * Sets only standard models and handles automatic model switching
-   *
-   * @param enhancedModels - Array of enhanced standard models
-   * @param overrideSettings - Optional settings override
-   */
-  const handleInferenceProfilesDisabled = async (
-    enhancedModels: LLM[],
-    overrideSettings?: Partial<typeof bedrockSettings>
-  ) => {
-    // Set only standard models (no inference profiles)
-    setAvailableModels(enhancedModels)
-
-    // Handle automatic model switching if needed
-    const shouldSwitchModel =
-      overrideSettings &&
-      'enableInferenceProfiles' in overrideSettings &&
-      !overrideSettings.enableInferenceProfiles &&
-      currentLLM?.isInferenceProfile
-
-    if (shouldSwitchModel) {
-      switchToFirstStandardModel(enhancedModels)
-    }
-  }
-
-  /**
-   * Switches the current model to the first available standard model
-   * Used when inference profiles are disabled and current model is an inference profile
-   *
-   * @param enhancedModels - Array of available standard models
-   */
-  const switchToFirstStandardModel = (enhancedModels: LLM[]) => {
-    const firstStandardModel = enhancedModels[0]
-    if (firstStandardModel) {
-      console.info(
-        `Switching from inference profile to standard model: ${firstStandardModel.modelName}`
-      )
-      updateLLM(firstStandardModel)
-    } else {
-      console.warn('No standard models available for automatic switching')
-    }
-  }
-
-  // Function to refresh application inference profiles
-  const refreshInferenceProfiles = useCallback(
-    async (
-      overrideSettings?: Partial<typeof bedrockSettings>
-    ): Promise<ApplicationInferenceProfile[]> => {
-      const currentSettings = { ...bedrockSettings, ...overrideSettings }
-
-      if (!currentSettings.enableInferenceProfiles) {
-        return []
-      }
-
-      setIsLoadingInferenceProfiles(true)
-      try {
-        const profiles = await window.api.bedrock.listApplicationInferenceProfiles()
-        setAvailableInferenceProfiles(profiles)
-        return profiles
-      } catch (error) {
-        console.error('Failed to fetch inference profiles:', error)
-        setAvailableInferenceProfiles([])
-        return []
-      } finally {
-        setIsLoadingInferenceProfiles(false)
-      }
-    },
-    [bedrockSettings.enableInferenceProfiles]
-  )
 
   const updateLLM = (selectedModel: LLM) => {
     setCurrentLLM(selectedModel)
@@ -1008,7 +876,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // If inference profiles setting changed, refresh available models with new settings
     if ('enableInferenceProfiles' in settings) {
-      fetchModels(updatedSettings)
+      fetchModels({ overrideSettings: updatedSettings })
     }
   }
 

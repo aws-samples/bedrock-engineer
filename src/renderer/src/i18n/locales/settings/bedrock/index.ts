@@ -13,7 +13,8 @@ export const bedrockSettings = {
     'Add a failover region': 'Add a failover region',
     // Application Inference Profiles
     'Enable Application Inference Profiles': 'Enable Application Inference Profiles',
-    'Use Application Inference Profiles for cost allocation and tracking': 'Use Application Inference Profiles for cost allocation and tracking',
+    'Use Application Inference Profiles for cost allocation and tracking':
+      'Use Application Inference Profiles for cost allocation and tracking',
     // Guardrails
     'Amazon Bedrock Guardrails': 'Amazon Bedrock Guardrails',
     'Enable Guardrails': 'Enable Guardrails',
@@ -42,7 +43,8 @@ export const bedrockSettings = {
     'Add a failover region': 'Failover Region を追加',
     // Application Inference Profiles
     'Enable Application Inference Profiles': 'アプリケーション推論プロファイルを有効にする',
-    'Use Application Inference Profiles for cost allocation and tracking': 'コスト配分とトラッキングのためのアプリケーション推論プロファイルを使用',
+    'Use Application Inference Profiles for cost allocation and tracking':
+      'コスト配分とトラッキングのためのアプリケーション推論プロファイルを使用',
     // Guardrails
     'Amazon Bedrock Guardrails': 'Amazon Bedrock ガードレール',
     'Enable Guardrails': 'ガードレールを有効にする',
