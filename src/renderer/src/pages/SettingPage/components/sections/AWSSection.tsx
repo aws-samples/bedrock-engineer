@@ -35,7 +35,6 @@ interface AWSSectionProps {
     username: string
     password: string
     protocol: 'http' | 'https'
-    autoDetectProxy?: boolean
   }
   onUpdateProxySettings: (settings: Partial<AWSSectionProps['proxySettings']>) => void
 

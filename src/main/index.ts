@@ -47,10 +47,8 @@ async function setupSessionProxy(window: BrowserWindow): Promise<void> {
     const awsConfig = store.get('aws') as any
 
     // プロキシ設定を決定
-    const proxyConfig = resolveProxyConfig(
-      awsConfig?.proxyConfig,
-      awsConfig?.autoDetectProxy ?? true
-    )
+    const proxyConfig = resolveProxyConfig(awsConfig?.proxyConfig)
+    console.log({ proxyConfig })
 
     if (proxyConfig) {
       const electronProxyRules = convertToElectronProxyConfig(proxyConfig)

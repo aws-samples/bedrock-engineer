@@ -27,7 +27,6 @@ export type ProxyConfiguration = {
 
 export type ProxySettings = {
   proxyConfig?: ProxyConfiguration
-  autoDetectProxy?: boolean // OSプロキシ自動検出を有効にするか
 }
 
 export type AWSCredentials = {
@@ -38,7 +37,6 @@ export type AWSCredentials = {
   profile?: string
   useProfile?: boolean
   proxyConfig?: ProxyConfiguration
-  autoDetectProxy?: boolean
 }
 
 export interface ThinkingMode {

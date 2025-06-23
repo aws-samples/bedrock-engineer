@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { testProxyConnection, detectSystemProxy } from '../lib/proxy-utils'
+import { testProxyConnection } from '../lib/proxy-utils'
 import { updateProxySettings } from '../index'
 import { log } from '../../common/logger'
 import type { ProxyConfiguration } from '../api/bedrock/types'
@@ -16,20 +16,6 @@ export function registerProxyHandlers(): void {
       return { success: true, connected: result }
     } catch (error) {
       log.error('Proxy connection test failed', {
-        error: error instanceof Error ? error.message : String(error)
-      })
-      return { success: false, error: error instanceof Error ? error.message : String(error) }
-    }
-  })
-
-  // OSプロキシ自動検出
-  ipcMain.handle('proxy:detect-system', async () => {
-    try {
-      log.info('Detecting system proxy')
-      const systemProxy = detectSystemProxy()
-      return { success: true, proxy: systemProxy }
-    } catch (error) {
-      log.error('System proxy detection failed', {
         error: error instanceof Error ? error.message : String(error)
       })
       return { success: false, error: error instanceof Error ? error.message : String(error) }

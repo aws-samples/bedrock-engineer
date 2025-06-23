@@ -8,14 +8,11 @@ import type { AWSCredentials } from './types'
 import { S3Client } from '@aws-sdk/client-s3'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { NodeHttpHandler } from '@smithy/node-http-handler'
+import { resolveProxyConfig } from '../../lib/proxy-utils'
 
 function createHttpOptions(awsCredentials: AWSCredentials) {
   // プロキシ設定の優先順位に従って決定
-  const { resolveProxyConfig } = require('../../lib/proxy-utils')
-  const proxyConfig = resolveProxyConfig(
-    awsCredentials.proxyConfig,
-    awsCredentials.autoDetectProxy ?? true
-  )
+  const proxyConfig = resolveProxyConfig(awsCredentials.proxyConfig)
 
   if (!proxyConfig?.enabled || !proxyConfig.host) {
     return {}
