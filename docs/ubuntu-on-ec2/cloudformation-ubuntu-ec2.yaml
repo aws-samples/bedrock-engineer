@@ -1,0 +1,608 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Ubuntu 22.04 EC2 instance with development tools (Git, Node.js, Python, Docker, AWS CLI, Bedrock SDK) pre-installed via UserData'
+
+Parameters:
+  InstanceType:
+    Description: EC2 instance type for the Ubuntu server
+    Type: String
+    Default: t3.medium
+    AllowedValues:
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - c5.large
+      - c5.xlarge
+    ConstraintDescription: Must be a valid EC2 instance type
+
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair
+
+  AllowedCidrBlock:
+    Description: CIDR block that is allowed to access the instance via SSH
+    Type: String
+    Default: 0.0.0.0/0
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+    ConstraintDescription: Must be a valid CIDR range
+
+  InstanceName:
+    Description: Name for the EC2 instance
+    Type: String
+    Default: Ubuntu-Dev-Instance
+
+  VolumeSize:
+    Description: Size of the EBS volume in GB
+    Type: Number
+    Default: 20
+    MinValue: 8
+    MaxValue: 1000
+
+  VolumeType:
+    Description: EBS volume type
+    Type: String
+    Default: gp3
+    AllowedValues:
+      - gp2
+      - gp3
+      - io1
+      - io2
+
+  VpcId:
+    Description: VPC ID where the instance will be created (leave empty for default VPC)
+    Type: String
+    Default: ''
+
+  EnableVSCodeServer:
+    Description: Install and configure VS Code Server for remote development
+    Type: String
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+
+Conditions:
+  UseCustomVpc: !Not [!Equals [!Ref VpcId, '']]
+  InstallVSCode: !Equals [!Ref EnableVSCodeServer, 'true']
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      AMI: ami-0866a3c8686eaeeba # Ubuntu 22.04 LTS
+    us-east-2:
+      AMI: ami-0ea3c35c5c3284d82 # Ubuntu 22.04 LTS
+    us-west-1:
+      AMI: ami-0c8c8c1c834a6b8b2 # Ubuntu 22.04 LTS
+    us-west-2:
+      AMI: ami-0c02fb55956c7d316 # Ubuntu 22.04 LTS
+    eu-west-1:
+      AMI: ami-0c1bc246476a5572b # Ubuntu 22.04 LTS
+    eu-central-1:
+      AMI: ami-0ec7f9846da6b37c4 # Ubuntu 22.04 LTS
+    ap-southeast-1:
+      AMI: ami-0df7a207adb9748c7 # Ubuntu 22.04 LTS
+    ap-northeast-1:
+      AMI: ami-03f4fa076d2981b45 # Ubuntu 22.04 LTS
+    ap-south-1:
+      AMI: ami-0ad21ae1d0696ad58 # Ubuntu 22.04 LTS
+
+Resources:
+  UbuntuSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub '${InstanceName}-SecurityGroup'
+      GroupDescription: Security group for Ubuntu development instance
+      VpcId: !If [UseCustomVpc, !Ref VpcId, !Ref 'AWS::NoValue']
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AllowedCidrBlock
+          Description: SSH access
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: !Ref AllowedCidrBlock
+          Description: Node.js development server
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref AllowedCidrBlock
+          Description: VS Code Server / Alternative development server
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          CidrIp: !Ref AllowedCidrBlock
+          Description: Python development server
+        - IpProtocol: tcp
+          FromPort: 5000
+          ToPort: 5000
+          CidrIp: !Ref AllowedCidrBlock
+          Description: Flask development server
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref AllowedCidrBlock
+          Description: HTTP access
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref AllowedCidrBlock
+          Description: HTTPS access
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+          Description: All outbound traffic
+      Tags:
+        - Key: Name
+          Value: !Sub '${InstanceName}-SecurityGroup'
+        - Key: Purpose
+          Value: Ubuntu Development
+
+  UbuntuInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', AMI]
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SecurityGroupIds:
+        - !Ref UbuntuSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: !Ref VolumeSize
+            VolumeType: !Ref VolumeType
+            DeleteOnTermination: true
+            Encrypted: true
+      IamInstanceProfile: !Ref UbuntuInstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+          
+          echo "Starting Ubuntu development environment setup..."
+          echo "Instance: ${InstanceName}"
+          echo "Timestamp: $(date)"
+          
+          # System update
+          apt-get update -y
+          apt-get upgrade -y
+          
+          # Install essential packages
+          apt-get install -y \
+            curl \
+            wget \
+            git \
+            vim \
+            nano \
+            htop \
+            tree \
+            unzip \
+            build-essential \
+            software-properties-common \
+            apt-transport-https \
+            ca-certificates \
+            gnupg \
+            lsb-release \
+            jq \
+            python3 \
+            python3-pip \
+            python3-venv
+          
+          # Install AWS CLI v2
+          echo "Installing AWS CLI v2..."
+          cd /tmp
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          ./aws/install
+          
+          # Install Node.js via NodeSource
+          echo "Installing Node.js LTS..."
+          curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+          apt-get install -y nodejs
+          
+          # Install Yarn
+          npm install -g yarn
+          
+          # Install Docker
+          echo "Installing Docker..."
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+          apt-get update -y
+          apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+          
+          # Add ubuntu user to docker group
+          usermod -aG docker ubuntu
+          
+          # Install Docker Compose standalone
+          DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)
+          curl -L "https://github.com/docker/compose/releases/download/$${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          
+          # Install Python packages for Bedrock development
+          echo "Installing Python packages for Bedrock..."
+          pip3 install --upgrade pip
+          pip3 install \
+            boto3 \
+            anthropic \
+            langchain \
+            langchain-aws \
+            langchain-community \
+            jupyter \
+            pandas \
+            numpy \
+            requests \
+            python-dotenv \
+            fastapi \
+            uvicorn
+          
+          # Install Node.js packages for Bedrock
+          echo "Installing Node.js packages for Bedrock..."
+          npm install -g \
+            @aws-sdk/client-bedrock-runtime \
+            @aws-sdk/client-bedrock \
+            nodemon \
+            express \
+            typescript \
+            ts-node
+          
+          # Install VS Code Server (if enabled)
+          if [ "${EnableVSCodeServer}" = "true" ]; then
+            echo "Installing VS Code Server..."
+            curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone
+            
+            # Configure VS Code Server
+            sudo -u ubuntu mkdir -p /home/ubuntu/.config/code-server
+            sudo -u ubuntu tee /home/ubuntu/.config/code-server/config.yaml > /dev/null <<EOF
+          bind-addr: 0.0.0.0:8080
+          auth: password
+          password: bedrock-dev-$(openssl rand -hex 8)
+          cert: false
+          EOF
+            
+            # Create systemd service for VS Code Server
+            tee /etc/systemd/system/code-server@.service > /dev/null <<EOF
+          [Unit]
+          Description=code-server
+          After=network.target
+          
+          [Service]
+          Type=exec
+          ExecStart=/usr/local/bin/code-server --config /home/%i/.config/code-server/config.yaml
+          Restart=always
+          User=%i
+          
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+            
+            # Enable and start VS Code Server
+            systemctl enable code-server@ubuntu
+            systemctl start code-server@ubuntu
+            
+            echo "VS Code Server password: $(sudo -u ubuntu cat /home/ubuntu/.config/code-server/config.yaml | grep password | cut -d' ' -f2)"
+          fi
+          
+          # Install Oh My Zsh for ubuntu user
+          echo "Installing Oh My Zsh..."
+          sudo -u ubuntu sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+          
+          # Configure Git (placeholder)
+          sudo -u ubuntu git config --global init.defaultBranch main
+          
+          # Create development directories
+          sudo -u ubuntu mkdir -p /home/ubuntu/projects
+          sudo -u ubuntu mkdir -p /home/ubuntu/.aws
+          
+          # Create sample Bedrock projects
+          echo "Creating sample Bedrock projects..."
+          
+          # Python sample
+          sudo -u ubuntu mkdir -p /home/ubuntu/projects/bedrock-python
+          sudo -u ubuntu tee /home/ubuntu/projects/bedrock-python/main.py > /dev/null <<'EOF'
+          import boto3
+          import json
+          
+          def test_bedrock():
+              # Create Bedrock client
+              bedrock = boto3.client('bedrock-runtime', region_name='us-east-1')
+              
+              # Test with Claude-3 Haiku
+              response = bedrock.invoke_model(
+                  modelId='anthropic.claude-3-haiku-20240307-v1:0',
+                  body=json.dumps({
+                      "anthropic_version": "bedrock-2023-05-31",
+                      "max_tokens": 1000,
+                      "messages": [
+                          {
+                              "role": "user", 
+                              "content": "Hello from Ubuntu! Tell me about Amazon Bedrock."
+                          }
+                      ]
+                  })
+              )
+              
+              result = json.loads(response['body'].read())
+              print("Bedrock Response:", result['content'][0]['text'])
+          
+          if __name__ == "__main__":
+              test_bedrock()
+          EOF
+          
+          # Node.js sample
+          sudo -u ubuntu mkdir -p /home/ubuntu/projects/bedrock-nodejs
+          sudo -u ubuntu tee /home/ubuntu/projects/bedrock-nodejs/package.json > /dev/null <<'EOF'
+          {
+            "name": "bedrock-nodejs-sample",
+            "version": "1.0.0",
+            "description": "Sample Node.js project for Amazon Bedrock",
+            "main": "index.js",
+            "scripts": {
+              "start": "node index.js",
+              "dev": "nodemon index.js"
+            },
+            "dependencies": {
+              "@aws-sdk/client-bedrock-runtime": "latest"
+            }
+          }
+          EOF
+          
+          sudo -u ubuntu tee /home/ubuntu/projects/bedrock-nodejs/index.js > /dev/null <<'EOF'
+          const { BedrockRuntimeClient, InvokeModelCommand } = require("@aws-sdk/client-bedrock-runtime");
+          
+          async function testBedrock() {
+              const client = new BedrockRuntimeClient({ region: "us-east-1" });
+              
+              const command = new InvokeModelCommand({
+                  modelId: "anthropic.claude-3-haiku-20240307-v1:0",
+                  body: JSON.stringify({
+                      anthropic_version: "bedrock-2023-05-31",
+                      max_tokens: 1000,
+                      messages: [
+                          { 
+                              role: "user", 
+                              content: "Hello from Ubuntu Node.js! Tell me about Amazon Bedrock." 
+                          }
+                      ]
+                  })
+              });
+              
+              try {
+                  const response = await client.send(command);
+                  const result = JSON.parse(new TextDecoder().decode(response.body));
+                  console.log("Bedrock Response:", result.content[0].text);
+              } catch (error) {
+                  console.error("Error:", error);
+              }
+          }
+          
+          testBedrock();
+          EOF
+          
+          # Install Node.js dependencies
+          cd /home/ubuntu/projects/bedrock-nodejs
+          sudo -u ubuntu npm install
+          
+          # Create welcome message
+          sudo -u ubuntu tee /home/ubuntu/WELCOME.md > /dev/null <<'EOF'
+          # Welcome to your Ubuntu Bedrock Development Environment!
+          
+          ## Installed Tools
+          - Node.js $(node --version)
+          - Python $(python3 --version)
+          - Docker $(docker --version)
+          - AWS CLI $(aws --version)
+          - Git $(git --version)
+          
+          ## Quick Start
+          
+          ### Python Bedrock Example
+          ```bash
+          cd ~/projects/bedrock-python
+          python3 main.py
+          ```
+          
+          ### Node.js Bedrock Example
+          ```bash
+          cd ~/projects/bedrock-nodejs
+          npm start
+          ```
+          
+          ### VS Code Server (if enabled)
+          - Access at: http://YOUR_IP:8080
+          - Password in: ~/.config/code-server/config.yaml
+          
+          ## Next Steps
+          1. Configure Git: git config --global user.name "Your Name"
+          2. Configure Git: git config --global user.email "your@email.com"
+          3. Test Bedrock access: aws bedrock list-foundation-models --region us-east-1
+          4. Start building amazing AI applications!
+          
+          Happy coding! 🚀
+          EOF
+          
+          # Start Docker service
+          systemctl enable docker
+          systemctl start docker
+          
+          # Clean up
+          apt-get autoremove -y
+          apt-get autoclean
+          
+          echo "Ubuntu development environment setup completed!"
+          echo "Check WELCOME.md for next steps"
+          
+          # Display versions
+          echo "=== Installed Versions ==="
+          echo "Node.js: $(node --version)"
+          echo "npm: $(npm --version)"
+          echo "Python: $(python3 --version)"
+          echo "Docker: $(docker --version)"
+          echo "AWS CLI: $(aws --version)"
+          echo "Git: $(git --version)"
+          echo "========================="
+          
+          echo "Setup completed at: $(date)"
+      Tags:
+        - Key: Name
+          Value: !Ref InstanceName
+        - Key: Purpose
+          Value: Ubuntu Development
+        - Key: Environment
+          Value: Development
+        - Key: CreatedBy
+          Value: CloudFormation
+
+  UbuntuInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: UbuntuBedrockFullAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Bedrock Full Access
+              - Effect: Allow
+                Action:
+                  - bedrock:*
+                Resource: '*'
+              # CloudWatch Logs
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: '*'
+              # S3 Access for Bedrock (for file uploads, etc.)
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource: 
+                  - 'arn:aws:s3:::bedrock-*'
+                  - 'arn:aws:s3:::bedrock-*/*'
+              # EC2 Instance Metadata
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                  - ec2:DescribeInstanceStatus
+                  - ec2:DescribeTags
+                Resource: '*'
+              # Systems Manager (for remote access)
+              - Effect: Allow
+                Action:
+                  - ssm:UpdateInstanceInformation
+                  - ssm:SendCommand
+                Resource: '*'
+      Tags:
+        - Key: Name
+          Value: !Sub '${InstanceName}-Role'
+
+  UbuntuInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref UbuntuInstanceRole
+
+  ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref UbuntuInstance
+      Tags:
+        - Key: Name
+          Value: !Sub '${InstanceName}-EIP'
+
+Outputs:
+  InstanceId:
+    Description: Instance ID of the Ubuntu server
+    Value: !Ref UbuntuInstance
+    Export:
+      Name: !Sub '${AWS::StackName}-InstanceId'
+
+  PublicIpAddress:
+    Description: Public IP address of the Ubuntu server
+    Value: !Ref ElasticIP
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicIP'
+
+  PublicDnsName:
+    Description: Public DNS name of the Ubuntu server
+    Value: !GetAtt UbuntuInstance.PublicDnsName
+    Export:
+      Name: !Sub '${AWS::StackName}-PublicDNS'
+
+  SecurityGroupId:
+    Description: Security Group ID for the Ubuntu server
+    Value: !Ref UbuntuSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupId'
+
+  SSHConnectionString:
+    Description: SSH connection string for the Ubuntu server
+    Value: !Sub 'ssh -i your-keypair.pem ubuntu@${ElasticIP}'
+
+  VSCodeServerURL:
+    Condition: InstallVSCode
+    Description: VS Code Server URL (if enabled)
+    Value: !Sub 'http://${ElasticIP}:8080'
+
+  InstanceType:
+    Description: Instance type of the Ubuntu server
+    Value: !Ref InstanceType
+
+  KeyPairUsed:
+    Description: Key pair used for the instance
+    Value: !Ref KeyName
+
+  UserDataLogLocation:
+    Description: Location of the UserData execution log
+    Value: '/var/log/user-data.log'
+
+  RecommendedNextSteps:
+    Description: Recommended next steps after instance creation
+    Value: |
+      1. Wait for the instance to complete initialization (5-10 minutes)
+      2. Connect via SSH: ssh -i your-keypair.pem ubuntu@PUBLIC_IP
+      3. Check setup log: sudo tail -f /var/log/user-data.log
+      4. Review welcome guide: cat ~/WELCOME.md
+      5. Test Bedrock access: aws bedrock list-foundation-models --region us-east-1
+      6. Try sample projects in ~/projects/
+      7. Configure Git with your credentials
+      8. Access VS Code Server (if enabled): http://PUBLIC_IP:8080
+      9. Start building with Amazon Bedrock!
+
+  BedrockInfo:
+    Description: Information about Bedrock integration
+    Value: |
+      This Ubuntu instance has full access to Amazon Bedrock services.
+      Pre-installed tools: Python 3.x, Node.js LTS, boto3, AWS SDK for JavaScript
+      Sample projects available in ~/projects/bedrock-python and ~/projects/bedrock-nodejs
+      Test command: aws bedrock list-foundation-models --region us-east-1
+      Documentation: https://docs.aws.amazon.com/bedrock/
+
+  EstimatedMonthlyCost:
+    Description: Estimated monthly cost (us-east-1 region)
+    Value: !Sub |
+      Estimated cost for ${InstanceType}:
+      t3.micro: ~$8/month, t3.small: ~$16/month, t3.medium: ~$33/month
+      t3.large: ~$67/month, t3.xlarge: ~$134/month
+      Note: Actual costs may vary based on usage and region
