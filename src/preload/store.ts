@@ -60,6 +60,12 @@ type StoreScheme = {
     modelId: string
   }
 
+  /** 動画認識ツールの設定 */
+  recognizeVideoTool?: {
+    /** 使用するモデルID */
+    modelId: string
+  }
+
   /** 画像生成ツールの設定 */
   generateImageTool?: {
     /** 使用するモデルID */

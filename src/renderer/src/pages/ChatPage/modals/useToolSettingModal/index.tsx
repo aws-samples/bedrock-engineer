@@ -9,6 +9,7 @@ import { BedrockAgentSettingForm } from './BedrockAgentSettingForm'
 import { TavilySearchSettingForm } from './TavilySearchSettingForm'
 import { ThinkToolSettingForm } from './ThinkToolSettingForm'
 import { RecognizeImageSettingForm } from './RecognizeImageSettingForm'
+import { RecognizeVideoSettingForm } from './RecognizeVideoSettingForm'
 import { GenerateImageSettingForm } from './GenerateImageSettingForm'
 import { GenerateVideoSettingForm } from './GenerateVideoSettingForm'
 import { FlowSettingForm } from './FlowSettingForm'
@@ -45,6 +46,7 @@ const TOOLS_WITH_SETTINGS = [
   'invokeBedrockAgent',
   'tavilySearch',
   'recognizeImage',
+  'recognizeVideo',
   'generateImage',
   'generateVideo',
   'invokeFlow',
@@ -566,6 +568,7 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                         />
                       )}
                       {selectedTool === 'recognizeImage' && <RecognizeImageSettingForm />}
+                      {selectedTool === 'recognizeVideo' && <RecognizeVideoSettingForm />}
                       {selectedTool === 'generateImage' && <GenerateImageSettingForm />}
                       {(selectedTool === 'generateVideo' ||
                         selectedTool === 'checkVideoStatus' ||

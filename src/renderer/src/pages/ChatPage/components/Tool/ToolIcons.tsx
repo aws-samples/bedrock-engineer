@@ -40,6 +40,7 @@ const standardToolIcons = {
   checkVideoStatus: <FaClock className="text-blue-500 size-6" />,
   downloadVideo: <FaDownload className="text-green-500 size-6" />,
   recognizeImage: <FaCamera className="text-violet-500 size-6" />,
+  recognizeVideo: <FaVideo className="text-indigo-500 size-6" />,
   retrieve: <FaDatabase className="text-green-500 size-6" />,
   invokeBedrockAgent: <BiFace className="text-purple-700 size-6" />,
   executeCommand: <FaTerminal className="text-gray-500 size-6" />,

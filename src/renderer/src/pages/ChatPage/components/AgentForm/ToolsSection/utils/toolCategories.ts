@@ -32,6 +32,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       'generateImage',
       'generateVideo',
       'recognizeImage',
+      'recognizeVideo',
       'retrieve',
       'invokeBedrockAgent',
       'invokeFlow'

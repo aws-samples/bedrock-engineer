@@ -56,6 +56,10 @@ export interface SettingsContextType {
   recognizeImageModel: string
   setRecognizeImageModel: (modelId: string) => void
 
+  // recognizeVideo Tool Settings
+  recognizeVideoModel: string
+  setRecognizeVideoModel: (modelId: string) => void
+
   // generateImage Tool Settings
   generateImageModel: string
   setGenerateImageModel: (modelId: string) => void
@@ -255,6 +259,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     'anthropic.claude-3-5-sonnet-20241022-v2:0'
   )
 
+  // recognizeVideo Tool Settings
+  const [recognizeVideoModel, setStateRecognizeVideoModel] =
+    useState<string>('amazon.nova-lite-v1:0')
+
   // generateImage Tool Settings
   const [generateImageModel, setStateGenerateImageModel] = useState<string>(
     'amazon.titan-image-generator-v2:0'
@@ -387,6 +395,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const recognizeImageSetting = window.store.get('recognizeImageTool')
     if (recognizeImageSetting?.modelId) {
       setStateRecognizeImageModel(recognizeImageSetting.modelId)
+    }
+
+    // Load recognizeVideo Tool Settings
+    const recognizeVideoSetting = window.store.get('recognizeVideoTool')
+    if (recognizeVideoSetting?.modelId) {
+      setStateRecognizeVideoModel(recognizeVideoSetting.modelId)
     }
 
     // Load generateImage Tool Settings
@@ -1154,6 +1168,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     window.store.set('recognizeImageTool', { modelId })
   }, [])
 
+  const setRecognizeVideoModel = useCallback((modelId: string) => {
+    setStateRecognizeVideoModel(modelId)
+    window.store.set('recognizeVideoTool', { modelId })
+  }, [])
+
   const setGenerateImageModel = useCallback((modelId: string) => {
     setStateGenerateImageModel(modelId)
     window.store.set('generateImageTool', { modelId })
@@ -1542,6 +1561,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // recognizeImage Tool Settings
     recognizeImageModel,
     setRecognizeImageModel,
+
+    // recognizeVideo Tool Settings
+    recognizeVideoModel,
+    setRecognizeVideoModel,
 
     // generateImage Tool Settings
     generateImageModel,

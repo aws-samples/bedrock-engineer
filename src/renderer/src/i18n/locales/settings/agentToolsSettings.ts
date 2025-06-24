@@ -49,6 +49,8 @@ export const agentToolsSettings = {
       'When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.',
     'tool info.recognizeImage.description':
       'The recognizeImage tool uses AI vision capabilities to analyze and describe images. It helps the AI assistant understand image content and provide relevant responses based on what appears in the image.',
+    'tool info.recognizeVideo.description':
+      'The recognizeVideo tool uses Amazon Nova models to analyze and describe video content. It uploads videos to S3, processes them with Nova Micro/Lite/Pro/Premier models, and provides detailed descriptions of video scenes and actions.',
     'tool info.generateImage.description':
       'The generateImage tool uses AI image generation capabilities to create images from text descriptions. It helps the AI assistant generate visual content based on textual prompts and save them to specified locations.',
     'tool info.generateVideo.description':
@@ -252,6 +254,7 @@ export const agentToolsSettings = {
       generateImage: 'Generate an image using AI models',
       generateVideo: 'Generate high-quality videos using Amazon Nova Reel',
       recognizeImage: 'Analyze and describe images using AI vision capabilities',
+      recognizeVideo: 'Analyze and describe video content using Amazon Nova models',
       retrieve: 'Retrieve information from a knowledge base',
       invokeBedrockAgent: 'Invoke an Amazon Bedrock Agent',
       executeCommand: 'Execute a command or send input to a running process',
@@ -311,6 +314,8 @@ export const agentToolsSettings = {
       '画像が処理されると、AIは物体、テキスト、シーン、その他の視覚要素を識別し、内容に基づいた詳細な説明を提供します。',
     'tool info.recognizeImage.description':
       'recognizeImageツールはAIのビジョン機能を使用して画像を分析・説明します。AIアシスタントが画像の内容を理解し、画像に表示されているものに基づいて関連する回答を提供するのに役立ちます。',
+    'tool info.recognizeVideo.description':
+      'recognizeVideoツールはAmazon Novaモデルを使用して動画コンテンツを分析・説明します。動画をS3にアップロードし、Nova Micro/Lite/Pro/Premierモデルで処理して、動画のシーンやアクションの詳細な説明を提供します。',
     'tool info.generateImage.description':
       'generateImageツールはAIの画像生成機能を使用してテキストの説明から画像を作成します。AIアシスタントがテキストプロンプトに基づいて視覚的なコンテンツを生成し、指定された場所に保存するのに役立ちます。',
     'tool info.generateVideo.description':
@@ -513,6 +518,7 @@ export const agentToolsSettings = {
       generateImage: 'AIモデルを使用して画像を生成',
       generateVideo: 'Amazon Nova Reelを使用して高品質な動画を生成',
       recognizeImage: 'AIのビジョン機能を使用して画像を分析・説明',
+      recognizeVideo: 'Amazon Novaモデルを使用して動画コンテンツを分析・説明',
       retrieve: 'ナレッジベースから情報を取得',
       invokeBedrockAgent: 'Amazon Bedrock Agentを呼び出し',
       executeCommand: 'コマンドを実行または実行中のプロセスに入力を送信',
