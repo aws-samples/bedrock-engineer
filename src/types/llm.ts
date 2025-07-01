@@ -33,6 +33,7 @@ export interface LLM {
   readonly supportsThinking?: boolean // Whether the model supports extended thinking
   readonly isInferenceProfile?: boolean // Whether this is an inference profile
   readonly inferenceProfileArn?: string // ARN of the inference profile if applicable
+  readonly description?: string // Description of the inference profile
 }
 
 // Type guard for LLM validation

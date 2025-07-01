@@ -312,7 +312,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }>({
     enableRegionFailover: false,
     availableFailoverRegions: [],
-    enableInferenceProfiles: false
+    enableInferenceProfiles: true
   })
 
   // Model Management Hook

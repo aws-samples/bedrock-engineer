@@ -72,7 +72,6 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
                     ${model.modelId === currentLLM.modelId ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'}
                     ${modelColors.hover}
                     transition-colors rounded-md
-                    ${isInferenceProfile ? 'border-l-4 border-blue-500' : ''}
                   `}
                   title={
                     isInferenceProfile
@@ -94,7 +93,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       {isInferenceProfile
-                        ? 'Application Inference Profile for cost tracking'
+                        ? model.description || 'Application Inference Profile for cost tracking'
                         : model.toolUse
                           ? 'Supports tool use'
                           : 'Does not support tool use'}

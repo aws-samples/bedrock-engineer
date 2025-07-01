@@ -19,7 +19,8 @@ const DEFAULT_THINKING_MODE = {
 
 const DEFAULT_BEDROCK_SETTINGS = {
   enableRegionFailover: false,
-  availableFailoverRegions: []
+  availableFailoverRegions: [],
+  enableInferenceProfiles: false
 }
 
 const DEFAULT_GUARDRAIL_SETTINGS = {
@@ -136,6 +137,8 @@ type StoreScheme = {
     enableRegionFailover: boolean
     /** フェイルオーバー時に使用可能なリージョン一覧 */
     availableFailoverRegions: string[]
+    /** アプリケーション推論プロファイル機能の有効/無効 */
+    enableInferenceProfiles: boolean
   }
 
   /** ガードレール設定 */

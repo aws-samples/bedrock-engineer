@@ -297,7 +297,7 @@ Bedrock Engineer supports AWS Bedrock Application Inference Profiles for detaile
 
 For detailed setup instructions and examples, see:
 
-- [Application Inference Profile Guide (English)](./docs/INFERENCE_PROFILE.md)
+- [Application Inference Profile Guide (English)](./docs/inference-profile/INFERENCE_PROFILE.md)
 
 ## Star History
 

@@ -145,7 +145,8 @@ export class InferenceProfileService {
       isInferenceProfile: true,
       inferenceProfileArn: profile.inferenceProfileArn,
       maxTokensLimit: 4096, // デフォルト値
-      supportsThinking: false // デフォルトはfalse
+      supportsThinking: false, // デフォルトはfalse
+      description: profile.description // InferenceProfileのdescriptionを追加
     }
   }
 

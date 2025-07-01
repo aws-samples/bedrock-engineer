@@ -2,11 +2,6 @@ import { useState, useCallback, useMemo, useRef } from 'react'
 import { listModels } from '@renderer/lib/api'
 import type { LLM, ApplicationInferenceProfile } from '@/types/llm'
 
-// Constants for model enhancements
-const MODEL_ENHANCEMENTS = {
-  'anthropic.claude-3-7-sonnet': { supportsThinking: true }
-} as const
-
 // Types
 interface BedrockSettings {
   enableInferenceProfiles: boolean
@@ -32,12 +27,11 @@ interface ModelManagementActions {
   refreshInferenceProfiles: (
     overrideSettings?: Partial<BedrockSettings>
   ) => Promise<ApplicationInferenceProfile[]>
-  enhanceModelsWithFeatures: (models: LLM[]) => LLM[]
   clearModelError: () => void
 }
 
 interface UseModelManagementProps {
-  bedrockSettings: BedrockSettings
+  bedrockSettings?: BedrockSettings
   currentLLM?: LLM
   onModelUpdate?: (model: LLM) => void
 }
@@ -48,7 +42,6 @@ interface UseModelManagementProps {
  * Handles:
  * - Fetching and caching of available models
  * - Integration with inference profiles
- * - Model enhancement (adding features like thinking mode)
  * - Error handling and loading states
  * - Automatic model switching when settings change
  */
@@ -69,28 +62,6 @@ export const useModelManagement = ({
   // Use ref to track loading state without causing re-renders in useCallback dependencies
   const isLoadingRef = useRef<boolean>(false)
   const isInitializedRef = useRef<boolean>(false)
-
-  /**
-   * Enhances base models with additional features
-   * Currently adds thinking mode support to specific models
-   *
-   * @param models - Array of base LLM models
-   * @returns Enhanced models with additional features
-   */
-  const enhanceModelsWithFeatures = useCallback((models: LLM[]): LLM[] => {
-    return models.map((model) => {
-      // Check if model has enhancements defined
-      for (const [modelPattern, enhancement] of Object.entries(MODEL_ENHANCEMENTS)) {
-        if (model.modelId.includes(modelPattern)) {
-          return {
-            ...model,
-            ...enhancement
-          }
-        }
-      }
-      return model
-    })
-  }, [])
 
   /**
    * Refreshes application inference profiles from AWS
@@ -207,9 +178,8 @@ export const useModelManagement = ({
    *
    * This function performs the following operations:
    * 1. Retrieves base models from the API
-   * 2. Enhances models with additional features (e.g., thinking mode support)
-   * 3. Conditionally fetches and merges inference profiles based on settings
-   * 4. Handles automatic model switching when inference profiles are disabled
+   * 2. Conditionally fetches and merges inference profiles based on settings
+   * 3. Handles automatic model switching when inference profiles are disabled
    *
    * @param options - Optional configuration for model fetching
    */
@@ -227,24 +197,21 @@ export const useModelManagement = ({
       setModelError(null)
 
       try {
-        // Step 1: Fetch base models from the API
+        // Fetch base models from the API
         const models = await listModels()
         if (!models) {
           console.warn('No models returned from API')
           return
         }
 
-        // Step 2: Enhance models with additional features
-        const enhancedModels = enhanceModelsWithFeatures(models as LLM[])
+        // Determine effective settings (override takes precedence)
+        const settings = { ...bedrockSettings, ...overrideSettings }
 
-        // Step 3: Determine effective settings (override takes precedence)
-        const effectiveSettings = { ...bedrockSettings, ...overrideSettings }
-
-        // Step 4: Handle inference profiles based on settings
-        if (effectiveSettings.enableInferenceProfiles) {
-          await handleInferenceProfilesEnabled(enhancedModels, overrideSettings)
+        // Handle inference profiles based on settings
+        if (settings.enableInferenceProfiles) {
+          await handleInferenceProfilesEnabled(models, overrideSettings)
         } else {
-          await handleInferenceProfilesDisabled(enhancedModels, overrideSettings)
+          await handleInferenceProfilesDisabled(models, overrideSettings)
         }
       } catch (error) {
         const modelError =
@@ -259,12 +226,7 @@ export const useModelManagement = ({
         isInitializedRef.current = true
       }
     },
-    [
-      bedrockSettings,
-      enhanceModelsWithFeatures,
-      handleInferenceProfilesEnabled,
-      handleInferenceProfilesDisabled
-    ]
+    [bedrockSettings, handleInferenceProfilesEnabled, handleInferenceProfilesDisabled]
   )
 
   /**
@@ -297,10 +259,9 @@ export const useModelManagement = ({
     (): ModelManagementActions => ({
       fetchModels,
       refreshInferenceProfiles,
-      enhanceModelsWithFeatures,
       clearModelError
     }),
-    [fetchModels, refreshInferenceProfiles, enhanceModelsWithFeatures, clearModelError]
+    [fetchModels, refreshInferenceProfiles, clearModelError]
   )
 
   return {
