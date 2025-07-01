@@ -1,5 +1,6 @@
-import { ProxyConfiguration } from '../api/bedrock/types'
+import { ProxyConfiguration, AWSCredentials } from '../api/bedrock/types'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import { NodeHttpHandler } from '@smithy/node-http-handler'
 import { log } from '../../common/logger'
 import fetch from 'node-fetch'
 
@@ -116,4 +117,167 @@ export function resolveProxyConfig(manualConfig?: ProxyConfiguration): ProxyConf
   // プロキシなし
   log.debug('No proxy configuration found')
   return null
+}
+
+/**
+ * プロキシエージェント作成のオプション
+ */
+export interface ProxyAgentOptions {
+  includeHttpAgent?: boolean
+  includeHttpsAgent?: boolean
+  includeNodeHandler?: boolean
+}
+
+/**
+ * プロキシエージェント作成の結果
+ */
+export interface ProxyAgentResult {
+  httpAgent?: HttpsProxyAgent<string>
+  httpsAgent?: HttpsProxyAgent<string>
+  requestHandler?: NodeHttpHandler
+}
+
+/**
+ * プロキシエージェントを作成する共通関数
+ * @param config プロキシ設定またはAWS認証情報
+ * @param options 作成するエージェントのオプション
+ * @returns プロキシエージェントまたはnull
+ */
+export function createProxyAgents(
+  config: ProxyConfiguration | AWSCredentials,
+  options: ProxyAgentOptions = { includeHttpsAgent: true }
+): ProxyAgentResult | null {
+  try {
+    // ProxyConfigurationまたはAWSCredentialsからプロキシ設定を取得
+    let proxyConfig: ProxyConfiguration | null = null
+
+    if ('proxyConfig' in config) {
+      // AWSCredentials の場合
+      proxyConfig = resolveProxyConfig(config.proxyConfig)
+    } else {
+      // ProxyConfiguration の場合
+      const proxyConf = config as ProxyConfiguration
+      proxyConfig = proxyConf.enabled && proxyConf.host ? proxyConf : null
+    }
+
+    if (!proxyConfig?.enabled || !proxyConfig.host) {
+      log.debug('Proxy agent not created: disabled or no host', {
+        enabled: proxyConfig?.enabled,
+        hasHost: !!proxyConfig?.host
+      })
+      return null
+    }
+
+    const proxyUrl = new URL(
+      `${proxyConfig.protocol || 'http'}://${proxyConfig.host}:${proxyConfig.port || 8080}`
+    )
+
+    if (proxyConfig.username && proxyConfig.password) {
+      proxyUrl.username = proxyConfig.username
+      proxyUrl.password = proxyConfig.password
+    }
+
+    const result: ProxyAgentResult = {}
+
+    // HttpsProxyAgent を作成（HTTP/HTTPS両方に使用可能）
+    const agent = new HttpsProxyAgent(proxyUrl.href)
+
+    if (options.includeHttpAgent) {
+      result.httpAgent = agent
+    }
+
+    if (options.includeHttpsAgent !== false) {
+      result.httpsAgent = agent
+    }
+
+    if (options.includeNodeHandler) {
+      result.requestHandler = new NodeHttpHandler({
+        httpAgent: agent,
+        httpsAgent: agent
+      })
+    }
+
+    log.debug('Proxy agents created successfully', {
+      protocol: proxyConfig.protocol || 'http',
+      host: '[REDACTED]',
+      port: proxyConfig.port || 8080,
+      hasAuth: !!(proxyConfig.username && proxyConfig.password),
+      includeHttpAgent: options.includeHttpAgent,
+      includeHttpsAgent: options.includeHttpsAgent,
+      includeNodeHandler: options.includeNodeHandler
+    })
+
+    return result
+  } catch (error) {
+    log.error('Failed to create proxy agents', {
+      error: error instanceof Error ? error.message : String(error),
+      options
+    })
+    return null
+  }
+}
+
+/**
+ * AWS Bedrock用のHTTPオプションを作成する便利関数
+ * @param awsCredentials AWS認証情報
+ * @returns HTTPオプション
+ */
+export function createHttpOptions(awsCredentials: AWSCredentials): object {
+  const proxyAgents = createProxyAgents(awsCredentials, { includeNodeHandler: true })
+
+  if (!proxyAgents?.requestHandler) {
+    return {}
+  }
+
+  return {
+    requestHandler: proxyAgents.requestHandler
+  }
+}
+
+/**
+ * Nova Sonic用のHTTPオプションを作成する便利関数
+ * @param proxyConfig プロキシ設定
+ * @returns HTTPオプション
+ */
+export function createSonicHttpOptions(proxyConfig?: ProxyConfiguration): object {
+  if (!proxyConfig) {
+    return {}
+  }
+
+  const proxyAgents = createProxyAgents(proxyConfig, {
+    includeHttpAgent: true,
+    includeHttpsAgent: true
+  })
+
+  if (!proxyAgents) {
+    return {}
+  }
+
+  return {
+    httpAgent: proxyAgents.httpAgent,
+    httpsAgent: proxyAgents.httpsAgent
+  }
+}
+
+/**
+ * Util handlers用のプロキシエージェントを作成する便利関数
+ * @param proxyConfig プロキシ設定
+ * @returns プロキシエージェント
+ */
+export function createUtilProxyAgent(proxyConfig?: ProxyConfiguration): {
+  httpsAgent?: HttpsProxyAgent<string>
+} {
+  if (!proxyConfig) {
+    return {}
+  }
+
+  const proxyAgents = createProxyAgents(proxyConfig, { includeHttpsAgent: true })
+
+  if (!proxyAgents?.httpsAgent) {
+    return {}
+  }
+
+  return {
+    httpsAgent: proxyAgents.httpsAgent
+  }
 }

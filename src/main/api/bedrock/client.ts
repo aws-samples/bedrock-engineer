@@ -6,35 +6,7 @@ import { fromIni } from '@aws-sdk/credential-providers'
 import { NovaSonicBidirectionalStreamClient } from '../sonic/client'
 import type { AWSCredentials } from './types'
 import { S3Client } from '@aws-sdk/client-s3'
-import { HttpsProxyAgent } from 'https-proxy-agent'
-import { NodeHttpHandler } from '@smithy/node-http-handler'
-import { resolveProxyConfig } from '../../lib/proxy-utils'
-
-function createHttpOptions(awsCredentials: AWSCredentials) {
-  // プロキシ設定の優先順位に従って決定
-  const proxyConfig = resolveProxyConfig(awsCredentials.proxyConfig)
-
-  if (!proxyConfig?.enabled || !proxyConfig.host) {
-    return {}
-  }
-
-  const proxyUrl = new URL(
-    `${proxyConfig.protocol || 'http'}://${proxyConfig.host}:${proxyConfig.port || 8080}`
-  )
-
-  if (proxyConfig.username && proxyConfig.password) {
-    proxyUrl.username = proxyConfig.username
-    proxyUrl.password = proxyConfig.password
-  }
-
-  const agent = new HttpsProxyAgent(proxyUrl.href)
-  return {
-    requestHandler: new NodeHttpHandler({
-      httpAgent: agent,
-      httpsAgent: agent
-    })
-  }
-}
+import { createHttpOptions } from '../../lib/proxy-utils'
 
 export function createS3Client(awsCredentials: AWSCredentials) {
   const { region, useProfile, profile, ...credentials } = awsCredentials

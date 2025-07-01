@@ -363,7 +363,7 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
         </div>
       </SettingSection>
 
-      <SettingSection title={t('Proxy Settings')} icon={FcMindMap}>
+      <SettingSection title={t('Proxy Settings')}>
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
             <label className="inline-flex items-center cursor-pointer">
@@ -398,7 +398,6 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
 
                 <SettingInput
                   label={t('Port')}
-                  type="number"
                   placeholder="8080"
                   value={proxySettings.port.toString()}
                   onChange={(e) =>

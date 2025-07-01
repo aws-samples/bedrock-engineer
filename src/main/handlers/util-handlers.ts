@@ -2,54 +2,8 @@ import { IpcMainInvokeEvent, app } from 'electron'
 import { spawn } from 'child_process'
 import axios from 'axios'
 import { log } from '../../common/logger'
-import { HttpsProxyAgent } from 'https-proxy-agent'
 import { store } from '../../preload/store'
-import type { ProxyConfiguration } from '../api/bedrock/types'
-
-function createProxyAgent(proxyConfig?: ProxyConfiguration) {
-  try {
-    if (!proxyConfig?.enabled || !proxyConfig.host) {
-      log.debug('Proxy agent not created: disabled or no host', {
-        enabled: proxyConfig?.enabled,
-        hasHost: !!proxyConfig?.host
-      })
-      return undefined
-    }
-
-    const proxyUrl = new URL(
-      `${proxyConfig.protocol || 'http'}://${proxyConfig.host}:${proxyConfig.port || 8080}`
-    )
-
-    if (proxyConfig.username && proxyConfig.password) {
-      proxyUrl.username = proxyConfig.username
-      proxyUrl.password = proxyConfig.password
-      log.debug('Proxy authentication configured')
-    }
-
-    // Create appropriate agent based on target URL protocol
-    // For HTTPS targets, use HttpsProxyAgent; for HTTP targets, use HttpProxyAgent
-    const httpsAgent = new HttpsProxyAgent(proxyUrl.href)
-
-    log.debug('Proxy agents created successfully', {
-      protocol: proxyConfig.protocol || 'http',
-      host: '[REDACTED]',
-      port: proxyConfig.port || 8080,
-      hasAuth: !!(proxyConfig.username && proxyConfig.password)
-    })
-
-    // Return an object with both agents for flexible use
-    return { httpsAgent }
-  } catch (error) {
-    log.error('Failed to create proxy agent', {
-      error: error instanceof Error ? error.message : String(error),
-      proxyEnabled: proxyConfig?.enabled,
-      hasHost: !!proxyConfig?.host,
-      protocol: proxyConfig?.protocol,
-      port: proxyConfig?.port
-    })
-    return undefined
-  }
-}
+import { createUtilProxyAgent } from '../lib/proxy-utils'
 
 export const utilHandlers = {
   'get-app-path': async (_event: IpcMainInvokeEvent) => {
@@ -61,23 +15,7 @@ export const utilHandlers = {
     try {
       // Get proxy configuration from store
       const awsConfig = store.get('aws')
-
-      log.debug('Proxy configuration check', {
-        hasAwsConfig: !!awsConfig,
-        hasProxyConfig: !!awsConfig?.proxyConfig,
-        proxyEnabled: awsConfig?.proxyConfig?.enabled,
-        proxyHost: awsConfig?.proxyConfig?.host ? '[REDACTED]' : undefined,
-        proxyPort: awsConfig?.proxyConfig?.port,
-        proxyProtocol: awsConfig?.proxyConfig?.protocol
-      })
-
-      const proxyAgents = createProxyAgent(awsConfig?.proxyConfig)
-
-      log.debug('Proxy agent creation result', {
-        hasProxyAgents: !!proxyAgents,
-        url: url
-      })
-
+      const proxyAgents = createUtilProxyAgent(awsConfig?.proxyConfig)
       const axiosConfig: any = {
         method: options?.method || 'GET',
         url: url,
@@ -103,28 +41,11 @@ export const utilHandlers = {
         } else {
           axiosConfig.httpAgent = agent
         }
-
-        log.debug('Applied proxy agent to axios request', {
-          url,
-          targetProtocol: targetUrl.protocol,
-          proxyProtocol: awsConfig?.proxyConfig?.protocol,
-          agentType: targetUrl.protocol === 'https:' ? 'HttpsProxyAgent' : 'HttpProxyAgent',
-          proxyHost: awsConfig?.proxyConfig?.host ? '[REDACTED]' : undefined,
-          proxyPort: awsConfig?.proxyConfig?.port
-        })
       } else {
         log.debug('No proxy agent configured, using direct connection', { url })
       }
 
       const response = await axios(axiosConfig)
-
-      log.debug('Axios response received', {
-        url,
-        status: response.status,
-        statusText: response.statusText,
-        hasProxyAgents: !!proxyAgents,
-        contentType: response.headers['content-type']
-      })
 
       return {
         status: response.status,

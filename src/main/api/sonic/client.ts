@@ -23,28 +23,7 @@ import {
 import { SonicToolExecutor } from './tool-executor'
 import { ToolInput } from '../../../types/tools'
 import { ProxyConfiguration } from '../bedrock/types'
-import { HttpsProxyAgent } from 'https-proxy-agent'
-
-function createHttpOptions(proxyConfig?: ProxyConfiguration) {
-  if (!proxyConfig?.enabled || !proxyConfig.host) {
-    return {}
-  }
-
-  const proxyUrl = new URL(
-    `${proxyConfig.protocol || 'http'}://${proxyConfig.host}:${proxyConfig.port || 8080}`
-  )
-
-  if (proxyConfig.username && proxyConfig.password) {
-    proxyUrl.username = proxyConfig.username
-    proxyUrl.password = proxyConfig.password
-  }
-
-  const agent = new HttpsProxyAgent(proxyUrl.href)
-  return {
-    httpAgent: agent,
-    httpsAgent: agent
-  }
-}
+import { createSonicHttpOptions } from '../../lib/proxy-utils'
 
 export interface NovaSonicBidirectionalStreamClientConfig {
   requestHandlerConfig?: NodeHttp2HandlerOptions | Provider<NodeHttp2HandlerOptions | void>
@@ -185,7 +164,7 @@ export class NovaSonicBidirectionalStreamClient {
 
   constructor(config: NovaSonicBidirectionalStreamClientConfig) {
     // Create proxy configuration if provided
-    const httpOptions = createHttpOptions(config.proxyConfig)
+    const httpOptions = createSonicHttpOptions(config.proxyConfig)
 
     const nodeHttp2Handler = new NodeHttp2Handler({
       requestTimeout: 300000,
