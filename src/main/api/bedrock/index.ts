@@ -137,12 +137,6 @@ export class BedrockService {
     return this.inferenceProfileService.listApplicationInferenceProfiles()
   }
 
-  async getApplicationInferenceProfile(
-    inferenceProfileArn: string
-  ): Promise<ApplicationInferenceProfile | null> {
-    return this.inferenceProfileService.getApplicationInferenceProfile(inferenceProfileArn)
-  }
-
   convertInferenceProfileToLLM(profile: ApplicationInferenceProfile) {
     return this.inferenceProfileService.convertProfileToLLM(profile)
   }
