@@ -78,6 +78,10 @@ const SettingPage = {
   'Enter password': 'パスワードを入力',
   'Proxy settings will be applied to both AWS SDK connections and browser sessions. Please test your configuration to ensure proper connectivity.':
     'プロキシ設定はAWS SDK接続とブラウザセッションの両方に適用されます。設定後は接続テストを行って正常性を確認してください。',
+  'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.':
+    'プロキシ設定はすべてのAWS SDK接続に適用されます。設定後は接続テストを行って接続性を確認してください。',
+  'If proxy settings do not take effect, please try restarting the application.':
+    'プロキシ設定が有効にならない場合は、アプリケーションの再起動をお試しください。',
   'Config Directory': 'アプリの設定',
   'Config Directory Description': 'アプリの設定が保存されるディレクトリです。',
   'Project Setting': 'プロジェクト設定',

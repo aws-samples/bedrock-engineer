@@ -38,6 +38,24 @@ Store.initRenderer()
 const apiLogger = createCategoryLogger('api')
 const agentsLogger = createCategoryLogger('agents')
 
+// プロキシ認証情報を保存するグローバル変数
+let currentProxyConfig: any = null
+
+/**
+ * プロキシ認証ハンドラーを設定
+ */
+function setupProxyAuthHandler(_window: BrowserWindow, proxyConfig: any): void {
+  // 現在のプロキシ設定を保存
+  currentProxyConfig = proxyConfig
+
+  log.debug('Proxy authentication handler configured', {
+    host: proxyConfig.host,
+    port: proxyConfig.port,
+    hasUsername: !!proxyConfig.username,
+    hasPassword: !!proxyConfig.password
+  })
+}
+
 /**
  * BrowserWindow Session のプロキシ設定を適用
  */
@@ -59,10 +77,16 @@ async function setupSessionProxy(window: BrowserWindow): Promise<void> {
           proxyRules: electronProxyRules
         })
 
+        // プロキシ認証ハンドラーの設定
+        if (proxyConfig.username && proxyConfig.password) {
+          setupProxyAuthHandler(window, proxyConfig)
+        }
+
         log.info('Session proxy configured', {
           host: proxyConfig.host,
           port: proxyConfig.port,
-          proxyRules: electronProxyRules
+          proxyRules: electronProxyRules,
+          hasAuth: !!(proxyConfig.username && proxyConfig.password)
         })
       }
     } else {
@@ -339,6 +363,21 @@ app.whenReady().then(async () => {
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
+  })
+
+  // プロキシ認証ハンドラーの設定（アプリケーションレベル）
+  app.on('login', (event, _webContents, _authenticationResponseDetails, authInfo, callback) => {
+    // プロキシ認証のリクエストかチェック
+    if (authInfo.isProxy && currentProxyConfig?.username && currentProxyConfig?.password) {
+      event.preventDefault()
+      callback(currentProxyConfig.username, currentProxyConfig.password)
+
+      log.debug('Proxy authentication provided', {
+        host: authInfo.host,
+        port: authInfo.port,
+        realm: authInfo.realm
+      })
+    }
   })
 
   // IPCハンドラーの一括登録

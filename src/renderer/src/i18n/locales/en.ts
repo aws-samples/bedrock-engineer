@@ -78,6 +78,10 @@ const SettingPage = {
   'Enter password': 'Enter password',
   'Proxy settings will be applied to both AWS SDK connections and browser sessions. Please test your configuration to ensure proper connectivity.':
     'Proxy settings will be applied to both AWS SDK connections and browser sessions. Please test your configuration to ensure proper connectivity.',
+  'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.':
+    'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.',
+  'If proxy settings do not take effect, please try restarting the application.':
+    'If proxy settings do not take effect, please try restarting the application.',
   'Config Directory': 'Config Directory',
   'Config Directory Description':
     'This is the directory where the application settings are stored.',

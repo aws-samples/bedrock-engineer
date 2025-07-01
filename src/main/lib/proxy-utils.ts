@@ -83,7 +83,37 @@ export async function testProxyConnection(
 }
 
 /**
+ * プロキシ認証情報の妥当性をチェック
+ * @param proxyConfig プロキシ設定
+ * @returns 検証結果
+ */
+export function validateProxyAuth(proxyConfig: ProxyConfiguration): {
+  isValid: boolean
+  warnings: string[]
+} {
+  const warnings: string[] = []
+
+  if (proxyConfig.enabled && proxyConfig.host) {
+    if (
+      (proxyConfig.username && !proxyConfig.password) ||
+      (!proxyConfig.username && proxyConfig.password)
+    ) {
+      warnings.push('Username and password must both be provided for proxy authentication')
+    }
+  }
+
+  return {
+    isValid: warnings.length === 0,
+    warnings
+  }
+}
+
+/**
  * プロキシ設定をElectron Session用のProxyConfig形式に変換
+ *
+ * 注意: ElectronのproxyRulesは認証情報を含めません。
+ * プロキシ認証はapp.on('login')イベントで別途処理されます。
+ *
  * @param proxyConfig プロキシ設定
  * @returns Electron Session用のproxy設定文字列
  */
@@ -96,6 +126,7 @@ export function convertToElectronProxyConfig(proxyConfig: ProxyConfiguration): s
 
   // Electron Session用のproxyRules形式
   // 例: "http=proxy.example.com:8080;https=proxy.example.com:8080"
+  // 認証情報はここには含まれず、app.on('login')で処理される
   return `http=${proxyConfig.host}:${port};https=${proxyConfig.host}:${port}`
 }
 

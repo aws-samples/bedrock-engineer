@@ -437,6 +437,9 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
                   {t(
                     'Proxy settings will be applied to all AWS SDK connections. Please test your configuration to ensure connectivity.'
                   )}
+                  {t(
+                    'If proxy settings do not take effect, please try restarting the application.'
+                  )}
                 </p>
               </div>
             </div>
