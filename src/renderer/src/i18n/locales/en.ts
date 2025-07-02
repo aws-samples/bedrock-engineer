@@ -202,7 +202,28 @@ const SpeakPage = {
   'permissionHelp.noteTitle': 'Note',
   'permissionHelp.noteDescription':
     'This command applies an ad-hoc code signature to the application and prevents the system permission dialogs from being displayed duplicately.',
-  'permissionHelp.tooltip': 'Help with permission dialogs'
+  'permissionHelp.tooltip': 'Help with permission dialogs',
+
+  // Voice Chat
+  'voiceChat.regionWarning.title': 'Voice Chat Not Available',
+  'voiceChat.regionWarning.message':
+    'Voice Chat (Nova Sonic) is not available in the current region ({{currentRegion}}). Please switch to a supported region: {{supportedRegions}}.',
+  'voiceChat.regionWarning.openSettings': 'Open Settings',
+  'voiceChat.error.regionNotSupported':
+    'Voice Chat is not available in the current region or there are permission issues. Please check your AWS region settings.',
+  'voiceChat.error.regionConnection':
+    'Failed to connect to Voice Chat service. This may be due to region compatibility issues.',
+  'voiceChat.error.openSettings': 'Open Settings',
+
+  // Settings
+  'settings.novaSonic.title': 'Voice Chat (Nova Sonic)',
+  'settings.novaSonic.checking': 'Checking availability...',
+  'settings.novaSonic.available': 'Available',
+  'settings.novaSonic.notAvailable': 'Not Available',
+  'settings.novaSonic.refresh': 'Refresh status',
+  'settings.novaSonic.currentRegion': 'Current region: {{region}}',
+  'settings.novaSonic.supportedRegions': 'Supported regions: {{regions}}',
+  'Voice Chat Status': 'Voice Chat Status'
 }
 
 const WebsiteGeneratorPage = {

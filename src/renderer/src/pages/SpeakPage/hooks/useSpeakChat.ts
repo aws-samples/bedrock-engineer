@@ -295,6 +295,14 @@ export function useSpeakChat(
     error: (error) => {
       console.error('Socket error:', error)
       setStatus('error')
+
+      // Set detailed error state based on the error content
+      const errorMessage = typeof error === 'string' ? error : error?.message || 'Unknown error'
+      setErrorState({
+        type: 'connection',
+        message: errorMessage,
+        timestamp: Date.now()
+      })
     }
   }
 

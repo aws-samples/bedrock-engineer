@@ -9,6 +9,7 @@ import { IAMPolicyModal } from '../IAMPolicyModal'
 import { ThinkingModeSettings } from '../ThinkingModeSettings'
 import { AWS_REGIONS } from '@/types/aws-regions'
 import { LLM } from '@/types/llm'
+import { NovaSonicStatus } from '../NovaSonicStatus'
 
 interface AWSSectionProps {
   // AWS Basic Settings
@@ -49,6 +50,7 @@ interface AWSSectionProps {
   bedrockSettings: {
     enableRegionFailover: boolean
     availableFailoverRegions: string[]
+    enableInferenceProfiles: boolean
   }
   onUpdateLLM: (modelId: string) => void
   onUpdateInferenceParams: (params: Partial<AWSSectionProps['inferenceParams']>) => void
@@ -236,6 +238,10 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
         </div>
       </SettingSection>
 
+      <SettingSection title={t('Voice Chat Status')} icon={FcElectronics}>
+        <NovaSonicStatus currentRegion={awsRegion} />
+      </SettingSection>
+
       <SettingSection title={t('Amazon Bedrock')} icon={FcElectronics}>
         <div className="space-y-4">
           <SettingSelect
@@ -247,6 +253,25 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
 
           <div className="space-y-2">
             <div className="space-y-4">
+              <label className="inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="form-checkbox h-5 w-5 text-blue-600 rounded border-gray-300
+                    focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800
+                    focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                  checked={bedrockSettings.enableInferenceProfiles}
+                  onChange={(e) =>
+                    onUpdateBedrockSettings({ enableInferenceProfiles: e.target.checked })
+                  }
+                />
+                <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                  {t('Enable Application Inference Profiles')}
+                </span>
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 ml-7">
+                {t('Use Application Inference Profiles for cost allocation and tracking')}
+              </p>
+
               <label className="inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"

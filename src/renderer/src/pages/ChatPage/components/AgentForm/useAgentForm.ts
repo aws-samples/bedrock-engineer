@@ -61,7 +61,26 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
   // 設定データへのアクセス
   const { getDefaultToolsForCategory } = useSetting()
 
-  // プロンプト生成機能の統合
+  // useCallbackでメモ化して、再レンダリングによる関数参照の変更を防止
+  const updateField = useCallback(
+    <K extends keyof CustomAgent>(field: K, value: CustomAgent[K]) => {
+      setFormData((prev) => ({ ...prev, [field]: value }))
+    },
+    []
+  )
+
+  // System prompt update callback functions with useCallback memoization
+  const handleSystemPromptUpdate = useCallback(
+    (prompt: string) => updateField('system', prompt),
+    [updateField]
+  )
+
+  const handleScenariosUpdate = useCallback(
+    (scenarios: Array<{ title: string; content: string }>) => updateField('scenarios', scenarios),
+    [updateField]
+  )
+
+  // Prompt generation functionality integration
   const {
     generateSystemPrompt,
     generateVoiceChatPrompt,
@@ -73,18 +92,10 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
     formData.name,
     formData.description,
     formData.system,
-    (prompt: string) => updateField('system', prompt),
-    (scenarios: Array<{ title: string; content: string }>) => updateField('scenarios', scenarios),
+    handleSystemPromptUpdate,
+    handleScenariosUpdate,
     formData.additionalInstruction,
     agentTools
-  )
-
-  // useCallbackでメモ化して、再レンダリングによる関数参照の変更を防止
-  const updateField = useCallback(
-    <K extends keyof CustomAgent>(field: K, value: CustomAgent[K]) => {
-      setFormData((prev) => ({ ...prev, [field]: value }))
-    },
-    []
   )
 
   // 複数フィールドを一度に更新する関数

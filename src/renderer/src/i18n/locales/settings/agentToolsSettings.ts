@@ -257,7 +257,9 @@ export const agentToolsSettings = {
       executeCommand: 'Execute a command or send input to a running process',
       invokeFlow: 'Execute an AWS Bedrock Flow to automate multi-step workflows',
       think: 'Use enhanced reasoning for complex problem solving',
-      cameraCapture: 'Capture images from PC camera and analyze with AI vision capabilities'
+      cameraCapture: 'Capture images from PC camera and analyze with AI vision capabilities',
+      codeInterpreter: 'Execute Python code with data analysis capabilities and file operations',
+      screenCapture: 'Capture screenshots of the screen for analysis and documentation'
     }
   },
   ja: {
@@ -516,7 +518,9 @@ export const agentToolsSettings = {
       executeCommand: 'コマンドを実行または実行中のプロセスに入力を送信',
       invokeFlow: 'AWS Bedrock Flowを実行して複数ステップのワークフローを自動化',
       think: '複雑な問題解決のための高度な推論を使用',
-      cameraCapture: 'PCカメラから画像をキャプチャしてAIビジョン機能で分析'
+      cameraCapture: 'PCカメラから画像をキャプチャしてAIビジョン機能で分析',
+      codeInterpreter: 'Pythonコードを実行しデータ分析機能とファイル操作を提供',
+      screenCapture: 'スクリーンのスクリーンショットをキャプチャして分析・文書化'
     }
   }
 }

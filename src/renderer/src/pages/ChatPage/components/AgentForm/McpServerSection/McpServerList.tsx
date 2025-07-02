@@ -45,7 +45,9 @@ export const McpServerList: React.FC<McpServerListProps> = ({
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <h4 className="font-medium text-sm">{t('Registered MCP Servers')}</h4>
+        <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100">
+          {t('Registered MCP Servers')}
+        </h4>
 
         {/* 全サーバーテストボタン */}
         {mcpServers.length > 0 && (

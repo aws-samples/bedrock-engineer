@@ -58,7 +58,13 @@ export class McpToolAdapter extends BaseTool<McpToolInput, McpToolResult> {
    */
   protected async executeInternal(input: McpToolInput): Promise<McpToolResult> {
     // Extract the actual tool name from mcpToolName or type
-    const toolName = input.mcpToolName || input.type.replace(/^mcp_/, '')
+    let toolName = input.mcpToolName || input.type
+
+    // Handle legacy format (mcp_toolName) for backward compatibility
+    if (!input.mcpToolName && input.type.startsWith('mcp_')) {
+      // Legacy format: remove mcp_ prefix
+      toolName = input.type.replace(/^mcp_/, '')
+    }
 
     // Extract arguments (exclude type and mcpToolName)
     const { type, mcpToolName: _mcpToolName, ...args } = input

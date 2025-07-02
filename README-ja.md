@@ -10,6 +10,11 @@ Bedrock Engineer は、[Amazon Bedrock](https://aws.amazon.com/bedrock/) を活�
 
 https://github.com/user-attachments/assets/f6ed028d-f3c3-4e2c-afff-de2dd9444759
 
+## Deck
+
+- [English](https://speakerdeck.com/gawa/introducing-bedrock-engineer-en)
+- [Japanese](https://speakerdeck.com/gawa/introducing-bedrock-engineer)
+
 ## 🍎 はじめに
 
 Bedrock Engineer はネイティブアプリです。アプリをダウンロードするか、ソースコードをビルドして使用してください。
@@ -18,13 +23,13 @@ Bedrock Engineer はネイティブアプリです。アプリをダウンロー
 
 MacOS:
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.1.dmg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.4.dmg)
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.1.pkg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.4.pkg)
 
 Windows:
 
-[<img src="https://img.shields.io/badge/Download_FOR_WINDOWS-Latest%20Release-blue?style=for-the-badge" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.1-setup.exe)
+[<img src="https://img.shields.io/badge/Download_FOR_WINDOWS-Latest%20Release-blue?style=for-the-badge" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.4-setup.exe)
 
 MacOS に最適化されていますが、Windows, Linux OS でもビルドして使用できます。不具合がある場合、issue に起票ください。
 
@@ -313,6 +318,14 @@ AWS Step Functions の ASL 定義を生成し、リアルタイムにプレビ�
 生成された図はdraw.io互換のXML形式で作成されるため、必要に応じてさらに編集やカスタマイズが可能です。
 
 ![diagram-generator](./assets/diagram-generator.png)
+
+## アプリケーション推論プロファイル
+
+Bedrock Engineer は、詳細なコスト追跡と配分のためのAWS Bedrockアプリケーション推論プロファイルをサポートしています。タグ付きのカスタム推論プロファイルを作成して、プロジェクト、部門、またはユースケース別にコストを追跡できます。
+
+詳細なセットアップ手順と例については、以下を参照してください：
+
+- [アプリケーション推論プロファイルガイド (日本語)](./docs/inference-profile/INFERENCE_PROFILE-ja.md)
 
 ## Star History
 

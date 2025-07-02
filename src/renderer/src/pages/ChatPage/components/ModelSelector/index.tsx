@@ -33,7 +33,10 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const getModelIcon = (modelId: string) => {
+  const getModelIcon = (modelId: string, isInferenceProfile?: boolean) => {
+    // Show group icon for inference profiles
+    if (isInferenceProfile) return <LuBrainCircuit className="size-4 text-blue-600" />
+
     if (modelId.includes('claude')) return MODEL_ICONS.claude
     if (modelId.includes('llama')) return MODEL_ICONS.llama
     if (modelId.includes('nova')) return <NovaLogo />
@@ -56,6 +59,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
             border border-gray-200 dark:border-gray-700 py-2 px-2 max-h-[40vh] overflow-y-auto"
           >
             {availableModels.map((model: LLM) => {
+              const isInferenceProfile = model.isInferenceProfile || false
               return (
                 <div
                   key={model.modelId}
@@ -69,16 +73,30 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
                     ${modelColors.hover}
                     transition-colors rounded-md
                   `}
+                  title={
+                    isInferenceProfile
+                      ? `Application Inference Profile: ${model.inferenceProfileArn}`
+                      : ''
+                  }
                 >
                   <div className={`rounded-md ${modelColors.icon}`}>
-                    {getModelIcon(model.modelId)}
+                    {getModelIcon(model.modelId, isInferenceProfile)}
                   </div>
                   <div className="flex flex-col">
                     <span className="font-medium text-gray-900 dark:text-gray-100">
                       {model.modelName}
+                      {isInferenceProfile && (
+                        <span className="ml-2 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">
+                          Profile
+                        </span>
+                      )}
                     </span>
                     <span className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                      {model.toolUse ? 'Supports tool use' : 'Does not support tool use'}
+                      {isInferenceProfile
+                        ? model.description || 'Application Inference Profile for cost tracking'
+                        : model.toolUse
+                          ? 'Supports tool use'
+                          : 'Does not support tool use'}
                     </span>
                   </div>
                 </div>
@@ -93,7 +111,9 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
           className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 rounded-md transition-colors"
         >
           <span className="flex items-center gap-1.5">
-            <span className={modelColors.icon}>{getModelIcon(currentLLM.modelId)}</span>
+            <span className={modelColors.icon}>
+              {getModelIcon(currentLLM.modelId, currentLLM.isInferenceProfile)}
+            </span>
             <span className="text-left whitespace-nowrap">{currentLLM.modelName}</span>
             <FiChevronDown className="text-gray-400 dark:text-gray-500" size={16} />
           </span>

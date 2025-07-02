@@ -14,13 +14,14 @@ export const FormActionButtons: React.FC<{
   const { t } = useTranslation()
 
   return (
-    <div className="flex justify-end space-x-2" onClick={formEventUtils.preventPropagation}>
+    <div className="flex justify-end space-x-3" onClick={formEventUtils.preventPropagation}>
       <button
         type="button"
         onClick={formEventUtils.createSafeHandler(onCancel)}
-        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-100 bg-white dark:bg-gray-700
-          border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600
-          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900"
+        className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800
+          border border-gray-300 dark:border-gray-600/50 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50
+          focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400
+          dark:focus:ring-offset-gray-900 transition-all duration-200 hover:border-gray-400 dark:hover:border-gray-500"
       >
         {t('cancel')}
       </button>
@@ -31,11 +32,11 @@ export const FormActionButtons: React.FC<{
         }}
         disabled={isGenerating}
         className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border rounded-md shadow-sm focus:outline-none focus:ring-2
-          focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-900 transition-all duration-200
+          focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 dark:focus:ring-offset-gray-900 transition-all duration-200
           ${
             isGenerating
-              ? 'text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-700 cursor-not-allowed opacity-70'
-              : 'text-white bg-blue-600 dark:bg-blue-600 border-transparent hover:bg-blue-700 dark:hover:bg-blue-500'
+              ? 'text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-700 border-gray-300 dark:border-gray-600 cursor-not-allowed opacity-70'
+              : 'text-white bg-blue-600 dark:bg-blue-500 border-transparent hover:bg-blue-700 dark:hover:bg-blue-400 hover:shadow-md'
           }`}
       >
         {isGenerating ? (

@@ -56,7 +56,7 @@ export const McpServerSection: React.FC<McpServerSectionProps> = ({ mcpServers, 
         {t('MCP Server Settings')}
       </h3>
 
-      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md mb-4">
+      <div className="bg-gray-100 dark:bg-gray-800/50 p-3 rounded-md mb-4 border border-gray-200 dark:border-gray-700/50">
         <p className="text-sm text-gray-700 dark:text-gray-300">
           {t('Configure MCP servers for this agent to use MCP tools.')}
         </p>

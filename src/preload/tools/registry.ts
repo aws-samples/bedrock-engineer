@@ -167,7 +167,10 @@ export class ToolRegistry {
 
     try {
       // Special handling for MCP tools
-      if (isMcpTool(input.type)) {
+      const isLegacyMcp = typeof input.type === 'string' && input.type.startsWith('mcp_')
+      const isMcp = isMcpTool(input.type)
+
+      if (isMcp || isLegacyMcp) {
         const mcpTool = this.getTool('mcp')
         if (!mcpTool) {
           throw new ToolNotFoundError('MCP adapter not registered')
@@ -215,7 +218,12 @@ export class ToolRegistry {
    * Resolve tool name from input type
    */
   private resolveToolName(type: string): string {
-    // Check if it's an MCP tool
+    // Check if it's a legacy MCP tool first
+    if (type.startsWith('mcp_')) {
+      return 'mcp'
+    }
+
+    // Check if it's an MCP tool (any non-built-in tool)
     if (isMcpTool(type)) {
       return 'mcp'
     }

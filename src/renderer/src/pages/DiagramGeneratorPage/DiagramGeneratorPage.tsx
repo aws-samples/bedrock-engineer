@@ -23,22 +23,31 @@ import {
   calculateTimeBasedProgress,
   getProgressMessage
 } from './utils/progressCalculator'
-import { DIAGRAM_GENERATOR_SYSTEM_PROMPT } from '../ChatPage/constants/DEFAULT_AGENTS'
+import {
+  DIAGRAM_GENERATOR_SYSTEM_PROMPT,
+  SOFTWARE_ARCHITECTURE_SYSTEM_PROMPT,
+  BUSINESS_PROCESS_SYSTEM_PROMPT
+} from '../ChatPage/constants/DEFAULT_AGENTS'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
 import { DiagramExplanationView } from './components/DiagramExplanationView'
 import { MdOutlineArticle } from 'react-icons/md'
 import { Tooltip } from 'flowbite-react'
 import { useNavigate } from 'react-router'
 import { generateCDKPrompt } from './utils/awsDetector'
+import { DiagramModeSelector, DiagramMode } from './components/DiagramModeSelector'
+import { useSystemPromptModal } from '../ChatPage/modals/useSystemPromptModal'
 
 export default function DiagramGeneratorPage() {
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
 
   const [userInput, setUserInput] = useState('')
-  const [xml, setXml] = useState(exampleDiagrams['serverless'])
+  const [xml, setXml] = useState(exampleDiagrams['aws'])
   const [isComposing, setIsComposing] = useState(false)
   const drawioRef = useRef<DrawIoEmbedRef>(null)
   const { currentLLM: llm, sendMsgKey, getAgentTools, enabledTavilySearch } = useSetting()
+
+  // ダイアグラムモードの状態
+  const [diagramMode, setDiagramMode] = useState<DiagramMode>('aws')
 
   // 検索機能の状態
   const [enableSearch, setEnableSearch] = useState(false)
@@ -64,7 +73,12 @@ export default function DiagramGeneratorPage() {
   const [xmlLoading, setXmlLoading] = useState(false)
   const [hasValidXml, setHasValidXml] = useState(false)
 
-  const { recommendDiagrams, recommendLoading, getRecommendDiagrams } = useRecommendDiagrams()
+  const {
+    recommendDiagrams,
+    recommendLoading,
+    getRecommendDiagrams,
+    refreshRecommendDiagrams: _refreshRecommendDiagrams
+  } = useRecommendDiagrams(diagramMode)
 
   const navigate = useNavigate()
 
@@ -73,10 +87,31 @@ export default function DiagramGeneratorPage() {
     i18n: { language }
   } = useTranslation()
 
+  // システムプロンプトモーダル
+  const {
+    show: showSystemPromptModal,
+    handleClose: handleCloseSystemPromptModal,
+    handleOpen: handleOpenSystemPromptModal,
+    SystemPromptModal
+  } = useSystemPromptModal()
+
   // カスタムシステムプロンプトを定義 - 言語設定と検索機能の有効化に対応
   const getSystemPrompt = () => {
-    // デフォルトのプロンプトをベースに言語設定と検索機能の状態に応じて調整
-    let basePrompt = DIAGRAM_GENERATOR_SYSTEM_PROMPT
+    // モードに応じたベースプロンプトを選択
+    let basePrompt: string
+    switch (diagramMode) {
+      case 'aws':
+        basePrompt = DIAGRAM_GENERATOR_SYSTEM_PROMPT
+        break
+      case 'software-architecture':
+        basePrompt = SOFTWARE_ARCHITECTURE_SYSTEM_PROMPT
+        break
+      case 'business-process':
+        basePrompt = BUSINESS_PROCESS_SYSTEM_PROMPT
+        break
+      default:
+        basePrompt = DIAGRAM_GENERATOR_SYSTEM_PROMPT
+    }
 
     // 言語設定を追加
     basePrompt = basePrompt.replace(
@@ -97,17 +132,28 @@ export default function DiagramGeneratorPage() {
 
   const systemPrompt = getSystemPrompt()
 
-  // ダイアグラム生成用のエージェントID
-  const diagramAgentId = 'diagramGeneratorAgent'
+  // ダイアグラム生成用のエージェントID（モードに応じて変更）
+  const diagramAgentId = useMemo(() => {
+    switch (diagramMode) {
+      case 'aws':
+        return 'diagramGeneratorAgent'
+      case 'software-architecture':
+        return 'softwareArchitectureAgent'
+      case 'business-process':
+        return 'businessProcessAgent'
+      default:
+        return 'diagramGeneratorAgent'
+    }
+  }, [diagramMode])
 
   // Diagram Generator Agent で利用可能なツールを定義
   // enableSearch が true の場合のみ tavilySearch ツールを有効にする
   const diagramAgentTools = useMemo(() => {
     const agentTools = getAgentTools(diagramAgentId)
 
-    if (enableSearch) {
-      // diagramAgentIdからツールを取得し、tavilySearch ツールをフィルタリング
-      return agentTools.filter((tool) => tool.toolSpec?.name === 'tavilySearch' && tool.enabled)
+    if (!enableSearch) {
+      // diagramAgentIdからツールを取得し、tavilySearch ツールだけをフィルタリング
+      return agentTools.filter((tool) => tool.toolSpec?.name !== 'tavilySearch')
     }
 
     return agentTools
@@ -142,10 +188,59 @@ export default function DiagramGeneratorPage() {
     setDiagramExplanation('')
   }
 
-  // システムプロンプトを検索状態に応じて更新
+  // システムプロンプトを検索状態やモード変更に応じて更新
   useEffect(() => {
-    // systemPromptは関数から取得するため、enableSearchが変更されたときに再レンダリングされる
-  }, [enableSearch])
+    // systemPromptは関数から取得するため、enableSearchやdiagramModeが変更されたときに再レンダリングされる
+  }, [enableSearch, diagramMode])
+
+  // モード変更時の処理
+  const handleModeChange = useCallback(
+    async (newMode: DiagramMode) => {
+      console.log('[DEBUG] Mode change initiated:', { from: diagramMode, to: newMode })
+
+      setDiagramMode(newMode)
+      // モード変更時にexampleDiagramを切り替える
+      const newXml = exampleDiagrams[newMode] || exampleDiagrams['aws']
+
+      console.log('[DEBUG] Loading new XML for mode:', {
+        mode: newMode,
+        xmlLength: newXml.length,
+        xmlPreview: newXml.substring(0, 100) + '...'
+      })
+
+      // DrawIOを明示的に更新してからステートを設定
+      if (drawioRef.current) {
+        try {
+          await drawioRef.current.load({ xml: newXml })
+          console.log('[DEBUG] DrawIO load successful for new mode')
+          setXml(newXml) // 成功後にステート更新
+        } catch (error) {
+          console.error('[DEBUG] Failed to load diagram for new mode:', error)
+          // フォールバック: ステートを更新してuseEffectに委ねる
+          setXml(newXml)
+        }
+      } else {
+        console.log('[DEBUG] DrawIO ref not ready, setting XML state only')
+        setXml(newXml)
+      }
+
+      // モード変更時にチャット履歴をクリア
+      // handleSubmit関数をクリアする代わりに、新しいセッションを開始
+    },
+    [diagramMode]
+  )
+
+  // モード変更時のリフレッシュ処理
+  const handleModeRefresh = useCallback(() => {
+    // 現在の図をクリア
+    setXml('')
+    setDiagramExplanation('')
+    setStreamingExplanation('')
+    setUserInput('')
+    // 履歴もクリア
+    setDiagramHistory([])
+    setSelectedHistoryIndex(null)
+  }, [])
 
   // ストリーミング中の説明文を抽出・更新
   useEffect(() => {
@@ -197,17 +292,42 @@ export default function DiagramGeneratorPage() {
     }
   }, [messages, loading, xmlLoading, hasValidXml])
 
-  // XMLステートの変更を監視してdrawioに反映
+  // XMLステートの変更を監視してdrawioに反映（デバウンス付き）
   useEffect(() => {
-    if (xml && drawioRef.current) {
-      console.log('[DEBUG] XML state changed, updating drawio:', xml.substring(0, 200) + '...')
-      try {
-        drawioRef.current.load({ xml })
-        console.log('[DEBUG] DrawIO updated successfully')
-      } catch (error) {
-        console.error('[DEBUG] Failed to update DrawIO with new XML:', error)
-      }
+    if (!xml || !drawioRef.current) {
+      return
     }
+
+    console.log('[DEBUG] XML state changed, scheduling drawio update:', {
+      xmlLength: xml.length,
+      xmlPreview: xml.substring(0, 200) + '...',
+      drawioExists: !!drawioRef.current
+    })
+
+    // デバウンス処理で頻繁な更新を制御
+    const timeoutId = setTimeout(async () => {
+      if (drawioRef.current) {
+        try {
+          await drawioRef.current.load({ xml })
+          console.log('[DEBUG] DrawIO updated successfully via useEffect')
+        } catch (error) {
+          console.error('[DEBUG] Failed to update DrawIO with new XML via useEffect:', error)
+          // リトライ処理
+          setTimeout(() => {
+            if (drawioRef.current) {
+              try {
+                drawioRef.current.load({ xml })
+                console.log('[DEBUG] DrawIO retry successful')
+              } catch (retryError) {
+                console.error('[DEBUG] DrawIO retry failed:', retryError)
+              }
+            }
+          }, 100)
+        }
+      }
+    }, 50) // 50msのデバウンス
+
+    return () => clearTimeout(timeoutId)
   }, [xml])
 
   // XML生成状態を判定
@@ -335,36 +455,53 @@ export default function DiagramGeneratorPage() {
 
   return (
     <div className="flex flex-col p-3 h-[calc(100vh-14rem)]">
+      {/* SystemPromptModal */}
+      <SystemPromptModal
+        isOpen={showSystemPromptModal}
+        onClose={handleCloseSystemPromptModal}
+        systemPrompt={systemPrompt}
+      />
+
       {/* Header */}
       <div className="flex pb-2 justify-between">
         <span className="font-bold flex flex-col gap-2 w-full">
           <div className="flex justify-between">
             <h1 className="content-center dark:text-white text-lg">Diagram Generator</h1>
+            <span
+              className="text-xs text-gray-400 font-thin cursor-pointer hover:text-gray-700"
+              onClick={handleOpenSystemPromptModal}
+            >
+              SYSTEM_PROMPT
+            </span>
           </div>
           <div className="flex justify-between w-full">
-            <div className="flex gap-2">
-              {diagramHistory.map((_history, index) => (
-                <motion.span
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  key={index}
-                  className={`p-1 px-3 rounded cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 dark:text-white ${
-                    selectedHistoryIndex === index
-                      ? 'bg-gray-300 text-gray-800 dark:bg-gray-500 dark:text-white'
-                      : 'bg-gray-200 text-gray-500 dark:bg-gray-600'
-                  }`}
-                  onClick={() => loadDiagramFromHistory(index)}
-                >
-                  {index + 1}
-                </motion.span>
-              ))}
-              {diagramHistory.length === 0 && (
-                <span className="text-sm text-gray-800 dark:text-gray-400 font-medium">
-                  Turn your ideas into visuals. Easily make diagrams, blueprints, flowcharts, and
-                  other visual materials you need.
-                </span>
-              )}
+            <div className="flex gap-2 items-center">
+              {/* モード切り替えボタン */}
+              <DiagramModeSelector
+                selectedMode={diagramMode}
+                onModeChange={handleModeChange}
+                onRefresh={handleModeRefresh}
+              />
+
+              {/* 履歴ボタン */}
+              <div className="ml-4 flex gap-2">
+                {diagramHistory.map((_history, index) => (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    key={index}
+                    className={`p-1 px-3 rounded cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 dark:text-white ${
+                      selectedHistoryIndex === index
+                        ? 'bg-gray-300 text-gray-800 dark:bg-gray-500 dark:text-white'
+                        : 'bg-gray-200 text-gray-500 dark:bg-gray-600'
+                    }`}
+                    onClick={() => loadDiagramFromHistory(index)}
+                  >
+                    {index + 1}
+                  </motion.span>
+                ))}
+              </div>
             </div>
           </div>
         </span>

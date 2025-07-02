@@ -164,9 +164,10 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
           <textarea
             value={additionalInstruction || ''}
             onChange={handleAdditionalInstructionChange}
-            className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
+            disabled={isGenerating || isGeneratingVoiceChat}
+            className={`block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
               text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              h-[150px]"
+              h-[150px] ${isGenerating || isGeneratingVoiceChat ? 'opacity-50 cursor-not-allowed' : ''}`}
             placeholder={t(
               'additionalInstructionPlaceholder',
               'Enter additional instructions for system prompt generation...'
@@ -178,19 +179,19 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
       <p className="text-xs text-gray-500 dark:text-gray-400 whitespace-pre-line mb-2 mt-1">
         {t('systemPromptInfo')}
       </p>
-      <div className="p-2 bg-blue-50 dark:bg-blue-800 rounded-md border border-gray-200 dark:border-gray-700 mb-2">
+      <div className="p-2 bg-white dark:bg-gray-900 rounded-md border border-gray-300 dark:border-gray-600 mb-2">
         <p className="text-xs text-gray-600 dark:text-gray-300 font-medium">{t('placeholders')}</p>
         <div className="grid lg:grid-cols-2 grid-cols-1 gap-1">
           {PLACEHOLDERS.map(({ key, translationKey }) => (
             <div key={key} className="flex items-center space-x-2">
-              <code className="text-xs bg-white dark:bg-gray-700 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:text-gray-300">
+              <code className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded border border-gray-300 dark:border-gray-600 dark:text-gray-300">
                 {`{{${key}}}`}
               </code>
               <span className="text-xs text-gray-500 dark:text-gray-400">{t(translationKey)}</span>
               <button
                 type="button"
                 onClick={() => copyToClipboard(`{{${key}}}`)}
-                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                className="text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
               >
                 {t('copy')}
               </button>
@@ -208,9 +209,10 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
           <textarea
             value={system}
             onChange={(e) => onChange(e.target.value)}
-            className="block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
+            disabled={isGenerating || isGeneratingVoiceChat}
+            className={`block w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
               text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm
-              h-[512px]"
+              h-[512px] ${isGenerating || isGeneratingVoiceChat ? 'opacity-50 cursor-not-allowed' : ''}`}
             required
             placeholder={t('systemPromptPlaceholder')}
           />

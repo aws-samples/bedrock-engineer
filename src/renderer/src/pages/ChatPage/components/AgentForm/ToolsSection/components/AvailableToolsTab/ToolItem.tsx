@@ -36,9 +36,9 @@ export const ToolItem: React.FC<ToolItemProps> = ({
     <div
       className={`flex items-center justify-between p-3 ${
         isMcp
-          ? 'bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-200 dark:border-cyan-800'
-          : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
-      } rounded-md shadow-sm`}
+          ? 'bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600'
+          : 'bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600'
+      } rounded-md hover:border-gray-400 dark:hover:border-gray-500 transition-colors duration-200`}
     >
       <div className="flex items-center space-x-3">
         <div className="text-gray-500 dark:text-gray-400 flex-shrink-0 w-7 h-7 flex items-center justify-center">
@@ -48,7 +48,7 @@ export const ToolItem: React.FC<ToolItemProps> = ({
           <p className="font-medium text-gray-800 dark:text-gray-200">
             {displayedName}
             {isMcp && (
-              <span className="ml-1 text-xs font-normal bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 py-0.5 px-1 rounded">
+              <span className="ml-1 text-xs font-normal bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 py-0.5 px-1 rounded">
                 MCP
               </span>
             )}
@@ -68,7 +68,7 @@ export const ToolItem: React.FC<ToolItemProps> = ({
                 {tool.toolSpec?.description || t('MCP tool from Model Context Protocol server')}
                 {/* サーバー情報があれば表示 */}
                 {serverInfo && (
-                  <span className="block mt-0.5 text-blue-600 dark:text-blue-400 truncate">
+                  <span className="block mt-0.5 text-gray-500 dark:text-gray-500 truncate">
                     {serverInfo}
                   </span>
                 )}

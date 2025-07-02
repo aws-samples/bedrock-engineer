@@ -53,16 +53,19 @@ export const AgentFormSidebar: React.FC<{
   ]
 
   return (
-    <div className="py-4 flex flex-col h-full" onClick={formEventUtils.preventPropagation}>
+    <div
+      className="py-4 flex flex-col h-full bg-gray-50 dark:bg-gray-900/50"
+      onClick={formEventUtils.preventPropagation}
+    >
       <ul className="space-y-1 px-2">
         {tabs.map((tab) => (
           <li key={tab.id}>
             <button
               type="button"
-              className={`flex items-center w-full px-3 py-2.5 rounded-lg text-left transition-colors ${
+              className={`relative flex items-center w-full px-3 py-2.5 rounded-lg text-left transition-all duration-200 ease-in-out ${
                 activeTab === tab.id
-                  ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 dark:border-l-2 dark:border-blue-500'
-                  : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-blue-50 text-blue-600 dark:bg-gray-700/50 dark:text-gray-100'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50 hover:text-gray-900 dark:hover:text-gray-100'
               }`}
               onClick={tab.onClick}
               title={tab.label}

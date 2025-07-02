@@ -10,6 +10,11 @@ Bedrock Engineer is Autonomous software development agent apps using [Amazon Bed
 
 https://github.com/user-attachments/assets/f6ed028d-f3c3-4e2c-afff-de2dd9444759
 
+## Deck
+
+- [English](https://speakerdeck.com/gawa/introducing-bedrock-engineer-en)
+- [Japanese](https://speakerdeck.com/gawa/introducing-bedrock-engineer)
+
 ## 🍎 Getting Started
 
 Bedrock Engineer is a native app, you can download the app or build the source code to use it.
@@ -18,13 +23,13 @@ Bedrock Engineer is a native app, you can download the app or build the source c
 
 MacOS:
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.1.dmg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.4.dmg)
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.1.pkg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.4.pkg)
 
 Windows:
 
-[<img src="https://img.shields.io/badge/Download_FOR_WINDOWS-Latest%20Release-blue?style=for-the-badge" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.1-setup.exe)
+[<img src="https://img.shields.io/badge/Download_FOR_WINDOWS-Latest%20Release-blue?style=for-the-badge" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.15.4-setup.exe)
 
 It is optimized for MacOS, but can also be built and used on Windows and Linux OS. If you have any problems, please report an issue.
 
@@ -290,6 +295,14 @@ Key features:
 The diagrams are created using draw.io compatible XML format, allowing for further editing and customization if needed.
 
 ![diagram-generator](./assets/diagram-generator.png)
+
+## Application Inference Profiles
+
+Bedrock Engineer supports AWS Bedrock Application Inference Profiles for detailed cost tracking and allocation. You can create custom inference profiles with tags to track costs by project, department, or use case.
+
+For detailed setup instructions and examples, see:
+
+- [Application Inference Profile Guide (English)](./docs/inference-profile/INFERENCE_PROFILE.md)
 
 ## Star History
 

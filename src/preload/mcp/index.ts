@@ -214,13 +214,11 @@ export const getMcpToolSpecs = async (mcpServers?: McpServerConfig[]): Promise<T
   await initMcpFromAgentConfig(mcpServers)
 
   return clients.flatMap(({ client }) => {
-    // ツールに接頭辞を付けて返す（名前の衝突を避けるため）
+    // ツールをそのまま返す（プリフィックスなし）
     return client.tools.map((tool) => {
       // ディープコピーして元のオブジェクトを変更しないようにする
       const clonedTool = JSON.parse(JSON.stringify(tool))
-      if (clonedTool.toolSpec?.name) {
-        clonedTool.toolSpec.name = `mcp_${clonedTool.toolSpec.name}`
-      }
+      // ツール名はそのまま使用（プリフィックスなし）
       return clonedTool
     })
   })
@@ -236,7 +234,7 @@ export const tryExecuteMcpTool = async (
     return {
       found: false,
       success: false,
-      name: `mcp_${toolName}`,
+      name: toolName,
       error: `No MCP servers configured`,
       message: `This agent does not have any MCP servers configured. Please add MCP server configuration in agent settings.`,
       result: null
@@ -246,31 +244,33 @@ export const tryExecuteMcpTool = async (
   // エージェント固有のMCPサーバー設定を使用する
   await initMcpFromAgentConfig(mcpServers)
 
-  // ここでは素のツール名（mcp_ プレフィックスなし）を使用
-  const client = clients.find(({ client }) =>
-    client.tools.find((tool) => tool.toolSpec?.name == toolName)
-  )
+  // ツール名をそのまま使用して適切なクライアントを検索
+  const client = clients.find(({ client }) => {
+    // ツールが存在するかチェック
+    return client.tools.find((tool) => tool.toolSpec?.name === toolName)
+  })
+
   if (client == null) {
     return {
       found: false,
       success: false,
-      name: `mcp_${toolName}`,
-      error: `MCP tool ${toolName} not found`,
-      message: `No MCP server provides a tool named "${toolName}"`,
+      name: toolName,
+      error: `MCP tool "${toolName}" not found`,
+      message: `No MCP server provides tool "${toolName}"`,
       result: null
     }
   }
 
   try {
-    // inputの型からmcp_ プレフィックスを取り除いたツール名を使用
+    // ツール名をそのまま使用してMCPツールを実行
     const params = { ...input }
     const res = await client.client.callTool(toolName, params)
 
     return {
       found: true,
       success: true,
-      name: `mcp_${toolName}`,
-      message: 'MCP tool execution successful',
+      name: toolName,
+      message: `MCP tool execution successful: ${toolName}`,
       result: res
     }
   } catch (error) {
@@ -279,7 +279,7 @@ export const tryExecuteMcpTool = async (
     return {
       found: true,
       success: false,
-      name: `mcp_${toolName}`,
+      name: toolName,
       error: errorMessage,
       message: `Error executing MCP tool "${toolName}": ${errorMessage}`,
       result: null

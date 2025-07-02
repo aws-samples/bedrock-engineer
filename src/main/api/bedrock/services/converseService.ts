@@ -144,7 +144,6 @@ export class ConverseService {
       system[0].text =
         system[0].text + '\n Do not run ToolUse in parallel, but proceed step by step.'
     }
-
     // コマンドパラメータを作成
     const commandParams: ConverseCommandInput | ConverseStreamCommandInput = {
       modelId,

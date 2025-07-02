@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useMemo } from 'react'
 import { McpServerConfig } from '@/types/agent-chat'
-import { isMcpTool, getOriginalMcpToolName } from '@/types/tools'
+import { isMcpTool } from '@/types/tools'
 
 /**
  * ツール情報の表示に関連するフォーマット関数を提供するカスタムフック
@@ -31,12 +31,17 @@ export function useToolsFormatter(mcpServers: McpServerConfig[] = []) {
       (toolName: string | null): string => {
         if (!toolName || !isMcpTool(toolName) || !mcpServers || mcpServers.length === 0) return ''
 
-        const serverName = getOriginalMcpToolName(toolName)?.split('.')[0]
-        const server = mcpServers.find((s) => s.name === serverName)
+        // 元のツール名をそのまま使用する新形式では、どのサーバーからのツールかを特定する必要がある
+        // 複数のサーバーに同じ名前のツールがある場合は、最初に見つかったものを使用
+        const server = mcpServers.find((_s) => {
+          // サーバーからツールリストを取得できる場合の判定ロジックは後で実装
+          // 現在は設定されたサーバーがあれば表示する
+          return true
+        })
 
         return server
           ? `${t('From')}: ${server.name} (${server.description || 'MCP Server'})`
-          : `${t('From')}: ${serverName || 'Unknown server'}`
+          : `${t('From')}: MCP Server`
       },
     [mcpServers, t]
   )

@@ -62,7 +62,7 @@ export const AgentFormContent: React.FC<{
       return (
         <div className="h-full">
           <div className="space-y-6 overflow-y-auto pb-4">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-white mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6 pb-2 border-b border-gray-200 dark:border-gray-700/50">
               {t('Basic Agent Settings')}
             </h3>
 

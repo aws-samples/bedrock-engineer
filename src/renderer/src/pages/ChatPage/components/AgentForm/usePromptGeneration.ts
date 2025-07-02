@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import useSetting from '@renderer/hooks/useSetting'
@@ -215,13 +215,26 @@ export function usePromptGeneration(
   onSystemPromptGenerated: (prompt: string) => void,
   onScenariosGenerated: (scenarios: Array<{ title: string; content: string }>) => void,
   additionalInstruction?: string,
-  customTools?: ToolState[] // 追加: カスタムツール情報を受け取る
+  customTools?: ToolState[] // Additional: Receive custom tool information
 ) {
   const { t } = useTranslation()
   const { currentLLM: llm, selectedAgentId, getAgentTools } = useSetting()
   const [isGeneratingSystem, setIsGeneratingSystem] = useState(false)
   const [isGeneratingVoiceChat, setIsGeneratingVoiceChat] = useState(false)
   const [isGeneratingScenarios, setIsGeneratingScenarios] = useState(false)
+
+  // Hold the latest references of callback functions to avoid unnecessary re-renders
+  const onSystemPromptGeneratedRef = useRef(onSystemPromptGenerated)
+  const onScenariosGeneratedRef = useRef(onScenariosGenerated)
+
+  // Update callback function references
+  useEffect(() => {
+    onSystemPromptGeneratedRef.current = onSystemPromptGenerated
+  }, [onSystemPromptGenerated])
+
+  useEffect(() => {
+    onScenariosGeneratedRef.current = onScenariosGenerated
+  }, [onScenariosGenerated])
 
   // システムプロンプト生成
   // カスタムツールが提供されていればそれを使用、なければ既存のエージェントツールを使用
@@ -296,34 +309,34 @@ export function usePromptGeneration(
     setIsGeneratingScenarios(false)
   }, [name, description, system, submitScenarioPrompt, t])
 
-  // システムプロンプト生成結果の処理
+  // Process system prompt generation results
   useEffect(() => {
     if (systemMessages.length > 1) {
       const lastMessage = systemMessages[systemMessages.length - 1]
       if (lastMessage.content) {
-        // lastMessage.content の配列のなかから text フィールドを含む要素を取り出す
+        // Extract text field from lastMessage.content array
         const textContent = lastMessage.content.find((v) => v.text)
         if (textContent && textContent.text) {
-          onSystemPromptGenerated(textContent.text)
+          onSystemPromptGeneratedRef.current(textContent.text)
         }
       }
     }
-  }, [systemMessages, onSystemPromptGenerated])
+  }, [systemMessages])
 
-  // 音声チャット用システムプロンプト生成結果の処理
+  // Process voice chat system prompt generation results
   useEffect(() => {
     if (voiceChatMessages.length > 1) {
       const lastMessage = voiceChatMessages[voiceChatMessages.length - 1]
       if (lastMessage.content) {
         const textContent = lastMessage.content.find((v) => v.text)
         if (textContent && textContent.text) {
-          onSystemPromptGenerated(textContent.text)
+          onSystemPromptGeneratedRef.current(textContent.text)
         }
       }
     }
-  }, [voiceChatMessages, onSystemPromptGenerated])
+  }, [voiceChatMessages])
 
-  // シナリオ生成結果の処理
+  // Process scenario generation results
   useEffect(() => {
     if (scenarioMessages.length > 1) {
       const lastMessage = scenarioMessages[scenarioMessages.length - 1]
@@ -331,10 +344,10 @@ export function usePromptGeneration(
         const textContent = lastMessage.content.find((v) => v.text)
         if (textContent && textContent.text) {
           try {
-            // テキストをJSONとしてパースを試みる
+            // Attempt to parse text as JSON
             const scenarios = extractCompleteObjects(textContent.text)
             if (Array.isArray(scenarios)) {
-              onScenariosGenerated(scenarios)
+              onScenariosGeneratedRef.current(scenarios)
             }
           } catch (e) {
             console.error('Failed to parse scenarios:', e)
@@ -342,7 +355,7 @@ export function usePromptGeneration(
         }
       }
     }
-  }, [scenarioMessages, onScenariosGenerated])
+  }, [scenarioMessages])
 
   return {
     generateSystemPrompt,

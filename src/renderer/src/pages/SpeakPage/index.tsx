@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 import { BsQuestionCircle } from 'react-icons/bs'
 import { useSpeakChat } from './hooks/useSpeakChat'
 import { VoiceAILottie } from '@renderer/components/VoiceAI'
@@ -15,6 +16,8 @@ import { VoiceSelector } from './components/VoiceSelector'
 import { VoiceId } from './constants/voices'
 import { SampleTextCarousel } from './components/SampleTextCarousel'
 import { usePermissionHelpModal } from './components/PermissionHelpModal'
+import { RegionWarningBanner } from './components/RegionWarningBanner'
+import { checkNovaSonicRegionSupport, type RegionCheckResult } from '@renderer/lib/api/novaSonic'
 
 const API_ENDPOINT = window.store.get('apiEndpoint')
 
@@ -196,9 +199,10 @@ const ThinkingIndicator: React.FC<ThinkingIndicatorProps> = ({ thinkingState }) 
 interface ErrorDisplayProps {
   status: SpeakChatStatus
   errorState: any
+  onOpenSettings?: () => void
 }
 
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
+const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState, onOpenSettings }) => {
   const { t } = useTranslation()
 
   if (status !== 'error') return null
@@ -207,18 +211,53 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
     window.location.reload()
   }
 
+  // Check if this is a region-related error
+  const isRegionRelatedError = (message: string): boolean => {
+    const regionKeywords = [
+      'region',
+      'nova sonic',
+      'nova-sonic',
+      'not available',
+      'unauthorized',
+      'access denied',
+      'forbidden',
+      'ValidationException',
+      'UnauthorizedOperation'
+    ]
+    return regionKeywords.some((keyword) => message.toLowerCase().includes(keyword.toLowerCase()))
+  }
+
   // Get error message based on error state
   const getErrorMessage = () => {
     if (errorState) {
+      const baseMessage = errorState.message || 'An unknown error occurred'
+
+      // Check for region-specific errors
+      if (isRegionRelatedError(baseMessage)) {
+        return t('voiceChat.error.regionNotSupported', {
+          defaultValue:
+            'Voice Chat is not available in the current region or there are permission issues. Please check your AWS region settings.',
+          message: baseMessage.slice(0, 100) // Limit message length
+        })
+      }
+
       switch (errorState.type) {
         case 'connection':
-          return errorState.message || 'Connection error occurred'
+          return baseMessage.includes('region') ||
+            baseMessage.includes('Nova Sonic') ||
+            baseMessage.includes('nova-sonic')
+            ? t('voiceChat.error.regionConnection', {
+                defaultValue:
+                  'Failed to connect to Voice Chat service. This may be due to region compatibility issues.',
+                originalMessage: baseMessage
+              })
+            : baseMessage || 'Connection error occurred'
         case 'recording':
-          return errorState.message || 'Recording error occurred'
+          return baseMessage || 'Recording error occurred'
         case 'audio':
-          return errorState.message || 'Audio processing error occurred'
+          return baseMessage || 'Audio processing error occurred'
         default:
-          return errorState.message || 'An unknown error occurred'
+          return baseMessage
       }
     }
     return 'Connection error. Please try reconnecting.'
@@ -250,8 +289,10 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
     )
   }
 
+  const isRegionError = errorState && isRegionRelatedError(errorState.message || '')
+
   return (
-    <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg max-w-xs">
+    <div className="fixed bottom-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg max-w-sm">
       <div className="flex items-start space-x-2">
         {getErrorIcon()}
         <div className="flex flex-col space-y-1 flex-1">
@@ -261,12 +302,22 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ status, errorState }) => {
               {new Date(errorState.timestamp).toLocaleTimeString()}
             </span>
           )}
-          <button
-            onClick={handleReload}
-            className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded transition-colors self-start"
-          >
-            {t('Reload Page')}
-          </button>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {isRegionError && onOpenSettings && (
+              <button
+                onClick={onOpenSettings}
+                className="text-xs bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded transition-colors"
+              >
+                {t('voiceChat.error.openSettings', 'Open Settings')}
+              </button>
+            )}
+            <button
+              onClick={handleReload}
+              className="text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded transition-colors"
+            >
+              {t('common.reload', 'Reload Page')}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -278,19 +329,21 @@ interface FixedElementsProps {
   onToggleChat: (show: boolean) => void
   status: SpeakChatStatus
   errorState: any
+  onOpenSettings?: () => void
 }
 
 const FixedElements: React.FC<FixedElementsProps> = ({
   showChat,
   onToggleChat,
   status,
-  errorState
+  errorState,
+  onOpenSettings
 }) => (
   <>
     <div className={`fixed right-4 z-50 ${status === 'error' ? 'bottom-20' : 'bottom-4'}`}>
       <ViewToggleButton isDetailView={showChat} onToggle={onToggleChat} />
     </div>
-    <ErrorDisplay status={status} errorState={errorState} />
+    <ErrorDisplay status={status} errorState={errorState} onOpenSettings={onOpenSettings} />
   </>
 )
 
@@ -420,8 +473,12 @@ const DetailView: React.FC<DetailViewProps> = ({
 // ============================================================================
 
 export const SpeakPage: React.FC = () => {
+  const navigate = useNavigate()
   const [showChat, setShowChat] = useState(false)
   const [showVoiceSelector, setShowVoiceSelector] = useState(false)
+  const [regionCheck, setRegionCheck] = useState<RegionCheckResult | null>(null)
+  const [regionCheckLoading, setRegionCheckLoading] = useState(true)
+  const [showRegionWarning, setShowRegionWarning] = useState(true)
   const {
     currentAgentSystemPrompt,
     selectedAgentId,
@@ -450,8 +507,46 @@ export const SpeakPage: React.FC = () => {
     systemPrompt
   } = useSpeakChat(API_ENDPOINT, currentAgentSystemPrompt, agentTools, selectedVoiceId)
 
-  // Auto-connect when component mounts
+  // Check region support when component mounts
   useEffect(() => {
+    const checkRegionSupport = async () => {
+      try {
+        setRegionCheckLoading(true)
+        const result = await checkNovaSonicRegionSupport()
+        setRegionCheck(result)
+
+        // If region is supported, show warning banner only briefly if there was an error
+        if (result.isSupported && !result.error) {
+          setShowRegionWarning(false)
+        }
+      } catch (error) {
+        console.error('Failed to check region support:', error)
+        setRegionCheck({
+          isSupported: false,
+          currentRegion: 'unknown',
+          supportedRegions: ['us-east-1', 'us-west-2'],
+          error: 'Failed to check region support'
+        })
+      } finally {
+        setRegionCheckLoading(false)
+      }
+    }
+
+    checkRegionSupport()
+  }, [])
+
+  // Auto-connect when component mounts (only if region is supported)
+  useEffect(() => {
+    // Only proceed with connection if region check is complete and region is supported
+    if (regionCheckLoading || !regionCheck) {
+      return
+    }
+
+    if (!regionCheck.isSupported) {
+      console.log('SpeakPage: Skipping connection - Nova Sonic not supported in current region')
+      return
+    }
+
     // Only connect on initial mount and if not already connected
     const timer = setTimeout(() => {
       if (!isConnected && status === 'disconnected') {
@@ -469,7 +564,7 @@ export const SpeakPage: React.FC = () => {
       clearTimeout(timer)
       console.log('SpeakPage: Component unmounting')
     }
-  }, []) // Empty dependency array to run only once on mount
+  }, [regionCheck, regionCheckLoading, isConnected, status, connect])
 
   const {
     show: showSystemPromptModal,
@@ -524,8 +619,20 @@ export const SpeakPage: React.FC = () => {
     }, 100)
   }
 
+  const handleOpenSettings = () => {
+    // Navigate to settings page using React Router
+    navigate('/setting')
+  }
+
+  const handleDismissRegionWarning = () => {
+    setShowRegionWarning(false)
+  }
+
   const canStartRecording =
-    isConnected && (status === 'ready' || status === 'connected') && !isRecording
+    isConnected &&
+    (status === 'ready' || status === 'connected') &&
+    !isRecording &&
+    regionCheck?.isSupported === true
   const canStopRecording = isRecording
 
   const commonProps = {
@@ -550,6 +657,16 @@ export const SpeakPage: React.FC = () => {
           onOpenVoiceSelector={handleOpenVoiceSelector}
           onOpenPermissionHelp={openPermissionHelpModal}
         />
+
+        {/* Region Warning Banner */}
+        {!regionCheckLoading && regionCheck && !regionCheck.isSupported && showRegionWarning && (
+          <RegionWarningBanner
+            currentRegion={regionCheck.currentRegion}
+            supportedRegions={regionCheck.supportedRegions}
+            onDismiss={handleDismissRegionWarning}
+            onOpenSettings={handleOpenSettings}
+          />
+        )}
 
         {/* Main Content */}
         {showChat ? (
@@ -594,6 +711,7 @@ export const SpeakPage: React.FC = () => {
           onToggleChat={setShowChat}
           status={status}
           errorState={errorState}
+          onOpenSettings={handleOpenSettings}
         />
       </div>
     </div>
