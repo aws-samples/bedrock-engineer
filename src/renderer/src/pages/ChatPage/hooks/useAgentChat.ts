@@ -104,7 +104,8 @@ export const useAgentChat = (
     guardrailSettings,
     getAgentTools,
     agents,
-    enablePromptCache
+    enablePromptCache,
+    inferenceParams
   } = useSettings()
 
   // エージェントIDからツール設定を取得
@@ -406,11 +407,18 @@ export const useAgentChat = (
           toolUse = json.contentBlockStart.start?.toolUse
         } else if (json.contentBlockStop) {
           if (toolUse) {
-            let parseInput: string
+            let parseInput: any
             try {
               parseInput = JSON.parse(input)
             } catch (e) {
-              parseInput = input
+              parseInput = {
+                __jsonParseError: true,
+                originalInput: input,
+                maxTokens: inferenceParams.maxTokens,
+                error:
+                  (e instanceof Error ? e.message : 'JSON parse failed') +
+                  '\n JSON parsing failed. This error might have occurred because the token limit (character count) was exceeded while the AI was trying to create the input JSON for tool use. \nThe output needs to fit within the maxTokens limit.'
+              }
             }
 
             content.push({
@@ -690,6 +698,22 @@ export const useAgentChat = (
     }
   }
 
+  /**
+   * 直近5回のassistantメッセージが全てJSONパースエラーを含むかチェック
+   */
+  const hasConsecutiveJsonParseErrors = (messages: Message[]): boolean => {
+    const recentAssistantMessages = messages.filter((msg) => msg.role === 'assistant').slice(-3) // 最新の3つを取得
+
+    return (
+      recentAssistantMessages.length === 5 &&
+      recentAssistantMessages.every((msg) =>
+        msg.content?.some(
+          (block) => block.toolUse?.input && (block.toolUse.input as any).__jsonParseError === true
+        )
+      )
+    )
+  }
+
   const recursivelyExecTool = async (contentBlocks: ContentBlock[], currentMessages: Message[]) => {
     const contentBlock = contentBlocks.find((block) => block.toolUse)
     if (!contentBlock) {
@@ -707,6 +731,7 @@ export const useAgentChat = (
               ...(toolUse.input as any)
             }
             setExecutingTool(toolInput.type)
+
             const toolResult = await window.api.bedrock.executeTool(toolInput)
             setExecutingTool(null)
 
@@ -830,9 +855,39 @@ export const useAgentChat = (
       currentMessages
     )
 
-    if (stopReason === 'tool_use') {
+    if (stopReason === 'tool_use' || stopReason === 'max_tokens') {
       const lastMessage = currentMessages[currentMessages.length - 1].content
       if (lastMessage) {
+        // max_tokensで連続JSONパースエラーの場合は処理中断
+        if (stopReason === 'max_tokens' && hasConsecutiveJsonParseErrors(currentMessages)) {
+          toast.error('Max token limit reached repeatedly. Stopping generation.')
+
+          // 最後のtoolUseIdを取得
+          const lastToolUse = lastMessage.find((block) => block.toolUse)?.toolUse
+          const toolUseId = lastToolUse?.toolUseId || 'error-tool-use'
+
+          const toolResultMessage: IdentifiableMessage = {
+            role: 'user',
+            content: [
+              {
+                toolResult: {
+                  toolUseId: toolUseId,
+                  content: [{ text: 'Max token limit reached repeatedly. Stopping generation.' }],
+                  status: 'error'
+                }
+              }
+            ],
+            id: generateMessageId()
+          }
+
+          currentMessages.push(toolResultMessage)
+          setMessages((prev) => [...prev, toolResultMessage])
+          await persistMessage(toolResultMessage)
+
+          setLoading(false)
+          return
+        }
+
         await recursivelyExecTool(lastMessage, currentMessages)
         return
       }

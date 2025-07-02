@@ -5,7 +5,7 @@
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { ToolInput, ToolResult, isMcpTool, getOriginalMcpToolName } from '../../types/tools'
 import { ITool, ToolCategory, ToolRegistration, ToolDependencies } from './base/types'
-import { ToolNotFoundError, isToolError } from './base/errors'
+import { ToolNotFoundError, ValidationError, isToolError } from './base/errors'
 import { toolSystemLogger } from './common/Logger'
 import { CreateFolderTool } from './handlers/filesystem/CreateFolderTool'
 import { WriteToFileTool } from './handlers/filesystem/WriteToFileTool'
@@ -160,6 +160,11 @@ export class ToolRegistry {
   async execute(input: ToolInput): Promise<string | ToolResult> {
     const toolName = this.resolveToolName(input.type)
 
+    // JSON Parse Error の事前チェック
+    if (this.hasJsonParseError(input)) {
+      throw new ValidationError(this.createJsonParseErrorMessage(input), toolName, input)
+    }
+
     toolSystemLogger.info(`Executing tool: ${toolName}`, {
       originalType: input.type,
       isMcp: isMcpTool(input.type)
@@ -212,6 +217,24 @@ export class ToolRegistry {
       // Throw unknown errors as strings
       throw String(error)
     }
+  }
+
+  /**
+   * JSON Parse エラーがあるかチェック
+   */
+  private hasJsonParseError(input: any): boolean {
+    return typeof input === 'object' && input !== null && input.__jsonParseError === true
+  }
+
+  /**
+   * JSON Parse エラー用のエラーメッセージを作成
+   */
+  private createJsonParseErrorMessage(input: any): string {
+    const maxTokens = input.maxTokens || 'unknown'
+    const originalInput = input.originalInput || 'unknown'
+    const errorDetails = input.error || 'JSON parsing failed'
+
+    return `Tool input JSON parsing failed. This error occurred because the token limit (${maxTokens}) was exceeded while generating the input JSON for tool use.\n\nOriginal input: ${originalInput}\n\nError details: ${errorDetails}`
   }
 
   /**

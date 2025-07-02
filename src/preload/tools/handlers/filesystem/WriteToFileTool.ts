@@ -24,7 +24,7 @@ interface WriteToFileInput {
 export class WriteToFileTool extends BaseTool<WriteToFileInput, string> {
   static readonly toolName = 'writeToFile'
   static readonly toolDescription =
-    'Write content to an existing file at the specified path. Use this when you need to add or update content in an existing file.'
+    'Write content to an existing file at the specified path. Use this when you need to add or update content in an existing file. \n !IMPORTANT: Be careful not to exceed the output_tokens limit.'
 
   readonly name = WriteToFileTool.toolName
   readonly description = WriteToFileTool.toolDescription
