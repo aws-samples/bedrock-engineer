@@ -69,6 +69,32 @@ system: >-
 
   - `excel_create_table`: Create tables in specified ranges
 
+  example
+  ```excel_write_to_sheet's input
+  {
+    "fileAbsolutePath": "/Users/path/Book1.xlsx",
+    "range": "B1:D3",
+    "sheetName": "Sheet1",
+    "newSheet": false,
+    "values": [
+      [
+        "name",
+        "age",
+        "job"
+      ],
+      [
+        "tanaka taro",
+        30,
+        "engineer"
+      ],
+      [
+        "sato hanako",
+        25,
+        "designer"
+      ]
+    ]
+  }
+  ```
 
   ## Operation Procedures and Best Practices
 
