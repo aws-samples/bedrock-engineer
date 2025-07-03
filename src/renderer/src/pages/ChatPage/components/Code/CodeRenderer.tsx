@@ -5,8 +5,10 @@ import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
 import { HtmlBlock } from './HtmlBlock'
 import { MermaidBlock } from './MermaidBlock'
+import { DrawIOBlock } from './DrawIOBlock'
 import LocalImage from '@renderer/components/LocalImage'
 import style from '@renderer/components/Markdown/styles.module.css'
+import { extractDrawioXml, isDrawioXml } from '@renderer/lib/drawio/xmlParser'
 import 'katex/dist/katex.min.css'
 
 // Types
@@ -70,6 +72,22 @@ export const CodeRenderer: React.FC<CodeRendererProps> = ({ text = '', className
           // Special handling for Mermaid blocks
           if (language === 'mermaid') {
             return <MermaidBlock code={codeContent} />
+          }
+
+          // Special handling for DrawIO XML blocks
+          if (language === 'xml' || language === 'drawio') {
+            const drawioXml = extractDrawioXml(codeContent)
+            if (drawioXml) {
+              return <DrawIOBlock xml={drawioXml} />
+            }
+          }
+
+          // Auto-detect DrawIO XML even without explicit language tag
+          if (!language && isDrawioXml(codeContent)) {
+            const drawioXml = extractDrawioXml(codeContent)
+            if (drawioXml) {
+              return <DrawIOBlock xml={drawioXml} />
+            }
           }
         }
 

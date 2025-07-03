@@ -26,7 +26,7 @@ export const ResizableContainer: React.FC<ResizableContainerProps> = ({
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Content area with dynamic height */}
-      <div style={{ height: `${height}px` }} className="overflow-hidden">
+      <div style={{ height: `${height}px` }} className="overflow-hidden h-full">
         {children}
       </div>
 

@@ -17,12 +17,12 @@ export const useAgentFilter = (agents: CustomAgent[]) => {
     () =>
       [...agents]
         .filter((agent) => {
-          // 別ページで使用している特殊エージェントは表示しない
+          // Don't display special agents used on other pages
           const excludedAgentIds = [
             'reactGeneratorAgent',
             'vueGeneratorAgent',
             'svelteGeneratorAgent',
-            'diagramGeneratorAgent',
+            // 'diagramGeneratorAgent',
             'softwareArchitectureAgent',
             'businessProcessAgent'
           ]

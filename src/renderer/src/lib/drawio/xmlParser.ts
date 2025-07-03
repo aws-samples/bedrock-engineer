@@ -45,6 +45,7 @@ export const extractDrawioXml = (content: string): string => {
 
   return ''
 }
+
 /**
  * AIの出力からDrawIO XMLと説明テキストを抽出する関数
  * XMLと説明文を分離して返す
@@ -93,10 +94,6 @@ export const filterXmlFromStreamingContent = (content: string): string => {
 
   let filteredContent = content
 
-  // ``` のバッククォートを削除
-  filteredContent = filteredContent.replace(/```[\w]*\s*/g, '') // Remove opening code block markers
-  filteredContent = filteredContent.replace(/^\s*```\s*$/gm, '') // Remove standalone closing markers
-
   // XMLコードブロックを除去
   filteredContent = filteredContent.replace(/```(?:xml)?[\s\S]*?```/gi, '')
 
@@ -139,4 +136,19 @@ export const isXmlComplete = (content: string): boolean => {
 
   // </mxfile>タグで終了している、またはコードブロックが閉じている
   return content.includes('</mxfile>') || /```[\s\S]*?```/.test(content)
+}
+
+/**
+ * DrawIO XMLかどうかを判定する関数
+ *
+ * @param content 検査するテキスト
+ * @returns DrawIO XMLの場合true
+ */
+export const isDrawioXml = (content: string): boolean => {
+  if (!content) return false
+
+  // DrawIO固有のタグをチェック
+  const drawioPatterns = [/<mxfile/i, /<mxGraphModel/i, /<mxCell/i, /<diagram/i]
+
+  return drawioPatterns.some((pattern) => pattern.test(content))
 }

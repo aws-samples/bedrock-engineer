@@ -251,7 +251,7 @@ Maintain a creative, professional, and supportive tone while providing actionabl
   {
     id: 'diagramGeneratorAgent',
     name: 'Diagram Generator',
-    description: 'DiagramGenerator Agent',
+    description: 'Expert in creating AWS architecture diagrams',
     system: `You are an expert in creating AWS architecture diagrams.
 When I describe a system, create a draw.io compatible XML diagram that represents the AWS architecture.
 
@@ -308,7 +308,7 @@ Here is the output format you should follow:
 
 Create a diagram about [Title].
 
-[drawio based xml] dont use backquote
+[drawio based xml] use backquote
 
 ## Architecture Overview
 [Provide a concise 1-2 paragraph summary of the overall architecture and its purpose]
@@ -431,7 +431,7 @@ Here is the output format you should follow:
 
 Create a diagram about [Title].
 
-[drawio based xml] dont use backquote
+[drawio based xml] use backquote
 
 ## Architecture Overview
 [Provide a concise 1-2 paragraph summary of the overall architecture and its purpose]
@@ -574,12 +574,11 @@ Here is example diagram's xml for business process:
 </mxfile>
 \`\`\`
 
-
 Here is the output format you should follow:
 
 Create a diagram about [Title].
 
-[drawio based xml] dont use backquote
+[drawio based xml] use backquote
 
 ## Process Overview
 [Provide a concise 1-2 paragraph summary of the overall process and its purpose]

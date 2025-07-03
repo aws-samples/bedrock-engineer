@@ -33,6 +33,7 @@ const VISUAL_EXPRESSION_RULES = `
 If you are acting as a voice chat, please ignore this illustration rule.
 
 - Create Mermaid.js diagrams for visual explanations (maximum 2 per response unless specified)
+- If a complex diagram is required  please express it in draw.io xml format.
 - Ask user permission before generating images with Stable Diffusion
 - Display images using Markdown syntax: \`![image-name](url)\`
   - (example) \`![img]({{projectPath}}/generated_image.png)\`
