@@ -251,24 +251,33 @@ export class CommandService {
         return
       }
 
-      // プラットフォーム別のシェル引数を設定
+      // プラットフォーム別の設定
       const isWindows = process.platform === 'win32'
-      const shellArgs = isWindows
-        ? ['/c', input.command]  // Windows: cmd /c "command" 
-        : ['-ic', input.command]  // Unix: bash -ic "command"
-
+      
       // Electron特有の環境変数問題を解決
       const spawnEnv = this.getEnhancedEnvironment(isWindows)
 
-      // 設定されたシェルを使用
-      const childProcess = spawn(this.config.shell, shellArgs, {
-        cwd: input.cwd,
-        detached: !isWindows,  // Windowsではdetachedを無効化
-        stdio: ['pipe', 'pipe', 'pipe'],
-        shell: isWindows,  // Windowsではshellオプションをtrueにする
-        env: spawnEnv,  // 強化された環境変数を使用
-        windowsHide: isWindows  // Windowsでコンソールウィンドウを隠す
-      })
+      let childProcess
+
+      if (isWindows) {
+        // Windows: shell=trueを使用してコマンドを直接実行
+        // Node.js公式推奨方法: spawn(command, {shell: true})
+        childProcess = spawn(input.command, {
+          cwd: input.cwd,
+          stdio: ['pipe', 'pipe', 'pipe'],
+          shell: true,  // Windowsでは必須
+          env: spawnEnv,
+          windowsHide: true  // コンソールウィンドウを隠す
+        })
+      } else {
+        // Unix系: 従来通りシェルに引数を渡す
+        childProcess = spawn(this.config.shell, ['-ic', input.command], {
+          cwd: input.cwd,
+          detached: true,
+          stdio: ['pipe', 'pipe', 'pipe'],
+          env: spawnEnv
+        })
+      }
 
       if (typeof childProcess.pid === 'undefined') {
         const errorMessage = `Failed to start process: PID is undefined
