@@ -1,5 +1,5 @@
 /* eslint-disable react/no-unescaped-entities */
-import { memo, useState } from 'react'
+import { memo, useState, useMemo } from 'react'
 import { CommandConfig, AVAILABLE_SHELLS } from '.'
 import { EditIcon, RemoveIcon } from '@renderer/components/icons/ToolIcons'
 import { useTranslation } from 'react-i18next'
@@ -22,6 +22,11 @@ export const CommandForm = memo(
     const [newDescription, setNewDescription] = useState('')
     const [editMode, setEditMode] = useState<string | null>(null)
     const [editData, setEditData] = useState<CommandConfig>({ pattern: '', description: '' })
+
+    // Windows環境かどうかを判定
+    const isWindows = useMemo(() => {
+      return navigator.platform.toLowerCase().includes('win')
+    }, [])
 
     const handleAddCommand = () => {
       if (newCommand.trim() && newDescription.trim()) {
@@ -113,31 +118,33 @@ export const CommandForm = memo(
             </p>
 
             {/* Windows環境での注意事項 */}
-            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="h-4 w-4 text-green-400 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-2">
-                  <h5 className="text-xs font-medium text-green-800 dark:text-green-300">
-                    {t('Windows Environment Notice')}
-                  </h5>
-                  <p className="text-xs text-green-700 dark:text-green-300 mt-1">
-                    {t('Windows shell execution note')}
-                  </p>
+            {isWindows && (
+              <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-4 w-4 text-green-400 mt-0.5"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-2">
+                    <h5 className="text-xs font-medium text-green-800 dark:text-green-300">
+                      {t('Windows Environment Notice')}
+                    </h5>
+                    <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                      {t('Windows shell execution note')}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
