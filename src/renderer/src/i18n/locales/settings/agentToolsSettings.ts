@@ -45,7 +45,11 @@ export const agentToolsSettings = {
     'Command Settings': 'Command Settings',
     'Command Shell Settings': 'Command Shell Settings',
     'Command Shell': 'Command Shell',
-    'Select which shell to use when executing commands': 'Select which shell to use when executing commands',
+    'Select which shell to use when executing commands':
+      'Select which shell to use when executing commands',
+    'Windows Environment Notice': 'Windows Environment Notice',
+    'Windows shell execution note':
+      'On Windows, commands are executed directly with the system shell regardless of this setting. The shell selection primarily affects Unix-based systems (macOS/Linux).',
     'Bedrock Agent Settings': 'Bedrock Agent Settings',
     'Recognition Model': 'Recognition Model',
     'When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.':
@@ -311,6 +315,9 @@ export const agentToolsSettings = {
     'Command Shell Settings': 'コマンドシェル設定',
     'Command Shell': 'コマンドシェル',
     'Select which shell to use when executing commands': 'コマンド実行時に使用するシェルを選択',
+    'Windows Environment Notice': 'Windows環境での注意事項',
+    'Windows shell execution note':
+      'Windows環境では、この設定に関係なくシステムシェルで直接コマンドが実行されます。シェル選択は主にUnix系システム（macOS/Linux）で有効です。',
     'Bedrock Agent Settings': 'Bedrock Agent設定',
     'Recognition Model': '認識モデル',
     'When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.':
