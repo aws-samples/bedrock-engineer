@@ -73,6 +73,65 @@ export class CommandService {
     this.config = config
   }
 
+  /**
+   * Electron環境で適切な環境変数を取得
+   * Windows特有のPATH問題を解決
+   */
+  private getEnhancedEnvironment(isWindows: boolean): NodeJS.ProcessEnv {
+    const env = { ...process.env }
+
+    if (isWindows) {
+      // Windows固有の環境変数とPATHの強化
+      const systemPaths = [
+        'C:\\Windows\\System32',
+        'C:\\Windows',
+        'C:\\Windows\\System32\\Wbem',
+        'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\',
+        'C:\\Program Files\\Amazon\\AWSCLIV2',  // AWS CLI v2
+        'C:\\Program Files (x86)\\Amazon\\AWSCLIV2',
+        'C:\\Program Files\\Git\\cmd',  // Git
+        'C:\\Program Files\\nodejs',  // Node.js
+        'C:\\Users\\Public\\chocolatey\\bin',  // Chocolatey
+        'C:\\ProgramData\\chocolatey\\bin'
+      ]
+
+      // 既存のPATHに追加
+      const currentPath = env.PATH || env.Path || ''
+      const enhancedPath = [currentPath, ...systemPaths]
+        .filter(Boolean)
+        .join(';')
+
+      env.PATH = enhancedPath
+      env.Path = enhancedPath  // Windowsでは両方設定
+
+      // Windows固有の環境変数
+      env.COMSPEC = env.COMSPEC || 'C:\\Windows\\System32\\cmd.exe'
+      env.PATHEXT = env.PATHEXT || '.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC'
+      env.SYSTEMROOT = env.SYSTEMROOT || 'C:\\Windows'
+      env.WINDIR = env.WINDIR || 'C:\\Windows'
+    } else {
+      // Unix系の場合
+      const systemPaths = [
+        '/usr/local/bin',
+        '/usr/bin',
+        '/bin',
+        '/usr/sbin',
+        '/sbin',
+        '/opt/homebrew/bin',  // macOS Homebrew (Apple Silicon)
+        '/usr/local/aws-cli/v2/current/bin'  // AWS CLI v2
+      ]
+
+      const currentPath = env.PATH || ''
+      const enhancedPath = [currentPath, ...systemPaths]
+        .filter(Boolean)
+        .join(':')
+
+      env.PATH = enhancedPath
+    }
+
+    return env
+  }
+
   private parseCommandPattern(commandStr: string): CommandPattern {
     const parts = commandStr.split(' ')
     const hasWildcard = parts.some((part) => part === '*')
@@ -198,12 +257,17 @@ export class CommandService {
         ? ['/c', input.command]  // Windows: cmd /c "command" 
         : ['-ic', input.command]  // Unix: bash -ic "command"
 
+      // Electron特有の環境変数問題を解決
+      const spawnEnv = this.getEnhancedEnvironment(isWindows)
+
       // 設定されたシェルを使用
       const childProcess = spawn(this.config.shell, shellArgs, {
         cwd: input.cwd,
         detached: !isWindows,  // Windowsではdetachedを無効化
         stdio: ['pipe', 'pipe', 'pipe'],
-        shell: isWindows  // Windowsではshellオプションをtrueにする
+        shell: isWindows,  // Windowsではshellオプションをtrueにする
+        env: spawnEnv,  // 強化された環境変数を使用
+        windowsHide: isWindows  // Windowsでコンソールウィンドウを隠す
       })
 
       if (typeof childProcess.pid === 'undefined') {
