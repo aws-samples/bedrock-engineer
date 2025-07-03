@@ -43,6 +43,9 @@ export const agentToolsSettings = {
       'No tools enabled. Enable tools in the Available Tools tab to configure them.',
     'Knowledge Base Settings': 'Knowledge Base Settings',
     'Command Settings': 'Command Settings',
+    'Command Shell Settings': 'Command Shell Settings',
+    'Command Shell': 'Command Shell',
+    'Select which shell to use when executing commands': 'Select which shell to use when executing commands',
     'Bedrock Agent Settings': 'Bedrock Agent Settings',
     'Recognition Model': 'Recognition Model',
     'When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.':
@@ -305,6 +308,9 @@ export const agentToolsSettings = {
       'ツールが有効化されていません。「利用可能なツール」タブでツールを有効にして設定してください。',
     'Knowledge Base Settings': 'ナレッジベース設定',
     'Command Settings': 'コマンド設定',
+    'Command Shell Settings': 'コマンドシェル設定',
+    'Command Shell': 'コマンドシェル',
+    'Select which shell to use when executing commands': 'コマンド実行時に使用するシェルを選択',
     'Bedrock Agent Settings': 'Bedrock Agent設定',
     'Recognition Model': '認識モデル',
     'When an image is processed, the AI will identify objects, text, scenes, and other visual elements, providing a detailed description based on the content.':
