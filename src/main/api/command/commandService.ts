@@ -58,7 +58,15 @@ export class CommandService {
     'command not found',
     'Failed to compile',
     'Syntax error:',
-    'TypeError:'
+    'TypeError:',
+    // Windows固有のエラーパターン
+    'The system cannot find the file specified',
+    'Access is denied',
+    'The filename, directory name, or volume label syntax is incorrect',
+    'is not recognized as an internal or external command',
+    'The process cannot access the file because it is being used by another process',
+    'ENOENT',
+    'EACCES'
   ]
 
   constructor(config: CommandConfig) {
@@ -162,21 +170,59 @@ export class CommandService {
 
   async executeCommand(input: CommandInput): Promise<CommandExecutionResult> {
     return new Promise((resolve, reject) => {
+      // 入力値の事前検証
+      if (!input.command || typeof input.command !== 'string' || input.command.trim() === '') {
+        reject(new Error('Invalid command: Command cannot be empty'))
+        return
+      }
+
+      if (!input.cwd || typeof input.cwd !== 'string') {
+        reject(new Error('Invalid working directory: cwd must be a valid string'))
+        return
+      }
+
+      // シェルの存在確認（Windows環境での追加チェック）
+      if (!this.config.shell) {
+        reject(new Error('Shell configuration is missing'))
+        return
+      }
+
       if (!this.isCommandAllowed(input.command)) {
         reject(new Error(`Command not allowed: ${input.command}`))
         return
       }
 
+      // プラットフォーム別のシェル引数を設定
+      const isWindows = process.platform === 'win32'
+      const shellArgs = isWindows
+        ? ['/c', input.command]  // Windows: cmd /c "command" 
+        : ['-ic', input.command]  // Unix: bash -ic "command"
+
       // 設定されたシェルを使用
-      const process = spawn(this.config.shell, ['-ic', input.command], {
+      const process = spawn(this.config.shell, shellArgs, {
         cwd: input.cwd,
-        detached: true,
-        stdio: ['pipe', 'pipe', 'pipe']
+        detached: !isWindows,  // Windowsではdetachedを無効化
+        stdio: ['pipe', 'pipe', 'pipe'],
+        shell: isWindows  // Windowsではshellオプションをtrueにする
       })
 
       if (typeof process.pid === 'undefined') {
-        console.log(process)
-        reject(new Error('Failed to start process: PID is undefined'))
+        const errorMessage = `Failed to start process: PID is undefined
+Platform: ${process.platform}
+Shell: ${this.config.shell}
+Command: ${input.command}
+Working Directory: ${input.cwd}
+Shell Args: ${JSON.stringify(shellArgs)}`
+        console.error('Process spawn failed:', {
+          platform: process.platform,
+          shell: this.config.shell,
+          command: input.command,
+          cwd: input.cwd,
+          shellArgs,
+          spawnfile: process.spawnfile,
+          spawnargs: process.spawnargs
+        })
+        reject(new Error(errorMessage))
         return
       }
 
@@ -311,9 +357,18 @@ export class CommandService {
       })
 
       process.on('error', (error) => {
-        completeWithError(
-          `Command execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-        )
+        let errorMessage = `Command execution failed: ${error instanceof Error ? error.message : "Unknown error"}`
+        
+        // Windows固有のエラーの詳細情報を追加
+        if (process.platform === "win32" && error instanceof Error) {
+          if (error.message.includes("ENOENT")) {
+            errorMessage += "\nHint: The command or shell may not be found. Please check if the command exists and the shell path is correct."
+          } else if (error.message.includes("EACCES")) {
+            errorMessage += "\nHint: Permission denied. Please check if you have the necessary permissions to execute this command."
+          }
+        }
+        
+        completeWithError(errorMessage)
       })
 
       process.on('exit', (code) => {
