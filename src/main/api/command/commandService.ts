@@ -199,14 +199,14 @@ export class CommandService {
         : ['-ic', input.command]  // Unix: bash -ic "command"
 
       // 設定されたシェルを使用
-      const process = spawn(this.config.shell, shellArgs, {
+      const childProcess = spawn(this.config.shell, shellArgs, {
         cwd: input.cwd,
         detached: !isWindows,  // Windowsではdetachedを無効化
         stdio: ['pipe', 'pipe', 'pipe'],
         shell: isWindows  // Windowsではshellオプションをtrueにする
       })
 
-      if (typeof process.pid === 'undefined') {
+      if (typeof childProcess.pid === 'undefined') {
         const errorMessage = `Failed to start process: PID is undefined
 Platform: ${process.platform}
 Shell: ${this.config.shell}
@@ -219,14 +219,14 @@ Shell Args: ${JSON.stringify(shellArgs)}`
           command: input.command,
           cwd: input.cwd,
           shellArgs,
-          spawnfile: process.spawnfile,
-          spawnargs: process.spawnargs
+          spawnfile: childProcess.spawnfile,
+          spawnargs: childProcess.spawnargs
         })
         reject(new Error(errorMessage))
         return
       }
 
-      const pid = process.pid
+      const pid = childProcess.pid
 
       // プロセス情報を初期化
       this.initializeProcessState(pid)
@@ -237,7 +237,7 @@ Shell Args: ${JSON.stringify(shellArgs)}`
       })
 
       // プロセスの状態を保存
-      this.updateProcessState(pid, { process })
+      this.updateProcessState(pid, { process: childProcess })
 
       let currentOutput = ''
       let currentError = ''
@@ -313,7 +313,7 @@ Shell Args: ${JSON.stringify(shellArgs)}`
         }
       }
 
-      process.stdout.on('data', (data) => {
+      childProcess.stdout.on('data', (data) => {
         const chunk = data.toString()
         currentOutput += chunk
 
@@ -338,7 +338,7 @@ Shell Args: ${JSON.stringify(shellArgs)}`
         }
       })
 
-      process.stderr.on('data', (data) => {
+      childProcess.stderr.on('data', (data) => {
         const chunk = data.toString()
         currentError += chunk
 
@@ -356,7 +356,7 @@ Shell Args: ${JSON.stringify(shellArgs)}`
         }
       })
 
-      process.on('error', (error) => {
+      childProcess.on('error', (error) => {
         let errorMessage = `Command execution failed: ${error instanceof Error ? error.message : "Unknown error"}`
         
         // Windows固有のエラーの詳細情報を追加
@@ -371,7 +371,7 @@ Shell Args: ${JSON.stringify(shellArgs)}`
         completeWithError(errorMessage)
       })
 
-      process.on('exit', (code) => {
+      childProcess.on('exit', (code) => {
         const state = this.processStates.get(pid)
         if (state) {
           this.updateProcessState(pid, {
@@ -419,16 +419,16 @@ Shell Args: ${JSON.stringify(shellArgs)}`
     }
 
     return new Promise((resolve, reject) => {
-      const { process } = state
+      const { process: childProcess } = state
       let currentOutput = state.output.stdout
       let currentError = state.output.stderr
       let isCompleted = false
 
       // 既存のリスナーを削除
-      process.stdout.removeAllListeners('data')
-      process.stderr.removeAllListeners('data')
-      process.removeAllListeners('error')
-      process.removeAllListeners('exit')
+      childProcess.stdout.removeAllListeners('data')
+      childProcess.stderr.removeAllListeners('data')
+      childProcess.removeAllListeners('error')
+      childProcess.removeAllListeners('exit')
 
       const completeWithError = (error: string) => {
         if (!isCompleted) {
@@ -450,7 +450,7 @@ Shell Args: ${JSON.stringify(shellArgs)}`
             exitCode: 0,
             processInfo: {
               pid: input.pid,
-              command: state.process.spawnargs.join(' '),
+              command: childProcess.spawnargs.join(' '),
               detached: true
             },
             requiresInput: isWaiting,
@@ -459,7 +459,7 @@ Shell Args: ${JSON.stringify(shellArgs)}`
         }
       }
 
-      process.stdout.on('data', (data) => {
+      childProcess.stdout.on('data', (data) => {
         const chunk = data.toString()
         currentOutput += chunk
 
@@ -481,7 +481,7 @@ Shell Args: ${JSON.stringify(shellArgs)}`
         }
       })
 
-      process.stderr.on('data', (data) => {
+      childProcess.stderr.on('data', (data) => {
         const chunk = data.toString()
         currentError += chunk
 
@@ -495,13 +495,13 @@ Shell Args: ${JSON.stringify(shellArgs)}`
         }
       })
 
-      process.on('error', (error) => {
+      childProcess.on('error', (error) => {
         completeWithError(
           `Command execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
       })
 
-      process.on('exit', (code) => {
+      childProcess.on('exit', (code) => {
         this.updateProcessState(input.pid, {
           isRunning: false,
           output: { ...state.output, code: code || 0 }
@@ -519,7 +519,7 @@ Shell Args: ${JSON.stringify(shellArgs)}`
       })
 
       // 標準入力を送信
-      process.stdin.write(input.stdin + '\n')
+      childProcess.stdin.write(input.stdin + '\n')
 
       // タイムアウト処理
       setTimeout(() => {
