@@ -87,22 +87,20 @@ export class CommandService {
         'C:\\Windows',
         'C:\\Windows\\System32\\Wbem',
         'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\',
-        'C:\\Program Files\\Amazon\\AWSCLIV2',  // AWS CLI v2
+        'C:\\Program Files\\Amazon\\AWSCLIV2', // AWS CLI v2
         'C:\\Program Files (x86)\\Amazon\\AWSCLIV2',
-        'C:\\Program Files\\Git\\cmd',  // Git
-        'C:\\Program Files\\nodejs',  // Node.js
-        'C:\\Users\\Public\\chocolatey\\bin',  // Chocolatey
+        'C:\\Program Files\\Git\\cmd', // Git
+        'C:\\Program Files\\nodejs', // Node.js
+        'C:\\Users\\Public\\chocolatey\\bin', // Chocolatey
         'C:\\ProgramData\\chocolatey\\bin'
       ]
 
       // 既存のPATHに追加
       const currentPath = env.PATH || env.Path || ''
-      const enhancedPath = [currentPath, ...systemPaths]
-        .filter(Boolean)
-        .join(';')
+      const enhancedPath = [currentPath, ...systemPaths].filter(Boolean).join(';')
 
       env.PATH = enhancedPath
-      env.Path = enhancedPath  // Windowsでは両方設定
+      env.Path = enhancedPath // Windowsでは両方設定
 
       // Windows固有の環境変数
       env.COMSPEC = env.COMSPEC || 'C:\\Windows\\System32\\cmd.exe'
@@ -117,14 +115,12 @@ export class CommandService {
         '/bin',
         '/usr/sbin',
         '/sbin',
-        '/opt/homebrew/bin',  // macOS Homebrew (Apple Silicon)
-        '/usr/local/aws-cli/v2/current/bin'  // AWS CLI v2
+        '/opt/homebrew/bin', // macOS Homebrew (Apple Silicon)
+        '/usr/local/aws-cli/v2/current/bin' // AWS CLI v2
       ]
 
       const currentPath = env.PATH || ''
-      const enhancedPath = [currentPath, ...systemPaths]
-        .filter(Boolean)
-        .join(':')
+      const enhancedPath = [currentPath, ...systemPaths].filter(Boolean).join(':')
 
       env.PATH = enhancedPath
     }
@@ -253,7 +249,7 @@ export class CommandService {
 
       // プラットフォーム別の設定
       const isWindows = process.platform === 'win32'
-      
+
       // Electron特有の環境変数問題を解決
       const spawnEnv = this.getEnhancedEnvironment(isWindows)
 
@@ -265,9 +261,9 @@ export class CommandService {
         childProcess = spawn(input.command, {
           cwd: input.cwd,
           stdio: ['pipe', 'pipe', 'pipe'],
-          shell: true,  // Windowsでは必須
+          shell: true, // Windowsでは必須
           env: spawnEnv,
-          windowsHide: true  // コンソールウィンドウを隠す
+          windowsHide: true // コンソールウィンドウを隠す
         })
       } else {
         // Unix系: 従来通りシェルに引数を渡す
@@ -285,13 +281,13 @@ Platform: ${process.platform}
 Shell: ${this.config.shell}
 Command: ${input.command}
 Working Directory: ${input.cwd}
-Shell Args: ${JSON.stringify(shellArgs)}`
+Spawn Method: ${isWindows ? 'shell=true' : 'shell+args'}`
         console.error('Process spawn failed:', {
           platform: process.platform,
           shell: this.config.shell,
           command: input.command,
           cwd: input.cwd,
-          shellArgs,
+          spawnMethod: isWindows ? 'shell=true' : 'shell+args',
           spawnfile: childProcess.spawnfile,
           spawnargs: childProcess.spawnargs
         })
@@ -430,17 +426,19 @@ Shell Args: ${JSON.stringify(shellArgs)}`
       })
 
       childProcess.on('error', (error) => {
-        let errorMessage = `Command execution failed: ${error instanceof Error ? error.message : "Unknown error"}`
-        
+        let errorMessage = `Command execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+
         // Windows固有のエラーの詳細情報を追加
-        if (process.platform === "win32" && error instanceof Error) {
-          if (error.message.includes("ENOENT")) {
-            errorMessage += "\nHint: The command or shell may not be found. Please check if the command exists and the shell path is correct."
-          } else if (error.message.includes("EACCES")) {
-            errorMessage += "\nHint: Permission denied. Please check if you have the necessary permissions to execute this command."
+        if (process.platform === 'win32' && error instanceof Error) {
+          if (error.message.includes('ENOENT')) {
+            errorMessage +=
+              '\nHint: The command or shell may not be found. Please check if the command exists and the shell path is correct.'
+          } else if (error.message.includes('EACCES')) {
+            errorMessage +=
+              '\nHint: Permission denied. Please check if you have the necessary permissions to execute this command.'
           }
         }
-        
+
         completeWithError(errorMessage)
       })
 

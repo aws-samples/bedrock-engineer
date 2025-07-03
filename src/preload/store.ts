@@ -6,9 +6,10 @@ import { BedrockAgent } from '../types/agent'
 import { AWSCredentials } from '../main/api/bedrock/types'
 import { CodeInterpreterContainerConfig } from './tools/handlers/interpreter/types'
 
-const DEFAULT_SHELL = process.platform === 'win32' 
-  ? process.env.ComSpec || 'cmd.exe'  // Windows環境ではcmd.exe
-  : '/bin/bash'  // Unix系環境では/bin/bash
+const DEFAULT_SHELL =
+  process.platform === 'win32'
+    ? process.env.ComSpec || 'cmd.exe' // Windows環境ではcmd.exe
+    : '/bin/bash' // Unix系環境では/bin/bash
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
   temperature: 0.5,
