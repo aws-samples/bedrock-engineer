@@ -12,6 +12,7 @@ import { ChatHistoryProvider } from './contexts/ChatHistoryContext'
 import { AgentDirectoryProvider } from './contexts/AgentDirectoryContext'
 import { StepType, TourProvider } from '@reactour/tour'
 import { useTranslation } from 'react-i18next'
+import { BackgroundAgentNotificationHandler } from './components/BackgroundAgentNotificationHandler'
 
 const ListItem: React.FC<{
   children: any
@@ -135,6 +136,7 @@ function App(): JSX.Element {
           <AgentDirectoryProvider>
             <div>
               <Toaster position="top-right" />
+              <BackgroundAgentNotificationHandler />
               <RouterProvider router={router} />
             </div>
           </AgentDirectoryProvider>

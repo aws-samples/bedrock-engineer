@@ -8,6 +8,14 @@ export const notificationSettings = {
         chatComplete: {
           title: 'Task Complete 🎉',
           body: 'AI response has arrived'
+        },
+        backgroundAgentSuccess: {
+          title: 'Background Task Complete ✅',
+          body: 'Background agent task completed successfully'
+        },
+        backgroundAgentError: {
+          title: 'Background Task Failed ❌',
+          body: 'Background agent task failed to execute'
         }
       }
     }
@@ -21,6 +29,14 @@ export const notificationSettings = {
         chatComplete: {
           title: 'タスクが完了しました 🎉',
           body: 'AIからの返信が届きました'
+        },
+        backgroundAgentSuccess: {
+          title: 'バックグラウンドタスク完了 ✅',
+          body: 'バックグラウンドエージェントタスクが正常に完了しました'
+        },
+        backgroundAgentError: {
+          title: 'バックグラウンドタスクエラー ❌',
+          body: 'バックグラウンドエージェントタスクの実行に失敗しました'
         }
       }
     }

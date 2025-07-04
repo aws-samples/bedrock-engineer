@@ -8,26 +8,36 @@ import {
   BackgroundChatResult,
   BackgroundAgentOptions
 } from './types'
-import { BackgroundAgentSessionManager } from './BackgroundAgentSessionManager'
+import { BackgroundChatSessionManager } from './BackgroundChatSessionManager'
 import { v4 as uuidv4 } from 'uuid'
 import { ToolInput, ToolName, ToolResult } from '../../../../../types/tools'
 import { agentHandlers } from '../../../../handlers/agent-handlers'
-import { CustomAgent, ToolState } from '../../../../../types/agent-chat'
+import {
+  CustomAgent,
+  ToolState,
+  EnvironmentContextSettings,
+  CommandConfig,
+  WindowConfig,
+  CameraConfig,
+  KnowledgeBase,
+  FlowConfig
+} from '../../../../../types/agent-chat'
+import { BedrockAgent } from '../../../../../types/agent'
 import { BrowserWindow, ipcMain } from 'electron'
 
 const backgroundAgentLogger = createCategoryLogger('background-agent')
 
 export class BackgroundAgentService {
   private bedrockService: BedrockService
-  private sessionManager: BackgroundAgentSessionManager
+  private sessionManager: BackgroundChatSessionManager
   private context: ServiceContext
 
   constructor(context: ServiceContext) {
     this.context = context
     this.bedrockService = new BedrockService(context)
-    this.sessionManager = new BackgroundAgentSessionManager()
+    this.sessionManager = new BackgroundChatSessionManager()
 
-    backgroundAgentLogger.info('BackgroundAgentService initialized (using preload tools only)')
+    backgroundAgentLogger.info('BackgroundAgentService initialized (using persistent sessions)')
   }
 
   /**
@@ -172,6 +182,192 @@ export class BackgroundAgentService {
   }
 
   /**
+   * プレースホルダーを置換する
+   */
+  private replacePlaceholders(
+    text: string,
+    placeholders: {
+      projectPath: string
+      allowedCommands?: CommandConfig[]
+      allowedWindows?: WindowConfig[]
+      allowedCameras?: CameraConfig[]
+      knowledgeBases?: KnowledgeBase[]
+      bedrockAgents?: BedrockAgent[]
+      flows?: FlowConfig[]
+    }
+  ): string {
+    const {
+      projectPath,
+      allowedCommands = [],
+      allowedWindows = [],
+      allowedCameras = [],
+      knowledgeBases = [],
+      bedrockAgents = [],
+      flows = []
+    } = placeholders
+
+    const yyyyMMdd = new Date().toISOString().slice(0, 10)
+
+    return text
+      .replace(/{{projectPath}}/g, projectPath)
+      .replace(/{{date}}/g, yyyyMMdd)
+      .replace(/{{allowedCommands}}/g, JSON.stringify(allowedCommands))
+      .replace(/{{allowedWindows}}/g, JSON.stringify(allowedWindows))
+      .replace(/{{allowedCameras}}/g, JSON.stringify(allowedCameras))
+      .replace(/{{knowledgeBases}}/g, JSON.stringify(knowledgeBases))
+      .replace(/{{bedrockAgents}}/g, JSON.stringify(bedrockAgents))
+      .replace(/{{flows}}/g, JSON.stringify(flows))
+  }
+
+  /**
+   * 環境コンテキストを生成する
+   */
+  private getEnvironmentContext(
+    enabledTools: ToolState[],
+    contextSettings?: EnvironmentContextSettings
+  ): string {
+    // デフォルト設定（すべて有効）
+    const defaultSettings: EnvironmentContextSettings = {
+      todoListInstruction: true,
+      projectRule: true,
+      visualExpressionRules: true
+    }
+
+    // 設定が指定されていない場合はデフォルト設定を使用
+    const settings = contextSettings || defaultSettings
+
+    // 基本環境コンテキスト
+    let context = `**<context>**
+
+- working directory: {{projectPath}}
+- date: {{date}}
+
+**</context>**
+`
+
+    // プロジェクトルール
+    if (settings.projectRule) {
+      context += `
+**<project rule>**
+
+- If there are files under {{projectPath}}/.bedrock-engineer/rules, make sure to load them before working on them.
+  This folder contains project-specific rules.
+
+**</project rule>**
+`
+    }
+
+    // 視覚的表現ルール
+    if (settings.visualExpressionRules) {
+      context += `
+**<visual expression rule>**
+
+If you are acting as a voice chat, please ignore this illustration rule.
+
+- Create Mermaid.js diagrams for visual explanations (maximum 2 per response unless specified)
+- If a complex diagram is required  please express it in draw.io xml format.
+- Ask user permission before generating images with Stable Diffusion
+- Display images using Markdown syntax: \`![image-name](url)\`
+  - (example) \`![img]({{projectPath}}/generated_image.png)\`
+  - (example) \`![img]({{projectPath}}/workspaces/workspace-20250529-session_1748509562336_4xe58p/generated_image.png)\`
+  - Do not start with file://. Start with /.
+- Use KaTeX format for mathematical formulas
+- For web applications, source images from Pexels or user-specified sources
+
+**</visual expression rule>**`
+    }
+
+    // TODOリスト指示
+    if (settings.todoListInstruction) {
+      context += `
+**<todo list handling rule>**
+
+If you expect the work will take a long time, create the following file to create a work plan and TODO list, and refer to and update it as you work. Be sure to write in detail so that you can start the same work again if the AI agent's session is interrupted.
+
+{{projectPath}}/.bedrock-engineer/{{TASK_NAME}}_TODO.md
+
+**</todo list handling rule>**`
+    }
+
+    // ツールルール
+    context += this.generateToolRules(enabledTools)
+
+    return context
+  }
+
+  /**
+   * ツールルールを生成する
+   */
+  private generateToolRules(enabledTools: ToolState[]): string {
+    if (
+      !enabledTools ||
+      enabledTools.length === 0 ||
+      enabledTools.filter((tool) => tool.enabled).length === 0
+    ) {
+      return `
+**<tool usage rules>**
+No tools are currently enabled for this agent.
+**</tool usage rules>**`
+    }
+
+    const activeTools = enabledTools.filter((tool) => tool.enabled)
+
+    let rulesContent = '\n**<tool usage rules>**\n'
+    rulesContent += 'Available tools and their usage:\n\n'
+
+    // 各ツールの説明を追加
+    activeTools.forEach((tool) => {
+      const toolName = tool.toolSpec?.name || 'unknown'
+      const description = tool.toolSpec?.description || 'Tool with specific functionality.'
+      rulesContent += `**${toolName}**\n${description}\n\n`
+    })
+
+    rulesContent += 'General guidelines:\n'
+    rulesContent += '- Use tools one at a time and wait for results\n'
+    rulesContent += '- Always use absolute paths starting from {{projectPath}}\n'
+    rulesContent += '- Request permission for destructive operations\n'
+    rulesContent += '- Handle errors gracefully with clear explanations\n\n'
+
+    rulesContent += '**</tool usage rules>**'
+
+    return rulesContent
+  }
+
+  /**
+   * エージェントのシステムプロンプトを構築する
+   */
+  private buildSystemPrompt(
+    agent: CustomAgent,
+    toolStates: ToolState[],
+    projectDirectory?: string
+  ): string {
+    if (!agent.system) return ''
+
+    // 環境コンテキストを生成
+    const environmentContext = this.getEnvironmentContext(
+      toolStates,
+      agent.environmentContextSettings
+    )
+
+    // システムプロンプトと環境コンテキストを結合
+    const fullPrompt = agent.system + '\n\n' + environmentContext
+
+    // プロジェクトディレクトリが指定されている場合はそれを使用、なければstoreから取得
+    const workingDirectory = projectDirectory || this.context.store.get('projectPath') || ''
+
+    // プレースホルダーを置換
+    return this.replacePlaceholders(fullPrompt, {
+      projectPath: workingDirectory,
+      allowedCommands: agent.allowedCommands || [],
+      allowedWindows: agent.allowedWindows || [],
+      allowedCameras: agent.allowedCameras || [],
+      knowledgeBases: agent.knowledgeBases || [],
+      bedrockAgents: agent.bedrockAgents || [],
+      flows: agent.flows || []
+    })
+  }
+
+  /**
    * セッション付きエージェント会話を実行
    */
   async chat(
@@ -191,6 +387,16 @@ export class BackgroundAgentService {
 
     // セッション履歴を取得
     const conversationHistory = this.sessionManager.getHistory(sessionId)
+
+    // セッションが存在しない場合は作成（プロジェクトディレクトリ情報を含む）
+    if (!this.sessionManager.hasSession(sessionId)) {
+      this.sessionManager.createSession(sessionId, {
+        projectDirectory: config.projectDirectory,
+        agentId: config.agentId,
+        modelId: config.modelId
+      })
+    }
+
     backgroundAgentLogger.info('Starting background agent chat', {
       modelId: config.modelId,
       agentId: config.agentId,
@@ -198,7 +404,8 @@ export class BackgroundAgentService {
       hasSystemPrompt: !!config.systemPrompt,
       agentsSystemPrompt: agent.system,
       toolCount: toolStates.length,
-      historyLength: conversationHistory.length
+      historyLength: conversationHistory.length,
+      projectDirectory: config.projectDirectory
     })
 
     const { enableToolExecution = true, maxToolExecutions = 5, timeoutMs = 3000000 } = options
@@ -209,10 +416,17 @@ export class BackgroundAgentService {
 
       // ユーザーメッセージをセッションに保存
       const userMessageObj = messages[messages.length - 1]
-      this.sessionManager.addMessage(sessionId, userMessageObj)
+      await this.sessionManager.addMessage(sessionId, userMessageObj)
 
-      // システムプロンプトの準備
-      const system = config.systemPrompt ? [{ text: config.systemPrompt }] : []
+      // エージェントのシステムプロンプトを構築（環境コンテキスト＋プレースホルダー置換）
+      const systemPrompt = this.buildSystemPrompt(agent, toolStates, config.projectDirectory)
+      const system = systemPrompt ? [{ text: systemPrompt }] : []
+
+      backgroundAgentLogger.debug('System prompt built', {
+        hasOriginalSystemPrompt: !!agent.system,
+        hasProcessedSystemPrompt: !!systemPrompt,
+        systemPromptLength: systemPrompt.length
+      })
 
       // ツール設定の準備
       const toolConfig =
@@ -261,16 +475,20 @@ export class BackgroundAgentService {
       // ツール使用が必要な場合の処理
       if (response.stopReason === 'tool_use' && enableToolExecution) {
         backgroundAgentLogger.info('Tool execution required, processing tools')
+        // 初回の応答メッセージ（ツール使用を含む）をセッションに保存
+        await this.sessionManager.addMessage(sessionId, responseMessage)
+
         result = await this.executeToolsRecursively(
+          sessionId,
           config,
           [...messages, responseMessage],
           maxToolExecutions,
           toolStates
         )
+      } else {
+        // ツール使用がない場合は通常通り保存
+        await this.sessionManager.addMessage(sessionId, result.response)
       }
-
-      // AIの応答をセッションに保存
-      this.sessionManager.addMessage(sessionId, result.response)
 
       backgroundAgentLogger.info('Background agent chat completed successfully', {
         sessionId,
@@ -293,6 +511,7 @@ export class BackgroundAgentService {
    * ツールを再帰的に実行
    */
   private async executeToolsRecursively(
+    sessionId: string,
     config: BackgroundAgentConfig,
     messages: BackgroundMessage[],
     maxExecutions: number,
@@ -350,7 +569,8 @@ export class BackgroundAgentService {
       }
 
       currentMessages.push(toolResultMessage)
-      // ツール実行中はセッションに保存しない（useAgentChatと同じパターン）
+      // ツール実行結果もセッションに保存する（BackgroundAgentでは履歴が重要）
+      await this.sessionManager.addMessage(sessionId, toolResultMessage)
 
       // 次のAI応答を取得
       const nextResponse = await this.bedrockService.converse({
@@ -369,6 +589,8 @@ export class BackgroundAgentService {
       }
 
       currentMessages.push(nextResponseMessage)
+      // 中間のassistantメッセージもセッションに保存
+      await this.sessionManager.addMessage(sessionId, nextResponseMessage)
       executionCount++
 
       // ツール使用が不要になった場合は終了
@@ -530,8 +752,15 @@ export class BackgroundAgentService {
   /**
    * セッション作成
    */
-  createSession(sessionId: string): void {
-    this.sessionManager.createSession(sessionId)
+  createSession(
+    sessionId: string,
+    options?: {
+      projectDirectory?: string
+      agentId?: string
+      modelId?: string
+    }
+  ): void {
+    this.sessionManager.createSession(sessionId, options)
   }
 
   /**
@@ -567,6 +796,34 @@ export class BackgroundAgentService {
    */
   getSessionHistory(sessionId: string): BackgroundMessage[] {
     return this.sessionManager.getHistory(sessionId)
+  }
+
+  /**
+   * 全セッションメタデータを取得
+   */
+  getAllSessionsMetadata() {
+    return this.sessionManager.getAllSessionsMetadata()
+  }
+
+  /**
+   * プロジェクトディレクトリでセッションをフィルタ
+   */
+  getSessionsByProjectDirectory(projectDirectory: string) {
+    return this.sessionManager.getSessionsByProjectDirectory(projectDirectory)
+  }
+
+  /**
+   * エージェントIDでセッションをフィルタ
+   */
+  getSessionsByAgentId(agentId: string) {
+    return this.sessionManager.getSessionsByAgentId(agentId)
+  }
+
+  /**
+   * セッションメタデータを取得
+   */
+  getSessionMetadata(sessionId: string) {
+    return this.sessionManager.getSessionMetadata(sessionId)
   }
 
   /**

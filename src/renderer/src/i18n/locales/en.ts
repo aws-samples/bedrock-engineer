@@ -394,6 +394,112 @@ const FileChanges = {
   collapse: 'Collapse'
 }
 
+const BackgroundAgent = {
+  title: 'Background Agent Scheduler',
+  description: 'Schedule AI agents to run automatically at specified times',
+  createTask: 'Create Task',
+
+  // Tabs
+  tabs: {
+    tasks: 'Tasks',
+    stats: 'Statistics'
+  },
+
+  // Form
+  form: {
+    title: 'Create Scheduled Task',
+    taskName: 'Task Name',
+    taskNamePlaceholder: 'Enter task name...',
+    schedule: 'Schedule',
+    agent: 'Agent',
+    selectAgent: 'Select an agent',
+    model: 'Model',
+    projectDirectory: 'Project Directory',
+    projectDirectoryPlaceholder: 'Enter project directory path...',
+    projectDirectoryHelp: 'Optional: Specify the working directory for the agent',
+    selectProjectDirectory: 'Select Project Directory',
+    wakeWord: 'Wake Word (Prompt)',
+    wakeWordPlaceholder: 'Enter the prompt to send to the agent...',
+    wakeWordHelp: 'This message will be sent to the agent when the task runs',
+    cronHelp: 'Cron expression format: minute hour day month day-of-week',
+    enableTask: 'Enable task immediately',
+
+    errors: {
+      nameRequired: 'Task name is required',
+      cronRequired: 'Schedule is required',
+      agentRequired: 'Agent selection is required',
+      modelRequired: 'Model selection is required',
+      wakeWordRequired: 'Wake word is required'
+    }
+  },
+
+  // Task List
+  scheduledTasks: 'Scheduled Tasks',
+  noTasks: 'No Scheduled Tasks',
+  noTasksDescription: 'Create your first scheduled task to get started',
+  wakeWord: 'Wake Word',
+  executions: 'Executions',
+  lastRun: 'Last Run',
+  nextRun: 'Next Run',
+  created: 'Created',
+  never: 'Never',
+
+  // Task Actions
+  executeManually: 'Execute Now',
+  enable: 'Enable',
+  disable: 'Disable',
+  deleteTask: 'Delete Task',
+  confirmDeleteTask: 'Are you sure you want to delete this task?',
+
+  // Status
+  status: {
+    active: 'Active',
+    disabled: 'Disabled',
+    error: 'Error'
+  },
+
+  // Messages
+  messages: {
+    taskCreated: 'Task created successfully',
+    taskCancelled: 'Task deleted successfully',
+    taskEnabled: 'Task enabled',
+    taskDisabled: 'Task disabled',
+    taskExecuted: 'Task executed successfully'
+  },
+
+  // Errors
+  errors: {
+    fetchTasks: 'Failed to load tasks',
+    fetchStats: 'Failed to load statistics',
+    createTask: 'Failed to create task',
+    cancelTask: 'Failed to delete task',
+    toggleTask: 'Failed to toggle task',
+    executeTask: 'Failed to execute task',
+    fetchHistory: 'Failed to load execution history'
+  },
+
+  // Statistics
+  stats: {
+    title: 'Scheduler Statistics',
+    totalTasks: 'Total Tasks',
+    enabledTasks: 'Enabled Tasks',
+    disabledTasks: 'Disabled Tasks',
+    totalExecutions: 'Total Executions',
+    tasksWithErrors: 'Tasks with Errors',
+    activeCronJobs: 'Active Cron Jobs',
+    healthOverview: 'Health Overview',
+    executionRate: 'Execution Rate',
+    successRate: 'Success Rate',
+    activeRate: 'Active Rate',
+    summary: 'Summary',
+    active: 'Active',
+    errors: 'Errors',
+    disabled: 'Disabled'
+  },
+
+  lastError: 'Last Error'
+}
+
 const en = {
   ...HomePage,
   ...SettingPage,
@@ -418,7 +524,8 @@ const en = {
   ...thinkingMode.en,
   ...agentDirectory.en,
   ...AgentFormTabs,
-  ...planActMode.en
+  ...planActMode.en,
+  backgroundAgent: BackgroundAgent
 }
 
 export default en

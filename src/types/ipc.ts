@@ -203,6 +203,17 @@ export interface IPCChannelDefinitions {
       }>
     }
   }
+  'background-agent:task-notification': {
+    params: {
+      taskId: string
+      taskName: string
+      success: boolean
+      error?: string
+      aiMessage?: string
+      executedAt: number
+    }
+    result: void
+  }
   'background-agent:create-session': {
     params: {
       sessionId: string

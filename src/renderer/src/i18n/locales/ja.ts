@@ -418,6 +418,154 @@ const FileChanges = {
   collapse: '折りたたむ'
 }
 
+const BackgroundAgent = {
+  title: 'バックグラウンドエージェントスケジューラー',
+  description: '指定した時間にAIエージェントを自動実行するスケジュール機能',
+  createTask: 'タスク作成',
+
+  // Tabs
+  tabs: {
+    tasks: 'タスク',
+    stats: '統計'
+  },
+
+  // Form
+  form: {
+    title: 'スケジュールタスクの作成',
+    taskName: 'タスク名',
+    taskNamePlaceholder: 'タスク名を入力してください...',
+    schedule: 'スケジュール',
+    agent: 'エージェント',
+    selectAgent: 'エージェントを選択',
+    model: 'モデル',
+    projectDirectory: 'プロジェクトディレクトリ',
+    projectDirectoryPlaceholder: 'プロジェクトディレクトリのパスを入力してください...',
+    projectDirectoryHelp: 'オプション: エージェントの作業ディレクトリを指定',
+    selectProjectDirectory: 'プロジェクトディレクトリを選択',
+    wakeWord: 'ウェイクワード（プロンプト）',
+    wakeWordPlaceholder: 'エージェントに送信するプロンプトを入力してください...',
+    wakeWordHelp: 'このメッセージがタスク実行時にエージェントに送信されます',
+    cronHelp: 'Cron表記フォーマット: 分 時 日 月 曜日',
+    enableTask: 'タスクを即座に有効にする',
+
+    errors: {
+      nameRequired: 'タスク名は必須です',
+      cronRequired: 'スケジュールは必須です',
+      agentRequired: 'エージェントの選択は必須です',
+      modelRequired: 'モデルの選択は必須です',
+      wakeWordRequired: 'ウェイクワードは必須です'
+    }
+  },
+
+  // Task List
+  scheduledTasks: 'スケジュールタスク',
+  noTasks: 'スケジュールタスクがありません',
+  noTasksDescription: '最初のスケジュールタスクを作成して開始しましょう',
+  wakeWord: 'ウェイクワード',
+  executions: '実行回数',
+  lastRun: '最後の実行',
+  nextRun: '次回実行',
+  created: '作成日時',
+  never: 'なし',
+
+  // Task Actions
+  executeManually: '今すぐ実行',
+  testExecution: 'テスト実行',
+  enable: '有効にする',
+  disable: '無効にする',
+  deleteTask: 'タスクを削除',
+  confirmDeleteTask: 'このタスクを削除してもよろしいですか？',
+  taskDetails: 'タスク詳細',
+
+  // Status
+  status: {
+    active: '有効',
+    disabled: '無効',
+    error: 'エラー'
+  },
+
+  // Messages
+  messages: {
+    taskCreated: 'タスクが正常に作成されました',
+    taskCancelled: 'タスクが正常に削除されました',
+    taskEnabled: 'タスクが有効になりました',
+    taskDisabled: 'タスクが無効になりました',
+    taskExecuted: 'タスクが正常に実行されました'
+  },
+
+  // Statistics
+  stats: {
+    title: 'スケジューラー統計',
+    totalTasks: '総タスク数',
+    enabledTasks: '有効タスク数',
+    disabledTasks: '無効タスク数',
+    totalExecutions: '総実行回数',
+    tasksWithErrors: 'エラーのあるタスク数',
+    activeCronJobs: 'アクティブCronジョブ数',
+    healthOverview: 'ヘルス概要',
+    executionRate: '実行レート',
+    successRate: '成功率',
+    activeRate: 'アクティブ率',
+    summary: '概要',
+    active: 'アクティブ',
+    errors: 'エラー',
+    disabled: '無効'
+  },
+
+  lastError: '最後のエラー',
+
+  // History
+  history: {
+    title: '実行履歴',
+    viewHistory: '実行履歴を表示',
+    totalExecutions: '総実行回数',
+    successful: '成功',
+    failed: '失敗',
+    successRate: '成功率',
+    filterStatus: 'ステータス',
+    filterDate: '期間',
+    all: 'すべて',
+    successOnly: '成功のみ',
+    failureOnly: '失敗のみ',
+    allTime: '全期間',
+    today: '今日',
+    thisWeek: '今週',
+    thisMonth: '今月',
+    noHistory: '実行履歴がありません',
+    executionSuccess: '実行成功',
+    executionFailure: '実行失敗',
+    duration: '実行時間',
+    messages: 'メッセージ数',
+    unknown: '不明',
+    sessionHistory: 'セッション履歴',
+    noMessages: 'メッセージがありません',
+    user: 'ユーザー',
+    assistant: 'アシスタント'
+  },
+
+  // Error messages
+  errors: {
+    fetchTasks: 'タスクの読み込みに失敗しました',
+    fetchStats: '統計の読み込みに失敗しました',
+    createTask: 'タスクの作成に失敗しました',
+    cancelTask: 'タスクの削除に失敗しました',
+    toggleTask: 'タスクの切り替えに失敗しました',
+    executeTask: 'タスクの実行に失敗しました',
+    fetchHistory: '実行履歴の読み込みに失敗しました',
+    fetchSessionHistory: 'セッション履歴の読み込みに失敗しました'
+  }
+}
+
+const Common = {
+  refresh: '更新',
+  close: '閉じる',
+  cancel: 'キャンセル',
+  create: '作成',
+  creating: '作成中...',
+  minutes: '分',
+  seconds: '秒'
+}
+
 const ja = {
   ...HomePage,
   ...SettingPage,
@@ -442,7 +590,9 @@ const ja = {
   ...thinkingMode.ja,
   ...agentDirectory.ja,
   ...AgentFormTabs,
-  ...planActMode.ja
+  ...planActMode.ja,
+  backgroundAgent: BackgroundAgent,
+  common: Common
 }
 
 export default ja

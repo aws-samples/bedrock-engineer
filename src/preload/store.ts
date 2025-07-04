@@ -164,6 +164,9 @@ type StoreScheme = {
 
   /** Nova Sonic音声チャットで使用する音声ID */
   selectedVoiceId?: string
+
+  /** バックグラウンドエージェントのスケジュールタスク */
+  backgroundAgentScheduledTasks?: any[]
 }
 
 const electronStore = new Store<StoreScheme>()

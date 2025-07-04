@@ -10,6 +10,9 @@ import MetaLogo from './meta-color.svg'
 
 type ModelSelectorProps = {
   openable: boolean
+  value?: string // 外部からのモデルID指定
+  onChange?: (modelId: string) => void // 外部への変更通知
+  className?: string // 追加のスタイリング
 }
 
 const MODEL_ICONS = {
@@ -17,10 +20,20 @@ const MODEL_ICONS = {
   llama: <LuBrainCircuit className="size-4" />
 } as const
 
-export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
+export const ModelSelector: React.FC<ModelSelectorProps> = ({
+  openable,
+  value,
+  onChange,
+  className
+}) => {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { currentLLM, updateLLM, availableModels } = useSettings()
+
+  // 外部から値が指定されている場合はそれを使用、そうでなければcurrentLLMを使用
+  const selectedModelId = value || currentLLM.modelId
+  const selectedModel =
+    availableModels.find((model) => model.modelId === selectedModelId) || currentLLM
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -32,6 +45,17 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  const handleModelSelect = (model: LLM) => {
+    if (onChange) {
+      // 外部制御モード：onChangeコールバックを呼び出し
+      onChange(model.modelId)
+    } else {
+      // デフォルトモード：設定を更新
+      updateLLM(model)
+    }
+    setIsOpen(false)
+  }
 
   const getModelIcon = (modelId: string, isInferenceProfile?: boolean) => {
     // Show group icon for inference profiles
@@ -51,7 +75,10 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
   }
 
   return (
-    <div className="justify-start flex items-center relative" ref={dropdownRef}>
+    <div
+      className={`justify-start flex items-center relative ${className || ''}`}
+      ref={dropdownRef}
+    >
       <div className="relative">
         {isOpen && (
           <div
@@ -63,13 +90,10 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
               return (
                 <div
                   key={model.modelId}
-                  onClick={() => {
-                    updateLLM(model)
-                    setIsOpen(false)
-                  }}
+                  onClick={() => handleModelSelect(model)}
                   className={`
                     flex items-center gap-4 px-3 py-2.5 cursor-pointer
-                    ${model.modelId === currentLLM.modelId ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'}
+                    ${model.modelId === selectedModelId ? 'bg-gray-50 dark:bg-gray-800' : 'bg-white dark:bg-gray-900'}
                     ${modelColors.hover}
                     transition-colors rounded-md
                   `}
@@ -112,9 +136,9 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ openable }) => {
         >
           <span className="flex items-center gap-1.5">
             <span className={modelColors.icon}>
-              {getModelIcon(currentLLM.modelId, currentLLM.isInferenceProfile)}
+              {getModelIcon(selectedModel.modelId, selectedModel.isInferenceProfile)}
             </span>
-            <span className="text-left whitespace-nowrap">{currentLLM.modelName}</span>
+            <span className="text-left whitespace-nowrap">{selectedModel.modelName}</span>
             <FiChevronDown className="text-gray-400 dark:text-gray-500" size={16} />
           </span>
         </button>

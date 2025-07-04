@@ -29,14 +29,54 @@ export const api = {
         modelId: string
         systemPrompt?: string
         agentId?: string
+        projectDirectory?: string
         tools?: any[]
       }
       userMessage: string
+      options?: any
     }) => {
       return ipcRenderer.invoke('background-agent:chat', params)
     },
-    createSession: async (sessionId: string) => {
-      return ipcRenderer.invoke('background-agent:create-session', { sessionId })
+    // 通知イベントリスナー
+    onTaskNotification: (
+      callback: (params: {
+        taskId: string
+        taskName: string
+        success: boolean
+        error?: string
+        aiMessage?: string
+        executedAt: number
+      }) => void
+    ) => {
+      const handler = (_event: any, params: any) => callback(params)
+      ipcRenderer.on('background-agent:task-notification', handler)
+
+      // クリーンアップ関数を返す
+      return () => {
+        ipcRenderer.removeListener('background-agent:task-notification', handler)
+      }
+    },
+    // 実行開始通知リスナー
+    onTaskExecutionStart: (
+      callback: (params: { taskId: string; taskName: string; executedAt: number }) => void
+    ) => {
+      const handler = (_event: any, params: any) => callback(params)
+      ipcRenderer.on('background-agent:task-execution-start', handler)
+
+      // クリーンアップ関数を返す
+      return () => {
+        ipcRenderer.removeListener('background-agent:task-execution-start', handler)
+      }
+    },
+    createSession: async (
+      sessionId: string,
+      options?: {
+        projectDirectory?: string
+        agentId?: string
+        modelId?: string
+      }
+    ) => {
+      return ipcRenderer.invoke('background-agent:create-session', { sessionId, options })
     },
     deleteSession: async (sessionId: string) => {
       return ipcRenderer.invoke('background-agent:delete-session', { sessionId })
@@ -49,6 +89,40 @@ export const api = {
     },
     getSessionStats: async (sessionId: string) => {
       return ipcRenderer.invoke('background-agent:get-session-stats', { sessionId })
+    },
+    getAllSessionsMetadata: async () => {
+      return ipcRenderer.invoke('background-agent:get-all-sessions-metadata')
+    },
+    getSessionsByProject: async (projectDirectory: string) => {
+      return ipcRenderer.invoke('background-agent:get-sessions-by-project', { projectDirectory })
+    },
+    getSessionsByAgent: async (agentId: string) => {
+      return ipcRenderer.invoke('background-agent:get-sessions-by-agent', { agentId })
+    },
+    // スケジューリング機能
+    scheduleTask: async (config: any) => {
+      return ipcRenderer.invoke('background-agent:schedule-task', { config })
+    },
+    cancelTask: async (taskId: string) => {
+      return ipcRenderer.invoke('background-agent:cancel-task', { taskId })
+    },
+    toggleTask: async (taskId: string, enabled: boolean) => {
+      return ipcRenderer.invoke('background-agent:toggle-task', { taskId, enabled })
+    },
+    listTasks: async () => {
+      return ipcRenderer.invoke('background-agent:list-tasks')
+    },
+    getTask: async (taskId: string) => {
+      return ipcRenderer.invoke('background-agent:get-task', { taskId })
+    },
+    getTaskExecutionHistory: async (taskId: string) => {
+      return ipcRenderer.invoke('background-agent:get-task-execution-history', { taskId })
+    },
+    executeTaskManually: async (taskId: string) => {
+      return ipcRenderer.invoke('background-agent:execute-task-manually', { taskId })
+    },
+    getSchedulerStats: async () => {
+      return ipcRenderer.invoke('background-agent:get-scheduler-stats')
     }
   },
   bedrock: {
