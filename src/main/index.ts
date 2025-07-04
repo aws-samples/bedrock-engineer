@@ -23,6 +23,8 @@ import { utilHandlers } from './handlers/util-handlers'
 import { screenHandlers } from './handlers/screen-handlers'
 import { cameraHandlers } from './handlers/camera-handlers'
 import { registerProxyHandlers } from './handlers/proxy-handlers'
+import { backgroundAgentHandlers } from './handlers/background-agent-handlers'
+
 // 動的インポートを使用してfix-pathパッケージを読み込む
 import('fix-path')
   .then((fixPathModule) => {
@@ -388,6 +390,7 @@ app.whenReady().then(async () => {
   registerIpcHandlers(utilHandlers, { loggerCategory: 'utils:ipc' })
   registerIpcHandlers(screenHandlers, { loggerCategory: 'screen:ipc' })
   registerIpcHandlers(cameraHandlers, { loggerCategory: 'camera:ipc' })
+  registerIpcHandlers(backgroundAgentHandlers, { loggerCategory: 'background-agent:ipc' })
 
   // プロキシ関連IPCハンドラーの登録
   registerProxyHandlers()

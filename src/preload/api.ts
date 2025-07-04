@@ -1,6 +1,5 @@
 import { Message, ToolConfiguration, ApplyGuardrailRequest } from '@aws-sdk/client-bedrock-runtime'
 import { ipcRenderer } from 'electron'
-import { executeTool } from './tools'
 import { store } from './store'
 import { BedrockService } from '../main/api/bedrock'
 import { getMcpToolSpecs, testMcpServerConnection, testAllMcpServerConnections } from './mcp'
@@ -13,6 +12,7 @@ import {
   getSystemPromptDescriptions,
   getToolUsageDescription
 } from './tools/common/ToolMetadataHelper'
+import { executeTool } from './tools'
 
 export type CallConverseAPIProps = {
   modelId: string
@@ -22,6 +22,35 @@ export type CallConverseAPIProps = {
 }
 
 export const api = {
+  backgroundAgent: {
+    chat: async (params: {
+      sessionId: string
+      config: {
+        modelId: string
+        systemPrompt?: string
+        agentId?: string
+        tools?: any[]
+      }
+      userMessage: string
+    }) => {
+      return ipcRenderer.invoke('background-agent:chat', params)
+    },
+    createSession: async (sessionId: string) => {
+      return ipcRenderer.invoke('background-agent:create-session', { sessionId })
+    },
+    deleteSession: async (sessionId: string) => {
+      return ipcRenderer.invoke('background-agent:delete-session', { sessionId })
+    },
+    listSessions: async () => {
+      return ipcRenderer.invoke('background-agent:list-sessions')
+    },
+    getSessionHistory: async (sessionId: string) => {
+      return ipcRenderer.invoke('background-agent:get-session-history', { sessionId })
+    },
+    getSessionStats: async (sessionId: string) => {
+      return ipcRenderer.invoke('background-agent:get-session-stats', { sessionId })
+    }
+  },
   bedrock: {
     executeTool,
     applyGuardrail: async (request: ApplyGuardrailRequest) => {

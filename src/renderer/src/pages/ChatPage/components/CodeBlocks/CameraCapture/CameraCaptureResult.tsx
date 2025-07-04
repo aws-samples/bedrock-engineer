@@ -36,6 +36,29 @@ export const CameraCaptureResult: React.FC<{ response: CameraCaptureResponse }> 
   const [isPromptExpanded, setIsPromptExpanded] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
 
+  // Null safety check
+  if (!result) {
+    return (
+      <div className="w-full bg-red-800 text-red-100 p-4 rounded-lg">
+        <p>{t('Error: Camera capture result is missing')}</p>
+      </div>
+    )
+  }
+
+  // Default metadata values
+  const metadata = result.metadata || {
+    width: 0,
+    height: 0,
+    format: 'unknown',
+    fileSize: 0,
+    timestamp: new Date().toISOString(),
+    deviceId: 'unknown',
+    deviceName: 'Unknown Device'
+  }
+
+  // Safe file path access
+  const filePath = result.filePath || ''
+
   // Handle Esc key to close fullscreen
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -75,15 +98,15 @@ export const CameraCaptureResult: React.FC<{ response: CameraCaptureResponse }> 
             {t('Camera Capture')}
           </h3>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-            <span className="text-blue-400" title={`Device ID: ${result.metadata.deviceId}`}>
-              {result.metadata.deviceName}
+            <span className="text-blue-400" title={`Device ID: ${metadata.deviceId}`}>
+              {metadata.deviceName}
             </span>
             <span>
-              {result.metadata.width} × {result.metadata.height}
+              {metadata.width} × {metadata.height}
             </span>
-            <span>{formatFileSize(result.metadata.fileSize)}</span>
-            <span>{result.metadata.format.toUpperCase()}</span>
-            <span>{formatTimestamp(result.metadata.timestamp)}</span>
+            <span>{formatFileSize(metadata.fileSize)}</span>
+            <span>{metadata.format.toUpperCase()}</span>
+            <span>{formatTimestamp(metadata.timestamp)}</span>
           </div>
         </div>
 
@@ -96,21 +119,20 @@ export const CameraCaptureResult: React.FC<{ response: CameraCaptureResponse }> 
               className="cursor-pointer hover:opacity-80 transition-opacity"
             >
               <LocalImage
-                src={result.filePath}
+                src={filePath}
                 alt="Camera capture"
                 className="aspect-auto max-h-[40vh] object-contain w-full rounded"
               />
             </div>
-            <div className="mt-2 text-xs text-gray-400 truncate" title={result.filePath}>
-              {result.filePath}
+            <div className="mt-2 text-xs text-gray-400 truncate" title={filePath}>
+              {filePath}
             </div>
 
             {/* Camera device info */}
             <div className="mt-2 text-xs text-gray-400">
-              <span className="text-blue-400">{t('Camera Device')}:</span>{' '}
-              {result.metadata.deviceName}
-              {result.metadata.deviceId !== 'default' && (
-                <span className="opacity-70 ml-1">({result.metadata.deviceId})</span>
+              <span className="text-blue-400">{t('Camera Device')}:</span> {metadata.deviceName}
+              {metadata.deviceId !== 'default' && (
+                <span className="opacity-70 ml-1">({metadata.deviceId})</span>
               )}
             </div>
 
@@ -178,7 +200,7 @@ export const CameraCaptureResult: React.FC<{ response: CameraCaptureResponse }> 
               onClick={(e) => e.stopPropagation()}
             >
               <LocalImage
-                src={result.filePath}
+                src={filePath}
                 alt="Camera capture"
                 className="max-w-full max-h-full object-contain"
               />

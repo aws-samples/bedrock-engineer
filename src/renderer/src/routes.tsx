@@ -2,6 +2,7 @@ import { FiHome, FiFeather, FiSettings, FiMic } from 'react-icons/fi'
 import { LuCombine } from 'react-icons/lu'
 import { HiOutlineChatAlt2 } from 'react-icons/hi'
 import { BsLayoutWtf } from 'react-icons/bs'
+import { MdOutlineSmartToy } from 'react-icons/md'
 import HomePage from './pages/HomePage/HomePage'
 import SettingPage from './pages/SettingPage/SettingPage'
 import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
@@ -9,6 +10,7 @@ import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorP
 import ChatPage from './pages/ChatPage/ChatPage'
 import DiagramGeneratorPage from './pages/DiagramGeneratorPage/DiagramGeneratorPage'
 import { AgentDirectoryPage } from './pages/AgentDirectoryPage/AgentDirectoryPage'
+import BackgroundAgentPage from './pages/BackgroundAgentPage/BackgroundAgentPage'
 import SpeakPage from './pages/SpeakPage'
 import { LuBookDown } from 'react-icons/lu'
 
@@ -40,6 +42,13 @@ export const routes = [
     icon: LuBookDown,
     position: 'top',
     element: <AgentDirectoryPage />
+  },
+  {
+    name: 'Background Agent',
+    href: '/background-agent',
+    icon: MdOutlineSmartToy,
+    position: 'top',
+    element: <BackgroundAgentPage />
   },
   {
     name: 'Website Generator',

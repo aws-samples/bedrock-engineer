@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { FiGithub } from 'react-icons/fi'
 import { Tooltip } from 'flowbite-react'
 import { createHashRouter, Link, Outlet, RouterProvider, useLocation } from 'react-router-dom'
@@ -119,6 +119,14 @@ function App(): JSX.Element {
       position: 'right'
     }
   ]
+
+  // preloadツールのイベントリスナーを設定
+  useEffect(() => {
+    const preloadTools = (window as any).preloadTools
+    if (preloadTools) {
+      preloadTools.onToolRequest()
+    }
+  }, [])
 
   return (
     <TourProvider steps={steps} styles={styles}>

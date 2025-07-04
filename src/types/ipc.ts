@@ -1,3 +1,5 @@
+import { ToolInput, ToolResult } from './tools'
+
 // IPC通信の型定義を一元管理
 export interface IPCChannelDefinitions {
   // Bedrock関連
@@ -155,6 +157,99 @@ export interface IPCChannelDefinitions {
   'bedrock:getTranslationCacheStats': {
     params: void
     result: { size: number; maxSize: number; hitRate?: number }
+  }
+
+  // Preloadツール実行関連（IPC経由 - 新しいパターン）
+  'preload-tool-request': {
+    params: {
+      requestId: string
+      toolInput: ToolInput
+    }
+    result: void
+  }
+  'preload-tool-response': {
+    params: {
+      requestId: string
+      result: ToolResult
+    }
+    result: void
+  }
+
+  // 背景エージェント関連
+  'background-agent:chat': {
+    params: {
+      sessionId: string
+      config: {
+        modelId: string
+        systemPrompt?: string
+        agentId?: string
+        tools?: any[]
+      }
+      userMessage: string
+    }
+    result: {
+      response: {
+        id: string
+        role: string
+        content: any[]
+        timestamp: number
+      }
+      toolExecutions?: Array<{
+        toolName: string
+        input: any
+        output: any
+        success: boolean
+        error?: string
+      }>
+    }
+  }
+  'background-agent:create-session': {
+    params: {
+      sessionId: string
+    }
+    result: {
+      success: boolean
+      sessionId: string
+    }
+  }
+  'background-agent:delete-session': {
+    params: {
+      sessionId: string
+    }
+    result: {
+      success: boolean
+      sessionId: string
+    }
+  }
+  'background-agent:list-sessions': {
+    params: void
+    result: {
+      sessions: string[]
+    }
+  }
+  'background-agent:get-session-history': {
+    params: {
+      sessionId: string
+    }
+    result: {
+      history: Array<{
+        id: string
+        role: string
+        content: any[]
+        timestamp: number
+      }>
+    }
+  }
+  'background-agent:get-session-stats': {
+    params: {
+      sessionId: string
+    }
+    result: {
+      exists: boolean
+      messageCount: number
+      userMessages: number
+      assistantMessages: number
+    }
   }
 
   // ファイル操作関連
