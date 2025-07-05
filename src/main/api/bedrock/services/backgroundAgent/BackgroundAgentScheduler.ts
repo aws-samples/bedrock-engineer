@@ -1,6 +1,7 @@
 import * as cron from 'node-cron'
 import { v4 as uuidv4 } from 'uuid'
 import { BrowserWindow } from 'electron'
+import Store from 'electron-store'
 import { createCategoryLogger } from '../../../../../common/logger'
 import { ScheduleConfig, ScheduledTask, TaskExecutionResult, BackgroundAgentConfig } from './types'
 import { BackgroundAgentService } from './BackgroundAgentService'
@@ -11,13 +12,23 @@ const schedulerLogger = createCategoryLogger('background-agent:scheduler')
 export class BackgroundAgentScheduler {
   private scheduledTasks: Map<string, ScheduledTask> = new Map()
   private cronJobs: Map<string, cron.ScheduledTask> = new Map()
-  private executionHistory: Map<string, TaskExecutionResult[]> = new Map()
   private backgroundAgentService: BackgroundAgentService
   private context: ServiceContext
+  private executionHistoryStore: Store<{
+    executionHistory: { [key: string]: TaskExecutionResult[] }
+  }>
 
   constructor(context: ServiceContext) {
     this.context = context
     this.backgroundAgentService = new BackgroundAgentService(context)
+
+    // 実行履歴用のストアを初期化
+    this.executionHistoryStore = new Store({
+      name: 'background-agent-execution-history',
+      defaults: {
+        executionHistory: {} as { [key: string]: TaskExecutionResult[] }
+      }
+    })
 
     schedulerLogger.info('BackgroundAgentScheduler initialized')
 
@@ -421,23 +432,37 @@ export class BackgroundAgentScheduler {
    * 実行履歴を記録
    */
   private recordExecution(taskId: string, result: TaskExecutionResult): void {
-    if (!this.executionHistory.has(taskId)) {
-      this.executionHistory.set(taskId, [])
+    try {
+      // 現在の実行履歴を取得
+      const allHistory = this.executionHistoryStore.get('executionHistory')
+
+      // 該当タスクの履歴を取得または初期化
+      if (!allHistory[taskId]) {
+        allHistory[taskId] = []
+      }
+
+      // 新しい実行結果を追加
+      allHistory[taskId].push(result)
+
+      // 履歴は最新100件まで保持
+      if (allHistory[taskId].length > 100) {
+        allHistory[taskId].splice(0, allHistory[taskId].length - 100)
+      }
+
+      // 永続化
+      this.executionHistoryStore.set('executionHistory', allHistory)
+
+      schedulerLogger.debug('Task execution recorded and persisted', {
+        taskId,
+        success: result.success,
+        historyCount: allHistory[taskId].length
+      })
+    } catch (error: any) {
+      schedulerLogger.error('Failed to record execution history', {
+        taskId,
+        error: error.message
+      })
     }
-
-    const history = this.executionHistory.get(taskId)!
-    history.push(result)
-
-    // 履歴は最新100件まで保持
-    if (history.length > 100) {
-      history.splice(0, history.length - 100)
-    }
-
-    schedulerLogger.debug('Task execution recorded', {
-      taskId,
-      success: result.success,
-      historyCount: history.length
-    })
   }
 
   /**
@@ -473,7 +498,11 @@ export class BackgroundAgentScheduler {
 
       // タスクを削除
       this.scheduledTasks.delete(taskId)
-      this.executionHistory.delete(taskId)
+
+      // 実行履歴からも削除
+      const allHistory = this.executionHistoryStore.get('executionHistory')
+      delete allHistory[taskId]
+      this.executionHistoryStore.set('executionHistory', allHistory)
 
       // 永続化を更新
       this.persistTasks()
@@ -553,7 +582,16 @@ export class BackgroundAgentScheduler {
    * タスクの実行履歴を取得
    */
   getTaskExecutionHistory(taskId: string): TaskExecutionResult[] {
-    return this.executionHistory.get(taskId) || []
+    try {
+      const allHistory = this.executionHistoryStore.get('executionHistory')
+      return allHistory[taskId] || []
+    } catch (error: any) {
+      schedulerLogger.error('Failed to get task execution history', {
+        taskId,
+        error: error.message
+      })
+      return []
+    }
   }
 
   /**

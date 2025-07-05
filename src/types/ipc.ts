@@ -262,6 +262,33 @@ export interface IPCChannelDefinitions {
       assistantMessages: number
     }
   }
+  'background-agent:continue-session': {
+    params: {
+      sessionId: string
+      taskId: string
+      userMessage: string
+      options?: {
+        enableToolExecution?: boolean
+        maxToolExecutions?: number
+        timeoutMs?: number
+      }
+    }
+    result: {
+      response: {
+        id: string
+        role: string
+        content: any[]
+        timestamp: number
+      }
+      toolExecutions?: Array<{
+        toolName: string
+        input: any
+        output: any
+        success: boolean
+        error?: string
+      }>
+    }
+  }
 
   // ファイル操作関連
   'open-file': {

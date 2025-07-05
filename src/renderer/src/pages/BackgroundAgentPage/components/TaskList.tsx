@@ -265,6 +265,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
         onClose={() => setShowHistoryModal(false)}
         onGetExecutionHistory={onGetExecutionHistory}
         onGetSessionHistory={onGetSessionHistory}
+        onContinueSession={
+          typeof window !== 'undefined' && window.api?.backgroundAgent?.continueSession
+            ? window.api.backgroundAgent.continueSession
+            : undefined
+        }
       />
     </div>
   )

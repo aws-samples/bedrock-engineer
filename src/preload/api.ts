@@ -123,6 +123,18 @@ export const api = {
     },
     getSchedulerStats: async () => {
       return ipcRenderer.invoke('background-agent:get-scheduler-stats')
+    },
+    continueSession: async (params: {
+      sessionId: string
+      taskId: string
+      userMessage: string
+      options?: {
+        enableToolExecution?: boolean
+        maxToolExecutions?: number
+        timeoutMs?: number
+      }
+    }) => {
+      return ipcRenderer.invoke('background-agent:continue-session', params)
     }
   },
   bedrock: {
@@ -183,6 +195,9 @@ export const api = {
   },
   images: {
     getLocalImage: (path: string) => ipcRenderer.invoke('get-local-image', path)
+  },
+  openDirectory: async () => {
+    return ipcRenderer.invoke('open-directory')
   },
   mcp: {
     getToolSpecs: async (mcpServers?: any) => {

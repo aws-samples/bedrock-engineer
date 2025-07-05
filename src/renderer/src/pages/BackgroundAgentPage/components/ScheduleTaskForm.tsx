@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 import { ModelSelector } from '../../ChatPage/components/ModelSelector'
+import { DirectorySelector } from '../../ChatPage/components/InputForm/DirectorySelector'
 import { ScheduleConfig } from '../hooks/useBackgroundAgent'
 
 interface ScheduleTaskFormProps {
@@ -36,6 +37,23 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  // プロジェクトディレクトリ選択ハンドラー
+  const handleSelectDirectory = async () => {
+    try {
+      const selectedPath = await window.api.openDirectory()
+      if (selectedPath) {
+        setFormData((prev) => ({ ...prev, projectDirectory: selectedPath }))
+      }
+    } catch (error) {
+      console.error('Failed to select directory:', error)
+    }
+  }
+
+  // .ignoreモーダルは不要なので空の関数
+  const handleOpenIgnoreModal = () => {
+    // スケジュールタスクでは.ignore機能は不要
+  }
 
   // デフォルトのエージェントを設定
   useEffect(() => {
@@ -207,15 +225,15 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t('backgroundAgent.form.projectDirectory')}
             </label>
-            <input
-              type="text"
-              value={formData.projectDirectory}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, projectDirectory: e.target.value }))
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              placeholder={t('backgroundAgent.form.projectDirectoryPlaceholder')}
-            />
+            <div className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600">
+              <DirectorySelector
+                projectPath={
+                  formData.projectDirectory || t('backgroundAgent.form.selectProjectDirectory')
+                }
+                onSelectDirectory={handleSelectDirectory}
+                onOpenIgnoreModal={handleOpenIgnoreModal}
+              />
+            </div>
             <p className="text-gray-500 text-xs mt-1">
               {t('backgroundAgent.form.projectDirectoryHelp')}
             </p>

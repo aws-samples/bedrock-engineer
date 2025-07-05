@@ -490,7 +490,8 @@ const BackgroundAgent = {
     taskCancelled: 'タスクが正常に削除されました',
     taskEnabled: 'タスクが有効になりました',
     taskDisabled: 'タスクが無効になりました',
-    taskExecuted: 'タスクが正常に実行されました'
+    taskExecuted: 'タスクが正常に実行されました',
+    sessionContinued: 'セッションでの会話を継続しました'
   },
 
   // Statistics
@@ -552,7 +553,8 @@ const BackgroundAgent = {
     toggleTask: 'タスクの切り替えに失敗しました',
     executeTask: 'タスクの実行に失敗しました',
     fetchHistory: '実行履歴の読み込みに失敗しました',
-    fetchSessionHistory: 'セッション履歴の読み込みに失敗しました'
+    fetchSessionHistory: 'セッション履歴の読み込みに失敗しました',
+    continueSession: 'セッションの継続に失敗しました'
   }
 }
 

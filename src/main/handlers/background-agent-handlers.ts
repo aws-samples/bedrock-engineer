@@ -475,6 +475,60 @@ export const backgroundAgentHandlers = {
     }
   },
 
+  'background-agent:continue-session': async (_event: IpcMainInvokeEvent, params: any) => {
+    backgroundAgentLogger.debug('Continue session request', {
+      sessionId: params.sessionId,
+      taskId: params.taskId,
+      userMessageLength: params.userMessage?.length || 0
+    })
+
+    try {
+      const service = getBackgroundAgentService()
+
+      // タスク情報を取得してエージェント設定を復元
+      const scheduler = getBackgroundAgentScheduler()
+      const task = scheduler.getTask(params.taskId)
+
+      if (!task) {
+        throw new Error(`Task not found: ${params.taskId}`)
+      }
+
+      const config = {
+        modelId: task.modelId,
+        agentId: task.agentId,
+        projectDirectory: task.projectDirectory
+      }
+
+      const result = await service.chat(
+        params.sessionId,
+        config,
+        params.userMessage,
+        params.options || {
+          enableToolExecution: true,
+          maxToolExecutions: 5,
+          timeoutMs: 300000 // 5分タイムアウト
+        }
+      )
+
+      backgroundAgentLogger.info('Session continued successfully', {
+        sessionId: params.sessionId,
+        taskId: params.taskId,
+        responseLength: result.response.content.length,
+        toolExecutionCount: result.toolExecutions?.length || 0
+      })
+
+      return result
+    } catch (error: any) {
+      backgroundAgentLogger.error('Failed to continue session', {
+        sessionId: params.sessionId,
+        taskId: params.taskId,
+        error: error.message,
+        stack: error.stack
+      })
+      throw error
+    }
+  },
+
   // 通知ハンドラー
   'background-agent:task-notification': async (_event: IpcMainInvokeEvent, params: any) => {
     backgroundAgentLogger.debug('Task notification request', {

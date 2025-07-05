@@ -219,6 +219,32 @@ export const useBackgroundAgent = () => {
     [t]
   )
 
+  // セッションでの会話を継続
+  const continueSession = useCallback(
+    async (sessionId: string, taskId: string, userMessage: string): Promise<any> => {
+      try {
+        const result = await window.api.backgroundAgent.continueSession({
+          sessionId,
+          taskId,
+          userMessage,
+          options: {
+            enableToolExecution: true,
+            maxToolExecutions: 5,
+            timeoutMs: 300000 // 5分タイムアウト
+          }
+        })
+
+        toast.success(t('backgroundAgent.messages.sessionContinued'))
+        return result
+      } catch (err: any) {
+        console.error('Failed to continue session:', err)
+        toast.error(t('backgroundAgent.errors.continueSession'))
+        throw err
+      }
+    },
+    [t]
+  )
+
   // 特定のタスクを取得
   const getTask = useCallback(async (taskId: string): Promise<ScheduledTask | null> => {
     try {
@@ -262,6 +288,7 @@ export const useBackgroundAgent = () => {
     getTaskExecutionHistory,
     getSessionHistory,
     getTask,
+    continueSession,
 
     // Refresh functions
     refreshTasks,

@@ -21,6 +21,16 @@ interface TaskExecutionHistoryModalProps {
   onClose: () => void
   onGetExecutionHistory: (taskId: string) => Promise<TaskExecutionResult[]>
   onGetSessionHistory: (sessionId: string) => Promise<any[]>
+  onContinueSession?: (params: {
+    sessionId: string
+    taskId: string
+    userMessage: string
+    options?: {
+      enableToolExecution?: boolean
+      maxToolExecutions?: number
+      timeoutMs?: number
+    }
+  }) => Promise<any>
 }
 
 interface HistoryFilter {
@@ -33,7 +43,8 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
   isOpen,
   onClose,
   onGetExecutionHistory,
-  onGetSessionHistory
+  onGetSessionHistory,
+  onContinueSession
 }) => {
   const { t } = useTranslation()
   const [history, setHistory] = useState<TaskExecutionResult[]>([])
@@ -46,6 +57,10 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
     status: 'all',
     dateRange: 'all'
   })
+  // 会話継続用の状態
+  const [showChatMode, setShowChatMode] = useState(false)
+  const [chatMessage, setChatMessage] = useState('')
+  const [isSendingMessage, setIsSendingMessage] = useState(false)
 
   // 履歴データを取得
   const fetchHistory = async () => {
@@ -114,16 +129,6 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
       setSelectedExecution(filtered[0])
       fetchSessionHistory(filtered[0].sessionId)
     }
-  }
-
-  // 統計情報を計算
-  const getStats = () => {
-    const total = history.length
-    const successful = history.filter((h) => h.success).length
-    const failed = total - successful
-    const successRate = total > 0 ? Math.round((successful / total) * 100) : 0
-
-    return { total, successful, failed, successRate }
   }
 
   // 実行時間をフォーマット
@@ -289,6 +294,40 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
     }
   }
 
+  // 会話継続機能のハンドラー
+  const handleContinueSession = async () => {
+    if (!selectedExecution || !onContinueSession || !chatMessage.trim()) return
+
+    try {
+      setIsSendingMessage(true)
+      await onContinueSession({
+        sessionId: selectedExecution.sessionId,
+        taskId: task.id,
+        userMessage: chatMessage.trim(),
+        options: {
+          enableToolExecution: true,
+          maxToolExecutions: 5,
+          timeoutMs: 300000 // 5分タイムアウト
+        }
+      })
+
+      // メッセージ送信後、セッション履歴を再取得
+      await fetchSessionHistory(selectedExecution.sessionId)
+      setChatMessage('')
+    } catch (error) {
+      console.error('Failed to continue session:', error)
+    } finally {
+      setIsSendingMessage(false)
+    }
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleContinueSession()
+    }
+  }
+
   useEffect(() => {
     fetchHistory()
   }, [isOpen, task.id])
@@ -298,8 +337,6 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
   }, [history, filter])
 
   if (!isOpen) return null
-
-  const stats = getStats()
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -318,38 +355,6 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
-        </div>
-
-        {/* Statistics */}
-        <div className="grid grid-cols-4 gap-4 p-6 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {t('backgroundAgent.history.totalExecutions')}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {stats.successful}
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {t('backgroundAgent.history.successful')}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.failed}</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {t('backgroundAgent.history.failed')}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-              {stats.successRate}%
-            </div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {t('backgroundAgent.history.successRate')}
-            </div>
-          </div>
         </div>
 
         {/* Filters */}
@@ -511,10 +516,22 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
 
                 {/* Messages */}
                 <div className="flex-1 flex flex-col min-h-0">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-600">
+                  <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600">
                     <h5 className="text-md font-medium text-gray-900 dark:text-white">
                       セッション履歴
                     </h5>
+                    {onContinueSession && (
+                      <button
+                        onClick={() => setShowChatMode(!showChatMode)}
+                        className={`text-sm px-3 py-1 rounded border transition-colors ${
+                          showChatMode
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50 dark:bg-gray-700 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        {showChatMode ? '履歴のみ表示' : '会話を継続'}
+                      </button>
+                    )}
                   </div>
                   <div className="flex-1 overflow-y-auto p-4">
                     {loadingSessions.has(selectedExecution.sessionId) ? (
@@ -553,6 +570,41 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                       </div>
                     )}
                   </div>
+
+                  {/* Chat Input Form */}
+                  {showChatMode && onContinueSession && (
+                    <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-gray-50 dark:bg-gray-750">
+                      <div className="flex space-x-3">
+                        <div className="flex-1">
+                          <textarea
+                            value={chatMessage}
+                            onChange={(e) => setChatMessage(e.target.value)}
+                            onKeyDown={handleKeyPress}
+                            placeholder="メッセージを入力してください..."
+                            className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                            rows={3}
+                            disabled={isSendingMessage}
+                          />
+                        </div>
+                        <div className="flex-shrink-0">
+                          <button
+                            onClick={handleContinueSession}
+                            disabled={isSendingMessage || !chatMessage.trim()}
+                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                          >
+                            {isSendingMessage ? (
+                              <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                            ) : (
+                              '送信'
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        Enterで送信、Shift+Enterで改行
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
