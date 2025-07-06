@@ -184,6 +184,9 @@ export const api = {
     },
     getTranslationCacheStats: async () => {
       return ipcRenderer.invoke('bedrock:getTranslationCacheStats')
+    },
+    getModelMaxTokens: async (modelId: string) => {
+      return ipcRenderer.invoke('bedrock:getModelMaxTokens', { modelId })
     }
   },
   contextMenu: {
@@ -198,6 +201,12 @@ export const api = {
   },
   openDirectory: async () => {
     return ipcRenderer.invoke('open-directory')
+  },
+  readProjectIgnore: async (projectPath: string) => {
+    return ipcRenderer.invoke('read-project-ignore', { projectPath })
+  },
+  writeProjectIgnore: async (projectPath: string, content: string) => {
+    return ipcRenderer.invoke('write-project-ignore', { projectPath, content })
   },
   mcp: {
     getToolSpecs: async (mcpServers?: any) => {

@@ -397,6 +397,7 @@ const FileChanges = {
 const BackgroundAgent = {
   title: 'Background Agent Scheduler',
   description: 'Schedule AI agents to run automatically at specified times',
+  pageDescription: 'Manage scheduled tasks and configure automatic execution',
   createTask: 'Create Task',
 
   // Tabs
@@ -420,6 +421,9 @@ const BackgroundAgent = {
     selectProjectDirectory: 'Select Project Directory',
     wakeWord: 'Wake Word (Prompt)',
     wakeWordPlaceholder: 'Enter the prompt to send to the agent...',
+    maxTokens: 'Max Output Tokens',
+    maxTokensHelp:
+      'Maximum number of tokens the model can generate (depends on the selected model)',
     wakeWordHelp: 'This message will be sent to the agent when the task runs',
     cronHelp: 'Cron expression format: minute hour day month day-of-week',
     enableTask: 'Enable task immediately',
@@ -429,7 +433,8 @@ const BackgroundAgent = {
       cronRequired: 'Schedule is required',
       agentRequired: 'Agent selection is required',
       modelRequired: 'Model selection is required',
-      wakeWordRequired: 'Wake word is required'
+      wakeWordRequired: 'Wake word is required',
+      invalidMaxTokens: 'Invalid max tokens value (1-64000)'
     }
   },
 
@@ -446,10 +451,14 @@ const BackgroundAgent = {
 
   // Task Actions
   executeManually: 'Execute Now',
+  testExecution: 'Test Execution',
   enable: 'Enable',
   disable: 'Disable',
+  enableTask: 'Enable task',
+  disableTask: 'Disable task',
   deleteTask: 'Delete Task',
   confirmDeleteTask: 'Are you sure you want to delete this task?',
+  taskDetails: 'Task Details',
 
   // Status
   status: {
@@ -464,18 +473,8 @@ const BackgroundAgent = {
     taskCancelled: 'Task deleted successfully',
     taskEnabled: 'Task enabled',
     taskDisabled: 'Task disabled',
-    taskExecuted: 'Task executed successfully'
-  },
-
-  // Errors
-  errors: {
-    fetchTasks: 'Failed to load tasks',
-    fetchStats: 'Failed to load statistics',
-    createTask: 'Failed to create task',
-    cancelTask: 'Failed to delete task',
-    toggleTask: 'Failed to toggle task',
-    executeTask: 'Failed to execute task',
-    fetchHistory: 'Failed to load execution history'
+    taskExecuted: 'Task executed successfully',
+    sessionContinued: 'Session conversation continued'
   },
 
   // Statistics
@@ -497,7 +496,108 @@ const BackgroundAgent = {
     disabled: 'Disabled'
   },
 
-  lastError: 'Last Error'
+  lastError: 'Last Error',
+
+  // History
+  viewExecutionHistory: 'View Execution History',
+  history: {
+    title: 'Execution History',
+    viewHistory: 'View Execution History',
+    totalExecutions: 'Total Executions',
+    successful: 'Successful',
+    failed: 'Failed',
+    successRate: 'Success Rate',
+    filterStatus: 'Filter Status',
+    filterDate: 'Filter Date',
+    all: 'All',
+    successOnly: 'Success Only',
+    failureOnly: 'Failure Only',
+    allTime: 'All Time',
+    today: 'Today',
+    thisWeek: 'This Week',
+    thisMonth: 'This Month',
+    noHistory: 'No execution history',
+    executionSuccess: 'Execution Success',
+    executionFailure: 'Execution Failure',
+    duration: 'Duration',
+    messages: 'Messages',
+    messageCount: 'Message Count',
+    unknown: 'Unknown',
+    sessionHistory: 'Session History',
+    noMessages: 'No messages',
+    user: 'User',
+    assistant: 'Assistant',
+    executionHistoryList: 'Execution History',
+    executionDetails: 'Execution Details',
+    sessionId: 'Session ID',
+    toolExecution: 'Tool Execution',
+    toolResult: 'Tool Result',
+    continueConversation: 'Continue Conversation',
+    showHistoryOnly: 'Show History Only',
+    loadingMessages: 'Loading messages...',
+    enterMessage: 'Enter your message...',
+    send: 'Send',
+    sendInstruction: 'Press Enter to send, Shift+Enter for new line',
+    selectExecutionHistory: 'Select an execution history',
+    success: 'Success',
+    failure: 'Failure'
+  },
+
+  // Error messages
+  errors: {
+    fetchTasks: 'Failed to load tasks',
+    fetchStats: 'Failed to load statistics',
+    createTask: 'Failed to create task',
+    cancelTask: 'Failed to delete task',
+    toggleTask: 'Failed to toggle task',
+    executeTask: 'Failed to execute task',
+    fetchHistory: 'Failed to load execution history',
+    fetchSessionHistory: 'Failed to load session history',
+    continueSession: 'Failed to continue session'
+  }
+}
+
+const IgnoreSettings = {
+  title: 'File Exclusion Settings',
+  globalTab: 'Global Settings',
+  projectTab: 'Project-specific Settings',
+  globalDescription: 'Configure exclusion patterns that apply across the entire application.',
+  globalPlaceholder: '.git\nnode_modules\n.vscode\n*.log\n.DS_Store\n...',
+  projectDescription:
+    'Configure exclusion patterns that apply only to this project. Settings are saved in the .bedrock-engineer/.ignore file.',
+  projectPath: 'Project Path',
+  projectPlaceholder: 'node_modules\n.git\n*.log\n.DS_Store\ndist/\nbuild/\n...',
+  loading: 'Loading...',
+  saving: 'Saving...',
+  save: 'Save',
+  loadError: 'Failed to load file',
+  saveError: 'Failed to save file'
+}
+
+const ProjectIgnore = {
+  title: 'Project-specific Exclusion Settings',
+  description:
+    'Configure patterns for files and folders to ignore in this project. Settings are saved in the .bedrock-engineer/.ignore file.',
+  projectPath: 'Project Path',
+  placeholder: 'node_modules\n.git\n*.log\n.DS_Store\n...',
+  loading: 'Loading...',
+  saving: 'Saving...',
+  save: 'Save',
+  loadError: 'Failed to load file',
+  saveError: 'Failed to save file'
+}
+
+const Common = {
+  refresh: 'Refresh',
+  close: 'Close',
+  cancel: 'Cancel',
+  create: 'Create',
+  creating: 'Creating...',
+  executing: 'Executing...',
+  enabled: 'Enabled',
+  disabled: 'Disabled',
+  minutes: 'min',
+  seconds: 's'
 }
 
 const en = {
@@ -525,7 +625,10 @@ const en = {
   ...agentDirectory.en,
   ...AgentFormTabs,
   ...planActMode.en,
-  backgroundAgent: BackgroundAgent
+  backgroundAgent: BackgroundAgent,
+  ignoreSettings: IgnoreSettings,
+  projectIgnore: ProjectIgnore,
+  common: Common
 }
 
 export default en

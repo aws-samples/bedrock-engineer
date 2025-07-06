@@ -1,5 +1,6 @@
 import { IpcMainInvokeEvent } from 'electron'
 import { bedrock } from '../api'
+import { getModelMaxTokens } from '../api/bedrock/models'
 import { createCategoryLogger } from '../../common/logger'
 
 const bedrockLogger = createCategoryLogger('bedrock:ipc')
@@ -242,5 +243,17 @@ export const bedrockHandlers = {
       downloadedPath,
       fileSize: stats.size
     }
+  },
+
+  'bedrock:getModelMaxTokens': async (_event: IpcMainInvokeEvent, params: { modelId: string }) => {
+    bedrockLogger.debug('Getting model max tokens', { modelId: params.modelId })
+
+    const maxTokens = getModelMaxTokens(params.modelId)
+
+    bedrockLogger.debug('Retrieved model max tokens', {
+      modelId: params.modelId,
+      maxTokens
+    })
+    return { maxTokens }
   }
 } as const

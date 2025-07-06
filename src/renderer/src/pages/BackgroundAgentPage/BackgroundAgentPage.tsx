@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PlusIcon } from '@heroicons/react/24/outline'
 import { useBackgroundAgent } from './hooks/useBackgroundAgent'
 import { ScheduleTaskForm } from './components/ScheduleTaskForm'
 import { TaskList } from './components/TaskList'
@@ -36,20 +35,8 @@ const BackgroundAgentPage: React.FC = () => {
     <div className="px-4 py-6">
       <header className="mb-6">
         <h1 className="text-3xl font-bold mb-2 dark:text-white">Background Agent</h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          スケジュールされたタスクを管理し、自動実行を設定できます
-        </p>
+        <p className="text-gray-600 dark:text-gray-400">{t('backgroundAgent.pageDescription')}</p>
       </header>
-
-      <div className="mb-6">
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600"
-        >
-          <PlusIcon className="h-4 w-4 mr-2" />
-          {t('backgroundAgent.createTask')}
-        </button>
-      </div>
 
       <TaskList
         tasks={tasks}
@@ -61,6 +48,7 @@ const BackgroundAgentPage: React.FC = () => {
         onRefresh={refreshAll}
         onGetExecutionHistory={getTaskExecutionHistory}
         onGetSessionHistory={getSessionHistory}
+        onCreateTask={() => setShowCreateForm(true)}
       />
 
       {/* Create Task Modal */}

@@ -16,6 +16,13 @@ export interface ScheduledTask {
   nextRun?: number
   runCount: number
   lastError?: string
+  inferenceConfig?: {
+    maxTokens?: number
+    temperature?: number
+    topP?: number
+    topK?: number
+    stopSequences?: string[]
+  }
 }
 
 export interface TaskExecutionResult {
@@ -35,6 +42,13 @@ export interface ScheduleConfig {
     modelId: string
     agentId: string
     projectDirectory?: string
+    inferenceConfig?: {
+      maxTokens?: number
+      temperature?: number
+      topP?: number
+      topK?: number
+      stopSequences?: string[]
+    }
   }
   wakeWord: string
   enabled: boolean

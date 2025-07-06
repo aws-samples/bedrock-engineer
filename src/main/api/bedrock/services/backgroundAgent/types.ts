@@ -1,10 +1,15 @@
-import { ContentBlock, ConversationRole } from '@aws-sdk/client-bedrock-runtime'
+import {
+  ContentBlock,
+  ConversationRole,
+  InferenceConfiguration
+} from '@aws-sdk/client-bedrock-runtime'
 
 export interface BackgroundAgentConfig {
   modelId: string
   systemPrompt?: string
   agentId: string // エージェントIDを必須にして、エージェント設定から取得
   projectDirectory?: string // 作業ディレクトリを指定
+  inferenceConfig?: InferenceConfiguration // タスク固有の推論設定
 }
 
 export interface BackgroundMessage {
@@ -42,7 +47,7 @@ export interface BackgroundAgentSession {
 
 // スケジューリング機能用の型定義
 export interface ScheduleConfig {
-  taskId: string
+  taskId?: string
   name: string
   cronExpression: string // "0 9 * * 1-5" (平日9時)
   agentConfig: BackgroundAgentConfig
@@ -64,6 +69,7 @@ export interface ScheduledTask {
   nextRun?: number
   runCount: number
   lastError?: string
+  inferenceConfig?: InferenceConfiguration // タスク固有の推論設定
 }
 
 export interface TaskExecutionResult {

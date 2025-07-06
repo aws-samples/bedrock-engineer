@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   XMarkIcon,
@@ -284,9 +284,9 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
 
     switch (messageType) {
       case 'tool_use':
-        return 'ツール実行'
+        return t('backgroundAgent.history.toolExecution')
       case 'tool_result':
-        return 'ツール結果'
+        return t('backgroundAgent.history.toolResult')
       default:
         return message.role === 'user'
           ? t('backgroundAgent.history.user')
@@ -336,13 +336,52 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
     applyFilters()
   }, [history, filter])
 
+  // ESCキーでモーダルを閉じる
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [isOpen, onClose])
+
+  // 確実なモーダル閉じる処理
+  const handleCloseClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      e.preventDefault()
+      onClose()
+    },
+    [onClose]
+  )
+
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        onClose()
+      }
+    },
+    [onClose]
+  )
+
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full h-full max-w-7xl max-h-[90vh] flex flex-col">
+    <div
+      className="fixed inset-0 bg-gray-600 bg-opacity-50 z-50 flex items-center justify-center p-4"
+      onClick={handleBackdropClick}
+    >
+      <div className="border-[0.5px] border-white dark:border-gray-100 rounded-lg shadow-xl dark:shadow-gray-900/80 bg-white dark:bg-gray-900 w-full h-[90vh] max-w-7xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
               {t('backgroundAgent.history.title')}
@@ -350,271 +389,280 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{task.name}</p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleCloseClick}
             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-2"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-4 p-6 border-b border-gray-200 dark:border-gray-600">
-          <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('backgroundAgent.history.filterStatus')}:
-            </label>
-            <select
-              value={filter.status}
-              onChange={(e) => setFilter((prev) => ({ ...prev, status: e.target.value as any }))}
-              className="text-sm border border-gray-300 rounded px-2 py-1 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+        {/* Body */}
+        <div className="flex-1 flex flex-col min-h-0">
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-4 p-6 border-b border-gray-200 dark:border-gray-600">
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('backgroundAgent.history.filterStatus')}:
+              </label>
+              <select
+                value={filter.status}
+                onChange={(e) => setFilter((prev) => ({ ...prev, status: e.target.value as any }))}
+                className="text-sm border border-gray-300 rounded px-2 py-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              >
+                <option value="all">{t('backgroundAgent.history.all')}</option>
+                <option value="success">{t('backgroundAgent.history.successOnly')}</option>
+                <option value="failure">{t('backgroundAgent.history.failureOnly')}</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('backgroundAgent.history.filterDate')}:
+              </label>
+              <select
+                value={filter.dateRange}
+                onChange={(e) =>
+                  setFilter((prev) => ({ ...prev, dateRange: e.target.value as any }))
+                }
+                className="text-sm border border-gray-300 rounded px-2 py-1 bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+              >
+                <option value="all">{t('backgroundAgent.history.allTime')}</option>
+                <option value="today">{t('backgroundAgent.history.today')}</option>
+                <option value="week">{t('backgroundAgent.history.thisWeek')}</option>
+                <option value="month">{t('backgroundAgent.history.thisMonth')}</option>
+              </select>
+            </div>
+
+            <button
+              onClick={fetchHistory}
+              disabled={isLoading}
+              className="flex items-center space-x-1 px-3 py-1 text-sm border border-gray-300 rounded bg-white hover:bg-gray-50 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
             >
-              <option value="all">{t('backgroundAgent.history.all')}</option>
-              <option value="success">{t('backgroundAgent.history.successOnly')}</option>
-              <option value="failure">{t('backgroundAgent.history.failureOnly')}</option>
-            </select>
+              <ArrowPathIcon className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <span>{t('common.refresh')}</span>
+            </button>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('backgroundAgent.history.filterDate')}:
-            </label>
-            <select
-              value={filter.dateRange}
-              onChange={(e) => setFilter((prev) => ({ ...prev, dateRange: e.target.value as any }))}
-              className="text-sm border border-gray-300 rounded px-2 py-1 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            >
-              <option value="all">{t('backgroundAgent.history.allTime')}</option>
-              <option value="today">{t('backgroundAgent.history.today')}</option>
-              <option value="week">{t('backgroundAgent.history.thisWeek')}</option>
-              <option value="month">{t('backgroundAgent.history.thisMonth')}</option>
-            </select>
-          </div>
+          {/* Main Content - 2 Column Layout */}
+          <div className="flex-1 flex min-h-0">
+            {/* Left Column - Execution History List */}
+            <div className="w-1/4 flex-shrink-0 border-r border-gray-200 dark:border-gray-600 overflow-y-auto">
+              <div className="p-4">
+                <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                  {t('backgroundAgent.history.executionHistoryList')} ({filteredHistory.length})
+                </h4>
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
+                  </div>
+                ) : filteredHistory.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <DocumentTextIcon className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
+                    <p>{t('backgroundAgent.history.noHistory')}</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {filteredHistory.map((execution) => (
+                      <div
+                        key={`${execution.taskId}-${execution.executedAt}`}
+                        onClick={() => selectExecution(execution)}
+                        className={`p-2 rounded cursor-pointer transition-colors ${
+                          selectedExecution?.executedAt === execution.executedAt
+                            ? 'bg-gray-100 dark:bg-gray-800'
+                            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-1 mb-1">
+                          {execution.success ? (
+                            <CheckCircleIcon className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                          ) : (
+                            <XCircleIcon className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                          )}
+                          <span className="text-xs font-medium text-gray-900 dark:text-white">
+                            {execution.success
+                              ? t('backgroundAgent.history.success')
+                              : t('backgroundAgent.history.failure')}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center space-x-2">
+                            <span>{formatDateTime(execution.executedAt)}</span>
+                            <span>•</span>
+                            <span>{execution.messageCount}msg</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
-          <button
-            onClick={fetchHistory}
-            disabled={isLoading}
-            className="flex items-center space-x-1 px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700 disabled:opacity-50"
-          >
-            <ArrowPathIcon className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>{t('common.refresh')}</span>
-          </button>
-        </div>
+            {/* Right Column - Selected Execution Details */}
+            <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+              {selectedExecution ? (
+                <>
+                  {/* Execution Details */}
+                  <div className="p-6 border-b border-gray-200 dark:border-gray-600">
+                    <div className="flex items-center space-x-2 mb-4">
+                      {selectedExecution.success ? (
+                        <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+                      ) : (
+                        <XCircleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
+                      )}
+                      <h4 className="text-lg font-medium text-gray-900 dark:text-white">
+                        {t('backgroundAgent.history.executionDetails')} -{' '}
+                        {formatDateTime(selectedExecution.executedAt)}
+                      </h4>
+                    </div>
 
-        {/* Main Content - 2 Column Layout */}
-        <div className="flex-1 flex min-h-0">
-          {/* Left Column - Execution History List */}
-          <div className="w-1/3 flex-shrink-0 border-r border-gray-200 dark:border-gray-600 overflow-y-auto">
-            <div className="p-4">
-              <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                実行履歴 ({filteredHistory.length})
-              </h4>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <ArrowPathIcon className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
-                </div>
-              ) : filteredHistory.length === 0 ? (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <DocumentTextIcon className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
-                  <p>{t('backgroundAgent.history.noHistory')}</p>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {filteredHistory.map((execution) => (
-                    <div
-                      key={`${execution.taskId}-${execution.executedAt}`}
-                      onClick={() => selectExecution(execution)}
-                      className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedExecution?.executedAt === execution.executedAt
-                          ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-700'
-                          : execution.success
-                            ? 'border-green-200 bg-green-50 hover:bg-green-100 dark:border-green-800 dark:bg-green-900/20 dark:hover:bg-green-900/30'
-                            : 'border-red-200 bg-red-50 hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:hover:bg-red-900/30'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2 mb-2">
-                        {execution.success ? (
-                          <CheckCircleIcon className="h-4 w-4 text-green-600 dark:text-green-400" />
-                        ) : (
-                          <XCircleIcon className="h-4 w-4 text-red-600 dark:text-red-400" />
-                        )}
-                        <span className="text-sm font-medium text-gray-900 dark:text-white">
-                          {execution.success ? '成功' : '失敗'}
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-center space-x-2">
+                        <ClockIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {t('backgroundAgent.history.duration')}:{' '}
+                          {formatDuration(
+                            selectedExecution.executedAt,
+                            selectedExecution.executedAt + 60000
+                          )}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                        <div>{formatDateTime(execution.executedAt)}</div>
-                        <div className="flex items-center space-x-3">
-                          <span>メッセージ: {execution.messageCount}</span>
-                          <span>セッション: {execution.sessionId.slice(0, 8)}...</span>
+                      <div className="flex items-center space-x-2">
+                        <ChatBubbleBottomCenterTextIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {t('backgroundAgent.history.messageCount')}:{' '}
+                          {selectedExecution.messageCount}
+                        </span>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <DocumentTextIcon className="h-4 w-4 text-gray-500 flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-gray-700 dark:text-gray-300 text-xs">
+                            {t('backgroundAgent.history.sessionId')}:
+                          </div>
+                          <div className="text-gray-600 dark:text-gray-400 font-mono text-xs break-all">
+                            {selectedExecution.sessionId}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+
+                    {selectedExecution.error && (
+                      <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 rounded border border-red-200 dark:border-red-800">
+                        <div className="flex items-start space-x-2">
+                          <XCircleIcon className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                          <div className="text-sm text-red-800 dark:text-red-200">
+                            {selectedExecution.error}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Messages */}
+                  <div className="flex-1 flex flex-col min-h-0">
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600">
+                      <h5 className="text-md font-medium text-gray-900 dark:text-white">
+                        {t('backgroundAgent.history.sessionHistory')}
+                      </h5>
+                      {onContinueSession && (
+                        <button
+                          onClick={() => setShowChatMode(!showChatMode)}
+                          className={`text-sm px-3 py-1 rounded border transition-colors ${
+                            showChatMode
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50 dark:bg-gray-700 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {showChatMode
+                            ? t('backgroundAgent.history.showHistoryOnly')
+                            : t('backgroundAgent.history.continueConversation')}
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4">
+                      {loadingSessions.has(selectedExecution.sessionId) ? (
+                        <div className="flex items-center justify-center py-8">
+                          <ArrowPathIcon className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
+                        </div>
+                      ) : sessionHistories[selectedExecution.sessionId] ? (
+                        sessionHistories[selectedExecution.sessionId].length === 0 ? (
+                          <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                            <ChatBubbleBottomCenterTextIcon className="h-8 w-8 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
+                            <p className="text-sm">{t('backgroundAgent.history.noMessages')}</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {sessionHistories[selectedExecution.sessionId].map((message, index) => (
+                              <div
+                                key={index}
+                                className={`flex items-start space-x-3 p-4 rounded-lg ${getMessageBackgroundColor(message)}`}
+                              >
+                                <div className="flex-shrink-0 mt-1">{getMessageIcon(message)}</div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
+                                    {getMessageTitle(message)}
+                                  </div>
+                                  <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+                                    {formatMessageContent(message)}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      ) : (
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                          {t('backgroundAgent.history.loadingMessages')}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Chat Input Form */}
+                    {showChatMode && onContinueSession && (
+                      <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-gray-50 dark:bg-gray-800">
+                        <div className="flex space-x-3">
+                          <div className="flex-1">
+                            <textarea
+                              value={chatMessage}
+                              onChange={(e) => setChatMessage(e.target.value)}
+                              onKeyDown={handleKeyPress}
+                              placeholder={t('backgroundAgent.history.enterMessage')}
+                              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
+                              rows={3}
+                              disabled={isSendingMessage}
+                            />
+                          </div>
+                          <div className="flex-shrink-0">
+                            <button
+                              onClick={handleContinueSession}
+                              disabled={isSendingMessage || !chatMessage.trim()}
+                              className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              {isSendingMessage ? (
+                                <ArrowPathIcon className="h-5 w-5 animate-spin" />
+                              ) : (
+                                t('backgroundAgent.history.send')
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          {t('backgroundAgent.history.sendInstruction')}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+                  <div className="text-center">
+                    <DocumentTextIcon className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
+                    <p>{t('backgroundAgent.history.selectExecutionHistory')}</p>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Right Column - Selected Execution Details */}
-          <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
-            {selectedExecution ? (
-              <>
-                {/* Execution Details */}
-                <div className="p-6 border-b border-gray-200 dark:border-gray-600">
-                  <div className="flex items-center space-x-2 mb-4">
-                    {selectedExecution.success ? (
-                      <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
-                    ) : (
-                      <XCircleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />
-                    )}
-                    <h4 className="text-lg font-medium text-gray-900 dark:text-white">
-                      実行詳細 - {formatDateTime(selectedExecution.executedAt)}
-                    </h4>
-                  </div>
-
-                  <div className="space-y-3 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <ClockIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">
-                        実行時間:{' '}
-                        {formatDuration(
-                          selectedExecution.executedAt,
-                          selectedExecution.executedAt + 60000
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <ChatBubbleBottomCenterTextIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">
-                        メッセージ数: {selectedExecution.messageCount}
-                      </span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <DocumentTextIcon className="h-4 w-4 text-gray-500 flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0 flex-1">
-                        <div className="text-gray-700 dark:text-gray-300 text-xs">
-                          セッションID:
-                        </div>
-                        <div className="text-gray-600 dark:text-gray-400 font-mono text-xs break-all">
-                          {selectedExecution.sessionId}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedExecution.error && (
-                    <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/30 rounded border border-red-200 dark:border-red-800">
-                      <div className="flex items-start space-x-2">
-                        <XCircleIcon className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                        <div className="text-sm text-red-800 dark:text-red-200">
-                          {selectedExecution.error}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Messages */}
-                <div className="flex-1 flex flex-col min-h-0">
-                  <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600">
-                    <h5 className="text-md font-medium text-gray-900 dark:text-white">
-                      セッション履歴
-                    </h5>
-                    {onContinueSession && (
-                      <button
-                        onClick={() => setShowChatMode(!showChatMode)}
-                        className={`text-sm px-3 py-1 rounded border transition-colors ${
-                          showChatMode
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50 dark:bg-gray-700 dark:text-blue-400 dark:border-blue-400 dark:hover:bg-gray-600'
-                        }`}
-                      >
-                        {showChatMode ? '履歴のみ表示' : '会話を継続'}
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-4">
-                    {loadingSessions.has(selectedExecution.sessionId) ? (
-                      <div className="flex items-center justify-center py-8">
-                        <ArrowPathIcon className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" />
-                      </div>
-                    ) : sessionHistories[selectedExecution.sessionId] ? (
-                      sessionHistories[selectedExecution.sessionId].length === 0 ? (
-                        <div className="text-center text-gray-500 dark:text-gray-400 py-8">
-                          <ChatBubbleBottomCenterTextIcon className="h-8 w-8 mx-auto mb-2 text-gray-400 dark:text-gray-600" />
-                          <p className="text-sm">{t('backgroundAgent.history.noMessages')}</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {sessionHistories[selectedExecution.sessionId].map((message, index) => (
-                            <div
-                              key={index}
-                              className={`flex items-start space-x-3 p-4 rounded-lg ${getMessageBackgroundColor(message)}`}
-                            >
-                              <div className="flex-shrink-0 mt-1">{getMessageIcon(message)}</div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-                                  {getMessageTitle(message)}
-                                </div>
-                                <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-                                  {formatMessageContent(message)}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )
-                    ) : (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        メッセージを読み込み中...
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Chat Input Form */}
-                  {showChatMode && onContinueSession && (
-                    <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-gray-50 dark:bg-gray-750">
-                      <div className="flex space-x-3">
-                        <div className="flex-1">
-                          <textarea
-                            value={chatMessage}
-                            onChange={(e) => setChatMessage(e.target.value)}
-                            onKeyDown={handleKeyPress}
-                            placeholder="メッセージを入力してください..."
-                            className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                            rows={3}
-                            disabled={isSendingMessage}
-                          />
-                        </div>
-                        <div className="flex-shrink-0">
-                          <button
-                            onClick={handleContinueSession}
-                            disabled={isSendingMessage || !chatMessage.trim()}
-                            className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                          >
-                            {isSendingMessage ? (
-                              <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                            ) : (
-                              '送信'
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        Enterで送信、Shift+Enterで改行
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
-                <div className="text-center">
-                  <DocumentTextIcon className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
-                  <p>実行履歴を選択してください</p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

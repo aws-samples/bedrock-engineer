@@ -444,6 +444,31 @@ export const getImageGenerationModelsForRegion = (region: BedrockSupportRegion) 
   })
 }
 
+// モデルユーティリティ関数
+export const getModelMaxTokens = (modelId: string): number => {
+  // 完全一致を最初に試す
+  let model = allModels.find((m) => m.modelId === modelId)
+
+  // 完全一致しない場合は部分一致を試す
+  if (!model) {
+    model = allModels.find((m) => m.modelId.includes(modelId) || modelId.includes(m.modelId))
+  }
+
+  return model?.maxTokensLimit || 8192 // デフォルト値
+}
+
+export const getModelByModelId = (modelId: string) => {
+  // 完全一致を最初に試す
+  let model = allModels.find((m) => m.modelId === modelId)
+
+  // 完全一致しない場合は部分一致を試す
+  if (!model) {
+    model = allModels.find((m) => m.modelId.includes(modelId) || modelId.includes(m.modelId))
+  }
+
+  return model
+}
+
 // Prompt Router support
 export const getDefaultPromptRouter = (accountId: string, region: string) => {
   return [

@@ -7,7 +7,7 @@ import { useAgentChat } from './hooks/useAgentChat'
 import { AgentSelector } from './components/AgentSelector'
 import useSetting from '@renderer/hooks/useSetting'
 import useScroll from '@renderer/hooks/useScroll'
-import { useIgnoreFileModal } from './modals/useIgnoreFileModal'
+import { IgnoreSettingsModal } from '@renderer/components/IgnoreSettingsModal'
 import { useToolSettingModal } from './modals/useToolSettingModal'
 import { useAgentSettingsModal } from './modals/useAgentSettingsModal'
 import { FiChevronRight, FiBarChart2 } from 'react-icons/fi'
@@ -76,12 +76,11 @@ export default function ChatPage() {
   }
 
   const { scrollToBottom } = useScroll()
-  const {
-    show: showIgnoreFileModal,
-    handleClose: handleCloseIgnoreFileModal,
-    handleOpen: handleOpenIgnoreFileModal,
-    IgnoreFileModal
-  } = useIgnoreFileModal()
+
+  // Ignore Settings Modal の状態管理
+  const [showIgnoreSettingsModal, setShowIgnoreSettingsModal] = useState(false)
+  const handleOpenIgnoreFileModal = () => setShowIgnoreSettingsModal(true)
+  const handleCloseIgnoreFileModal = () => setShowIgnoreSettingsModal(false)
 
   const {
     show: showAgentSettingModal,
@@ -207,7 +206,11 @@ export default function ChatPage() {
             onSelectAgent={setSelectedAgentId}
           />
           <ToolSettingModal isOpen={showToolSettingModal} onClose={handleCloseToolSettingModal} />
-          <IgnoreFileModal isOpen={showIgnoreFileModal} onClose={handleCloseIgnoreFileModal} />
+          <IgnoreSettingsModal
+            isOpen={showIgnoreSettingsModal}
+            onClose={handleCloseIgnoreFileModal}
+            projectPath={projectPath}
+          />
 
           {/* メインコンテンツエリア - フレックス成長 */}
           <div className="flex flex-row flex-1 min-h-0">

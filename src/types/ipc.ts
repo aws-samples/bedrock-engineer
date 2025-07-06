@@ -303,6 +303,14 @@ export interface IPCChannelDefinitions {
     params: string // ファイルパス
     result: string // base64画像
   }
+  'read-project-ignore': {
+    params: { projectPath: string }
+    result: { content: string; exists: boolean }
+  }
+  'write-project-ignore': {
+    params: { projectPath: string; content: string }
+    result: { success: boolean }
+  }
 
   // ウィンドウ関連
   'window:isFocused': {

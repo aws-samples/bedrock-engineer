@@ -444,12 +444,13 @@ No tools are currently enabled for this agent.
         setTimeout(() => reject(new Error('Chat timeout')), timeoutMs)
       })
 
-      // Bedrock Converse APIを呼び出し
+      // Bedrock Converse APIを呼び出し（タスク固有のinferenceConfigがあれば使用）
       const conversePromise = this.bedrockService.converse({
         modelId: config.modelId,
         messages,
         system,
-        toolConfig
+        toolConfig,
+        inferenceConfig: config.inferenceConfig
       })
 
       const response = await Promise.race([conversePromise, timeoutPromise])
@@ -572,13 +573,14 @@ No tools are currently enabled for this agent.
       // ツール実行結果もセッションに保存する（BackgroundAgentでは履歴が重要）
       await this.sessionManager.addMessage(sessionId, toolResultMessage)
 
-      // 次のAI応答を取得
+      // 次のAI応答を取得（タスク固有のinferenceConfigがあれば使用）
       const nextResponse = await this.bedrockService.converse({
         modelId: config.modelId,
         messages: currentMessages,
         system: config.systemPrompt ? [{ text: config.systemPrompt }] : [],
         toolConfig:
-          toolStates.length > 0 ? { tools: toolStates.filter((tool) => tool.enabled) } : undefined
+          toolStates.length > 0 ? { tools: toolStates.filter((tool) => tool.enabled) } : undefined,
+        inferenceConfig: config.inferenceConfig
       })
 
       const nextResponseMessage: BackgroundMessage = {

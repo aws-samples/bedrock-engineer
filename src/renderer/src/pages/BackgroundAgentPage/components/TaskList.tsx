@@ -8,10 +8,12 @@ import {
   XCircleIcon,
   ArrowPathIcon,
   CalendarIcon,
-  CogIcon
+  CogIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline'
 import { ScheduledTask, TaskExecutionResult } from '../hooks/useBackgroundAgent'
 import { TaskExecutionHistoryModal } from './TaskExecutionHistoryModal'
+import { useSettings } from '@renderer/contexts/SettingsContext'
 
 interface TaskListProps {
   tasks: ScheduledTask[]
@@ -23,6 +25,7 @@ interface TaskListProps {
   onRefresh: () => Promise<void>
   onGetExecutionHistory: (taskId: string) => Promise<TaskExecutionResult[]>
   onGetSessionHistory: (sessionId: string) => Promise<any[]>
+  onCreateTask: () => void
 }
 
 interface TaskCardProps {
@@ -38,9 +41,10 @@ interface TaskCardProps {
 // Toggle Switch Component
 const ToggleSwitch: React.FC<{
   enabled: boolean
-  onToggle: () => void
+  onToggle: (e: React.MouseEvent) => void
   disabled?: boolean
-}> = ({ enabled, onToggle, disabled = false }) => (
+  t: (key: string) => string
+}> = ({ enabled, onToggle, disabled = false, t }) => (
   <button
     onClick={onToggle}
     disabled={disabled}
@@ -48,7 +52,7 @@ const ToggleSwitch: React.FC<{
       enabled ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-600'
     } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     aria-pressed={enabled}
-    aria-label={enabled ? 'タスクを無効にする' : 'タスクを有効にする'}
+    aria-label={enabled ? t('backgroundAgent.disableTask') : t('backgroundAgent.enableTask')}
   >
     <span
       className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
@@ -68,8 +72,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onGetSessionHistory
 }) => {
   const { t } = useTranslation()
+  const { agents, availableModels } = useSettings()
   const [isExecuting, setIsExecuting] = useState(false)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+
+  // エージェント名を取得する関数
+  const getAgentName = (agentId: string) => {
+    const agent = agents.find((a) => a.id === agentId)
+    return agent?.name || agentId
+  }
+
+  // モデル名を取得する関数
+  const getModelName = (modelId: string) => {
+    const model = availableModels.find((m) => m.modelId === modelId)
+    return model?.modelName || modelId
+  }
 
   const handleExecute = async () => {
     try {
@@ -92,7 +109,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   }
 
-  const handleCardClick = () => {
+  const handleStatisticsClick = () => {
     setShowHistoryModal(true)
   }
 
@@ -114,7 +131,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+    <div className="bg-white dark:bg-gray-900 rounded-lg dark:shadow-gray-900/80 border-[0.5px] border-gray-200 dark:border-gray-600 p-6 shadow-sm hover:shadow-md dark:hover:shadow-gray-900/90 transition-all duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
@@ -131,16 +148,24 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </div>
           </div>
 
-          <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+          <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
             <div className="flex items-center space-x-2">
               <ClockIcon className="h-4 w-4" />
               <span>{task.cronExpression}</span>
             </div>
             <div className="flex items-center space-x-2">
-              <CogIcon className="h-4 w-4" />
-              <span>
-                {task.agentId} • {task.modelId}
-              </span>
+              <CogIcon className="h-4 w-4 flex-shrink-0" />
+              <div className="flex flex-col space-y-1 min-w-0">
+                <span className="text-sm font-medium truncate" title={getAgentName(task.agentId)}>
+                  {getAgentName(task.agentId)}
+                </span>
+                <span
+                  className="text-xs text-gray-500 dark:text-gray-400 truncate"
+                  title={getModelName(task.modelId)}
+                >
+                  {getModelName(task.modelId)}
+                </span>
+              </div>
             </div>
             {task.projectDirectory && (
               <div className="flex items-center space-x-2">
@@ -162,7 +187,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             {isExecuting || isTaskLoading ? (
               <>
                 <ArrowPathIcon className="h-4 w-4 mr-1.5 animate-spin" />
-                実行中...
+                {t('common.executing')}
               </>
             ) : (
               <>
@@ -174,13 +199,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
           {/* Toggle Switch */}
           <div className="flex items-center space-x-2">
-            <ToggleSwitch enabled={task.enabled} onToggle={handleToggle} disabled={false} />
+            <ToggleSwitch enabled={task.enabled} onToggle={handleToggle} disabled={false} t={t} />
             <span
               className={`text-sm font-medium ${
                 task.enabled ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
               }`}
             >
-              {task.enabled ? '有効' : '無効'}
+              {task.enabled ? t('common.enabled') : t('common.disabled')}
             </span>
           </div>
 
@@ -195,6 +220,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
+      {/* Created Date */}
+      <div className="mb-3">
+        <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+          <CalendarIcon className="h-3 w-3" />
+          <span>
+            {t('backgroundAgent.created')}: {formatDate(task.createdAt)}
+          </span>
+        </div>
+      </div>
+
       {/* Wake Word Preview */}
       <div className="mb-4">
         <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -205,17 +240,17 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
-      {/* Statistics - Clickable for Task Details */}
+      {/* Statistics */}
       <div
-        className="grid grid-cols-2 gap-4 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors rounded-md p-3 -mx-3"
-        onClick={handleCardClick}
+        className="grid grid-cols-3 gap-4 text-sm transition-colors rounded-md p-3 -mx-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50"
+        onClick={handleStatisticsClick}
         role="button"
         tabIndex={0}
-        aria-label={t('backgroundAgent.taskDetails')}
+        aria-label={t('backgroundAgent.viewExecutionHistory')}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault()
-            handleCardClick()
+            handleStatisticsClick()
           }
         }}
       >
@@ -234,12 +269,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
             {formatDate(task.nextRun)}
           </div>
           <div className="text-gray-500 dark:text-gray-400">{t('backgroundAgent.nextRun')}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-medium text-gray-900 dark:text-white">
-            {formatDate(task.createdAt)}
-          </div>
-          <div className="text-gray-500 dark:text-gray-400">{t('backgroundAgent.created')}</div>
         </div>
       </div>
 
@@ -284,7 +313,8 @@ export const TaskList: React.FC<TaskListProps> = ({
   onExecuteTask,
   onRefresh,
   onGetExecutionHistory,
-  onGetSessionHistory
+  onGetSessionHistory,
+  onCreateTask
 }) => {
   const { t } = useTranslation()
 
@@ -307,11 +337,11 @@ export const TaskList: React.FC<TaskListProps> = ({
           {t('backgroundAgent.noTasksDescription')}
         </p>
         <button
-          onClick={onRefresh}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800"
+          onClick={onCreateTask}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700"
         >
-          <ArrowPathIcon className="h-4 w-4 mr-2" />
-          {t('common.refresh')}
+          <PlusIcon className="h-4 w-4 mr-2" />
+          {t('backgroundAgent.createTask')}
         </button>
       </div>
     )
@@ -323,16 +353,25 @@ export const TaskList: React.FC<TaskListProps> = ({
         <h2 className="text-lg font-medium text-gray-900 dark:text-white">
           {t('backgroundAgent.scheduledTasks')} ({tasks.length})
         </h2>
-        <button
-          onClick={onRefresh}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
-        >
-          <ArrowPathIcon className="h-4 w-4 mr-2" />
-          {t('common.refresh')}
-        </button>
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={onCreateTask}
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-200"
+          >
+            <PlusIcon className="h-4 w-4 mr-2" />
+            {t('backgroundAgent.createTask')}
+          </button>
+          <button
+            onClick={onRefresh}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+          >
+            <ArrowPathIcon className="h-4 w-4 mr-2" />
+            {t('common.refresh')}
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {tasks.map((task) => (
           <TaskCard
             key={task.id}

@@ -108,7 +108,8 @@ export class BackgroundAgentScheduler {
         enabled: config.enabled,
         createdAt: Date.now(),
         nextRun: this.calculateNextRun(config.cronExpression),
-        runCount: 0
+        runCount: 0,
+        inferenceConfig: config.agentConfig.inferenceConfig
       }
 
       this.scheduledTasks.set(task.id, task)
@@ -249,7 +250,8 @@ export class BackgroundAgentScheduler {
       const agentConfig: BackgroundAgentConfig = {
         modelId: task.modelId,
         agentId: task.agentId,
-        projectDirectory: task.projectDirectory
+        projectDirectory: task.projectDirectory,
+        inferenceConfig: task.inferenceConfig
       }
 
       // タスク実行前のメッセージ数をデバッグログ出力

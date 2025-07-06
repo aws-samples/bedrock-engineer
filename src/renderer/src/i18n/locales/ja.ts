@@ -421,6 +421,7 @@ const FileChanges = {
 const BackgroundAgent = {
   title: 'バックグラウンドエージェントスケジューラー',
   description: '指定した時間にAIエージェントを自動実行するスケジュール機能',
+  pageDescription: 'スケジュールされたタスクを管理し、自動実行を設定できます',
   createTask: 'タスク作成',
 
   // Tabs
@@ -444,6 +445,8 @@ const BackgroundAgent = {
     selectProjectDirectory: 'プロジェクトディレクトリを選択',
     wakeWord: 'ウェイクワード（プロンプト）',
     wakeWordPlaceholder: 'エージェントに送信するプロンプトを入力してください...',
+    maxTokens: '最大出力トークン',
+    maxTokensHelp: 'モデルが生成できるトークンの最大数（選択されたモデルに依存）',
     wakeWordHelp: 'このメッセージがタスク実行時にエージェントに送信されます',
     cronHelp: 'Cron表記フォーマット: 分 時 日 月 曜日',
     enableTask: 'タスクを即座に有効にする',
@@ -453,7 +456,8 @@ const BackgroundAgent = {
       cronRequired: 'スケジュールは必須です',
       agentRequired: 'エージェントの選択は必須です',
       modelRequired: 'モデルの選択は必須です',
-      wakeWordRequired: 'ウェイクワードは必須です'
+      wakeWordRequired: 'ウェイクワードは必須です',
+      invalidMaxTokens: '無効な最大トークン数です（1-64000）'
     }
   },
 
@@ -473,6 +477,8 @@ const BackgroundAgent = {
   testExecution: 'テスト実行',
   enable: '有効にする',
   disable: '無効にする',
+  enableTask: 'タスクを有効にする',
+  disableTask: 'タスクを無効にする',
   deleteTask: 'タスクを削除',
   confirmDeleteTask: 'このタスクを削除してもよろしいですか？',
   taskDetails: 'タスク詳細',
@@ -516,6 +522,7 @@ const BackgroundAgent = {
   lastError: '最後のエラー',
 
   // History
+  viewExecutionHistory: '実行履歴を表示',
   history: {
     title: '実行履歴',
     viewHistory: '実行履歴を表示',
@@ -537,11 +544,26 @@ const BackgroundAgent = {
     executionFailure: '実行失敗',
     duration: '実行時間',
     messages: 'メッセージ数',
+    messageCount: 'メッセージ数',
     unknown: '不明',
     sessionHistory: 'セッション履歴',
     noMessages: 'メッセージがありません',
     user: 'ユーザー',
-    assistant: 'アシスタント'
+    assistant: 'アシスタント',
+    executionHistoryList: '実行履歴',
+    executionDetails: '実行詳細',
+    sessionId: 'セッションID',
+    toolExecution: 'ツール実行',
+    toolResult: 'ツール結果',
+    continueConversation: '会話を継続',
+    showHistoryOnly: '履歴のみ表示',
+    loadingMessages: 'メッセージを読み込み中...',
+    enterMessage: 'メッセージを入力してください...',
+    send: '送信',
+    sendInstruction: 'Enterで送信、Shift+Enterで改行',
+    selectExecutionHistory: '実行履歴を選択してください',
+    success: '成功',
+    failure: '失敗'
   },
 
   // Error messages
@@ -558,12 +580,45 @@ const BackgroundAgent = {
   }
 }
 
+const IgnoreSettings = {
+  title: 'ファイル除外設定',
+  globalTab: 'グローバル設定',
+  projectTab: 'プロジェクト固有設定',
+  globalDescription: 'アプリ全体で適用される除外パターンを設定します。',
+  globalPlaceholder: '.git\nnode_modules\n.vscode\n*.log\n.DS_Store\n...',
+  projectDescription:
+    'このプロジェクトでのみ適用される除外パターンを設定します。設定は .bedrock-engineer/.ignore ファイルに保存されます。',
+  projectPath: 'プロジェクトパス',
+  projectPlaceholder: 'node_modules\n.git\n*.log\n.DS_Store\ndist/\nbuild/\n...',
+  loading: '読み込み中...',
+  saving: '保存中...',
+  save: '保存',
+  loadError: 'ファイルの読み込みに失敗しました',
+  saveError: 'ファイルの保存に失敗しました'
+}
+
+const ProjectIgnore = {
+  title: 'プロジェクト固有の除外設定',
+  description:
+    'このプロジェクトで無視するファイルやフォルダのパターンを設定します。設定は .bedrock-engineer/.ignore ファイルに保存されます。',
+  projectPath: 'プロジェクトパス',
+  placeholder: 'node_modules\n.git\n*.log\n.DS_Store\n...',
+  loading: '読み込み中...',
+  saving: '保存中...',
+  save: '保存',
+  loadError: 'ファイルの読み込みに失敗しました',
+  saveError: 'ファイルの保存に失敗しました'
+}
+
 const Common = {
   refresh: '更新',
   close: '閉じる',
   cancel: 'キャンセル',
   create: '作成',
   creating: '作成中...',
+  executing: '実行中...',
+  enabled: '有効',
+  disabled: '無効',
   minutes: '分',
   seconds: '秒'
 }
@@ -594,6 +649,8 @@ const ja = {
   ...AgentFormTabs,
   ...planActMode.ja,
   backgroundAgent: BackgroundAgent,
+  ignoreSettings: IgnoreSettings,
+  projectIgnore: ProjectIgnore,
   common: Common
 }
 
