@@ -4,6 +4,8 @@ import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 import { ModelSelector } from '../../ChatPage/components/ModelSelector'
 import { DirectorySelector } from '../../ChatPage/components/InputForm/DirectorySelector'
+import { AgentSelector } from '../../ChatPage/components/AgentSelector'
+import { useAgentSettingsModal } from '../../ChatPage/modals/useAgentSettingsModal'
 import { IgnoreSettingsModal } from '@renderer/components/IgnoreSettingsModal'
 import { ScheduleConfig } from '../hooks/useBackgroundAgent'
 
@@ -34,12 +36,22 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
     projectDirectory: '',
     wakeWord: '',
     enabled: true,
-    maxTokens: 4096 // Default max tokens
+    maxTokens: 4096, // Default max tokens
+    continueSession: false, // セッション継続フラグ
+    continueSessionPrompt: '' // セッション継続時専用プロンプト
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showProjectIgnoreModal, setShowProjectIgnoreModal] = useState(false)
+
+  // Agent Settings Modal
+  const {
+    show: showAgentSettingModal,
+    handleOpen: openAgentSettingsModal,
+    handleClose: handleCloseAgentSettingsModal,
+    AgentSettingsModal
+  } = useAgentSettingsModal()
 
   // プロジェクトディレクトリ選択ハンドラー
   const handleSelectDirectory = async () => {
@@ -143,7 +155,9 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
           }
         },
         wakeWord: formData.wakeWord,
-        enabled: formData.enabled
+        enabled: formData.enabled,
+        continueSession: formData.continueSession,
+        continueSessionPrompt: formData.continueSessionPrompt || undefined
       }
 
       await onSubmit(config)
@@ -158,7 +172,7 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 w-full max-w-2xl">
+      <div className="relative top-10 mx-auto p-5 w-full max-w-5xl">
         <div className="border-[0.5px] border-white dark:border-gray-100 rounded-lg shadow-xl dark:shadow-gray-900/80 bg-white dark:bg-gray-900">
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">
@@ -173,9 +187,9 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
           </div>
 
           <div className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Task Name */}
-              <div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Task Name - Full width */}
+              <div className="col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('backgroundAgent.form.taskName')}
                 </label>
@@ -189,126 +203,138 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
                 {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
               </div>
 
-              {/* Cron Expression */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('backgroundAgent.form.schedule')}
-                </label>
-                <select
-                  value={formData.cronExpression}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, cronExpression: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white mb-2"
-                >
-                  {CRON_PRESETS.map((preset) => (
-                    <option key={preset.value} value={preset.value}>
-                      {preset.label} ({preset.value})
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  value={formData.cronExpression}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, cronExpression: e.target.value }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                  placeholder="0 9 * * 1-5"
-                />
-                {errors.cronExpression && (
-                  <p className="text-red-500 text-sm mt-1">{errors.cronExpression}</p>
-                )}
-                <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                  {t('backgroundAgent.form.cronHelp')}
-                </p>
-              </div>
+              {/* 2-column grid for form fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Column - Basic Settings */}
+                <div className="space-y-4">
+                  {/* Cron Expression */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('backgroundAgent.form.schedule')}
+                    </label>
+                    <select
+                      value={formData.cronExpression}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, cronExpression: e.target.value }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white mb-2"
+                    >
+                      {CRON_PRESETS.map((preset) => (
+                        <option key={preset.value} value={preset.value}>
+                          {preset.label} ({preset.value})
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={formData.cronExpression}
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, cronExpression: e.target.value }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                      placeholder="0 9 * * 1-5"
+                    />
+                    {errors.cronExpression && (
+                      <p className="text-red-500 text-sm mt-1">{errors.cronExpression}</p>
+                    )}
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                      {t('backgroundAgent.form.cronHelp')}
+                    </p>
+                  </div>
 
-              {/* Agent Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('backgroundAgent.form.agent')}
-                </label>
-                <select
-                  value={formData.agentId}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, agentId: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="">{t('backgroundAgent.form.selectAgent')}</option>
-                  {agents.map((agent) => (
-                    <option key={agent.id} value={agent.id}>
-                      {agent.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.agentId && <p className="text-red-500 text-sm mt-1">{errors.agentId}</p>}
-                {selectedAgent && (
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-                    {selectedAgent.description}
-                  </p>
-                )}
-              </div>
+                  {/* Agent Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('backgroundAgent.form.agent')}
+                    </label>
 
-              {/* Model Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('backgroundAgent.form.model')}
-                </label>
-                <div className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus-within:outline-none focus-within:ring-blue-500 focus-within:border-blue-500 dark:bg-gray-800 dark:border-gray-600">
-                  <ModelSelector
-                    openable={true}
-                    value={formData.modelId}
-                    onChange={(modelId) => setFormData((prev) => ({ ...prev, modelId }))}
-                    className="w-full"
-                  />
+                    <AgentSelector
+                      agents={agents}
+                      selectedAgent={formData.agentId}
+                      onOpenSettings={openAgentSettingsModal}
+                    />
+
+                    {errors.agentId && (
+                      <p className="text-red-500 text-sm mt-1">{errors.agentId}</p>
+                    )}
+                    {selectedAgent && (
+                      <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+                        {t(selectedAgent.description)}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                {errors.modelId && <p className="text-red-500 text-sm mt-1">{errors.modelId}</p>}
-              </div>
 
-              {/* Project Directory */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('backgroundAgent.form.projectDirectory')}
-                </label>
-                <div className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:border-gray-600">
-                  <DirectorySelector
-                    projectPath={
-                      formData.projectDirectory || t('backgroundAgent.form.selectProjectDirectory')
-                    }
-                    onSelectDirectory={handleSelectDirectory}
-                    onOpenIgnoreModal={handleOpenIgnoreModal}
-                  />
+                {/* Right Column - Execution Settings */}
+                <div className="space-y-4">
+                  {/* Model Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('backgroundAgent.form.model')}
+                    </label>
+                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus-within:outline-none focus-within:ring-blue-500 focus-within:border-blue-500 dark:bg-gray-800 dark:border-gray-600">
+                      <ModelSelector
+                        openable={true}
+                        value={formData.modelId}
+                        onChange={(modelId) => setFormData((prev) => ({ ...prev, modelId }))}
+                        className="w-full"
+                      />
+                    </div>
+                    {errors.modelId && (
+                      <p className="text-red-500 text-sm mt-1">{errors.modelId}</p>
+                    )}
+                  </div>
+
+                  {/* Project Directory */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('backgroundAgent.form.projectDirectory')}
+                    </label>
+                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:border-gray-600">
+                      <DirectorySelector
+                        projectPath={
+                          formData.projectDirectory ||
+                          t('backgroundAgent.form.selectProjectDirectory')
+                        }
+                        onSelectDirectory={handleSelectDirectory}
+                        onOpenIgnoreModal={handleOpenIgnoreModal}
+                      />
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                      {t('backgroundAgent.form.projectDirectoryHelp')}
+                    </p>
+                  </div>
+
+                  {/* Max Output Tokens */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('backgroundAgent.form.maxTokens')}
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="64000"
+                      value={formData.maxTokens}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          maxTokens: parseInt(e.target.value) || 1
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                      placeholder="4096"
+                    />
+                    {errors.maxTokens && (
+                      <p className="text-red-500 text-sm mt-1">{errors.maxTokens}</p>
+                    )}
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                      {t('backgroundAgent.form.maxTokensHelp')}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                  {t('backgroundAgent.form.projectDirectoryHelp')}
-                </p>
               </div>
 
-              {/* Max Output Tokens */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  {t('backgroundAgent.form.maxTokens')}
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="64000"
-                  value={formData.maxTokens}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, maxTokens: parseInt(e.target.value) || 1 }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                  placeholder="4096"
-                />
-                {errors.maxTokens && (
-                  <p className="text-red-500 text-sm mt-1">{errors.maxTokens}</p>
-                )}
-                <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-                  {t('backgroundAgent.form.maxTokensHelp')}
-                </p>
-              </div>
-
-              {/* Wake Word */}
+              {/* Wake Word - Full width */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('backgroundAgent.form.wakeWord')}
@@ -325,6 +351,49 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
                   {t('backgroundAgent.form.wakeWordHelp')}
                 </p>
               </div>
+
+              {/* Continue Session Toggle */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="continueSession"
+                  checked={formData.continueSession}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, continueSession: e.target.checked }))
+                  }
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="continueSession"
+                  className="ml-2 block text-sm text-gray-900 dark:text-gray-300"
+                >
+                  {t('backgroundAgent.form.continueSession')}
+                </label>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                {t('backgroundAgent.form.continueSessionHelp')}
+              </p>
+
+              {/* Continue Session Prompt - Only show when continueSession is true */}
+              {formData.continueSession && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('backgroundAgent.form.continueSessionPrompt')}
+                  </label>
+                  <textarea
+                    value={formData.continueSessionPrompt}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, continueSessionPrompt: e.target.value }))
+                    }
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                    placeholder={t('backgroundAgent.form.continueSessionPromptPlaceholder')}
+                  />
+                  <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                    {t('backgroundAgent.form.continueSessionPromptHelp')}
+                  </p>
+                </div>
+              )}
 
               {/* Enabled Toggle */}
               <div className="flex items-center">
@@ -370,6 +439,14 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
         isOpen={showProjectIgnoreModal}
         onClose={() => setShowProjectIgnoreModal(false)}
         projectPath={formData.projectDirectory}
+      />
+
+      {/* Agent Settings Modal */}
+      <AgentSettingsModal
+        isOpen={showAgentSettingModal}
+        onClose={handleCloseAgentSettingsModal}
+        selectedAgentId={formData.agentId}
+        onSelectAgent={(agentId) => setFormData((prev) => ({ ...prev, agentId }))}
       />
     </div>
   )

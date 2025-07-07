@@ -53,6 +53,8 @@ export interface ScheduleConfig {
   agentConfig: BackgroundAgentConfig
   wakeWord: string // 実行時に送信するプロンプト
   enabled: boolean
+  continueSession?: boolean // セッション継続フラグ
+  continueSessionPrompt?: string // セッション継続時専用プロンプト
 }
 
 export interface ScheduledTask {
@@ -70,6 +72,9 @@ export interface ScheduledTask {
   runCount: number
   lastError?: string
   inferenceConfig?: InferenceConfiguration // タスク固有の推論設定
+  continueSession?: boolean // セッション継続フラグ
+  continueSessionPrompt?: string // セッション継続時専用プロンプト
+  lastSessionId?: string // 最後に使用したセッションID
 }
 
 export interface TaskExecutionResult {

@@ -167,13 +167,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 </span>
               </div>
             </div>
-            {task.projectDirectory && (
-              <div className="flex items-center space-x-2">
-                <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+            <div className="h-6 flex items-center">
+              {task.projectDirectory && (
+                <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded truncate max-w-full">
                   {task.projectDirectory}
                 </span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
 
@@ -235,40 +235,78 @@ const TaskCard: React.FC<TaskCardProps> = ({
         <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('backgroundAgent.wakeWord')}:
         </div>
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-3 text-sm text-gray-600 dark:text-gray-400">
-          {task.wakeWord.length > 100 ? `${task.wakeWord.substring(0, 100)}...` : task.wakeWord}
+        <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-3 text-sm text-gray-600 dark:text-gray-400 h-20 overflow-hidden">
+          <div
+            className="line-clamp-3"
+            style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}
+          >
+            {task.wakeWord}
+          </div>
         </div>
       </div>
 
-      {/* Statistics */}
-      <div
-        className="grid grid-cols-3 gap-4 text-sm transition-colors rounded-md p-3 -mx-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50"
-        onClick={handleStatisticsClick}
-        role="button"
-        tabIndex={0}
-        aria-label={t('backgroundAgent.viewExecutionHistory')}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            handleStatisticsClick()
-          }
-        }}
-      >
-        <div className="text-center">
-          <div className="font-medium text-gray-900 dark:text-white">{task.runCount}</div>
-          <div className="text-gray-500 dark:text-gray-400">{t('backgroundAgent.executions')}</div>
-        </div>
-        <div className="text-center">
-          <div className="font-medium text-gray-900 dark:text-white">
-            {formatDate(task.lastRun)}
+      {/* Session Continuation Settings */}
+      {task.continueSession && (
+        <div className="mb-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+              {t('backgroundAgent.sessionContinuation')}
+            </span>
           </div>
-          <div className="text-gray-500 dark:text-gray-400">{t('backgroundAgent.lastRun')}</div>
+          {task.continueSessionPrompt && (
+            <div>
+              <div className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-1">
+                {t('backgroundAgent.continueSessionPrompt')}:
+              </div>
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-md p-3 text-sm text-gray-600 dark:text-gray-400 h-16 overflow-hidden">
+                <div
+                  style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical'
+                  }}
+                >
+                  {task.continueSessionPrompt}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="text-center">
-          <div className="font-medium text-gray-900 dark:text-white">
-            {formatDate(task.nextRun)}
+      )}
+
+      {/* Statistics - Always visible */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t('backgroundAgent.stats.summary')}
           </div>
-          <div className="text-gray-500 dark:text-gray-400">{t('backgroundAgent.nextRun')}</div>
+          <button
+            onClick={handleStatisticsClick}
+            className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+            title={t('backgroundAgent.viewExecutionHistory')}
+          >
+            {t('backgroundAgent.history.viewHistory')}
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-4 text-sm p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+          <div className="text-center">
+            <div className="font-medium text-gray-900 dark:text-white">{task.runCount}</div>
+            <div className="text-gray-500 dark:text-gray-400">
+              {t('backgroundAgent.executions')}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="font-medium text-gray-900 dark:text-white">
+              {formatDate(task.lastRun)}
+            </div>
+            <div className="text-gray-500 dark:text-gray-400">{t('backgroundAgent.lastRun')}</div>
+          </div>
+          <div className="text-center">
+            <div className="font-medium text-gray-900 dark:text-white">
+              {formatDate(task.nextRun)}
+            </div>
+            <div className="text-gray-500 dark:text-gray-400">{t('backgroundAgent.nextRun')}</div>
+          </div>
         </div>
       </div>
 
@@ -356,14 +394,14 @@ export const TaskList: React.FC<TaskListProps> = ({
         <div className="flex items-center space-x-3">
           <button
             onClick={onCreateTask}
-            className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-200"
+            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-200"
           >
             <PlusIcon className="h-4 w-4 mr-2" />
             {t('backgroundAgent.createTask')}
           </button>
           <button
             onClick={onRefresh}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600"
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors duration-200"
           >
             <ArrowPathIcon className="h-4 w-4 mr-2" />
             {t('common.refresh')}

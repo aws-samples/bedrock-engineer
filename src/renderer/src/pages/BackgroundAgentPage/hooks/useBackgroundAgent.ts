@@ -23,6 +23,9 @@ export interface ScheduledTask {
     topK?: number
     stopSequences?: string[]
   }
+  continueSession?: boolean // セッション継続フラグ
+  continueSessionPrompt?: string // セッション継続時専用プロンプト
+  lastSessionId?: string // 最後に使用したセッションID
 }
 
 export interface TaskExecutionResult {
@@ -52,6 +55,8 @@ export interface ScheduleConfig {
   }
   wakeWord: string
   enabled: boolean
+  continueSession?: boolean // セッション継続フラグ
+  continueSessionPrompt?: string // セッション継続時専用プロンプト
 }
 
 export const useBackgroundAgent = () => {

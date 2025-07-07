@@ -399,6 +399,63 @@ const BackgroundAgent = {
   description: 'Schedule AI agents to run automatically at specified times',
   pageDescription: 'Manage scheduled tasks and configure automatic execution',
   createTask: 'Create Task',
+  sessionContinuation: 'Session Continuation',
+  continueSessionPrompt: 'Continue Session Prompt',
+
+  // Help Modal
+  help: {
+    title: 'BackgroundAgent Creation Guide',
+    subtitle: 'Best practices for creating effective BackgroundAgents',
+    tooltip: 'Learn about BackgroundAgents',
+
+    concepts: {
+      title: 'Basic Concepts',
+      description:
+        'BackgroundAgent is designed to automate tasks suitable for scheduled execution:',
+      item1: 'Ideal for tasks with clear and specific objectives',
+      item2: "Automatable tasks that don't require user input",
+      item3: 'Tasks that provide value through regular execution',
+      item4: 'Tasks that can properly log and report results'
+    },
+
+    useCases: {
+      title: 'Recommended Use Cases',
+      development: {
+        title: 'Development Tasks',
+        description:
+          'Tasks that help improve project quality. Perform static analysis of the codebase to identify unused imports and coding standard violations, or run test suites periodically to detect regressions early. You can also automate tasks that improve the productivity of the entire development team, such as checking for updates to README files and API documentation.'
+      },
+      maintenance: {
+        title: 'Maintenance Tasks',
+        description:
+          'Tasks that support stable system operation. Regularly analyze application logs and error logs to detect potential problems and abnormal patterns, enabling early response. Perform periodic health checks to monitor system performance, and automate operations-related tasks such as checking data backup status and storage usage to provide peace of mind.'
+      },
+      workflow: {
+        title: 'Workflow Support',
+        description:
+          'Tasks that streamline daily work operations. Check emails before business hours to extract important matters and automatically create prioritized daily work plans, or review project task boards weekly to identify incomplete tasks and items nearing deadlines. Support team productivity improvement through meeting preparation, agenda organization, and regular progress report creation.'
+      },
+      business: {
+        title: 'Business Automation',
+        description:
+          'Tasks that automate routine work. Analyze customer inquiry patterns to propose FAQ updates, or regularly aggregate sales data and project metrics to update dashboards. Also helpful for management efficiency by checking team member workload and deliverable progress to create summary reports for management.'
+      }
+    },
+
+    prompts: {
+      title: 'Prompt Design Tips',
+      description:
+        'Clear and specific prompts are crucial for creating effective BackgroundAgents. Specify "what," "how," "where," and "by when," and define the expected output format (reports, summaries, checklists, etc.). Also, by clearly defining how to handle errors and the boundaries of the work scope, you can prevent unexpected behavior and achieve consistent results.'
+    },
+
+    bestPractices: {
+      title: 'Best Practices',
+      item1: 'Start small and improve gradually - begin with simple tasks',
+      item2: 'Set clear success metrics - define what should be achieved',
+      item3: 'Choose appropriate execution frequency - avoid excessive runs',
+      item4: 'Utilize logs and reports - regularly review execution results'
+    }
+  },
 
   // Tabs
   tabs: {
@@ -427,6 +484,13 @@ const BackgroundAgent = {
     wakeWordHelp: 'This message will be sent to the agent when the task runs',
     cronHelp: 'Cron expression format: minute hour day month day-of-week',
     enableTask: 'Enable task immediately',
+    continueSession: 'Continue Session',
+    continueSessionHelp:
+      'When enabled, sends additional messages to the previous session. When disabled, always starts a new session.',
+    continueSessionPrompt: 'Session Continuation Prompt',
+    continueSessionPromptPlaceholder: 'Continue with the previous work...',
+    continueSessionPromptHelp:
+      'Dedicated prompt sent when continuing a session. If left empty, the regular wake word will be used.',
 
     errors: {
       nameRequired: 'Task name is required',

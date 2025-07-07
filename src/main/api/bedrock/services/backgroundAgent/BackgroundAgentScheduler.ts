@@ -109,7 +109,9 @@ export class BackgroundAgentScheduler {
         createdAt: Date.now(),
         nextRun: this.calculateNextRun(config.cronExpression),
         runCount: 0,
-        inferenceConfig: config.agentConfig.inferenceConfig
+        inferenceConfig: config.agentConfig.inferenceConfig,
+        continueSession: config.continueSession,
+        continueSessionPrompt: config.continueSessionPrompt
       }
 
       this.scheduledTasks.set(task.id, task)
@@ -228,14 +230,46 @@ export class BackgroundAgentScheduler {
     const taskId = task.id
 
     const executionId = uuidv4()
-    const sessionId = `scheduled-${taskId}-${Date.now()}`
+
+    // セッション継続ロジック
+    let sessionId: string
+    let promptToUse: string = task.wakeWord
+    let isSessionContinuation = false
+
+    if (task.continueSession && task.lastSessionId) {
+      // セッション継続が有効で、前回のセッションIDが存在する場合
+      sessionId = task.lastSessionId
+      isSessionContinuation = true
+
+      // 継続時専用プロンプトがある場合はそれを使用
+      if (task.continueSessionPrompt && task.continueSessionPrompt.trim()) {
+        promptToUse = task.continueSessionPrompt
+      }
+
+      schedulerLogger.info('Continuing existing session', {
+        taskId,
+        sessionId,
+        continueSessionPrompt: !!task.continueSessionPrompt
+      })
+    } else {
+      // 新しいセッションを作成
+      sessionId = `scheduled-${taskId}-${Date.now()}`
+
+      schedulerLogger.info('Creating new session', {
+        taskId,
+        sessionId,
+        continueSessionEnabled: !!task.continueSession
+      })
+    }
 
     schedulerLogger.info('Executing scheduled task', {
       taskId,
       executionId,
       sessionId,
       taskName: task.name,
-      runCount: task.runCount + 1
+      runCount: task.runCount + 1,
+      isSessionContinuation,
+      promptType: task.continueSessionPrompt ? 'continuation' : 'wake'
     })
 
     // 実行開始通知を送信
@@ -259,11 +293,12 @@ export class BackgroundAgentScheduler {
       schedulerLogger.debug('Session history before chat execution', {
         taskId,
         sessionId,
-        messageCountBefore: sessionHistoryBefore.length
+        messageCountBefore: sessionHistoryBefore.length,
+        isSessionContinuation
       })
 
       // タスク実行
-      const result = await this.backgroundAgentService.chat(sessionId, agentConfig, task.wakeWord, {
+      const result = await this.backgroundAgentService.chat(sessionId, agentConfig, promptToUse, {
         enableToolExecution: true,
         maxToolExecutions: 10,
         timeoutMs: 600000 // 10分タイムアウト
@@ -296,6 +331,16 @@ export class BackgroundAgentScheduler {
       task.lastRun = Date.now()
       task.nextRun = this.calculateNextRun(task.cronExpression)
       delete task.lastError // エラーをクリア
+
+      // セッション継続が有効な場合は、セッションIDを保存
+      if (task.continueSession) {
+        task.lastSessionId = sessionId
+        schedulerLogger.debug('Session ID saved for continuation', {
+          taskId,
+          sessionId,
+          continueSession: task.continueSession
+        })
+      }
 
       this.scheduledTasks.set(taskId, task)
       this.persistTasks()
