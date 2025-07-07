@@ -6,7 +6,7 @@ import { BackgroundMessage } from './types'
 import { store } from '../../../../../preload/store'
 import { createCategoryLogger } from '../../../../../common/logger'
 
-const sessionLogger = createCategoryLogger('background-agent:chat-session')
+const logger = createCategoryLogger('background-agent:chat-session')
 
 export interface BackgroundSessionMetadata {
   sessionId: string
@@ -75,7 +75,7 @@ export class BackgroundChatSessionManager {
     // 初回起動時、既存のセッションからメタデータを生成
     this.initializeMetadata()
 
-    sessionLogger.info('BackgroundChatSessionManager initialized', {
+    logger.info('BackgroundChatSessionManager initialized', {
       sessionsDir: this.sessionsDir
     })
   }
@@ -95,11 +95,11 @@ export class BackgroundChatSessionManager {
           }
         }
 
-        sessionLogger.info('Background session metadata initialized', {
+        logger.info('Background session metadata initialized', {
           sessionCount: sessionFiles.length
         })
       } catch (error: any) {
-        sessionLogger.error('Error initializing background session metadata', {
+        logger.error('Error initializing background session metadata', {
           error: error.message
         })
       }
@@ -121,7 +121,7 @@ export class BackgroundChatSessionManager {
 
       // Check if file is empty or contains only whitespace
       if (!data || data.trim().length === 0) {
-        sessionLogger.warn('Session file is empty, removing corrupted file', {
+        logger.warn('Session file is empty, removing corrupted file', {
           sessionId,
           filePath
         })
@@ -133,7 +133,7 @@ export class BackgroundChatSessionManager {
 
       // Validate session structure
       if (!session.sessionId || !session.messages || !Array.isArray(session.messages)) {
-        sessionLogger.warn('Session file has invalid structure, removing corrupted file', {
+        logger.warn('Session file has invalid structure, removing corrupted file', {
           sessionId,
           filePath,
           hasSessionId: !!session.sessionId,
@@ -146,7 +146,7 @@ export class BackgroundChatSessionManager {
 
       return session
     } catch (error: any) {
-      sessionLogger.warn('Error reading background session file, removing corrupted file', {
+      logger.warn('Error reading background session file, removing corrupted file', {
         sessionId,
         error: error.message,
         filePath
@@ -174,7 +174,7 @@ export class BackgroundChatSessionManager {
         // 原子的にリネーム（一時ファイル → 本ファイル）
         await fs.promises.rename(tempFilePath, filePath)
 
-        sessionLogger.debug('Background session file written atomically', {
+        logger.debug('Background session file written atomically', {
           sessionId,
           messageCount: session.messages.length,
           attempt,
@@ -183,15 +183,12 @@ export class BackgroundChatSessionManager {
         return // 成功時は即座に終了
       } catch (error: any) {
         lastError = error
-        sessionLogger.warn(
-          `Error writing background session file (attempt ${attempt}/${maxRetries})`,
-          {
-            sessionId,
-            error: error.message,
-            filePath,
-            tempFilePath
-          }
-        )
+        logger.warn(`Error writing background session file (attempt ${attempt}/${maxRetries})`, {
+          sessionId,
+          error: error.message,
+          filePath,
+          tempFilePath
+        })
 
         // 一時ファイルのクリーンアップ
         try {
@@ -199,7 +196,7 @@ export class BackgroundChatSessionManager {
             await fs.promises.unlink(tempFilePath)
           }
         } catch (cleanupError: any) {
-          sessionLogger.debug('Error cleaning up temp file', {
+          logger.debug('Error cleaning up temp file', {
             tempFilePath,
             error: cleanupError.message
           })
@@ -213,7 +210,7 @@ export class BackgroundChatSessionManager {
     }
 
     // 全ての試行が失敗した場合はエラーを投げる
-    sessionLogger.error('Failed to write background session file after all retries', {
+    logger.error('Failed to write background session file after all retries', {
       sessionId,
       error: lastError?.message,
       filePath,
@@ -232,7 +229,7 @@ export class BackgroundChatSessionManager {
       const filePath = this.getSessionFilePath(sessionId)
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath)
-        sessionLogger.debug('Removed corrupted session file', { sessionId, filePath })
+        logger.debug('Removed corrupted session file', { sessionId, filePath })
       }
 
       // Remove from metadata store as well
@@ -240,10 +237,10 @@ export class BackgroundChatSessionManager {
       if (metadata[sessionId]) {
         delete metadata[sessionId]
         this.metadataStore.set('metadata', metadata)
-        sessionLogger.debug('Removed corrupted session from metadata', { sessionId })
+        logger.debug('Removed corrupted session from metadata', { sessionId })
       }
     } catch (error: any) {
-      sessionLogger.error('Failed to remove corrupted session file', {
+      logger.error('Failed to remove corrupted session file', {
         sessionId,
         error: error.message
       })
@@ -269,7 +266,7 @@ export class BackgroundChatSessionManager {
       [sessionId]: metadata
     })
 
-    sessionLogger.debug('Background session metadata updated', {
+    logger.debug('Background session metadata updated', {
       sessionId,
       messageCount: metadata.messageCount
     })
@@ -280,7 +277,7 @@ export class BackgroundChatSessionManager {
    */
   async createSession(sessionId: string, options: CreateSessionOptions = {}): Promise<void> {
     if (this.hasValidSession(sessionId)) {
-      sessionLogger.warn('Background session already exists', { sessionId })
+      logger.warn('Background session already exists', { sessionId })
       return
     }
 
@@ -298,7 +295,7 @@ export class BackgroundChatSessionManager {
     await this.writeSessionFile(sessionId, session)
     this.updateMetadata(sessionId, session)
 
-    sessionLogger.info('Background session created', {
+    logger.info('Background session created', {
       sessionId,
       taskId: options.taskId,
       agentId: options.agentId,
@@ -334,7 +331,7 @@ export class BackgroundChatSessionManager {
         session = this.readSessionFile(sessionId)
         if (!session) {
           const error = new Error(`Failed to create session for message: ${sessionId}`)
-          sessionLogger.error('Failed to create session for message', {
+          logger.error('Failed to create session for message', {
             sessionId,
             messageId: message.id,
             error: error.message
@@ -342,7 +339,7 @@ export class BackgroundChatSessionManager {
           throw error
         }
       } catch (error: any) {
-        sessionLogger.error('Error creating session for message', {
+        logger.error('Error creating session for message', {
           sessionId,
           messageId: message.id,
           error: error.message
@@ -360,14 +357,14 @@ export class BackgroundChatSessionManager {
       await this.writeSessionFile(sessionId, session)
       this.updateMetadata(sessionId, session)
 
-      sessionLogger.debug('Message added to background session', {
+      logger.debug('Message added to background session', {
         sessionId,
         messageId: message.id,
         role: message.role,
         totalMessages: session.messages.length
       })
     } catch (error: any) {
-      sessionLogger.error('Failed to save message to session', {
+      logger.error('Failed to save message to session', {
         sessionId,
         messageId: message.id,
         role: message.role,
@@ -387,11 +384,11 @@ export class BackgroundChatSessionManager {
   getHistory(sessionId: string): BackgroundMessage[] {
     const session = this.readSessionFile(sessionId)
     if (!session) {
-      sessionLogger.debug('Background session not found, returning empty history', { sessionId })
+      logger.debug('Background session not found, returning empty history', { sessionId })
       return []
     }
 
-    sessionLogger.debug('Retrieved background session history', {
+    logger.debug('Retrieved background session history', {
       sessionId,
       messageCount: session.messages.length
     })
@@ -414,10 +411,10 @@ export class BackgroundChatSessionManager {
       delete metadata[sessionId]
       this.metadataStore.set('metadata', metadata)
 
-      sessionLogger.info('Background session deleted', { sessionId })
+      logger.info('Background session deleted', { sessionId })
       return true
     } catch (error: any) {
-      sessionLogger.error('Error deleting background session', {
+      logger.error('Error deleting background session', {
         sessionId,
         error: error.message
       })
@@ -435,10 +432,10 @@ export class BackgroundChatSessionManager {
         .filter((file) => file.endsWith('.json'))
         .map((file) => file.replace('.json', ''))
 
-      sessionLogger.debug('Listed background sessions', { count: sessionIds.length })
+      logger.debug('Listed background sessions', { count: sessionIds.length })
       return sessionIds
     } catch (error: any) {
-      sessionLogger.error('Error listing background sessions', {
+      logger.error('Error listing background sessions', {
         error: error.message
       })
       return []
@@ -558,7 +555,7 @@ export class BackgroundChatSessionManager {
   ): Promise<void> {
     const session = this.readSessionFile(sessionId)
     if (!session) {
-      sessionLogger.warn('Cannot update execution metadata for non-existent session', { sessionId })
+      logger.warn('Cannot update execution metadata for non-existent session', { sessionId })
       return
     }
 
@@ -568,7 +565,7 @@ export class BackgroundChatSessionManager {
     await this.writeSessionFile(sessionId, session)
     this.updateMetadata(sessionId, session)
 
-    sessionLogger.debug('Execution metadata updated', {
+    logger.debug('Execution metadata updated', {
       sessionId,
       success: executionMetadata?.success
     })
@@ -593,7 +590,7 @@ export class BackgroundChatSessionManager {
     }
 
     if (cleanedCount > 0) {
-      sessionLogger.info('Cleaned up old background sessions', { cleanedCount })
+      logger.info('Cleaned up old background sessions', { cleanedCount })
     }
 
     return cleanedCount

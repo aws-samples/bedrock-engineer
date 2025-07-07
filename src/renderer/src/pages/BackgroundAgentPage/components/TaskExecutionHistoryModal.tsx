@@ -5,7 +5,6 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   ArrowPathIcon,
-  ClockIcon,
   ChatBubbleBottomCenterTextIcon,
   DocumentTextIcon,
   UserIcon,
@@ -125,16 +124,6 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
       setSelectedExecution(filtered[0])
       fetchSessionHistory(filtered[0].sessionId)
     }
-  }
-
-  // 実行時間をフォーマット
-  const formatDuration = (start: number, end?: number) => {
-    if (!end) return t('backgroundAgent.history.unknown')
-    const duration = Math.round((end - start) / 1000)
-    if (duration < 60) return `${duration}${t('common.seconds')}`
-    const minutes = Math.floor(duration / 60)
-    const seconds = duration % 60
-    return `${minutes}${t('common.minutes')}${seconds}${t('common.seconds')}`
   }
 
   // 日時をフォーマット
@@ -474,9 +463,9 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                       >
                         <div className="flex items-center space-x-1 mb-1">
                           {execution.success ? (
-                            <CheckCircleIcon className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                            <CheckCircleIcon className="h-3 w-3 text-green-600 dark:text-green-400" />
                           ) : (
-                            <XCircleIcon className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+                            <XCircleIcon className="h-3 w-3 text-red-600 dark:text-red-400" />
                           )}
                           <span className="text-xs font-medium text-gray-900 dark:text-white">
                             {execution.success
@@ -517,16 +506,6 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                     </div>
 
                     <div className="space-y-3 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <ClockIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                        <span className="text-gray-700 dark:text-gray-300">
-                          {t('backgroundAgent.history.duration')}:{' '}
-                          {formatDuration(
-                            selectedExecution.executedAt,
-                            selectedExecution.executedAt + 60000
-                          )}
-                        </span>
-                      </div>
                       <div className="flex items-center space-x-2">
                         <ChatBubbleBottomCenterTextIcon className="h-4 w-4 text-gray-500 flex-shrink-0" />
                         <span className="text-gray-700 dark:text-gray-300">

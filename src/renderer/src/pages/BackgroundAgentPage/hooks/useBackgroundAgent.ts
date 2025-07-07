@@ -81,16 +81,80 @@ export const useBackgroundAgent = () => {
       setTaskLoading(params.taskId, true)
     })
 
-    // 実行完了通知のリスナー
+    // 実行完了通知のリスナー（拡張された詳細情報を含む）
     const unsubscribeComplete = window.api.backgroundAgent.onTaskNotification((params) => {
       setTaskLoading(params.taskId, false)
+
+      // タスク情報を自動更新
+      if (params.success) {
+        // 成功時のタスク更新（統計情報も含む）
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task.id === params.taskId
+              ? {
+                  ...task,
+                  runCount: params.runCount || task.runCount,
+                  lastRun: params.executedAt,
+                  nextRun: params.nextRun || task.nextRun,
+                  lastError: undefined
+                }
+              : task
+          )
+        )
+
+        // シンプルなトースト通知（OS通知と同様）
+        const message = params.aiMessage || t('backgroundAgent.messages.taskExecuted')
+        toast.success(`[${params.taskName}]\n ${message}`, { duration: 4000 })
+      } else {
+        // エラー時のタスク更新
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task.id === params.taskId
+              ? {
+                  ...task,
+                  lastRun: params.executedAt,
+                  lastError: params.error
+                }
+              : task
+          )
+        )
+
+        // エラー時の詳細トースト通知
+        toast.error(
+          `${params.taskName}: ${t('backgroundAgent.messages.taskExecutionFailed')}\n` +
+            `${t('backgroundAgent.error')}: ${params.error || 'Unknown error'}`,
+          { duration: 6000 }
+        )
+      }
+    })
+
+    // タスクスキップ通知のリスナー（重複実行防止など）
+    const unsubscribeSkipped = window.api.backgroundAgent.onTaskSkipped((params) => {
+      setTaskLoading(params.taskId, false)
+
+      // スキップ理由に応じた通知メッセージを表示
+      let skipMessage = ''
+      if (params.reason === 'duplicate_execution') {
+        const executionTime = params.executionTime ? Math.round(params.executionTime / 1000) : 0
+        skipMessage = t('backgroundAgent.messages.taskSkippedDuplicateExecution', {
+          executionTime
+        })
+      } else {
+        skipMessage = t('backgroundAgent.messages.taskSkipped', { reason: params.reason })
+      }
+
+      toast(`[${params.taskName}]\n ${skipMessage}`, {
+        duration: 4000,
+        icon: '⏭️'
+      })
     })
 
     return () => {
       unsubscribeStart()
       unsubscribeComplete()
+      unsubscribeSkipped()
     }
-  }, [setTaskLoading])
+  }, [setTaskLoading, t])
 
   // タスク一覧を取得
   const fetchTasks = useCallback(async () => {

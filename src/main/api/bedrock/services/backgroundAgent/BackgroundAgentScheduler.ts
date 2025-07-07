@@ -7,7 +7,7 @@ import { ScheduleConfig, ScheduledTask, TaskExecutionResult, BackgroundAgentConf
 import { BackgroundAgentService } from './BackgroundAgentService'
 import { ServiceContext } from '../../types'
 
-const schedulerLogger = createCategoryLogger('background-agent:scheduler')
+const logger = createCategoryLogger('background-agent:scheduler')
 
 export class BackgroundAgentScheduler {
   private scheduledTasks: Map<string, ScheduledTask> = new Map()
@@ -30,10 +30,68 @@ export class BackgroundAgentScheduler {
       }
     })
 
-    schedulerLogger.info('BackgroundAgentScheduler initialized')
+    logger.info('BackgroundAgentScheduler initialized')
 
-    // アプリケーション起動時に永続化されたタスクを復元
+    // アプリケーション起動時にすべてのスケジューラ状態をリセット
+    this.resetAllSchedulerState()
+
+    // 永続化されたタスクを復元
     this.restorePersistedTasks()
+  }
+
+  /**
+   * アプリケーション起動時にすべてのスケジューラ状態をリセット
+   */
+  private resetAllSchedulerState(): void {
+    try {
+      logger.info('Resetting all scheduler state on startup')
+
+      // 1. メモリ上のすべてのcronジョブを停止・削除
+      for (const [taskId, cronJob] of this.cronJobs.entries()) {
+        try {
+          cronJob.stop()
+          if (typeof cronJob.destroy === 'function') {
+            cronJob.destroy()
+          }
+          logger.debug('Stopped existing cron job during reset', { taskId })
+        } catch (error: any) {
+          // エラーは無視（既に停止済みの可能性）
+          logger.debug('Error stopping cron job during reset (ignored)', {
+            taskId,
+            error: error.message
+          })
+        }
+      }
+      this.cronJobs.clear()
+
+      // 2. 永続化されたタスクの実行状態をリセット
+      const persistedTasksData = this.context.store.get('backgroundAgentScheduledTasks')
+      if (Array.isArray(persistedTasksData)) {
+        const cleanedTasks = persistedTasksData.map((task: any) => ({
+          ...task,
+          isExecuting: false,
+          lastExecutionStarted: undefined
+        }))
+        this.context.store.set('backgroundAgentScheduledTasks', cleanedTasks)
+
+        logger.info('Cleaned execution state for persisted tasks', {
+          taskCount: cleanedTasks.length
+        })
+      }
+
+      // 3. メモリ上のタスクマップもクリア
+      this.scheduledTasks.clear()
+
+      logger.info('All scheduler state reset completed on startup', {
+        clearedCronJobs: this.cronJobs.size,
+        clearedTasks: this.scheduledTasks.size
+      })
+    } catch (error: any) {
+      logger.error('Failed to reset scheduler state', {
+        error: error.message,
+        stack: error.stack
+      })
+    }
   }
 
   /**
@@ -58,12 +116,12 @@ export class BackgroundAgentScheduler {
         }
       }
 
-      schedulerLogger.info('Restored persisted scheduled tasks', {
+      logger.info('Restored persisted scheduled tasks', {
         count: persistedTasks.length,
         enabledCount: persistedTasks.filter((t: any) => t.enabled).length
       })
     } catch (error: any) {
-      schedulerLogger.error('Failed to restore persisted tasks', {
+      logger.error('Failed to restore persisted tasks', {
         error: error.message
       })
     }
@@ -77,11 +135,11 @@ export class BackgroundAgentScheduler {
       const tasksArray = Array.from(this.scheduledTasks.values())
       this.context.store.set('backgroundAgentScheduledTasks', tasksArray)
 
-      schedulerLogger.debug('Tasks persisted to store', {
+      logger.debug('Tasks persisted to store', {
         count: tasksArray.length
       })
     } catch (error: any) {
-      schedulerLogger.error('Failed to persist tasks', {
+      logger.error('Failed to persist tasks', {
         error: error.message
       })
     }
@@ -123,7 +181,7 @@ export class BackgroundAgentScheduler {
       // タスクを永続化
       this.persistTasks()
 
-      schedulerLogger.info('Scheduled task created', {
+      logger.info('Scheduled task created', {
         taskId: task.id,
         name: task.name,
         cronExpression: task.cronExpression,
@@ -133,7 +191,7 @@ export class BackgroundAgentScheduler {
 
       return task.id
     } catch (error: any) {
-      schedulerLogger.error('Failed to schedule task', {
+      logger.error('Failed to schedule task', {
         error: error.message,
         config
       })
@@ -142,39 +200,65 @@ export class BackgroundAgentScheduler {
   }
 
   /**
-   * Cronジョブを開始
+   * Cronジョブを開始（重複防止機能付き）
    */
   private startCronJob(task: ScheduledTask): void {
     try {
+      const taskId = task.id
+
       // 既存のジョブがあれば停止
-      const existingJob = this.cronJobs.get(task.id)
+      const existingJob = this.cronJobs.get(taskId)
       if (existingJob) {
-        existingJob.stop()
-        this.cronJobs.delete(task.id)
+        logger.warn('Stopping existing cron job before creating new one', {
+          taskId,
+          taskName: task.name
+        })
+
+        try {
+          existingJob.stop()
+          existingJob.destroy() // より確実にリソースを解放
+        } catch (stopError: any) {
+          logger.error('Failed to stop existing cron job', {
+            taskId,
+            error: stopError.message
+          })
+        }
+
+        this.cronJobs.delete(taskId)
+      }
+
+      // Cron式の妥当性を再確認
+      if (!cron.validate(task.cronExpression)) {
+        throw new Error(`Invalid cron expression for task ${taskId}: ${task.cronExpression}`)
       }
 
       // 新しいCronジョブを作成
       const cronJob = cron.schedule(
         task.cronExpression,
         async () => {
-          await this.executeTask(task.id)
+          await this.executeTask(taskId)
         },
         {
           timezone: 'Asia/Tokyo' // タイムゾーンを設定
         }
       )
 
-      this.cronJobs.set(task.id, cronJob)
+      this.cronJobs.set(taskId, cronJob)
 
-      schedulerLogger.debug('Cron job started', {
-        taskId: task.id,
-        cronExpression: task.cronExpression
+      logger.info('Cron job started successfully', {
+        taskId,
+        taskName: task.name,
+        cronExpression: task.cronExpression,
+        totalActiveCronJobs: this.cronJobs.size
       })
     } catch (error: any) {
-      schedulerLogger.error('Failed to start cron job', {
+      logger.error('Failed to start cron job', {
         taskId: task.id,
-        error: error.message
+        taskName: task.name,
+        error: error.message,
+        stack: error.stack
       })
+      throw error
     }
   }
 
@@ -184,7 +268,7 @@ export class BackgroundAgentScheduler {
   private async executeTaskForManual(taskId: string): Promise<void> {
     const task = this.scheduledTasks.get(taskId)
     if (!task) {
-      schedulerLogger.warn('Attempted to execute non-existent task', {
+      logger.warn('Attempted to execute non-existent task', {
         taskId,
         exists: false
       })
@@ -193,7 +277,7 @@ export class BackgroundAgentScheduler {
 
     // 手動実行の場合は無効化されたタスクでも実行
     if (!task.enabled) {
-      schedulerLogger.info('Executing disabled task manually', {
+      logger.info('Executing disabled task manually', {
         taskId,
         taskName: task.name,
         enabled: task.enabled
@@ -204,15 +288,35 @@ export class BackgroundAgentScheduler {
   }
 
   /**
-   * タスクを実行
+   * タスクを実行（重複実行防止機能付き）
    */
   private async executeTask(taskId: string): Promise<void> {
     const task = this.scheduledTasks.get(taskId)
     if (!task || !task.enabled) {
-      schedulerLogger.warn('Attempted to execute disabled or non-existent task', {
+      logger.warn('Attempted to execute disabled or non-existent task', {
         taskId,
         exists: !!task,
         enabled: task?.enabled
+      })
+      return
+    }
+
+    // 重複実行チェック
+    if (task.isExecuting) {
+      const executionTime = task.lastExecutionStarted ? Date.now() - task.lastExecutionStarted : 0
+      logger.warn('Task is already executing, skipping duplicate execution', {
+        task: JSON.stringify(task),
+        taskId,
+        taskName: task.name,
+        executionTime: Math.round(executionTime / 1000) // 秒単位
+      })
+
+      // 重複実行スキップの通知を送信
+      this.sendTaskSkippedNotification({
+        taskId,
+        taskName: task.name,
+        reason: 'duplicate_execution',
+        executionTime
       })
       return
     }
@@ -225,9 +329,17 @@ export class BackgroundAgentScheduler {
    */
   private async executeTaskInternal(
     task: ScheduledTask,
-    _isManualExecution: boolean
+    isManualExecution: boolean
   ): Promise<void> {
     const taskId = task.id
+
+    // 手動実行でない場合、または手動実行でも重複チェックを行う場合
+    if (!isManualExecution) {
+      // 実行状態を設定
+      task.isExecuting = true
+      task.lastExecutionStarted = Date.now()
+      this.scheduledTasks.set(taskId, task)
+    }
 
     const executionId = uuidv4()
 
@@ -249,7 +361,7 @@ export class BackgroundAgentScheduler {
           promptToUse = task.continueSessionPrompt
         }
 
-        schedulerLogger.info('Continuing existing valid session', {
+        logger.info('Continuing existing valid session', {
           taskId,
           sessionId,
           continueSessionPrompt: !!task.continueSessionPrompt
@@ -263,7 +375,7 @@ export class BackgroundAgentScheduler {
         this.scheduledTasks.set(taskId, task)
         this.persistTasks()
 
-        schedulerLogger.warn('Previous session invalid, creating new session', {
+        logger.warn('Previous session invalid, creating new session', {
           taskId,
           previousSessionId: task.lastSessionId,
           newSessionId: sessionId
@@ -273,14 +385,14 @@ export class BackgroundAgentScheduler {
       // 新しいセッションを作成（UUIDを使用してユニーク性を保証）
       sessionId = `scheduled-${taskId}-${uuidv4()}`
 
-      schedulerLogger.info('Creating new session', {
+      logger.info('Creating new session', {
         taskId,
         sessionId,
         continueSessionEnabled: !!task.continueSession
       })
     }
 
-    schedulerLogger.info('Executing scheduled task', {
+    logger.info('Executing scheduled task', {
       taskId,
       executionId,
       sessionId,
@@ -308,7 +420,7 @@ export class BackgroundAgentScheduler {
 
       // タスク実行前のメッセージ数をデバッグログ出力
       const sessionHistoryBefore = this.backgroundAgentService.getSessionHistory(sessionId)
-      schedulerLogger.debug('Session history before chat execution', {
+      logger.debug('Session history before chat execution', {
         taskId,
         sessionId,
         messageCountBefore: sessionHistoryBefore.length,
@@ -325,7 +437,7 @@ export class BackgroundAgentScheduler {
       // セッション履歴から実際のメッセージ数を取得
       const sessionHistory = this.backgroundAgentService.getSessionHistory(sessionId)
 
-      schedulerLogger.debug('Session history after chat execution', {
+      logger.debug('Session history after chat execution', {
         taskId,
         sessionId,
         messageCountAfter: sessionHistory.length,
@@ -353,7 +465,7 @@ export class BackgroundAgentScheduler {
       // セッション継続が有効な場合は、セッションIDを保存
       if (task.continueSession) {
         task.lastSessionId = sessionId
-        schedulerLogger.debug('Session ID saved for continuation', {
+        logger.debug('Session ID saved for continuation', {
           taskId,
           sessionId,
           continueSession: task.continueSession
@@ -367,7 +479,7 @@ export class BackgroundAgentScheduler {
       let aiMessage = ''
       if (result.response.content && Array.isArray(result.response.content)) {
         const textContent = result.response.content
-          .filter((item: any) => item.type === 'text')
+          .filter((item: any) => 'text' in item && item.text)
           .map((item: any) => item.text)
           .join(' ')
         aiMessage = textContent.length > 200 ? textContent.substring(0, 200) + '...' : textContent
@@ -379,10 +491,16 @@ export class BackgroundAgentScheduler {
         taskName: task.name,
         success: true,
         aiMessage,
-        executedAt: Date.now()
+        executedAt: Date.now(),
+        executionTime: Date.now() - executionResult.executedAt,
+        sessionId: executionResult.sessionId,
+        messageCount: executionResult.messageCount,
+        toolExecutions: result.toolExecutions?.length || 0,
+        runCount: task.runCount,
+        nextRun: task.nextRun
       })
 
-      schedulerLogger.info('Scheduled task executed successfully', {
+      logger.info('Scheduled task executed successfully', {
         taskId,
         executionId,
         sessionId,
@@ -390,7 +508,7 @@ export class BackgroundAgentScheduler {
         toolExecutionCount: result.toolExecutions?.length || 0
       })
     } catch (error: any) {
-      schedulerLogger.error('Scheduled task execution failed', {
+      logger.error('Scheduled task execution failed', {
         taskId,
         executionId,
         sessionId,
@@ -426,6 +544,18 @@ export class BackgroundAgentScheduler {
         error: error.message,
         executedAt: Date.now()
       })
+    } finally {
+      // 実行状態を確実にクリア（成功・失敗問わず）
+      if (!isManualExecution) {
+        task.isExecuting = false
+        task.lastExecutionStarted = undefined
+        this.scheduledTasks.set(taskId, task)
+
+        logger.debug('Task execution state cleared', {
+          taskId,
+          taskName: task.name
+        })
+      }
     }
   }
 
@@ -446,13 +576,13 @@ export class BackgroundAgentScheduler {
         }
       }
 
-      schedulerLogger.debug('Task execution start notification sent to all windows', {
+      logger.debug('Task execution start notification sent to all windows', {
         taskId: params.taskId,
         taskName: params.taskName,
         windowCount: allWindows.length
       })
     } catch (error: any) {
-      schedulerLogger.error('Failed to send task execution start notification', {
+      logger.error('Failed to send task execution start notification', {
         taskId: params.taskId,
         error: error.message
       })
@@ -469,6 +599,12 @@ export class BackgroundAgentScheduler {
     error?: string
     aiMessage?: string
     executedAt: number
+    executionTime?: number
+    sessionId?: string
+    messageCount?: number
+    toolExecutions?: number
+    runCount?: number
+    nextRun?: number
   }): void {
     try {
       // すべてのレンダラープロセスに通知イベントを送信
@@ -479,14 +615,46 @@ export class BackgroundAgentScheduler {
         }
       }
 
-      schedulerLogger.debug('Task notification sent to all windows', {
+      logger.debug('Task notification sent to all windows', {
         taskId: params.taskId,
         taskName: params.taskName,
         success: params.success,
         windowCount: allWindows.length
       })
     } catch (error: any) {
-      schedulerLogger.error('Failed to send task notification', {
+      logger.error('Failed to send task notification', {
+        taskId: params.taskId,
+        error: error.message
+      })
+    }
+  }
+
+  /**
+   * タスクスキップ通知を送信（重複実行防止など）
+   */
+  private sendTaskSkippedNotification(params: {
+    taskId: string
+    taskName: string
+    reason: string
+    executionTime?: number
+  }): void {
+    try {
+      // すべてのレンダラープロセスに通知イベントを送信
+      const allWindows = BrowserWindow.getAllWindows()
+      for (const window of allWindows) {
+        if (!window.isDestroyed()) {
+          window.webContents.send('background-agent:task-skipped', params)
+        }
+      }
+
+      logger.debug('Task skipped notification sent to all windows', {
+        taskId: params.taskId,
+        taskName: params.taskName,
+        reason: params.reason,
+        windowCount: allWindows.length
+      })
+    } catch (error: any) {
+      logger.error('Failed to send task skipped notification', {
         taskId: params.taskId,
         error: error.message
       })
@@ -517,13 +685,13 @@ export class BackgroundAgentScheduler {
       // 永続化
       this.executionHistoryStore.set('executionHistory', allHistory)
 
-      schedulerLogger.debug('Task execution recorded and persisted', {
+      logger.debug('Task execution recorded and persisted', {
         taskId,
         success: result.success,
         historyCount: allHistory[taskId].length
       })
     } catch (error: any) {
-      schedulerLogger.error('Failed to record execution history', {
+      logger.error('Failed to record execution history', {
         taskId,
         error: error.message
       })
@@ -572,14 +740,14 @@ export class BackgroundAgentScheduler {
       // 永続化を更新
       this.persistTasks()
 
-      schedulerLogger.info('Scheduled task cancelled', {
+      logger.info('Scheduled task cancelled', {
         taskId,
         taskName: task.name
       })
 
       return true
     } catch (error: any) {
-      schedulerLogger.error('Failed to cancel task', {
+      logger.error('Failed to cancel task', {
         taskId,
         error: error.message
       })
@@ -594,7 +762,7 @@ export class BackgroundAgentScheduler {
     try {
       const existingTask = this.scheduledTasks.get(taskId)
       if (!existingTask) {
-        schedulerLogger.error('Task not found for update', { taskId })
+        logger.error('Task not found for update', { taskId })
         return false
       }
 
@@ -638,7 +806,7 @@ export class BackgroundAgentScheduler {
       // タスクを永続化
       this.persistTasks()
 
-      schedulerLogger.info('Task updated successfully', {
+      logger.info('Task updated successfully', {
         taskId,
         name: updatedTask.name,
         cronExpression: updatedTask.cronExpression,
@@ -648,7 +816,7 @@ export class BackgroundAgentScheduler {
 
       return true
     } catch (error: any) {
-      schedulerLogger.error('Failed to update task', {
+      logger.error('Failed to update task', {
         taskId,
         error: error.message,
         config
@@ -682,7 +850,7 @@ export class BackgroundAgentScheduler {
       this.scheduledTasks.set(taskId, task)
       this.persistTasks()
 
-      schedulerLogger.info('Task toggle completed', {
+      logger.info('Task toggle completed', {
         taskId,
         enabled,
         taskName: task.name
@@ -690,7 +858,7 @@ export class BackgroundAgentScheduler {
 
       return true
     } catch (error: any) {
-      schedulerLogger.error('Failed to toggle task', {
+      logger.error('Failed to toggle task', {
         taskId,
         enabled,
         error: error.message
@@ -721,7 +889,7 @@ export class BackgroundAgentScheduler {
       const allHistory = this.executionHistoryStore.get('executionHistory')
       return allHistory[taskId] || []
     } catch (error: any) {
-      schedulerLogger.error('Failed to get task execution history', {
+      logger.error('Failed to get task execution history', {
         taskId,
         error: error.message
       })
@@ -738,7 +906,7 @@ export class BackgroundAgentScheduler {
       throw new Error(`Task not found: ${taskId}`)
     }
 
-    schedulerLogger.info('Manual task execution requested', {
+    logger.info('Manual task execution requested', {
       taskId,
       taskName: task.name
     })
@@ -761,7 +929,7 @@ export class BackgroundAgentScheduler {
    * スケジューラーをシャットダウン
    */
   shutdown(): void {
-    schedulerLogger.info('Shutting down scheduler', {
+    logger.info('Shutting down scheduler', {
       activeCronJobs: this.cronJobs.size,
       scheduledTasks: this.scheduledTasks.size
     })
@@ -770,9 +938,9 @@ export class BackgroundAgentScheduler {
     for (const [taskId, cronJob] of this.cronJobs.entries()) {
       try {
         cronJob.stop()
-        schedulerLogger.debug('Stopped cron job', { taskId })
+        logger.debug('Stopped cron job', { taskId })
       } catch (error: any) {
-        schedulerLogger.error('Error stopping cron job', {
+        logger.error('Error stopping cron job', {
           taskId,
           error: error.message
         })
@@ -784,7 +952,7 @@ export class BackgroundAgentScheduler {
     // 最終状態を永続化
     this.persistTasks()
 
-    schedulerLogger.info('Scheduler shutdown completed')
+    logger.info('Scheduler shutdown completed')
   }
 
   /**

@@ -25,7 +25,7 @@ import {
 import { BedrockAgent } from '../../../../../types/agent'
 import { BrowserWindow, ipcMain } from 'electron'
 
-const backgroundAgentLogger = createCategoryLogger('background-agent')
+const logger = createCategoryLogger('background-agent')
 
 export class BackgroundAgentService {
   private bedrockService: BedrockService
@@ -37,7 +37,7 @@ export class BackgroundAgentService {
     this.bedrockService = new BedrockService(context)
     this.sessionManager = new BackgroundChatSessionManager()
 
-    backgroundAgentLogger.info('BackgroundAgentService initialized (using persistent sessions)')
+    logger.info('BackgroundAgentService initialized (using persistent sessions)')
   }
 
   /**
@@ -57,7 +57,7 @@ export class BackgroundAgentService {
       const allAgents = [...customAgents, ...sharedAgents]
       const agent = allAgents.find((a) => a.id === agentId)
 
-      backgroundAgentLogger.debug('Agent search completed', {
+      logger.debug('Agent search completed', {
         agentId,
         customAgentsCount: customAgents.length,
         sharedAgentsCount: sharedAgents.length,
@@ -68,7 +68,7 @@ export class BackgroundAgentService {
 
       return agent || null
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get agent by ID', {
+      logger.error('Failed to get agent by ID', {
         agentId,
         error: error.message,
         stack: error.stack
@@ -140,10 +140,10 @@ export class BackgroundAgentService {
             toolSpec: toolSpec.toolSpec
           }
           toolStates.push(toolState)
-          backgroundAgentLogger.debug('Found preload tool spec', { toolName })
+          logger.debug('Found preload tool spec', { toolName })
         } else {
           // 仕様が見つからない場合は基本的な仕様を生成
-          backgroundAgentLogger.warn('Preload tool spec not found, generating basic spec', {
+          logger.warn('Preload tool spec not found, generating basic spec', {
             toolName
           })
           const basicToolState: ToolState = {
@@ -164,7 +164,7 @@ export class BackgroundAgentService {
         }
       }
 
-      backgroundAgentLogger.info('Generated tool specs from preload tools', {
+      logger.info('Generated tool specs from preload tools', {
         requestedCount: toolNames.length,
         generatedCount: toolStates.length,
         tools: toolStates.map((ts) => ts.toolSpec?.name).filter(Boolean)
@@ -172,7 +172,7 @@ export class BackgroundAgentService {
 
       return toolStates
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to generate tool specs', {
+      logger.error('Failed to generate tool specs', {
         toolNames,
         error: error.message,
         stack: error.stack
@@ -397,7 +397,7 @@ No tools are currently enabled for this agent.
       })
     }
 
-    backgroundAgentLogger.info('Starting background agent chat', {
+    logger.info('Starting background agent chat', {
       modelId: config.modelId,
       agentId: config.agentId,
       agentName: agent.name,
@@ -412,6 +412,8 @@ No tools are currently enabled for this agent.
 
     try {
       // メッセージ履歴をAWS Bedrock形式に変換
+
+      // ユーザーメッセージを追加
       const messages = this.buildMessages(conversationHistory, userMessage)
 
       // ユーザーメッセージをセッションに保存
@@ -419,7 +421,7 @@ No tools are currently enabled for this agent.
         const userMessageObj = messages[messages.length - 1]
         await this.sessionManager.addMessage(sessionId, userMessageObj)
       } catch (error: any) {
-        backgroundAgentLogger.error('Failed to save user message to session', {
+        logger.error('Failed to save user message to session', {
           sessionId,
           error: error.message
         })
@@ -431,7 +433,7 @@ No tools are currently enabled for this agent.
       const systemPrompt = this.buildSystemPrompt(agent, toolStates, config.projectDirectory)
       const system = systemPrompt ? [{ text: systemPrompt }] : []
 
-      backgroundAgentLogger.debug('System prompt built', {
+      logger.debug('System prompt built', {
         hasOriginalSystemPrompt: !!agent.system,
         hasProcessedSystemPrompt: !!systemPrompt,
         systemPromptLength: systemPrompt.length
@@ -441,7 +443,7 @@ No tools are currently enabled for this agent.
       const toolConfig =
         toolStates.length > 0 ? { tools: toolStates.filter((tool) => tool.enabled) } : undefined
 
-      backgroundAgentLogger.debug('Calling Bedrock converse API', {
+      logger.debug('Calling Bedrock converse API', {
         messageCount: messages.length,
         hasSystem: system.length > 0,
         hasTools: !!toolConfig,
@@ -464,7 +466,7 @@ No tools are currently enabled for this agent.
 
       const response = await Promise.race([conversePromise, timeoutPromise])
 
-      backgroundAgentLogger.debug('Received response from Bedrock', {
+      logger.debug('Received response from Bedrock', {
         hasOutput: !!response.output,
         usage: response.usage,
         stopReason: response.stopReason
@@ -484,7 +486,7 @@ No tools are currently enabled for this agent.
 
       // ツール使用が必要な場合の処理
       if (response.stopReason === 'tool_use' && enableToolExecution) {
-        backgroundAgentLogger.info('Tool execution required, processing tools')
+        logger.info('Tool execution required, processing tools')
         // 初回の応答メッセージ（ツール使用を含む）をセッションに保存
         await this.sessionManager.addMessage(sessionId, responseMessage)
 
@@ -500,7 +502,7 @@ No tools are currently enabled for this agent.
         try {
           await this.sessionManager.addMessage(sessionId, result.response)
         } catch (error: any) {
-          backgroundAgentLogger.error('Failed to save assistant response to session', {
+          logger.error('Failed to save assistant response to session', {
             sessionId,
             messageId: result.response.id,
             error: error.message
@@ -510,7 +512,7 @@ No tools are currently enabled for this agent.
         }
       }
 
-      backgroundAgentLogger.info('Background agent chat completed successfully', {
+      logger.info('Background agent chat completed successfully', {
         sessionId,
         finalResponseLength: result.response.content.length,
         toolExecutionCount: result.toolExecutions?.length || 0
@@ -518,7 +520,7 @@ No tools are currently enabled for this agent.
 
       return result
     } catch (error: any) {
-      backgroundAgentLogger.error('Error in background agent chat', {
+      logger.error('Error in background agent chat', {
         error: error.message,
         stack: error.stack,
         modelId: config.modelId
@@ -555,7 +557,7 @@ No tools are currently enabled for this agent.
         break
       }
 
-      backgroundAgentLogger.debug(
+      logger.debug(
         `Executing ${toolUseBlocks.length} tools (execution ${executionCount + 1}/${maxExecutions})`
       )
 
@@ -593,7 +595,7 @@ No tools are currently enabled for this agent.
       try {
         await this.sessionManager.addMessage(sessionId, toolResultMessage)
       } catch (error: any) {
-        backgroundAgentLogger.error('Failed to save tool result message to session', {
+        logger.error('Failed to save tool result message to session', {
           sessionId,
           messageId: toolResultMessage.id,
           error: error.message
@@ -633,7 +635,7 @@ No tools are currently enabled for this agent.
       }
     }
 
-    backgroundAgentLogger.warn('Maximum tool executions reached', { maxExecutions })
+    logger.warn('Maximum tool executions reached', { maxExecutions })
 
     return {
       response: currentMessages[currentMessages.length - 1],
@@ -693,7 +695,7 @@ No tools are currently enabled for this agent.
           toolInput
         })
 
-        backgroundAgentLogger.debug('Sent preload tool request via IPC', {
+        logger.debug('Sent preload tool request via IPC', {
           requestId,
           toolType: toolInput.type
         })
@@ -722,7 +724,7 @@ No tools are currently enabled for this agent.
     toolUse: any
   ): Promise<NonNullable<BackgroundChatResult['toolExecutions']>[0]> {
     try {
-      backgroundAgentLogger.debug('Executing tool via preload tool system', {
+      logger.debug('Executing tool via preload tool system', {
         toolName: toolUse.name,
         toolUseId: toolUse.toolUseId,
         input: toolUse.input
@@ -737,7 +739,7 @@ No tools are currently enabled for this agent.
       const toolResult = await this.executePreloadToolViaIPC(toolInput)
 
       if (toolResult.success) {
-        backgroundAgentLogger.debug('Tool execution completed via preload tools', {
+        logger.debug('Tool execution completed via preload tools', {
           toolName: toolUse.name,
           success: true
         })
@@ -750,7 +752,7 @@ No tools are currently enabled for this agent.
           error: undefined
         }
       } else {
-        backgroundAgentLogger.warn('Tool execution failed via preload tools', {
+        logger.warn('Tool execution failed via preload tools', {
           toolName: toolUse.name,
           error: toolResult.error
         })
@@ -764,7 +766,7 @@ No tools are currently enabled for this agent.
         }
       }
     } catch (error: any) {
-      backgroundAgentLogger.error('Tool execution failed', {
+      logger.error('Tool execution failed', {
         toolName: toolUse.name,
         error: error.message,
         stack: error.stack
@@ -883,7 +885,7 @@ No tools are currently enabled for this agent.
       // システムプロンプトを構築（プレースホルダー置換済み）
       const systemPrompt = this.buildSystemPrompt(agent, toolStates, task.projectDirectory)
 
-      backgroundAgentLogger.debug('Task system prompt generated', {
+      logger.debug('Task system prompt generated', {
         taskId,
         agentId: task.agentId,
         agentName: agent.name,
@@ -893,7 +895,7 @@ No tools are currently enabled for this agent.
 
       return systemPrompt
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get task system prompt', {
+      logger.error('Failed to get task system prompt', {
         taskId,
         error: error.message,
         stack: error.stack

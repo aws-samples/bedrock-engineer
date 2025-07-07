@@ -572,8 +572,18 @@ const BackgroundAgent = {
     taskEnabled: 'Task enabled',
     taskDisabled: 'Task disabled',
     taskExecuted: 'Task executed successfully',
+    taskExecutionFailed: 'Task execution failed',
+    taskSkipped: 'Task execution skipped ({{reason}})',
+    taskSkippedDuplicateExecution:
+      'Task execution skipped (already running for {{executionTime}}s)',
     sessionContinued: 'Session conversation continued'
   },
+
+  // Execution details
+  executionTime: 'Execution Time',
+  messagesLabel: 'Messages',
+  toolExecutions: 'Tool Executions',
+  error: 'Error',
 
   // Statistics
   stats: {

@@ -75,6 +75,8 @@ export interface ScheduledTask {
   continueSession?: boolean // セッション継続フラグ
   continueSessionPrompt?: string // セッション継続時専用プロンプト
   lastSessionId?: string // 最後に使用したセッションID
+  isExecuting?: boolean // 実行中フラグ（重複実行防止用）
+  lastExecutionStarted?: number // 最後の実行開始時刻
 }
 
 export interface TaskExecutionResult {

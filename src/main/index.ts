@@ -23,7 +23,10 @@ import { utilHandlers } from './handlers/util-handlers'
 import { screenHandlers } from './handlers/screen-handlers'
 import { cameraHandlers } from './handlers/camera-handlers'
 import { registerProxyHandlers } from './handlers/proxy-handlers'
-import { backgroundAgentHandlers } from './handlers/background-agent-handlers'
+import {
+  backgroundAgentHandlers,
+  shutdownBackgroundAgentScheduler
+} from './handlers/background-agent-handlers'
 
 // 動的インポートを使用してfix-pathパッケージを読み込む
 import('fix-path')
@@ -432,6 +435,16 @@ app.whenReady().then(async () => {
   // Handle before-quit to set flag for macOS
   app.on('before-quit', () => {
     isQuitting = true
+
+    // Background Agent Schedulerのシャットダウン処理
+    try {
+      shutdownBackgroundAgentScheduler()
+      log.info('Background Agent Scheduler shutdown completed')
+    } catch (error) {
+      log.error('Failed to shutdown Background Agent Scheduler', {
+        error: error instanceof Error ? error.message : String(error)
+      })
+    }
   })
 })
 

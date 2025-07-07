@@ -9,11 +9,15 @@ import { ServiceContext } from '../api/bedrock/types'
 import { createCategoryLogger } from '../../common/logger'
 import { store } from '../../preload/store'
 
-const backgroundAgentLogger = createCategoryLogger('background-agent:ipc')
+const logger = createCategoryLogger('background-agent:ipc')
 
 // BackgroundAgentServiceのインスタンスを作成
 let backgroundAgentService: BackgroundAgentService | null = null
 let backgroundAgentScheduler: BackgroundAgentScheduler | null = null
+
+// 排他制御用のフラグ
+let isSchedulerInitializing = false
+const toggleOperationMutex = new Map<string, Promise<boolean>>()
 
 function getBackgroundAgentService(): BackgroundAgentService {
   if (!backgroundAgentService) {
@@ -26,18 +30,47 @@ function getBackgroundAgentService(): BackgroundAgentService {
 }
 
 function getBackgroundAgentScheduler(): BackgroundAgentScheduler {
-  if (!backgroundAgentScheduler) {
-    const context: ServiceContext = {
-      store: store
+  if (!backgroundAgentScheduler && !isSchedulerInitializing) {
+    try {
+      isSchedulerInitializing = true
+      const context: ServiceContext = {
+        store: store
+      }
+      backgroundAgentScheduler = new BackgroundAgentScheduler(context)
+      logger.info('BackgroundAgentScheduler instance created')
+    } catch (error: any) {
+      logger.error('Failed to create BackgroundAgentScheduler instance', {
+        error: error.message
+      })
+      throw error
+    } finally {
+      isSchedulerInitializing = false
     }
-    backgroundAgentScheduler = new BackgroundAgentScheduler(context)
   }
-  return backgroundAgentScheduler
+  return backgroundAgentScheduler!
+}
+
+/**
+ * BackgroundAgentSchedulerをシャットダウン
+ */
+export function shutdownBackgroundAgentScheduler(): void {
+  if (backgroundAgentScheduler) {
+    try {
+      backgroundAgentScheduler.shutdown()
+      logger.info('BackgroundAgentScheduler shutdown completed')
+    } catch (error: any) {
+      logger.error('Failed to shutdown BackgroundAgentScheduler', {
+        error: error.message
+      })
+    } finally {
+      backgroundAgentScheduler = null
+    }
+  }
 }
 
 export const backgroundAgentHandlers = {
   'background-agent:chat': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Background agent chat request', {
+    logger.debug('Background agent chat request', {
       sessionId: params.sessionId,
       modelId: params.config?.modelId,
       hasSystemPrompt: !!params.config?.systemPrompt,
@@ -61,7 +94,7 @@ export const backgroundAgentHandlers = {
         params.options
       )
 
-      backgroundAgentLogger.info('Background agent chat completed', {
+      logger.info('Background agent chat completed', {
         sessionId: params.sessionId,
         responseLength: result.response.content.length,
         toolExecutionCount: result.toolExecutions?.length || 0,
@@ -70,7 +103,7 @@ export const backgroundAgentHandlers = {
 
       return result
     } catch (error: any) {
-      backgroundAgentLogger.error('Background agent chat failed', {
+      logger.error('Background agent chat failed', {
         sessionId: params.sessionId,
         error: error.message,
         stack: error.stack,
@@ -81,7 +114,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:create-session': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Create session request', {
+    logger.debug('Create session request', {
       sessionId: params.sessionId,
       projectDirectory: params.options?.projectDirectory,
       agentId: params.options?.agentId,
@@ -92,7 +125,7 @@ export const backgroundAgentHandlers = {
       const service = getBackgroundAgentService()
       service.createSession(params.sessionId, params.options)
 
-      backgroundAgentLogger.info('Session created', {
+      logger.info('Session created', {
         sessionId: params.sessionId,
         projectDirectory: params.options?.projectDirectory,
         agentId: params.options?.agentId,
@@ -105,7 +138,7 @@ export const backgroundAgentHandlers = {
         projectDirectory: params.options?.projectDirectory
       }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to create session', {
+      logger.error('Failed to create session', {
         sessionId: params.sessionId,
         error: error.message,
         projectDirectory: params.options?.projectDirectory
@@ -115,7 +148,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:delete-session': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Delete session request', {
+    logger.debug('Delete session request', {
       sessionId: params.sessionId
     })
 
@@ -123,14 +156,14 @@ export const backgroundAgentHandlers = {
       const service = getBackgroundAgentService()
       const deleted = service.deleteSession(params.sessionId)
 
-      backgroundAgentLogger.info('Session deletion result', {
+      logger.info('Session deletion result', {
         sessionId: params.sessionId,
         deleted
       })
 
       return { success: deleted, sessionId: params.sessionId }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to delete session', {
+      logger.error('Failed to delete session', {
         sessionId: params.sessionId,
         error: error.message
       })
@@ -139,19 +172,19 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:list-sessions': async (_event: IpcMainInvokeEvent) => {
-    backgroundAgentLogger.debug('List sessions request')
+    logger.debug('List sessions request')
 
     try {
       const service = getBackgroundAgentService()
       const sessions = service.listSessions()
 
-      backgroundAgentLogger.info('Sessions listed', {
+      logger.info('Sessions listed', {
         count: sessions.length
       })
 
       return { sessions }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to list sessions', {
+      logger.error('Failed to list sessions', {
         error: error.message
       })
       throw error
@@ -159,7 +192,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:get-session-history': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Get session history request', {
+    logger.debug('Get session history request', {
       sessionId: params.sessionId
     })
 
@@ -167,14 +200,14 @@ export const backgroundAgentHandlers = {
       const service = getBackgroundAgentService()
       const history = service.getSessionHistory(params.sessionId)
 
-      backgroundAgentLogger.info('Session history retrieved', {
+      logger.info('Session history retrieved', {
         sessionId: params.sessionId,
         messageCount: history.length
       })
 
       return { history }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get session history', {
+      logger.error('Failed to get session history', {
         sessionId: params.sessionId,
         error: error.message
       })
@@ -183,7 +216,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:get-session-stats': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Get session stats request', {
+    logger.debug('Get session stats request', {
       sessionId: params.sessionId
     })
 
@@ -191,14 +224,14 @@ export const backgroundAgentHandlers = {
       const service = getBackgroundAgentService()
       const stats = service.getSessionStats(params.sessionId)
 
-      backgroundAgentLogger.info('Session stats retrieved', {
+      logger.info('Session stats retrieved', {
         sessionId: params.sessionId,
         stats
       })
 
       return stats
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get session stats', {
+      logger.error('Failed to get session stats', {
         sessionId: params.sessionId,
         error: error.message
       })
@@ -207,19 +240,19 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:get-all-sessions-metadata': async (_event: IpcMainInvokeEvent) => {
-    backgroundAgentLogger.debug('Get all sessions metadata request')
+    logger.debug('Get all sessions metadata request')
 
     try {
       const service = getBackgroundAgentService()
       const metadata = service.getAllSessionsMetadata()
 
-      backgroundAgentLogger.info('All sessions metadata retrieved', {
+      logger.info('All sessions metadata retrieved', {
         sessionCount: metadata.length
       })
 
       return { metadata }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get all sessions metadata', {
+      logger.error('Failed to get all sessions metadata', {
         error: error.message
       })
       throw error
@@ -227,7 +260,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:get-sessions-by-project': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Get sessions by project request', {
+    logger.debug('Get sessions by project request', {
       projectDirectory: params.projectDirectory
     })
 
@@ -235,14 +268,14 @@ export const backgroundAgentHandlers = {
       const service = getBackgroundAgentService()
       const sessions = service.getSessionsByProjectDirectory(params.projectDirectory)
 
-      backgroundAgentLogger.info('Sessions by project retrieved', {
+      logger.info('Sessions by project retrieved', {
         projectDirectory: params.projectDirectory,
         sessionCount: sessions.length
       })
 
       return { sessions }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get sessions by project', {
+      logger.error('Failed to get sessions by project', {
         projectDirectory: params.projectDirectory,
         error: error.message
       })
@@ -251,7 +284,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:get-sessions-by-agent': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Get sessions by agent request', {
+    logger.debug('Get sessions by agent request', {
       agentId: params.agentId
     })
 
@@ -259,14 +292,14 @@ export const backgroundAgentHandlers = {
       const service = getBackgroundAgentService()
       const sessions = service.getSessionsByAgentId(params.agentId)
 
-      backgroundAgentLogger.info('Sessions by agent retrieved', {
+      logger.info('Sessions by agent retrieved', {
         agentId: params.agentId,
         sessionCount: sessions.length
       })
 
       return { sessions }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get sessions by agent', {
+      logger.error('Failed to get sessions by agent', {
         agentId: params.agentId,
         error: error.message
       })
@@ -276,7 +309,7 @@ export const backgroundAgentHandlers = {
 
   // スケジューリング機能のIPCハンドラー
   'background-agent:schedule-task': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Schedule task request', {
+    logger.debug('Schedule task request', {
       name: params.config?.name,
       cronExpression: params.config?.cronExpression,
       agentId: params.config?.agentConfig?.agentId
@@ -287,7 +320,7 @@ export const backgroundAgentHandlers = {
       const scheduler = getBackgroundAgentScheduler()
       const taskId = scheduler.scheduleTask(config)
 
-      backgroundAgentLogger.info('Task scheduled successfully', {
+      logger.info('Task scheduled successfully', {
         taskId,
         name: config.name,
         cronExpression: config.cronExpression
@@ -295,7 +328,7 @@ export const backgroundAgentHandlers = {
 
       return { success: true, taskId }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to schedule task', {
+      logger.error('Failed to schedule task', {
         error: error.message,
         config: params.config
       })
@@ -304,7 +337,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:cancel-task': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Cancel task request', {
+    logger.debug('Cancel task request', {
       taskId: params.taskId
     })
 
@@ -312,14 +345,14 @@ export const backgroundAgentHandlers = {
       const scheduler = getBackgroundAgentScheduler()
       const success = scheduler.cancelTask(params.taskId)
 
-      backgroundAgentLogger.info('Task cancellation result', {
+      logger.info('Task cancellation result', {
         taskId: params.taskId,
         success
       })
 
       return { success }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to cancel task', {
+      logger.error('Failed to cancel task', {
         taskId: params.taskId,
         error: error.message
       })
@@ -328,46 +361,69 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:toggle-task': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Toggle task request', {
+    logger.debug('Toggle task request', {
       taskId: params.taskId,
       enabled: params.enabled
     })
 
-    try {
-      const scheduler = getBackgroundAgentScheduler()
-      const success = scheduler.toggleTask(params.taskId, params.enabled)
+    const taskId = params.taskId
 
-      backgroundAgentLogger.info('Task toggle result', {
-        taskId: params.taskId,
-        enabled: params.enabled,
-        success
+    // 排他制御: 同じタスクのトグル操作が同時実行されることを防ぐ
+    const existingOperation = toggleOperationMutex.get(taskId)
+    if (existingOperation) {
+      logger.warn('Toggle operation already in progress for task', {
+        taskId
       })
-
-      return { success }
-    } catch (error: any) {
-      backgroundAgentLogger.error('Failed to toggle task', {
-        taskId: params.taskId,
-        enabled: params.enabled,
-        error: error.message
-      })
-      throw error
+      await existingOperation
     }
+
+    // 新しいトグル操作を開始
+    const togglePromise = (async (): Promise<boolean> => {
+      try {
+        const scheduler = getBackgroundAgentScheduler()
+        const success = scheduler.toggleTask(taskId, params.enabled)
+
+        logger.info('Task toggle result', {
+          taskId,
+          enabled: params.enabled,
+          success
+        })
+
+        return success
+      } catch (error: any) {
+        logger.error('Failed to toggle task', {
+          taskId,
+          enabled: params.enabled,
+          error: error.message
+        })
+        throw error
+      } finally {
+        // 操作完了後にミューテックスから削除
+        toggleOperationMutex.delete(taskId)
+      }
+    })()
+
+    // ミューテックスに登録
+    toggleOperationMutex.set(taskId, togglePromise)
+
+    const success = await togglePromise
+    return { success }
   },
 
   'background-agent:list-tasks': async (_event: IpcMainInvokeEvent) => {
-    backgroundAgentLogger.debug('List tasks request')
+    logger.debug('List tasks request')
 
     try {
       const scheduler = getBackgroundAgentScheduler()
       const tasks = scheduler.listTasks()
 
-      backgroundAgentLogger.info('Tasks listed', {
+      logger.info('Tasks listed', {
         count: tasks.length
       })
 
       return { tasks }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to list tasks', {
+      logger.error('Failed to list tasks', {
         error: error.message
       })
       throw error
@@ -375,7 +431,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:get-task': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Get task request', {
+    logger.debug('Get task request', {
       taskId: params.taskId
     })
 
@@ -383,14 +439,14 @@ export const backgroundAgentHandlers = {
       const scheduler = getBackgroundAgentScheduler()
       const task = scheduler.getTask(params.taskId)
 
-      backgroundAgentLogger.info('Task retrieved', {
+      logger.info('Task retrieved', {
         taskId: params.taskId,
         found: !!task
       })
 
       return { task }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get task', {
+      logger.error('Failed to get task', {
         taskId: params.taskId,
         error: error.message
       })
@@ -402,7 +458,7 @@ export const backgroundAgentHandlers = {
     _event: IpcMainInvokeEvent,
     params: any
   ) => {
-    backgroundAgentLogger.debug('Get task execution history request', {
+    logger.debug('Get task execution history request', {
       taskId: params.taskId
     })
 
@@ -410,14 +466,14 @@ export const backgroundAgentHandlers = {
       const scheduler = getBackgroundAgentScheduler()
       const history = scheduler.getTaskExecutionHistory(params.taskId)
 
-      backgroundAgentLogger.info('Task execution history retrieved', {
+      logger.info('Task execution history retrieved', {
         taskId: params.taskId,
         historyCount: history.length
       })
 
       return { history }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get task execution history', {
+      logger.error('Failed to get task execution history', {
         taskId: params.taskId,
         error: error.message
       })
@@ -426,7 +482,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:execute-task-manually': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Execute task manually request', {
+    logger.debug('Execute task manually request', {
       taskId: params.taskId
     })
 
@@ -438,14 +494,14 @@ export const backgroundAgentHandlers = {
         throw new Error('No execution result returned from scheduler')
       }
 
-      backgroundAgentLogger.info('Task executed manually', {
+      logger.info('Task executed manually', {
         taskId: params.taskId,
         success: result.success
       })
 
       return { result }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to execute task manually', {
+      logger.error('Failed to execute task manually', {
         taskId: params.taskId,
         error: error.message
       })
@@ -454,13 +510,13 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:get-scheduler-stats': async (_event: IpcMainInvokeEvent) => {
-    backgroundAgentLogger.debug('Get scheduler stats request')
+    logger.debug('Get scheduler stats request')
 
     try {
       const scheduler = getBackgroundAgentScheduler()
       const stats = scheduler.getStats()
 
-      backgroundAgentLogger.info('Scheduler stats retrieved', {
+      logger.info('Scheduler stats retrieved', {
         totalTasks: stats.totalTasks,
         enabledTasks: stats.enabledTasks,
         activeCronJobs: stats.activeCronJobs
@@ -468,7 +524,7 @@ export const backgroundAgentHandlers = {
 
       return { stats }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get scheduler stats', {
+      logger.error('Failed to get scheduler stats', {
         error: error.message
       })
       throw error
@@ -476,7 +532,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:update-task': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Update task request', {
+    logger.debug('Update task request', {
       taskId: params.taskId,
       name: params.config?.name,
       cronExpression: params.config?.cronExpression,
@@ -492,7 +548,7 @@ export const backgroundAgentHandlers = {
         throw new Error(`Failed to update task: ${params.taskId}`)
       }
 
-      backgroundAgentLogger.info('Task updated successfully', {
+      logger.info('Task updated successfully', {
         taskId: params.taskId,
         name: config.name,
         cronExpression: config.cronExpression
@@ -500,7 +556,7 @@ export const backgroundAgentHandlers = {
 
       return { success: true, taskId: params.taskId }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to update task', {
+      logger.error('Failed to update task', {
         taskId: params.taskId,
         error: error.message,
         config: params.config
@@ -510,7 +566,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:continue-session': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Continue session request', {
+    logger.debug('Continue session request', {
       sessionId: params.sessionId,
       taskId: params.taskId,
       userMessageLength: params.userMessage?.length || 0
@@ -544,7 +600,7 @@ export const backgroundAgentHandlers = {
         }
       )
 
-      backgroundAgentLogger.info('Session continued successfully', {
+      logger.info('Session continued successfully', {
         sessionId: params.sessionId,
         taskId: params.taskId,
         responseLength: result.response.content.length,
@@ -553,7 +609,7 @@ export const backgroundAgentHandlers = {
 
       return result
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to continue session', {
+      logger.error('Failed to continue session', {
         sessionId: params.sessionId,
         taskId: params.taskId,
         error: error.message,
@@ -564,7 +620,7 @@ export const backgroundAgentHandlers = {
   },
 
   'background-agent:get-task-system-prompt': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Get task system prompt request', {
+    logger.debug('Get task system prompt request', {
       taskId: params.taskId
     })
 
@@ -572,14 +628,14 @@ export const backgroundAgentHandlers = {
       const service = getBackgroundAgentService()
       const systemPrompt = await service.getTaskSystemPrompt(params.taskId)
 
-      backgroundAgentLogger.info('Task system prompt retrieved', {
+      logger.info('Task system prompt retrieved', {
         taskId: params.taskId,
         systemPromptLength: systemPrompt.length
       })
 
       return { systemPrompt }
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to get task system prompt', {
+      logger.error('Failed to get task system prompt', {
         taskId: params.taskId,
         error: error.message
       })
@@ -589,7 +645,7 @@ export const backgroundAgentHandlers = {
 
   // 通知ハンドラー
   'background-agent:task-notification': async (_event: IpcMainInvokeEvent, params: any) => {
-    backgroundAgentLogger.debug('Task notification request', {
+    logger.debug('Task notification request', {
       taskId: params.taskId,
       taskName: params.taskName,
       success: params.success
@@ -604,14 +660,14 @@ export const backgroundAgentHandlers = {
         }
       }
 
-      backgroundAgentLogger.info('Task notification sent to all windows', {
+      logger.info('Task notification sent to all windows', {
         taskId: params.taskId,
         taskName: params.taskName,
         success: params.success,
         windowCount: allWindows.length
       })
     } catch (error: any) {
-      backgroundAgentLogger.error('Failed to send task notification', {
+      logger.error('Failed to send task notification', {
         taskId: params.taskId,
         error: error.message
       })

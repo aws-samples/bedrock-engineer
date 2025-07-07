@@ -588,14 +588,23 @@ const BackgroundAgent = {
 
   // Messages
   messages: {
-    taskCreated: 'タスクが正常に作成されました',
-    taskUpdated: 'タスクが正常に更新されました',
-    taskCancelled: 'タスクが正常に削除されました',
-    taskEnabled: 'タスクが有効になりました',
-    taskDisabled: 'タスクが無効になりました',
-    taskExecuted: 'タスクが正常に実行されました',
+    taskCreated: 'タスクを作成しました',
+    taskUpdated: 'タスクを更新しました',
+    taskCancelled: 'タスクを削除しました',
+    taskEnabled: 'タスクを有効にしました',
+    taskDisabled: 'タスクを無効にしました',
+    taskExecuted: 'タスクを実行しました',
+    taskExecutionFailed: 'タスクの実行に失敗しました',
+    taskSkipped: 'タスクの実行をスキップしました（{{reason}}）',
+    taskSkippedDuplicateExecution: 'タスクの実行をスキップしました（{{executionTime}}秒間実行中）',
     sessionContinued: 'セッションでの会話を継続しました'
   },
+
+  // Execution details
+  executionTime: '実行時間',
+  messagesLabel: 'メッセージ',
+  toolExecutions: 'ツール実行',
+  error: 'エラー',
 
   // Statistics
   stats: {

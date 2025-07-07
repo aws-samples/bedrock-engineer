@@ -37,7 +37,7 @@ export const api = {
     }) => {
       return ipcRenderer.invoke('background-agent:chat', params)
     },
-    // 通知イベントリスナー
+    // 通知イベントリスナー（拡張された詳細情報を含む）
     onTaskNotification: (
       callback: (params: {
         taskId: string
@@ -46,6 +46,12 @@ export const api = {
         error?: string
         aiMessage?: string
         executedAt: number
+        executionTime?: number
+        sessionId?: string
+        messageCount?: number
+        toolExecutions?: number
+        runCount?: number
+        nextRun?: number
       }) => void
     ) => {
       const handler = (_event: any, params: any) => callback(params)
@@ -66,6 +72,23 @@ export const api = {
       // クリーンアップ関数を返す
       return () => {
         ipcRenderer.removeListener('background-agent:task-execution-start', handler)
+      }
+    },
+    // タスクスキップ通知リスナー（重複実行防止など）
+    onTaskSkipped: (
+      callback: (params: {
+        taskId: string
+        taskName: string
+        reason: string
+        executionTime?: number
+      }) => void
+    ) => {
+      const handler = (_event: any, params: any) => callback(params)
+      ipcRenderer.on('background-agent:task-skipped', handler)
+
+      // クリーンアップ関数を返す
+      return () => {
+        ipcRenderer.removeListener('background-agent:task-skipped', handler)
       }
     },
     createSession: async (
