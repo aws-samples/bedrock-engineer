@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiX } from 'react-icons/fi'
 import { ModelSelector } from '../../ChatPage/components/ModelSelector'
 import { Agent } from '@/types/agent-chat'
@@ -19,6 +20,7 @@ export const NewSessionModal: React.FC<NewSessionModalProps> = ({
   onCreateSession,
   agents
 }) => {
+  const { t } = useTranslation()
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null)
   const { currentLLM } = useSetting()
 
@@ -29,7 +31,7 @@ export const NewSessionModal: React.FC<NewSessionModalProps> = ({
 
     // エージェントが選択されていない場合はエラー
     if (!selectedAgentId) {
-      alert('エージェントを選択してください。')
+      alert(t('backgroundAgent.newSession.selectAgent'))
       return
     }
 
@@ -58,7 +60,7 @@ export const NewSessionModal: React.FC<NewSessionModalProps> = ({
         {/* ヘッダー */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            新規セッション作成
+            {t('backgroundAgent.newSession.title')}
           </h2>
           <button
             onClick={onClose}
@@ -73,7 +75,7 @@ export const NewSessionModal: React.FC<NewSessionModalProps> = ({
           {/* モデル選択 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              モデル選択
+              {t('backgroundAgent.newSession.modelSelection')}
             </label>
             <ModelSelector openable={true} />
           </div>
@@ -81,7 +83,7 @@ export const NewSessionModal: React.FC<NewSessionModalProps> = ({
           {/* エージェント選択 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              エージェント選択
+              {t('backgroundAgent.newSession.agentSelection')}
             </label>
             <div className="relative">
               <select
@@ -89,7 +91,7 @@ export const NewSessionModal: React.FC<NewSessionModalProps> = ({
                 onChange={(e) => setSelectedAgentId(e.target.value || null)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white appearance-none"
               >
-                <option value="">エージェントなし</option>
+                <option value="">{t('backgroundAgent.newSession.noAgent')}</option>
                 {agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
                     {agent.name}
@@ -134,13 +136,13 @@ export const NewSessionModal: React.FC<NewSessionModalProps> = ({
               onClick={onClose}
               className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              キャンセル
+              {t('backgroundAgent.newSession.cancel')}
             </button>
             <button
               type="submit"
               className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
-              作成
+              {t('backgroundAgent.newSession.create')}
             </button>
           </div>
         </form>

@@ -487,8 +487,8 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                         <div className="text-xs text-gray-600 dark:text-gray-400">
                           <div className="flex items-center space-x-2">
                             <span>{formatDateTime(execution.executedAt)}</span>
-                            <span>•</span>
-                            <span>{execution.messageCount}msg</span>
+                            <span className="hidden md:inline">•</span>
+                            <span className="hidden md:inline">{execution.messageCount}msg</span>
                           </div>
                         </div>
                       </div>

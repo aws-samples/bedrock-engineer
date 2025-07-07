@@ -1,6 +1,7 @@
 import path from 'path'
 import fs from 'fs'
 import Store from 'electron-store'
+import { v4 as uuidv4 } from 'uuid'
 import { BackgroundMessage } from './types'
 import { store } from '../../../../../preload/store'
 import { createCategoryLogger } from '../../../../../common/logger'
@@ -112,31 +113,72 @@ export class BackgroundChatSessionManager {
   private readSessionFile(sessionId: string): BackgroundChatSession | null {
     const filePath = this.getSessionFilePath(sessionId)
     try {
+      if (!fs.existsSync(filePath)) {
+        return null
+      }
+
       const data = fs.readFileSync(filePath, 'utf-8')
-      return JSON.parse(data) as BackgroundChatSession
+
+      // Check if file is empty or contains only whitespace
+      if (!data || data.trim().length === 0) {
+        sessionLogger.warn('Session file is empty, removing corrupted file', {
+          sessionId,
+          filePath
+        })
+        this.removeCorruptedSessionFile(sessionId)
+        return null
+      }
+
+      const session = JSON.parse(data) as BackgroundChatSession
+
+      // Validate session structure
+      if (!session.sessionId || !session.messages || !Array.isArray(session.messages)) {
+        sessionLogger.warn('Session file has invalid structure, removing corrupted file', {
+          sessionId,
+          filePath,
+          hasSessionId: !!session.sessionId,
+          hasMessages: !!session.messages,
+          messagesIsArray: Array.isArray(session.messages)
+        })
+        this.removeCorruptedSessionFile(sessionId)
+        return null
+      }
+
+      return session
     } catch (error: any) {
-      sessionLogger.debug('Error reading background session file (file may not exist)', {
+      sessionLogger.warn('Error reading background session file, removing corrupted file', {
         sessionId,
-        error: error.message
+        error: error.message,
+        filePath
       })
+
+      // Remove corrupted file to prevent repeated errors
+      this.removeCorruptedSessionFile(sessionId)
       return null
     }
   }
 
   private async writeSessionFile(sessionId: string, session: BackgroundChatSession): Promise<void> {
     const filePath = this.getSessionFilePath(sessionId)
+    const tempFilePath = `${filePath}.tmp-${uuidv4()}`
 
-    // リトライ機能付きでファイル書き込みを実行
+    // リトライ機能付きでファイル書き込みを実行（原子操作）
     const maxRetries = 3
     let lastError: Error | null = null
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        await fs.promises.writeFile(filePath, JSON.stringify(session, null, 2))
-        sessionLogger.debug('Background session file written', {
+        // 一時ファイルに書き込み
+        await fs.promises.writeFile(tempFilePath, JSON.stringify(session, null, 2))
+
+        // 原子的にリネーム（一時ファイル → 本ファイル）
+        await fs.promises.rename(tempFilePath, filePath)
+
+        sessionLogger.debug('Background session file written atomically', {
           sessionId,
           messageCount: session.messages.length,
-          attempt
+          attempt,
+          tempFilePath
         })
         return // 成功時は即座に終了
       } catch (error: any) {
@@ -146,9 +188,22 @@ export class BackgroundChatSessionManager {
           {
             sessionId,
             error: error.message,
-            filePath
+            filePath,
+            tempFilePath
           }
         )
+
+        // 一時ファイルのクリーンアップ
+        try {
+          if (fs.existsSync(tempFilePath)) {
+            await fs.promises.unlink(tempFilePath)
+          }
+        } catch (cleanupError: any) {
+          sessionLogger.debug('Error cleaning up temp file', {
+            tempFilePath,
+            error: cleanupError.message
+          })
+        }
 
         // 最後の試行でない場合は少し待機
         if (attempt < maxRetries) {
@@ -167,6 +222,32 @@ export class BackgroundChatSessionManager {
     throw new Error(
       `Failed to write session file after ${maxRetries} attempts: ${lastError?.message}`
     )
+  }
+
+  /**
+   * Remove corrupted session file and its metadata
+   */
+  private removeCorruptedSessionFile(sessionId: string): void {
+    try {
+      const filePath = this.getSessionFilePath(sessionId)
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
+        sessionLogger.debug('Removed corrupted session file', { sessionId, filePath })
+      }
+
+      // Remove from metadata store as well
+      const metadata = this.metadataStore.get('metadata')
+      if (metadata[sessionId]) {
+        delete metadata[sessionId]
+        this.metadataStore.set('metadata', metadata)
+        sessionLogger.debug('Removed corrupted session from metadata', { sessionId })
+      }
+    } catch (error: any) {
+      sessionLogger.error('Failed to remove corrupted session file', {
+        sessionId,
+        error: error.message
+      })
+    }
   }
 
   private updateMetadata(sessionId: string, session: BackgroundChatSession): void {
@@ -198,7 +279,7 @@ export class BackgroundChatSessionManager {
    * 新しいセッションを作成
    */
   async createSession(sessionId: string, options: CreateSessionOptions = {}): Promise<void> {
-    if (this.hasSession(sessionId)) {
+    if (this.hasValidSession(sessionId)) {
       sessionLogger.warn('Background session already exists', { sessionId })
       return
     }
@@ -226,11 +307,18 @@ export class BackgroundChatSessionManager {
   }
 
   /**
-   * セッションが存在するかチェック
+   * セッションが存在し、有効かチェック
    */
   hasSession(sessionId: string): boolean {
-    const filePath = this.getSessionFilePath(sessionId)
-    return fs.existsSync(filePath)
+    const session = this.readSessionFile(sessionId)
+    return session !== null
+  }
+
+  /**
+   * セッションが有効かどうかをチェック（ファイル存在 + 有効なJSON構造）
+   */
+  hasValidSession(sessionId: string): boolean {
+    return this.hasSession(sessionId)
   }
 
   /**

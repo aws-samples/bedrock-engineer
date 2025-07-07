@@ -403,6 +403,38 @@ const BackgroundAgent = {
   sessionContinuation: 'Session Continuation',
   continueSessionPrompt: 'Continue Session Prompt',
 
+  // Sessions
+  sessions: {
+    title: 'Sessions',
+    newSession: 'New Session',
+    noSessions: 'No sessions',
+    createNewSession: 'Create new session',
+    confirmDelete: 'Are you sure you want to delete this session?',
+    deleteSession: 'Delete Session'
+  },
+
+  // New Session Modal
+  newSession: {
+    title: 'Create New Session',
+    modelSelection: 'Model Selection',
+    agentSelection: 'Agent Selection',
+    noAgent: 'No Agent',
+    selectAgent: 'Please select an agent.',
+    cancel: 'Cancel',
+    create: 'Create'
+  },
+
+  // CRON Presets
+  cronPresets: {
+    everyMinute: 'Every minute',
+    every5Minutes: 'Every 5 minutes',
+    everyHour: 'Every hour',
+    dailyAt9AM: 'Daily at 9 AM',
+    weekdaysAt9AM: 'Weekdays at 9 AM',
+    weeklyMondayAt9AM: 'Weekly on Monday at 9 AM',
+    monthlyFirst9AM: 'Monthly on 1st at 9 AM'
+  },
+
   // Help Modal
   help: {
     title: 'BackgroundAgent Creation Guide',
@@ -565,10 +597,10 @@ const BackgroundAgent = {
   lastError: 'Last Error',
 
   // History
-  viewExecutionHistory: 'View Execution History',
+  viewExecutionHistory: 'Execution History',
   history: {
     title: 'Execution History',
-    viewHistory: 'View Execution History',
+    viewHistory: 'Execution History',
     totalExecutions: 'Total Executions',
     successful: 'Successful',
     failed: 'Failed',

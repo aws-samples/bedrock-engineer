@@ -237,23 +237,41 @@ export class BackgroundAgentScheduler {
     let isSessionContinuation = false
 
     if (task.continueSession && task.lastSessionId) {
-      // セッション継続が有効で、前回のセッションIDが存在する場合
-      sessionId = task.lastSessionId
-      isSessionContinuation = true
+      // 前回のセッションが有効かチェック
+      const sessionManager = this.backgroundAgentService['sessionManager']
+      if (sessionManager && sessionManager.hasValidSession(task.lastSessionId)) {
+        // セッション継続が有効で、前回のセッションが有効な場合
+        sessionId = task.lastSessionId
+        isSessionContinuation = true
 
-      // 継続時専用プロンプトがある場合はそれを使用
-      if (task.continueSessionPrompt && task.continueSessionPrompt.trim()) {
-        promptToUse = task.continueSessionPrompt
+        // 継続時専用プロンプトがある場合はそれを使用
+        if (task.continueSessionPrompt && task.continueSessionPrompt.trim()) {
+          promptToUse = task.continueSessionPrompt
+        }
+
+        schedulerLogger.info('Continuing existing valid session', {
+          taskId,
+          sessionId,
+          continueSessionPrompt: !!task.continueSessionPrompt
+        })
+      } else {
+        // 前回のセッションが無効または破損している場合は新規作成
+        sessionId = `scheduled-${taskId}-${uuidv4()}`
+
+        // lastSessionIdをリセット
+        task.lastSessionId = undefined
+        this.scheduledTasks.set(taskId, task)
+        this.persistTasks()
+
+        schedulerLogger.warn('Previous session invalid, creating new session', {
+          taskId,
+          previousSessionId: task.lastSessionId,
+          newSessionId: sessionId
+        })
       }
-
-      schedulerLogger.info('Continuing existing session', {
-        taskId,
-        sessionId,
-        continueSessionPrompt: !!task.continueSessionPrompt
-      })
     } else {
-      // 新しいセッションを作成
-      sessionId = `scheduled-${taskId}-${Date.now()}`
+      // 新しいセッションを作成（UUIDを使用してユニーク性を保証）
+      sessionId = `scheduled-${taskId}-${uuidv4()}`
 
       schedulerLogger.info('Creating new session', {
         taskId,

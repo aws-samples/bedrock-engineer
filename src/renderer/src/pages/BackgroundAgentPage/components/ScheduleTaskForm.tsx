@@ -14,19 +14,19 @@ interface ScheduleTaskFormProps {
   onCancel: () => void
 }
 
-const CRON_PRESETS = [
-  { label: 'Every minute', value: '* * * * *' },
-  { label: 'Every 5 minutes', value: '*/5 * * * *' },
-  { label: 'Every hour', value: '0 * * * *' },
-  { label: 'Daily at 9 AM', value: '0 9 * * *' },
-  { label: 'Weekdays at 9 AM', value: '0 9 * * 1-5' },
-  { label: 'Weekly on Monday at 9 AM', value: '0 9 * * 1' },
-  { label: 'Monthly on 1st at 9 AM', value: '0 9 1 * *' }
-]
-
 export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, onCancel }) => {
   const { t } = useTranslation()
   const { agents } = useSettings()
+
+  const CRON_PRESETS = [
+    { label: t('backgroundAgent.cronPresets.everyMinute'), value: '* * * * *' },
+    { label: t('backgroundAgent.cronPresets.every5Minutes'), value: '*/5 * * * *' },
+    { label: t('backgroundAgent.cronPresets.everyHour'), value: '0 * * * *' },
+    { label: t('backgroundAgent.cronPresets.dailyAt9AM'), value: '0 9 * * *' },
+    { label: t('backgroundAgent.cronPresets.weekdaysAt9AM'), value: '0 9 * * 1-5' },
+    { label: t('backgroundAgent.cronPresets.weeklyMondayAt9AM'), value: '0 9 * * 1' },
+    { label: t('backgroundAgent.cronPresets.monthlyFirst9AM'), value: '0 9 1 * *' }
+  ]
 
   const [formData, setFormData] = useState({
     name: '',

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { FiPlus, FiTrash2, FiMessageSquare } from 'react-icons/fi'
 
 interface SessionListProps {
@@ -16,6 +17,7 @@ export const SessionList: React.FC<SessionListProps> = ({
   onCreateSession,
   onDeleteSession
 }) => {
+  const { t } = useTranslation()
   const formatSessionId = (sessionId: string) => {
     // タイムスタンプを含む場合は日時を表示
     if (sessionId.includes('-') && sessionId.match(/\d{13}$/)) {
@@ -38,7 +40,9 @@ export const SessionList: React.FC<SessionListProps> = ({
       {/* ヘッダー */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Sessions</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            {t('backgroundAgent.sessions.title')}
+          </h2>
           <span className="text-sm text-gray-500">{sessions.length}</span>
         </div>
 
@@ -48,7 +52,7 @@ export const SessionList: React.FC<SessionListProps> = ({
           className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
         >
           <FiPlus className="w-4 h-4" />
-          新規セッション
+          {t('backgroundAgent.sessions.newSession')}
         </button>
       </div>
 
@@ -58,9 +62,9 @@ export const SessionList: React.FC<SessionListProps> = ({
           <div className="p-4 text-center">
             <FiMessageSquare className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              セッションがありません
+              {t('backgroundAgent.sessions.noSessions')}
               <br />
-              新規セッションを作成してください
+              {t('backgroundAgent.sessions.createNewSession')}
             </p>
           </div>
         ) : (
@@ -91,12 +95,12 @@ export const SessionList: React.FC<SessionListProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    if (window.confirm('このセッションを削除しますか？')) {
+                    if (window.confirm(t('backgroundAgent.sessions.confirmDelete'))) {
                       onDeleteSession(sessionId)
                     }
                   }}
                   className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-gray-400 hover:text-red-500"
-                  title="セッション削除"
+                  title={t('backgroundAgent.sessions.deleteSession')}
                 >
                   <FiTrash2 className="w-4 h-4" />
                 </button>

@@ -427,15 +427,47 @@ const BackgroundAgent = {
   sessionContinuation: 'セッション継続',
   continueSessionPrompt: 'セッション継続プロンプト',
 
+  // Sessions
+  sessions: {
+    title: 'セッション',
+    newSession: '新規セッション',
+    noSessions: 'セッションがありません',
+    createNewSession: '新規セッションを作成してください',
+    confirmDelete: 'このセッションを削除しますか？',
+    deleteSession: 'セッション削除'
+  },
+
+  // New Session Modal
+  newSession: {
+    title: '新規セッション作成',
+    modelSelection: 'モデル選択',
+    agentSelection: 'エージェント選択',
+    noAgent: 'エージェントなし',
+    selectAgent: 'エージェントを選択してください。',
+    cancel: 'キャンセル',
+    create: '作成'
+  },
+
+  // CRON Presets
+  cronPresets: {
+    everyMinute: '毎分',
+    every5Minutes: '5分ごと',
+    everyHour: '毎時',
+    dailyAt9AM: '毎日午前9時',
+    weekdaysAt9AM: '平日午前9時',
+    weeklyMondayAt9AM: '毎週月曜午前9時',
+    monthlyFirst9AM: '毎月1日午前9時'
+  },
+
   // Help Modal
   help: {
-    title: 'BackgroundAgent作成ガイド',
-    subtitle: '効果的なBackgroundAgentを作成するためのベストプラクティス',
-    tooltip: 'BackgroundAgentについて',
+    title: 'Background Agent 作成ガイド',
+    subtitle: '効果的な Background Agent を作成するためのベストプラクティス',
+    tooltip: 'Background Agent について',
 
     concepts: {
       title: '基本概念',
-      description: 'BackgroundAgentは定期実行に適したタスクを自動化するための機能です：',
+      description: 'Background Agent は定期実行に適したタスクを自動化するための機能です：',
       item1: '明確で具体的な目標を持つタスクに最適',
       item2: 'ユーザーの入力を必要としない自動化可能なタスク',
       item3: '定期的な実行により価値を提供するタスク',

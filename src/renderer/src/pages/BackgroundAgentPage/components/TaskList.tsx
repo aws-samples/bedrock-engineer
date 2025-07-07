@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   PlayIcon,
@@ -11,13 +11,19 @@ import {
   CogIcon,
   PlusIcon,
   PencilIcon,
-  DocumentTextIcon
+  DocumentTextIcon,
+  CpuChipIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  EllipsisVerticalIcon
 } from '@heroicons/react/24/outline'
 import { ScheduledTask, TaskExecutionResult, ScheduleConfig } from '../hooks/useBackgroundAgent'
 import { TaskExecutionHistoryModal } from './TaskExecutionHistoryModal'
 import { EditTaskModal } from './EditTaskModal'
 import { useTaskSystemPromptModal } from './TaskSystemPromptModal'
 import { useSettings } from '@renderer/contexts/SettingsContext'
+import { getIconByValue } from '@renderer/components/icons/AgentIcons'
+import { AgentIcon as AgentIconType } from '@/types/agent-chat'
 
 interface TaskListProps {
   tasks: ScheduledTask[]
@@ -44,6 +50,27 @@ interface TaskCardProps {
   onGetExecutionHistory: (taskId: string) => Promise<TaskExecutionResult[]>
   onGetSessionHistory: (sessionId: string) => Promise<any[]>
   onGetTaskSystemPrompt: (taskId: string) => Promise<string>
+}
+
+// Agent Icon Component
+const AgentIcon: React.FC<{
+  agent: { icon?: string; iconColor?: string; name: string } | null
+  size?: 'sm' | 'md'
+}> = ({ agent, size = 'sm' }) => {
+  const iconSize = size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'
+
+  if (!agent?.icon) {
+    return <CogIcon className={`${iconSize} flex-shrink-0`} />
+  }
+
+  // 既存のAgentIconsコンポーネントを使用
+  const iconElement = getIconByValue(agent.icon as AgentIconType, agent.iconColor)
+
+  return (
+    <div className={`${iconSize} flex items-center justify-center flex-shrink-0`}>
+      {iconElement}
+    </div>
+  )
 }
 
 // Toggle Switch Component
@@ -86,6 +113,26 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [isExecuting, setIsExecuting] = useState(false)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [isWakeWordExpanded, setIsWakeWordExpanded] = useState(false)
+  const [showActionsMenu, setShowActionsMenu] = useState(false)
+  const actionsMenuRef = useRef<HTMLDivElement>(null)
+
+  // Close actions menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
+        setShowActionsMenu(false)
+      }
+    }
+
+    if (showActionsMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showActionsMenu])
 
   // System Prompt Modal
   const {
@@ -96,6 +143,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
     handleClose: handleCloseSystemPrompt,
     TaskSystemPromptModal
   } = useTaskSystemPromptModal()
+
+  // エージェント情報を取得する関数
+  const getAgent = (agentId: string) => {
+    const agent = agents.find((a) => a.id === agentId)
+    return agent || null
+  }
 
   // エージェント名を取得する関数
   const getAgentName = (agentId: string) => {
@@ -187,21 +240,22 @@ const TaskCard: React.FC<TaskCardProps> = ({
               <ClockIcon className="h-4 w-4" />
               <span>{task.cronExpression}</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <CogIcon className="h-4 w-4 flex-shrink-0" />
-              <div className="flex flex-col space-y-1 min-w-0">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium truncate" title={getAgentName(task.agentId)}>
-                    {getAgentName(task.agentId)}
-                  </span>
-                  <button
-                    onClick={() => handleOpenSystemPrompt(task.id, task.name)}
-                    className="text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
-                    title={t('backgroundAgent.systemPrompt.show')}
-                  >
-                    <DocumentTextIcon className="h-3 w-3" />
-                  </button>
-                </div>
+            <div className="flex flex-col space-y-2">
+              <div className="flex items-center space-x-3">
+                <AgentIcon agent={getAgent(task.agentId)} size="md" />
+                <span className="text-sm font-medium truncate" title={getAgentName(task.agentId)}>
+                  {getAgentName(task.agentId)}
+                </span>
+                <button
+                  onClick={() => handleOpenSystemPrompt(task.id, task.name)}
+                  className="text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                  title={t('backgroundAgent.systemPrompt.show')}
+                >
+                  <DocumentTextIcon className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex items-center space-x-3">
+                <CpuChipIcon className="h-5 w-5 text-gray-400" />
                 <span
                   className="text-xs text-gray-500 dark:text-gray-400 truncate"
                   title={getModelName(task.modelId)}
@@ -220,55 +274,84 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          {/* Edit Button */}
-          <button
-            onClick={handleEdit}
-            className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
-            title={t('backgroundAgent.editTask')}
-          >
-            <PencilIcon className="h-4 w-4" />
-          </button>
-
-          {/* Test Execution Button */}
+        <div className="flex items-center space-x-3">
+          {/* Primary Action: Test Execution Button */}
           <button
             onClick={handleExecute}
             disabled={isExecuting || isTaskLoading}
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 transition-colors"
+            className="inline-flex items-center px-2 md:px-3 py-1.5 text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 transition-colors shadow-sm"
+            title={
+              isExecuting || isTaskLoading
+                ? t('common.executing')
+                : t('backgroundAgent.testExecution')
+            }
           >
             {isExecuting || isTaskLoading ? (
               <>
-                <ArrowPathIcon className="h-4 w-4 mr-1.5 animate-spin" />
-                {t('common.executing')}
+                <ArrowPathIcon className="h-4 w-4 mr-0 md:mr-1.5 animate-spin" />
+                <span className="hidden md:inline">{t('common.executing')}</span>
               </>
             ) : (
               <>
-                <PlayIcon className="h-4 w-4 mr-1.5" />
-                {t('backgroundAgent.testExecution')}
+                <PlayIcon className="h-4 w-4 mr-0 md:mr-1.5" />
+                <span className="hidden md:inline">{t('backgroundAgent.testExecution')}</span>
               </>
             )}
           </button>
 
           {/* Toggle Switch */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             <ToggleSwitch enabled={task.enabled} onToggle={handleToggle} disabled={false} t={t} />
-            <span
-              className={`text-sm font-medium ${
-                task.enabled ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
-              }`}
-            >
-              {task.enabled ? t('common.enabled') : t('common.disabled')}
-            </span>
           </div>
 
-          {/* Delete Button */}
-          <button
-            onClick={handleCancel}
-            className="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 transition-colors"
-            title={t('backgroundAgent.deleteTask')}
-          >
-            <TrashIcon className="h-5 w-5" />
-          </button>
+          {/* Secondary Actions Menu */}
+          <div className="relative" ref={actionsMenuRef}>
+            <button
+              onClick={() => setShowActionsMenu(!showActionsMenu)}
+              className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 transition-colors rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+              title="More actions"
+            >
+              <EllipsisVerticalIcon className="h-5 w-5" />
+            </button>
+
+            {showActionsMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 z-10">
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      handleEdit()
+                      setShowActionsMenu(false)
+                    }}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <PencilIcon className="h-4 w-4 mr-3" />
+                    {t('backgroundAgent.editTask')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleStatisticsClick()
+                      setShowActionsMenu(false)
+                    }}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <CalendarIcon className="h-4 w-4 mr-3" />
+                    {t('backgroundAgent.history.viewHistory')}
+                  </button>
+                  <hr className="my-1 border-gray-200 dark:border-gray-600" />
+                  <button
+                    onClick={() => {
+                      handleCancel()
+                      setShowActionsMenu(false)
+                    }}
+                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                  >
+                    <TrashIcon className="h-4 w-4 mr-3" />
+                    {t('backgroundAgent.deleteTask')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -282,15 +365,36 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
-      {/* Wake Word Preview */}
+      {/* Wake Word Preview with Expand/Collapse */}
       <div className="mb-4">
-        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {t('backgroundAgent.wakeWord')}:
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t('backgroundAgent.wakeWord')}:
+          </div>
+          <button
+            onClick={() => setIsWakeWordExpanded(!isWakeWordExpanded)}
+            className="text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors flex items-center space-x-1"
+          >
+            <span>{isWakeWordExpanded ? 'Show Less' : 'Show More'}</span>
+            {isWakeWordExpanded ? (
+              <ChevronUpIcon className="h-3 w-3" />
+            ) : (
+              <ChevronDownIcon className="h-3 w-3" />
+            )}
+          </button>
         </div>
-        <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-3 text-sm text-gray-600 dark:text-gray-400 h-20 overflow-hidden">
+        <div
+          className={`bg-gray-50 dark:bg-gray-700 rounded-md p-3 text-sm text-gray-600 dark:text-gray-400 transition-all duration-200 ${
+            isWakeWordExpanded ? 'max-h-48 overflow-y-auto' : 'h-16 overflow-hidden'
+          }`}
+        >
           <div
-            className="line-clamp-3"
-            style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}
+            className={isWakeWordExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'}
+            style={
+              !isWakeWordExpanded
+                ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }
+                : undefined
+            }
           >
             {task.wakeWord}
           </div>
