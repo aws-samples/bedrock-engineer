@@ -408,16 +408,21 @@ export const useAgentChat = (
         } else if (json.contentBlockStop) {
           if (toolUse) {
             let parseInput: any
-            try {
-              parseInput = JSON.parse(input)
-            } catch (e) {
-              parseInput = {
-                __jsonParseError: true,
-                originalInput: input,
-                maxTokens: inferenceParams.maxTokens,
-                error:
-                  (e instanceof Error ? e.message : 'JSON parse failed') +
-                  '\n JSON parsing failed. This error might have occurred because the token limit (character count) was exceeded while the AI was trying to create the input JSON for tool use. \nThe output needs to fit within the maxTokens limit.'
+            // 空文字列の場合は空オブジェクトを使用（JSONパースエラーとしない）
+            if (input === '' || input === '""' || input === "''") {
+              parseInput = {}
+            } else {
+              try {
+                parseInput = JSON.parse(input)
+              } catch (e) {
+                parseInput = {
+                  __jsonParseError: true,
+                  originalInput: input,
+                  maxTokens: inferenceParams.maxTokens,
+                  error:
+                    (e instanceof Error ? e.message : 'JSON parse failed') +
+                    '\n JSON parsing failed. This error might have occurred because the token limit (character count) was exceeded while the AI was trying to create the input JSON for tool use. \nThe output needs to fit within the maxTokens limit.'
+                }
               }
             }
 
