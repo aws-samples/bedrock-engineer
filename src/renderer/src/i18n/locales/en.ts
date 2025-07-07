@@ -399,6 +399,7 @@ const BackgroundAgent = {
   description: 'Schedule AI agents to run automatically at specified times',
   pageDescription: 'Manage scheduled tasks and configure automatic execution',
   createTask: 'Create Task',
+  editTask: 'Edit Task',
   sessionContinuation: 'Session Continuation',
   continueSessionPrompt: 'Continue Session Prompt',
 
@@ -534,6 +535,7 @@ const BackgroundAgent = {
   // Messages
   messages: {
     taskCreated: 'Task created successfully',
+    taskUpdated: 'Task updated successfully',
     taskCancelled: 'Task deleted successfully',
     taskEnabled: 'Task enabled',
     taskDisabled: 'Task disabled',
@@ -657,6 +659,8 @@ const Common = {
   cancel: 'Cancel',
   create: 'Create',
   creating: 'Creating...',
+  update: 'Update',
+  updating: 'Updating...',
   executing: 'Executing...',
   enabled: 'Enabled',
   disabled: 'Disabled',

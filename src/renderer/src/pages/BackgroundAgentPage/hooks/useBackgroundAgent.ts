@@ -133,6 +133,31 @@ export const useBackgroundAgent = () => {
     [t, fetchTasks]
   )
 
+  // タスクを更新
+  const updateTask = useCallback(
+    async (taskId: string, config: ScheduleConfig) => {
+      try {
+        setIsLoading(true)
+        const result = await window.api.backgroundAgent.updateTask(taskId, config)
+
+        if (result.success) {
+          toast.success(t('backgroundAgent.messages.taskUpdated'))
+          await fetchTasks()
+          return result.taskId
+        } else {
+          throw new Error('Failed to update task')
+        }
+      } catch (err: any) {
+        console.error('Failed to update task:', err)
+        toast.error(t('backgroundAgent.errors.updateTask'))
+        throw err
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [t, fetchTasks]
+  )
+
   // タスクを削除
   const cancelTask = useCallback(
     async (taskId: string) => {
@@ -301,6 +326,7 @@ export const useBackgroundAgent = () => {
 
     // Actions
     createTask,
+    updateTask,
     cancelTask,
     toggleTask,
     executeTaskManually,

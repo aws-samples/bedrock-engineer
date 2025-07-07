@@ -15,6 +15,7 @@ const BackgroundAgentPage: React.FC = () => {
     isLoading,
     taskLoadingStates,
     createTask,
+    updateTask,
     cancelTask,
     toggleTask,
     executeTaskManually,
@@ -66,6 +67,7 @@ const BackgroundAgentPage: React.FC = () => {
         onToggleTask={toggleTask}
         onCancelTask={cancelTask}
         onExecuteTask={executeTaskManually}
+        onUpdateTask={updateTask}
         onRefresh={refreshAll}
         onGetExecutionHistory={getTaskExecutionHistory}
         onGetSessionHistory={getSessionHistory}

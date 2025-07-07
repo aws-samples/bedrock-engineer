@@ -475,6 +475,40 @@ export const backgroundAgentHandlers = {
     }
   },
 
+  'background-agent:update-task': async (_event: IpcMainInvokeEvent, params: any) => {
+    backgroundAgentLogger.debug('Update task request', {
+      taskId: params.taskId,
+      name: params.config?.name,
+      cronExpression: params.config?.cronExpression,
+      agentId: params.config?.agentConfig?.agentId
+    })
+
+    try {
+      const config: ScheduleConfig = params.config
+      const scheduler = getBackgroundAgentScheduler()
+      const success = scheduler.updateTask(params.taskId, config)
+
+      if (!success) {
+        throw new Error(`Failed to update task: ${params.taskId}`)
+      }
+
+      backgroundAgentLogger.info('Task updated successfully', {
+        taskId: params.taskId,
+        name: config.name,
+        cronExpression: config.cronExpression
+      })
+
+      return { success: true, taskId: params.taskId }
+    } catch (error: any) {
+      backgroundAgentLogger.error('Failed to update task', {
+        taskId: params.taskId,
+        error: error.message,
+        config: params.config
+      })
+      throw error
+    }
+  },
+
   'background-agent:continue-session': async (_event: IpcMainInvokeEvent, params: any) => {
     backgroundAgentLogger.debug('Continue session request', {
       sessionId: params.sessionId,

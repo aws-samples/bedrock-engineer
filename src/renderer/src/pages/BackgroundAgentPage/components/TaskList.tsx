@@ -9,10 +9,12 @@ import {
   ArrowPathIcon,
   CalendarIcon,
   CogIcon,
-  PlusIcon
+  PlusIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline'
-import { ScheduledTask, TaskExecutionResult } from '../hooks/useBackgroundAgent'
+import { ScheduledTask, TaskExecutionResult, ScheduleConfig } from '../hooks/useBackgroundAgent'
 import { TaskExecutionHistoryModal } from './TaskExecutionHistoryModal'
+import { EditTaskModal } from './EditTaskModal'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 
 interface TaskListProps {
@@ -22,6 +24,7 @@ interface TaskListProps {
   onToggleTask: (taskId: string, enabled: boolean) => Promise<void>
   onCancelTask: (taskId: string) => Promise<void>
   onExecuteTask: (taskId: string) => Promise<void>
+  onUpdateTask: (taskId: string, config: ScheduleConfig) => Promise<void>
   onRefresh: () => Promise<void>
   onGetExecutionHistory: (taskId: string) => Promise<TaskExecutionResult[]>
   onGetSessionHistory: (sessionId: string) => Promise<any[]>
@@ -34,6 +37,7 @@ interface TaskCardProps {
   onToggle: (taskId: string, enabled: boolean) => Promise<void>
   onCancel: (taskId: string) => Promise<void>
   onExecute: (taskId: string) => Promise<void>
+  onUpdate: (taskId: string, config: ScheduleConfig) => Promise<void>
   onGetExecutionHistory: (taskId: string) => Promise<TaskExecutionResult[]>
   onGetSessionHistory: (sessionId: string) => Promise<any[]>
 }
@@ -68,6 +72,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onToggle,
   onCancel,
   onExecute,
+  onUpdate,
   onGetExecutionHistory,
   onGetSessionHistory
 }) => {
@@ -75,6 +80,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const { agents, availableModels } = useSettings()
   const [isExecuting, setIsExecuting] = useState(false)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
 
   // エージェント名を取得する関数
   const getAgentName = (agentId: string) => {
@@ -111,6 +117,19 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const handleStatisticsClick = () => {
     setShowHistoryModal(true)
+  }
+
+  const handleEdit = () => {
+    setShowEditModal(true)
+  }
+
+  const handleEditSubmit = async (taskId: string, config: ScheduleConfig) => {
+    try {
+      await onUpdate(taskId, config)
+      setShowEditModal(false)
+    } catch (error) {
+      console.error('Failed to update task:', error)
+    }
   }
 
   const formatDate = (timestamp?: number) => {
@@ -177,7 +196,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
+          {/* Edit Button */}
+          <button
+            onClick={handleEdit}
+            className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
+            title={t('backgroundAgent.editTask')}
+          >
+            <PencilIcon className="h-4 w-4" />
+          </button>
+
           {/* Test Execution Button */}
           <button
             onClick={handleExecute}
@@ -338,6 +366,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
             : undefined
         }
       />
+
+      {/* Edit Task Modal */}
+      {showEditModal && (
+        <EditTaskModal
+          task={task}
+          onSubmit={handleEditSubmit}
+          onCancel={() => setShowEditModal(false)}
+        />
+      )}
     </div>
   )
 }
@@ -349,6 +386,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   onToggleTask,
   onCancelTask,
   onExecuteTask,
+  onUpdateTask,
   onRefresh,
   onGetExecutionHistory,
   onGetSessionHistory,
@@ -418,6 +456,7 @@ export const TaskList: React.FC<TaskListProps> = ({
             onToggle={onToggleTask}
             onCancel={onCancelTask}
             onExecute={onExecuteTask}
+            onUpdate={onUpdateTask}
             onGetExecutionHistory={onGetExecutionHistory}
             onGetSessionHistory={onGetSessionHistory}
           />

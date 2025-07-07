@@ -423,6 +423,7 @@ const BackgroundAgent = {
   description: '指定した時間にAIエージェントを自動実行するスケジュール機能',
   pageDescription: 'スケジュールされたタスクを管理し、自動実行を設定できます',
   createTask: 'タスク作成',
+  editTask: 'タスク編集',
   sessionContinuation: 'セッション継続',
   continueSessionPrompt: 'セッション継続プロンプト',
 
@@ -556,6 +557,7 @@ const BackgroundAgent = {
   // Messages
   messages: {
     taskCreated: 'タスクが正常に作成されました',
+    taskUpdated: 'タスクが正常に更新されました',
     taskCancelled: 'タスクが正常に削除されました',
     taskEnabled: 'タスクが有効になりました',
     taskDisabled: 'タスクが無効になりました',
@@ -679,6 +681,8 @@ const Common = {
   cancel: 'キャンセル',
   create: '作成',
   creating: '作成中...',
+  update: '更新',
+  updating: '更新中...',
   executing: '実行中...',
   enabled: '有効',
   disabled: '無効',

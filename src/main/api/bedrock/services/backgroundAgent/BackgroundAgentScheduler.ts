@@ -570,6 +570,76 @@ export class BackgroundAgentScheduler {
   }
 
   /**
+   * タスクを更新
+   */
+  updateTask(taskId: string, config: ScheduleConfig): boolean {
+    try {
+      const existingTask = this.scheduledTasks.get(taskId)
+      if (!existingTask) {
+        schedulerLogger.error('Task not found for update', { taskId })
+        return false
+      }
+
+      // Cron式の妥当性を検証
+      if (!cron.validate(config.cronExpression)) {
+        throw new Error(`Invalid cron expression: ${config.cronExpression}`)
+      }
+
+      // 既存のCronジョブを停止
+      const existingJob = this.cronJobs.get(taskId)
+      if (existingJob) {
+        existingJob.stop()
+        this.cronJobs.delete(taskId)
+      }
+
+      // タスクを更新（作成日時、実行統計、最後のセッションIDは保持）
+      const updatedTask: ScheduledTask = {
+        ...existingTask,
+        name: config.name,
+        cronExpression: config.cronExpression,
+        agentId: config.agentConfig.agentId,
+        modelId: config.agentConfig.modelId,
+        projectDirectory: config.agentConfig.projectDirectory,
+        wakeWord: config.wakeWord,
+        enabled: config.enabled,
+        nextRun: this.calculateNextRun(config.cronExpression),
+        inferenceConfig: config.agentConfig.inferenceConfig,
+        continueSession: config.continueSession,
+        continueSessionPrompt: config.continueSessionPrompt,
+        // エラーをクリア（設定が更新されたため）
+        lastError: undefined
+      }
+
+      this.scheduledTasks.set(taskId, updatedTask)
+
+      // 新しい設定でCronジョブを開始（有効な場合）
+      if (updatedTask.enabled) {
+        this.startCronJob(updatedTask)
+      }
+
+      // タスクを永続化
+      this.persistTasks()
+
+      schedulerLogger.info('Task updated successfully', {
+        taskId,
+        name: updatedTask.name,
+        cronExpression: updatedTask.cronExpression,
+        enabled: updatedTask.enabled,
+        nextRun: updatedTask.nextRun
+      })
+
+      return true
+    } catch (error: any) {
+      schedulerLogger.error('Failed to update task', {
+        taskId,
+        error: error.message,
+        config
+      })
+      return false
+    }
+  }
+
+  /**
    * タスクを有効/無効切り替え
    */
   toggleTask(taskId: string, enabled: boolean): boolean {

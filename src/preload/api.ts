@@ -103,6 +103,9 @@ export const api = {
     scheduleTask: async (config: any) => {
       return ipcRenderer.invoke('background-agent:schedule-task', { config })
     },
+    updateTask: async (taskId: string, config: any) => {
+      return ipcRenderer.invoke('background-agent:update-task', { taskId, config })
+    },
     cancelTask: async (taskId: string) => {
       return ipcRenderer.invoke('background-agent:cancel-task', { taskId })
     },
