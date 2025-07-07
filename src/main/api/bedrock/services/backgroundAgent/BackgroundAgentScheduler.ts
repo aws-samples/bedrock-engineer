@@ -6,6 +6,7 @@ import { createCategoryLogger } from '../../../../../common/logger'
 import { ScheduleConfig, ScheduledTask, TaskExecutionResult, BackgroundAgentConfig } from './types'
 import { BackgroundAgentService } from './BackgroundAgentService'
 import { ServiceContext } from '../../types'
+import { MainNotificationService } from '../NotificationService'
 
 const logger = createCategoryLogger('background-agent:scheduler')
 
@@ -17,10 +18,12 @@ export class BackgroundAgentScheduler {
   private executionHistoryStore: Store<{
     executionHistory: { [key: string]: TaskExecutionResult[] }
   }>
+  private notificationService: MainNotificationService
 
   constructor(context: ServiceContext) {
     this.context = context
     this.backgroundAgentService = new BackgroundAgentService(context)
+    this.notificationService = new MainNotificationService(context)
 
     // 実行履歴用のストアを初期化
     this.executionHistoryStore = new Store({
@@ -485,7 +488,14 @@ export class BackgroundAgentScheduler {
         aiMessage = textContent.length > 200 ? textContent.substring(0, 200) + '...' : textContent
       }
 
-      // 成功通知を送信
+      // 成功通知を送信（新しいMainNotificationServiceを使用）
+      await this.notificationService.showBackgroundAgentNotification({
+        taskName: task.name,
+        success: true,
+        aiMessage
+      })
+
+      // フロントエンド通知は引き続き送信（UIの更新のため）
       this.sendTaskNotification({
         taskId,
         taskName: task.name,
@@ -536,7 +546,14 @@ export class BackgroundAgentScheduler {
       this.scheduledTasks.set(taskId, task)
       this.persistTasks()
 
-      // エラー通知を送信
+      // エラー通知を送信（新しいMainNotificationServiceを使用）
+      await this.notificationService.showBackgroundAgentNotification({
+        taskName: task.name,
+        success: false,
+        error: error.message
+      })
+
+      // フロントエンド通知は引き続き送信（UIの更新のため）
       this.sendTaskNotification({
         taskId,
         taskName: task.name,

@@ -408,7 +408,8 @@ No tools are currently enabled for this agent.
       projectDirectory: config.projectDirectory
     })
 
-    const { enableToolExecution = true, maxToolExecutions = 5, timeoutMs = 3000000 } = options
+    const threeHourMs = 10800000
+    const { enableToolExecution = true, maxToolExecutions = 5, timeoutMs = threeHourMs } = options
 
     try {
       // メッセージ履歴をAWS Bedrock形式に変換
@@ -905,6 +906,17 @@ No tools are currently enabled for this agent.
   }
 
   /**
+   * 環境固有情報の付与（Background Agent では定常的にエージェントが実行されるため、日時だけでなく実行時間を与えるニーズが多いため）
+   */
+  private buildContext(): string {
+    const context = `<context>
+Date: ${new Date()}
+<context>
+`
+    return context
+  }
+
+  /**
    * メッセージ履歴を構築
    */
   private buildMessages(history: BackgroundMessage[], userMessage: string): BackgroundMessage[] {
@@ -914,7 +926,7 @@ No tools are currently enabled for this agent.
     messages.push({
       id: uuidv4(),
       role: 'user' as ConversationRole,
-      content: [{ text: userMessage }],
+      content: [{ text: userMessage + '\n' + this.buildContext() }],
       timestamp: Date.now()
     })
 
