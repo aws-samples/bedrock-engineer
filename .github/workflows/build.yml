@@ -11,6 +11,8 @@ jobs:
         os: [macos-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
+    env:
+      NODE_OPTIONS: '--max-old-space-size=8192' # メモリ制限を8GBに設定
 
     steps:
       - uses: actions/checkout@v3

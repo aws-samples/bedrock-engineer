@@ -27,6 +27,9 @@ jobs:
             build_command: build:win
 
     runs-on: ${{ matrix.os }}
+    env:
+      NODE_OPTIONS: '--max-old-space-size=8192' # メモリ制限を8GBに設定
+
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
