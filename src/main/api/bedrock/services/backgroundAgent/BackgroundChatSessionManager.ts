@@ -125,18 +125,48 @@ export class BackgroundChatSessionManager {
 
   private async writeSessionFile(sessionId: string, session: BackgroundChatSession): Promise<void> {
     const filePath = this.getSessionFilePath(sessionId)
-    try {
-      await fs.promises.writeFile(filePath, JSON.stringify(session, null, 2))
-      sessionLogger.debug('Background session file written', {
-        sessionId,
-        messageCount: session.messages.length
-      })
-    } catch (error: any) {
-      sessionLogger.error('Error writing background session file', {
-        sessionId,
-        error: error.message
-      })
+
+    // リトライ機能付きでファイル書き込みを実行
+    const maxRetries = 3
+    let lastError: Error | null = null
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        await fs.promises.writeFile(filePath, JSON.stringify(session, null, 2))
+        sessionLogger.debug('Background session file written', {
+          sessionId,
+          messageCount: session.messages.length,
+          attempt
+        })
+        return // 成功時は即座に終了
+      } catch (error: any) {
+        lastError = error
+        sessionLogger.warn(
+          `Error writing background session file (attempt ${attempt}/${maxRetries})`,
+          {
+            sessionId,
+            error: error.message,
+            filePath
+          }
+        )
+
+        // 最後の試行でない場合は少し待機
+        if (attempt < maxRetries) {
+          await new Promise((resolve) => setTimeout(resolve, 100 * attempt))
+        }
+      }
     }
+
+    // 全ての試行が失敗した場合はエラーを投げる
+    sessionLogger.error('Failed to write background session file after all retries', {
+      sessionId,
+      error: lastError?.message,
+      filePath,
+      maxRetries
+    })
+    throw new Error(
+      `Failed to write session file after ${maxRetries} attempts: ${lastError?.message}`
+    )
   }
 
   private updateMetadata(sessionId: string, session: BackgroundChatSession): void {
@@ -211,26 +241,56 @@ export class BackgroundChatSessionManager {
 
     // セッションが存在しない場合は作成
     if (!session) {
-      await this.createSession(sessionId)
-      session = this.readSessionFile(sessionId)
-      if (!session) {
-        sessionLogger.error('Failed to create session for message', { sessionId })
-        return
+      try {
+        await this.createSession(sessionId)
+        session = this.readSessionFile(sessionId)
+        if (!session) {
+          const error = new Error(`Failed to create session for message: ${sessionId}`)
+          sessionLogger.error('Failed to create session for message', {
+            sessionId,
+            messageId: message.id,
+            error: error.message
+          })
+          throw error
+        }
+      } catch (error: any) {
+        sessionLogger.error('Error creating session for message', {
+          sessionId,
+          messageId: message.id,
+          error: error.message
+        })
+        throw new Error(`Failed to create session for message: ${error.message}`)
       }
     }
 
+    // メッセージを追加
     session.messages.push(message)
     session.updatedAt = Date.now()
 
-    await this.writeSessionFile(sessionId, session)
-    this.updateMetadata(sessionId, session)
+    try {
+      // ファイル書き込み（リトライ機能付き）
+      await this.writeSessionFile(sessionId, session)
+      this.updateMetadata(sessionId, session)
 
-    sessionLogger.debug('Message added to background session', {
-      sessionId,
-      messageId: message.id,
-      role: message.role,
-      totalMessages: session.messages.length
-    })
+      sessionLogger.debug('Message added to background session', {
+        sessionId,
+        messageId: message.id,
+        role: message.role,
+        totalMessages: session.messages.length
+      })
+    } catch (error: any) {
+      sessionLogger.error('Failed to save message to session', {
+        sessionId,
+        messageId: message.id,
+        role: message.role,
+        error: error.message
+      })
+
+      // メッセージ追加に失敗した場合は、メモリ上のセッションからもメッセージを削除
+      session.messages.pop()
+
+      throw new Error(`Failed to save message to session: ${error.message}`)
+    }
   }
 
   /**

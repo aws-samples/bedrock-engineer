@@ -609,6 +609,15 @@ const BackgroundAgent = {
     failure: 'Failure'
   },
 
+  // System Prompt
+  systemPrompt: {
+    title: 'System Prompt',
+    show: 'Show system prompt',
+    loading: 'Loading system prompt...',
+    error: 'Failed to load system prompt',
+    empty: 'No system prompt available'
+  },
+
   // Error messages
   errors: {
     fetchTasks: 'Failed to load tasks',
@@ -619,7 +628,8 @@ const BackgroundAgent = {
     executeTask: 'Failed to execute task',
     fetchHistory: 'Failed to load execution history',
     fetchSessionHistory: 'Failed to load session history',
-    continueSession: 'Failed to continue session'
+    continueSession: 'Failed to continue session',
+    getSystemPrompt: 'Failed to get system prompt'
   }
 }
 

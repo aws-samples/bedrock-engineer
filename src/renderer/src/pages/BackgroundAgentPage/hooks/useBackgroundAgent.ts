@@ -300,6 +300,21 @@ export const useBackgroundAgent = () => {
     }
   }, [])
 
+  // タスクのシステムプロンプトを取得
+  const getTaskSystemPrompt = useCallback(
+    async (taskId: string): Promise<string> => {
+      try {
+        const result = await window.api.backgroundAgent.getTaskSystemPrompt(taskId)
+        return result.systemPrompt || ''
+      } catch (err: any) {
+        console.error('Failed to get task system prompt:', err)
+        toast.error(t('backgroundAgent.errors.getSystemPrompt'))
+        throw err
+      }
+    },
+    [t]
+  )
+
   // データを更新
   const refreshTasks = useCallback(async () => {
     await fetchTasks()
@@ -333,6 +348,7 @@ export const useBackgroundAgent = () => {
     getTaskExecutionHistory,
     getSessionHistory,
     getTask,
+    getTaskSystemPrompt,
     continueSession,
 
     // Refresh functions

@@ -10,11 +10,13 @@ import {
   CalendarIcon,
   CogIcon,
   PlusIcon,
-  PencilIcon
+  PencilIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline'
 import { ScheduledTask, TaskExecutionResult, ScheduleConfig } from '../hooks/useBackgroundAgent'
 import { TaskExecutionHistoryModal } from './TaskExecutionHistoryModal'
 import { EditTaskModal } from './EditTaskModal'
+import { useTaskSystemPromptModal } from './TaskSystemPromptModal'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 
 interface TaskListProps {
@@ -28,6 +30,7 @@ interface TaskListProps {
   onRefresh: () => Promise<void>
   onGetExecutionHistory: (taskId: string) => Promise<TaskExecutionResult[]>
   onGetSessionHistory: (sessionId: string) => Promise<any[]>
+  onGetTaskSystemPrompt: (taskId: string) => Promise<string>
   onCreateTask: () => void
 }
 
@@ -40,6 +43,7 @@ interface TaskCardProps {
   onUpdate: (taskId: string, config: ScheduleConfig) => Promise<void>
   onGetExecutionHistory: (taskId: string) => Promise<TaskExecutionResult[]>
   onGetSessionHistory: (sessionId: string) => Promise<any[]>
+  onGetTaskSystemPrompt: (taskId: string) => Promise<string>
 }
 
 // Toggle Switch Component
@@ -74,13 +78,24 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onExecute,
   onUpdate,
   onGetExecutionHistory,
-  onGetSessionHistory
+  onGetSessionHistory,
+  onGetTaskSystemPrompt
 }) => {
   const { t } = useTranslation()
   const { agents, availableModels } = useSettings()
   const [isExecuting, setIsExecuting] = useState(false)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+
+  // System Prompt Modal
+  const {
+    show: showSystemPromptModal,
+    taskId: systemPromptTaskId,
+    taskName: systemPromptTaskName,
+    handleOpen: handleOpenSystemPrompt,
+    handleClose: handleCloseSystemPrompt,
+    TaskSystemPromptModal
+  } = useTaskSystemPromptModal()
 
   // エージェント名を取得する関数
   const getAgentName = (agentId: string) => {
@@ -175,9 +190,18 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <div className="flex items-center space-x-2">
               <CogIcon className="h-4 w-4 flex-shrink-0" />
               <div className="flex flex-col space-y-1 min-w-0">
-                <span className="text-sm font-medium truncate" title={getAgentName(task.agentId)}>
-                  {getAgentName(task.agentId)}
-                </span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium truncate" title={getAgentName(task.agentId)}>
+                    {getAgentName(task.agentId)}
+                  </span>
+                  <button
+                    onClick={() => handleOpenSystemPrompt(task.id, task.name)}
+                    className="text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors"
+                    title={t('backgroundAgent.systemPrompt.show')}
+                  >
+                    <DocumentTextIcon className="h-3 w-3" />
+                  </button>
+                </div>
                 <span
                   className="text-xs text-gray-500 dark:text-gray-400 truncate"
                   title={getModelName(task.modelId)}
@@ -375,6 +399,15 @@ const TaskCard: React.FC<TaskCardProps> = ({
           onCancel={() => setShowEditModal(false)}
         />
       )}
+
+      {/* System Prompt Modal */}
+      <TaskSystemPromptModal
+        isOpen={showSystemPromptModal}
+        onClose={handleCloseSystemPrompt}
+        taskId={systemPromptTaskId}
+        taskName={systemPromptTaskName}
+        getTaskSystemPrompt={onGetTaskSystemPrompt}
+      />
     </div>
   )
 }
@@ -390,6 +423,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   onRefresh,
   onGetExecutionHistory,
   onGetSessionHistory,
+  onGetTaskSystemPrompt,
   onCreateTask
 }) => {
   const { t } = useTranslation()
@@ -459,6 +493,7 @@ export const TaskList: React.FC<TaskListProps> = ({
             onUpdate={onUpdateTask}
             onGetExecutionHistory={onGetExecutionHistory}
             onGetSessionHistory={onGetSessionHistory}
+            onGetTaskSystemPrompt={onGetTaskSystemPrompt}
           />
         ))}
       </div>

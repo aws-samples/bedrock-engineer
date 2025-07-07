@@ -138,6 +138,9 @@ export const api = {
       }
     }) => {
       return ipcRenderer.invoke('background-agent:continue-session', params)
+    },
+    getTaskSystemPrompt: async (taskId: string) => {
+      return ipcRenderer.invoke('background-agent:get-task-system-prompt', { taskId })
     }
   },
   bedrock: {

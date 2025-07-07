@@ -415,8 +415,17 @@ No tools are currently enabled for this agent.
       const messages = this.buildMessages(conversationHistory, userMessage)
 
       // ユーザーメッセージをセッションに保存
-      const userMessageObj = messages[messages.length - 1]
-      await this.sessionManager.addMessage(sessionId, userMessageObj)
+      try {
+        const userMessageObj = messages[messages.length - 1]
+        await this.sessionManager.addMessage(sessionId, userMessageObj)
+      } catch (error: any) {
+        backgroundAgentLogger.error('Failed to save user message to session', {
+          sessionId,
+          error: error.message
+        })
+        // ユーザーメッセージの保存に失敗した場合もエラーを投げる
+        throw new Error(`Failed to save user message: ${error.message}`)
+      }
 
       // エージェントのシステムプロンプトを構築（環境コンテキスト＋プレースホルダー置換）
       const systemPrompt = this.buildSystemPrompt(agent, toolStates, config.projectDirectory)
@@ -488,7 +497,17 @@ No tools are currently enabled for this agent.
         )
       } else {
         // ツール使用がない場合は通常通り保存
-        await this.sessionManager.addMessage(sessionId, result.response)
+        try {
+          await this.sessionManager.addMessage(sessionId, result.response)
+        } catch (error: any) {
+          backgroundAgentLogger.error('Failed to save assistant response to session', {
+            sessionId,
+            messageId: result.response.id,
+            error: error.message
+          })
+          // アシスタントレスポンスの保存に失敗した場合もエラーを投げる
+          throw new Error(`Failed to save assistant response: ${error.message}`)
+        }
       }
 
       backgroundAgentLogger.info('Background agent chat completed successfully', {
@@ -571,7 +590,17 @@ No tools are currently enabled for this agent.
 
       currentMessages.push(toolResultMessage)
       // ツール実行結果もセッションに保存する（BackgroundAgentでは履歴が重要）
-      await this.sessionManager.addMessage(sessionId, toolResultMessage)
+      try {
+        await this.sessionManager.addMessage(sessionId, toolResultMessage)
+      } catch (error: any) {
+        backgroundAgentLogger.error('Failed to save tool result message to session', {
+          sessionId,
+          messageId: toolResultMessage.id,
+          error: error.message
+        })
+        // ツール結果メッセージの保存に失敗してもエラーを投げない（処理継続）
+        // ただしログは出力して問題を把握できるようにする
+      }
 
       // 次のAI応答を取得（タスク固有のinferenceConfigがあれば使用）
       const nextResponse = await this.bedrockService.converse({
@@ -826,6 +855,51 @@ No tools are currently enabled for this agent.
    */
   getSessionMetadata(sessionId: string) {
     return this.sessionManager.getSessionMetadata(sessionId)
+  }
+
+  /**
+   * タスクのシステムプロンプトを取得（プレースホルダー置換済み）
+   */
+  async getTaskSystemPrompt(taskId: string): Promise<string> {
+    try {
+      // BackgroundAgentSchedulerから対象タスクを取得
+      const { BackgroundAgentScheduler } = await import('./BackgroundAgentScheduler')
+      const scheduler = new BackgroundAgentScheduler(this.context)
+      const task = scheduler.getTask(taskId)
+
+      if (!task) {
+        throw new Error(`Task not found: ${taskId}`)
+      }
+
+      // エージェント設定を取得
+      const agent = await this.getAgentById(task.agentId)
+      if (!agent) {
+        throw new Error(`Agent not found: ${task.agentId}`)
+      }
+
+      // エージェント固有のツール設定を生成
+      const toolStates = await this.generateToolSpecs(agent.tools || [])
+
+      // システムプロンプトを構築（プレースホルダー置換済み）
+      const systemPrompt = this.buildSystemPrompt(agent, toolStates, task.projectDirectory)
+
+      backgroundAgentLogger.debug('Task system prompt generated', {
+        taskId,
+        agentId: task.agentId,
+        agentName: agent.name,
+        systemPromptLength: systemPrompt.length,
+        toolCount: toolStates.length
+      })
+
+      return systemPrompt
+    } catch (error: any) {
+      backgroundAgentLogger.error('Failed to get task system prompt', {
+        taskId,
+        error: error.message,
+        stack: error.stack
+      })
+      throw error
+    }
   }
 
   /**

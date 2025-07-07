@@ -70,11 +70,7 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
       setIsLoading(true)
       const historyData = await onGetExecutionHistory(task.id)
       setHistory(historyData)
-      // 最初の実行結果を自動選択
-      if (historyData.length > 0) {
-        setSelectedExecution(historyData[0])
-        await fetchSessionHistory(historyData[0].sessionId)
-      }
+      // 選択は applyFilters() で行うため、ここでは選択しない
     } catch (error) {
       console.error('Failed to fetch execution history:', error)
     } finally {
@@ -329,7 +325,11 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
   }
 
   useEffect(() => {
-    fetchHistory()
+    if (isOpen) {
+      // モーダルが開かれた時に選択をリセットして最新履歴を選択させる
+      setSelectedExecution(null)
+      fetchHistory()
+    }
   }, [isOpen, task.id])
 
   useEffect(() => {

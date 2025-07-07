@@ -631,6 +631,15 @@ const BackgroundAgent = {
     failure: '失敗'
   },
 
+  // System Prompt
+  systemPrompt: {
+    title: 'システムプロンプト',
+    show: 'システムプロンプトを表示',
+    loading: 'システムプロンプトを読み込み中...',
+    error: 'システムプロンプトの読み込みに失敗しました',
+    empty: 'システムプロンプトがありません'
+  },
+
   // Error messages
   errors: {
     fetchTasks: 'タスクの読み込みに失敗しました',
@@ -641,7 +650,8 @@ const BackgroundAgent = {
     executeTask: 'タスクの実行に失敗しました',
     fetchHistory: '実行履歴の読み込みに失敗しました',
     fetchSessionHistory: 'セッション履歴の読み込みに失敗しました',
-    continueSession: 'セッションの継続に失敗しました'
+    continueSession: 'セッションの継続に失敗しました',
+    getSystemPrompt: 'システムプロンプトの取得に失敗しました'
   }
 }
 

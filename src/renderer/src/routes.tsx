@@ -2,7 +2,6 @@ import { FiHome, FiFeather, FiSettings, FiMic } from 'react-icons/fi'
 import { LuCombine } from 'react-icons/lu'
 import { HiOutlineChatAlt2 } from 'react-icons/hi'
 import { BsLayoutWtf } from 'react-icons/bs'
-import { MdOutlineSmartToy } from 'react-icons/md'
 import HomePage from './pages/HomePage/HomePage'
 import SettingPage from './pages/SettingPage/SettingPage'
 import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
@@ -13,6 +12,7 @@ import { AgentDirectoryPage } from './pages/AgentDirectoryPage/AgentDirectoryPag
 import BackgroundAgentPage from './pages/BackgroundAgentPage/BackgroundAgentPage'
 import SpeakPage from './pages/SpeakPage'
 import { LuBookDown } from 'react-icons/lu'
+import { PiPulse } from 'react-icons/pi'
 
 export const routes = [
   {
@@ -46,7 +46,7 @@ export const routes = [
   {
     name: 'Background Agent',
     href: '/background-agent',
-    icon: MdOutlineSmartToy,
+    icon: PiPulse,
     position: 'top',
     element: <BackgroundAgentPage />
   },

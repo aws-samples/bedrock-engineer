@@ -563,6 +563,30 @@ export const backgroundAgentHandlers = {
     }
   },
 
+  'background-agent:get-task-system-prompt': async (_event: IpcMainInvokeEvent, params: any) => {
+    backgroundAgentLogger.debug('Get task system prompt request', {
+      taskId: params.taskId
+    })
+
+    try {
+      const service = getBackgroundAgentService()
+      const systemPrompt = await service.getTaskSystemPrompt(params.taskId)
+
+      backgroundAgentLogger.info('Task system prompt retrieved', {
+        taskId: params.taskId,
+        systemPromptLength: systemPrompt.length
+      })
+
+      return { systemPrompt }
+    } catch (error: any) {
+      backgroundAgentLogger.error('Failed to get task system prompt', {
+        taskId: params.taskId,
+        error: error.message
+      })
+      throw error
+    }
+  },
+
   // 通知ハンドラー
   'background-agent:task-notification': async (_event: IpcMainInvokeEvent, params: any) => {
     backgroundAgentLogger.debug('Task notification request', {

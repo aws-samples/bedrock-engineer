@@ -21,6 +21,7 @@ const BackgroundAgentPage: React.FC = () => {
     executeTaskManually,
     getTaskExecutionHistory,
     getSessionHistory,
+    getTaskSystemPrompt,
     refreshAll
   } = useBackgroundAgent()
 
@@ -71,6 +72,7 @@ const BackgroundAgentPage: React.FC = () => {
         onRefresh={refreshAll}
         onGetExecutionHistory={getTaskExecutionHistory}
         onGetSessionHistory={getSessionHistory}
+        onGetTaskSystemPrompt={getTaskSystemPrompt}
         onCreateTask={() => setShowCreateForm(true)}
       />
 
