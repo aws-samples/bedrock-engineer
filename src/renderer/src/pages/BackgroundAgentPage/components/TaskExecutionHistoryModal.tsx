@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   XMarkIcon,
@@ -62,6 +62,25 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
   const [showChatMode, setShowChatMode] = useState(false)
   const [chatMessage, setChatMessage] = useState('')
   const [isSendingMessage, setIsSendingMessage] = useState(false)
+
+  // 自動スクロール用のref
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+
+  // 最下部へのスクロール関数
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [])
+
+  // ユーザーが最下部近くにいるかを判定
+  const isNearBottom = useCallback(() => {
+    const container = messagesContainerRef.current
+    if (!container) return true
+
+    const { scrollTop, scrollHeight, clientHeight } = container
+    const threshold = 150 // 150px以内なら「最下部近く」と判定
+    return scrollHeight - scrollTop - clientHeight < threshold
+  }, [])
 
   // 履歴データを取得
   const fetchHistory = async () => {
@@ -377,6 +396,32 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
     return unsubscribe
   }, [selectedExecution?.sessionId, isOpen])
 
+  // セッション履歴更新時の自動スクロール
+  useEffect(() => {
+    if (!selectedExecution?.sessionId) return
+
+    const messages = sessionHistories[selectedExecution.sessionId]
+    if (!messages || messages.length === 0) return
+
+    // ユーザーが最下部近くにいる場合のみ自動スクロール
+    if (isNearBottom()) {
+      // 少し遅延させてDOMの更新を待つ
+      setTimeout(() => {
+        scrollToBottom()
+      }, 100)
+    }
+  }, [sessionHistories, selectedExecution?.sessionId, scrollToBottom, isNearBottom])
+
+  // メッセージ送信後の自動スクロール
+  useEffect(() => {
+    if (!isSendingMessage && selectedExecution?.sessionId) {
+      // 送信完了後は必ずスクロール
+      setTimeout(() => {
+        scrollToBottom()
+      }, 200)
+    }
+  }, [isSendingMessage, selectedExecution?.sessionId, scrollToBottom])
+
   // ESCキーでモーダルを閉じる
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
@@ -623,7 +668,7 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                             <p className="text-sm">{t('backgroundAgent.history.noMessages')}</p>
                           </div>
                         ) : (
-                          <div className="space-y-4">
+                          <div ref={messagesContainerRef} className="space-y-4">
                             {sessionHistories[selectedExecution.sessionId].map((message, index) => (
                               <div
                                 key={index}
@@ -646,6 +691,8 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                                 </div>
                               </div>
                             ))}
+                            {/* 自動スクロール用の要素 */}
+                            <div ref={messagesEndRef} />
                           </div>
                         )
                       ) : (
