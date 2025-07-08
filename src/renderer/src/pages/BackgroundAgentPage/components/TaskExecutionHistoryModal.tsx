@@ -13,6 +13,7 @@ import {
   ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline'
 import { ScheduledTask, TaskExecutionResult } from '../hooks/useBackgroundAgent'
+import JSONViewer from '../../../components/JSONViewer'
 
 interface TaskExecutionHistoryModalProps {
   task: ScheduledTask
@@ -202,65 +203,96 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
     }
   }
 
-  // ツール使用メッセージをフォーマット
-  const formatToolUseContent = (content: any[]): string => {
-    const toolUseItems = content.filter((item: any) => item.type === 'tool_use')
+  // JSONを安全に表示するヘルパー関数
+  const renderJSONContent = (value: any, maxHeight: string = '300px'): React.ReactNode => {
+    // 文字列の場合: JSONパースを試行
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value)
+        // textキーのみを持つオブジェクトの場合はテキスト値を表示
+        if (
+          typeof parsed === 'object' &&
+          parsed !== null &&
+          Object.keys(parsed).length === 1 &&
+          'text' in parsed
+        ) {
+          return (
+            <pre
+              className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded border overflow-auto whitespace-pre-wrap"
+              style={{ maxHeight }}
+            >
+              {parsed.text}
+            </pre>
+          )
+        }
+        return <JSONViewer data={parsed} title="" maxHeight={maxHeight} showCopyButton={true} />
+      } catch (e) {
+        // JSON parse failed, display as plain text
+        return (
+          <pre
+            className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded border overflow-auto whitespace-pre-wrap"
+            style={{ maxHeight }}
+          >
+            {value}
+          </pre>
+        )
+      }
+    }
 
-    return toolUseItems
-      .map((item: any) => {
-        const toolName = item.name || 'Unknown Tool'
-        const input = item.input ? JSON.stringify(item.input, null, 2) : 'No input'
-        const toolId = item.id ? `\nID: ${item.id}` : ''
+    // オブジェクト・配列の場合
+    if (typeof value === 'object' && value !== null) {
+      // textキーのみを持つオブジェクトの場合はテキスト値を表示
+      if (!Array.isArray(value) && Object.keys(value).length === 1 && 'text' in value) {
+        return (
+          <pre className="overflow-auto whitespace-pre-wrap" style={{ maxHeight }}>
+            {value.text}
+          </pre>
+        )
+      }
+      // その他のオブジェクト・配列: JSONViewerで表示
+      return <JSONViewer data={value} title="" maxHeight={maxHeight} showCopyButton={true} />
+    }
 
-        return `🔧 ツール実行リクエスト\n📝 ツール名: ${toolName}${toolId}\n📥 入力パラメータ:\n${input}`
-      })
-      .join('\n\n')
+    // その他の場合: 文字列として表示
+    return (
+      <pre className="overflow-auto whitespace-pre-wrap" style={{ maxHeight }}>
+        {String(value)}
+      </pre>
+    )
   }
 
-  // ツール結果メッセージをフォーマット
-  const formatToolResultContent = (content: any[]): string => {
-    const toolResultItems = content.filter((item: any) => item.type === 'tool_result')
-
-    return toolResultItems
-      .map((item: any) => {
-        const isError = item.is_error || false
-        const result = item.content || 'No result'
-        const toolId = item.tool_use_id ? `\nツールID: ${item.tool_use_id}` : ''
-
-        return `📋 ツール実行結果\n${isError ? '❌ 実行エラー' : '✅ 実行成功'}${toolId}\n📤 出力結果:\n${result}`
-      })
-      .join('\n\n')
-  }
-
-  // メッセージの内容をフォーマット
-  const formatMessageContent = (message: any): string => {
-    const messageType = getMessageType(message)
+  // メッセージの内容をフォーマット（シンプル版）
+  const formatMessageContent = (message: any): React.ReactNode => {
     const content = message.content
 
-    if (messageType === 'tool_use') {
-      return formatToolUseContent(content)
-    } else if (messageType === 'tool_result') {
-      return formatToolResultContent(content)
+    // contentが配列の場合（従来のAnthropic形式）
+    if (Array.isArray(content)) {
+      return (
+        <div className="space-y-3">
+          {content.map((item: any, index: number) => {
+            // テキストアイテム
+            if (typeof item === 'string') {
+              return renderJSONContent(item, '300px')
+            }
+
+            if (typeof item === 'object' && item !== null) {
+              // テキストタイプ
+              if (item.type === 'text' && item.text) {
+                return <div key={index}>{renderJSONContent(item.text, '300px')}</div>
+              }
+
+              // その他のオブジェクト（tool_use, tool_result等）
+              return <div key={index}>{renderJSONContent(item, '300px')}</div>
+            }
+
+            return <div key={index}>{renderJSONContent(item, '300px')}</div>
+          })}
+        </div>
+      )
     }
 
-    // 通常のテキストメッセージ
-    if (!Array.isArray(content)) {
-      if (typeof content === 'string') return content
-      if (content && typeof content === 'object' && (content as any).text)
-        return (content as any).text
-      return String(content)
-    }
-
-    return content
-      .map((item: any) => {
-        if (typeof item === 'string') return item
-        if (item && typeof item === 'object') {
-          if (item.type === 'text' && item.text) return item.text
-          if (item.text) return item.text
-        }
-        return JSON.stringify(item)
-      })
-      .join('\n')
+    // contentが単一の値の場合
+    return renderJSONContent(content, '400px')
   }
 
   // メッセージのタイトルを取得
@@ -582,7 +614,13 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                                   <div className="text-sm font-medium text-gray-900 dark:text-white mb-2">
                                     {getMessageTitle(message)}
                                   </div>
-                                  <div className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+                                  <div
+                                    className={`text-sm text-gray-800 dark:text-gray-200 break-words ${
+                                      getMessageType(message) === 'text'
+                                        ? 'whitespace-pre-wrap'
+                                        : ''
+                                    }`}
+                                  >
                                     {formatMessageContent(message)}
                                   </div>
                                 </div>
