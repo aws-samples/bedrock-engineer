@@ -313,6 +313,32 @@ export const api = {
     getAllToolMetadata: () => {
       return ToolMetadataCollector.getAllToolMetadata()
     }
+  },
+  pubsub: {
+    subscribe: (channel: string, callback: (data: any) => void) => {
+      // Listen for messages on the channel
+      const handler = (_event: any, data: any) => callback(data)
+      ipcRenderer.on(channel, handler)
+
+      // Register subscription with main process
+      ipcRenderer.invoke('pubsub:subscribe', { channel })
+
+      // Return unsubscribe function
+      return () => {
+        ipcRenderer.removeListener(channel, handler)
+        ipcRenderer.invoke('pubsub:unsubscribe', { channel })
+      }
+    },
+    unsubscribe: (channel: string) => {
+      ipcRenderer.removeAllListeners(channel)
+      return ipcRenderer.invoke('pubsub:unsubscribe', { channel })
+    },
+    publish: (channel: string, data: any) => {
+      return ipcRenderer.invoke('pubsub:publish', { channel, data })
+    },
+    stats: () => {
+      return ipcRenderer.invoke('pubsub:stats')
+    }
   }
 }
 

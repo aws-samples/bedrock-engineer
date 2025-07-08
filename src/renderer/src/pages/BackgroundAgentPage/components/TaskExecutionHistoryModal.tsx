@@ -14,6 +14,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { ScheduledTask, TaskExecutionResult } from '../hooks/useBackgroundAgent'
 import JSONViewer from '../../../components/JSONViewer'
+import { BackgroundAgentTextArea } from './BackgroundAgentTextArea'
 
 interface TaskExecutionHistoryModalProps {
   task: ScheduledTask
@@ -314,13 +315,14 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
   // 会話継続機能のハンドラー
   const handleContinueSession = async () => {
     if (!selectedExecution || !onContinueSession || !chatMessage.trim()) return
-
+    const msg = chatMessage
     try {
       setIsSendingMessage(true)
+      setChatMessage('')
       await onContinueSession({
         sessionId: selectedExecution.sessionId,
         taskId: task.id,
-        userMessage: chatMessage.trim(),
+        userMessage: msg.trim(),
         options: {
           enableToolExecution: true,
           maxToolExecutions: 5,
@@ -330,18 +332,10 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
 
       // メッセージ送信後、セッション履歴を再取得
       await fetchSessionHistory(selectedExecution.sessionId)
-      setChatMessage('')
     } catch (error) {
       console.error('Failed to continue session:', error)
     } finally {
       setIsSendingMessage(false)
-    }
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleContinueSession()
     }
   }
 
@@ -356,6 +350,32 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
   useEffect(() => {
     applyFilters()
   }, [history, filter])
+
+  // リアルタイム更新のための購読設定
+  useEffect(() => {
+    if (!selectedExecution?.sessionId || !isOpen) return
+
+    const unsubscribe = window.api.pubsub.subscribe(
+      `session-update:${selectedExecution.sessionId}`,
+      (updateData) => {
+        if (
+          updateData.type === 'message-added' &&
+          updateData.sessionId === selectedExecution.sessionId
+        ) {
+          // セッション履歴を更新
+          setSessionHistories((prev) => ({
+            ...prev,
+            [selectedExecution.sessionId]: [
+              ...(prev[selectedExecution.sessionId] || []),
+              updateData.message
+            ]
+          }))
+        }
+      }
+    )
+
+    return unsubscribe
+  }, [selectedExecution?.sessionId, isOpen])
 
   // ESCキーでモーダルを閉じる
   useEffect(() => {
@@ -638,35 +658,15 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                     {/* Chat Input Form */}
                     {showChatMode && onContinueSession && (
                       <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-gray-50 dark:bg-gray-800">
-                        <div className="flex space-x-3">
-                          <div className="flex-1">
-                            <textarea
-                              value={chatMessage}
-                              onChange={(e) => setChatMessage(e.target.value)}
-                              onKeyDown={handleKeyPress}
-                              placeholder={t('backgroundAgent.history.enterMessage')}
-                              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
-                              rows={3}
-                              disabled={isSendingMessage}
-                            />
-                          </div>
-                          <div className="flex-shrink-0">
-                            <button
-                              onClick={handleContinueSession}
-                              disabled={isSendingMessage || !chatMessage.trim()}
-                              className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                              {isSendingMessage ? (
-                                <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                              ) : (
-                                t('backgroundAgent.history.send')
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                          {t('backgroundAgent.history.sendInstruction')}
-                        </div>
+                        <BackgroundAgentTextArea
+                          value={chatMessage}
+                          onChange={setChatMessage}
+                          onSubmit={() => {
+                            handleContinueSession()
+                          }}
+                          disabled={isSendingMessage}
+                          placeholder={t('backgroundAgent.history.enterMessage')}
+                        />
                       </div>
                     )}
                   </div>

@@ -24,6 +24,7 @@ import {
 } from '../../../../../types/agent-chat'
 import { BedrockAgent } from '../../../../../types/agent'
 import { BrowserWindow, ipcMain } from 'electron'
+import { pubSubManager } from '../../../../lib/pubsub-manager'
 
 const logger = createCategoryLogger('background-agent')
 
@@ -421,6 +422,9 @@ No tools are currently enabled for this agent.
       try {
         const userMessageObj = messages[messages.length - 1]
         await this.sessionManager.addMessage(sessionId, userMessageObj)
+
+        // リアルタイム通知を送信
+        this.publishSessionUpdate(sessionId, userMessageObj)
       } catch (error: any) {
         logger.error('Failed to save user message to session', {
           sessionId,
@@ -502,6 +506,9 @@ No tools are currently enabled for this agent.
         // ツール使用がない場合は通常通り保存
         try {
           await this.sessionManager.addMessage(sessionId, result.response)
+
+          // リアルタイム通知を送信
+          this.publishSessionUpdate(sessionId, result.response)
         } catch (error: any) {
           logger.error('Failed to save assistant response to session', {
             sessionId,
@@ -595,6 +602,9 @@ No tools are currently enabled for this agent.
       // ツール実行結果もセッションに保存する（BackgroundAgentでは履歴が重要）
       try {
         await this.sessionManager.addMessage(sessionId, toolResultMessage)
+
+        // リアルタイム通知を送信
+        this.publishSessionUpdate(sessionId, toolResultMessage)
       } catch (error: any) {
         logger.error('Failed to save tool result message to session', {
           sessionId,
@@ -625,6 +635,9 @@ No tools are currently enabled for this agent.
       currentMessages.push(nextResponseMessage)
       // 中間のassistantメッセージもセッションに保存
       await this.sessionManager.addMessage(sessionId, nextResponseMessage)
+
+      // リアルタイム通知を送信
+      this.publishSessionUpdate(sessionId, nextResponseMessage)
       executionCount++
 
       // ツール使用が不要になった場合は終了
@@ -902,6 +915,37 @@ No tools are currently enabled for this agent.
         stack: error.stack
       })
       throw error
+    }
+  }
+
+  /**
+   * セッション更新をPub-Sub経由で通知
+   */
+  private publishSessionUpdate(sessionId: string, message: BackgroundMessage): void {
+    try {
+      const channel = `session-update:${sessionId}`
+      const updateData = {
+        type: 'message-added',
+        sessionId,
+        message,
+        timestamp: Date.now()
+      }
+
+      pubSubManager.publish(channel, updateData)
+
+      logger.debug('Published session update', {
+        channel,
+        messageId: message.id,
+        messageRole: message.role,
+        subscriberCount:
+          pubSubManager.getStats().channels.find((c) => c.channel === channel)?.subscriberCount || 0
+      })
+    } catch (error) {
+      logger.warn('Failed to publish session update', {
+        sessionId,
+        messageId: message.id,
+        error: error instanceof Error ? error.message : String(error)
+      })
     }
   }
 

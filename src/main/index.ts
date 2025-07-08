@@ -27,6 +27,7 @@ import {
   backgroundAgentHandlers,
   shutdownBackgroundAgentScheduler
 } from './handlers/background-agent-handlers'
+import { pubsubHandlers } from './handlers/pubsub-handlers'
 
 // 動的インポートを使用してfix-pathパッケージを読み込む
 import('fix-path')
@@ -394,6 +395,7 @@ app.whenReady().then(async () => {
   registerIpcHandlers(screenHandlers, { loggerCategory: 'screen:ipc' })
   registerIpcHandlers(cameraHandlers, { loggerCategory: 'camera:ipc' })
   registerIpcHandlers(backgroundAgentHandlers, { loggerCategory: 'background-agent:ipc' })
+  registerIpcHandlers(pubsubHandlers, { loggerCategory: 'pubsub:ipc' })
 
   // プロキシ関連IPCハンドラーの登録
   registerProxyHandlers()

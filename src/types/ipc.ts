@@ -371,6 +371,35 @@ export interface IPCChannelDefinitions {
     result: void
   }
 
+  // Pub-Sub システム関連
+  'pubsub:subscribe': {
+    params: {
+      channel: string
+    }
+    result: void
+  }
+  'pubsub:unsubscribe': {
+    params: {
+      channel: string
+    }
+    result: void
+  }
+  'pubsub:publish': {
+    params: {
+      channel: string
+      data: any
+    }
+    result: void
+  }
+  'pubsub:stats': {
+    params: void
+    result: {
+      totalChannels: number
+      totalSubscribers: number
+      channels: Array<{ channel: string; subscriberCount: number }>
+    }
+  }
+
   // 画面キャプチャ関連
   'screen:capture': {
     params: {
