@@ -246,6 +246,7 @@ export const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onSubmit, on
                       agents={agents}
                       selectedAgent={formData.agentId}
                       onOpenSettings={openAgentSettingsModal}
+                      alignment="left"
                     />
 
                     {errors.agentId && (

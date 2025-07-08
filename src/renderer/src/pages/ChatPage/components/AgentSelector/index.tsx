@@ -7,17 +7,21 @@ type AgentSelectorProps = {
   agents: readonly Agent[]
   selectedAgent: string
   onOpenSettings: () => void
+  alignment?: 'left' | 'center'
 }
 
 export const AgentSelector: React.FC<AgentSelectorProps> = ({
   agents,
   selectedAgent,
-  onOpenSettings
+  onOpenSettings,
+  alignment = 'center'
 }) => {
   const selectedAgentData = agents.find((agent) => agent.id === selectedAgent)
 
+  const containerClass = alignment === 'left' ? 'justify-start' : 'justify-center'
+
   return (
-    <div className="justify-center flex items-center gap-2">
+    <div className={`${containerClass} flex items-center gap-2`}>
       <div className="relative w-[30vw]">
         <button
           type="button"

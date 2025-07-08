@@ -252,6 +252,7 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
                       agents={agents}
                       selectedAgent={formData.agentId}
                       onOpenSettings={openAgentSettingsModal}
+                      alignment="left"
                     />
 
                     {errors.agentId && (
