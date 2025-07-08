@@ -7,6 +7,7 @@ import { ScheduleConfig, ScheduledTask, TaskExecutionResult, BackgroundAgentConf
 import { BackgroundAgentService } from './BackgroundAgentService'
 import { ServiceContext } from '../../types'
 import { MainNotificationService } from '../NotificationService'
+import { windowManager } from '../../../utils/WindowManager'
 
 const logger = createCategoryLogger('background-agent:scheduler')
 
@@ -585,7 +586,6 @@ export class BackgroundAgentScheduler {
     executedAt: number
   }): void {
     try {
-      const { windowManager } = require('../../../utils/WindowManager')
       const successCount = windowManager.broadcastToAllWindows(
         'background-agent:task-execution-start',
         params
@@ -622,7 +622,6 @@ export class BackgroundAgentScheduler {
     nextRun?: number
   }): void {
     try {
-      const { windowManager } = require('../../../utils/WindowManager')
       const successCount = windowManager.broadcastToAllWindows(
         'background-agent:task-notification',
         params
@@ -652,7 +651,6 @@ export class BackgroundAgentScheduler {
     executionTime?: number
   }): void {
     try {
-      const { windowManager } = require('../../../utils/WindowManager')
       const successCount = windowManager.broadcastToAllWindows(
         'background-agent:task-skipped',
         params

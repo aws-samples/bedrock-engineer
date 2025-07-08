@@ -25,6 +25,7 @@ import {
 import { BedrockAgent } from '../../../../../types/agent'
 // BrowserWindow, ipcMain imports removed - now using utility classes
 import { pubSubManager } from '../../../../lib/pubsub-manager'
+import { ipcHelper } from '../../../../utils/IPCHelper'
 
 const logger = createCategoryLogger('background-agent')
 
@@ -82,8 +83,6 @@ export class BackgroundAgentService {
    * IPC経由でpreloadツール仕様を取得
    */
   private async getPreloadToolSpecs(): Promise<any[]> {
-    const { ipcHelper } = await import('../../../../utils/IPCHelper')
-
     try {
       return await ipcHelper.sendRequest<any[]>({
         channel: 'get-tool-specs-request',
@@ -639,8 +638,6 @@ No tools are currently enabled for this agent.
    * IPC経由でpreloadツールを実行
    */
   private async executePreloadToolViaIPC(toolInput: ToolInput): Promise<ToolResult> {
-    const { ipcHelper } = await import('../../../../utils/IPCHelper')
-
     try {
       const result = await ipcHelper.sendRequest<ToolResult>({
         channel: 'preload-tool-request',
