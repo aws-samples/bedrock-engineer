@@ -23,7 +23,7 @@ import {
   FlowConfig
 } from '../../../../../types/agent-chat'
 import { BedrockAgent } from '../../../../../types/agent'
-import { BrowserWindow, ipcMain } from 'electron'
+// BrowserWindow, ipcMain imports removed - now using utility classes
 import { pubSubManager } from '../../../../lib/pubsub-manager'
 
 const logger = createCategoryLogger('background-agent')
@@ -82,42 +82,20 @@ export class BackgroundAgentService {
    * IPC経由でpreloadツール仕様を取得
    */
   private async getPreloadToolSpecs(): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-      const timeoutMs = 10000 // 10秒タイムアウト
-      const requestId = uuidv4()
+    const { ipcHelper } = await import('../../../../utils/IPCHelper')
 
-      const timeout = setTimeout(() => {
-        ipcMain.removeAllListeners(`tool-specs-response-${requestId}`)
-        reject(new Error('Tool specs request timeout'))
-      }, timeoutMs)
-
-      const responseHandler = (_event: any, specs: any[]) => {
-        clearTimeout(timeout)
-        ipcMain.removeListener(`tool-specs-response-${requestId}`, responseHandler)
-        resolve(specs)
-      }
-
-      ipcMain.once(`tool-specs-response-${requestId}`, responseHandler)
-
-      // 既存のBrowserWindowを取得
-      const allWindows = BrowserWindow.getAllWindows()
-      const mainWindow = allWindows.find((window) => !window.isDestroyed())
-
-      if (!mainWindow || !mainWindow.webContents) {
-        clearTimeout(timeout)
-        ipcMain.removeListener(`tool-specs-response-${requestId}`, responseHandler)
-        resolve([])
-        return
-      }
-
-      try {
-        mainWindow.webContents.send('get-tool-specs-request', { requestId })
-      } catch (sendError: any) {
-        clearTimeout(timeout)
-        ipcMain.removeListener(`tool-specs-response-${requestId}`, responseHandler)
-        reject(sendError)
-      }
-    })
+    try {
+      return await ipcHelper.sendRequest<any[]>({
+        channel: 'get-tool-specs-request',
+        responseChannel: 'tool-specs-response',
+        timeoutMs: 10000
+      })
+    } catch (error) {
+      logger.warn('Failed to get preload tool specs via IPC', {
+        error: error instanceof Error ? error.message : String(error)
+      })
+      return []
+    }
   }
 
   /**
@@ -661,73 +639,36 @@ No tools are currently enabled for this agent.
    * IPC経由でpreloadツールを実行
    */
   private async executePreloadToolViaIPC(toolInput: ToolInput): Promise<ToolResult> {
-    return new Promise((resolve, reject) => {
-      const requestId = uuidv4()
-      const timeoutMs = 30000 // 30秒タイムアウト
+    const { ipcHelper } = await import('../../../../utils/IPCHelper')
 
-      // タイムアウト設定
-      const timeout = setTimeout(() => {
-        ipcMain.removeAllListeners(`preload-tool-response`)
-        reject(new Error('Preload tool execution timeout'))
-      }, timeoutMs)
+    try {
+      const result = await ipcHelper.sendRequest<ToolResult>({
+        channel: 'preload-tool-request',
+        responseChannel: 'preload-tool-response',
+        timeoutMs: 30000,
+        data: { toolInput }
+      })
 
-      // レスポンスリスナーを設定
-      const responseHandler = (_event: any, data: { requestId: string; result: ToolResult }) => {
-        if (data.requestId === requestId) {
-          clearTimeout(timeout)
-          ipcMain.removeListener('preload-tool-response', responseHandler)
-          resolve(data.result)
-        }
+      logger.debug('Preload tool execution completed via IPC', {
+        toolType: toolInput.type,
+        success: result.success
+      })
+
+      return result
+    } catch (error) {
+      logger.error('Preload tool execution failed via IPC', {
+        toolType: toolInput.type,
+        error: error instanceof Error ? error.message : String(error)
+      })
+
+      return {
+        name: toolInput.type as any,
+        success: false,
+        result: null,
+        error: error instanceof Error ? error.message : 'Preload tool execution failed',
+        message: 'Failed to execute preload tool via IPC'
       }
-
-      ipcMain.on('preload-tool-response', responseHandler)
-
-      // 既存のBrowserWindowを取得
-      const allWindows = BrowserWindow.getAllWindows()
-      const mainWindow = allWindows.find((window) => !window.isDestroyed())
-
-      if (!mainWindow || !mainWindow.webContents) {
-        clearTimeout(timeout)
-        ipcMain.removeListener('preload-tool-response', responseHandler)
-
-        const noWindowResult: ToolResult = {
-          name: toolInput.type as any,
-          success: false,
-          result: null,
-          error: 'No active window available for preload tool execution',
-          message: 'No active window for preload tools'
-        }
-
-        resolve(noWindowResult)
-        return
-      }
-
-      // リクエストを送信
-      try {
-        mainWindow.webContents.send('preload-tool-request', {
-          requestId,
-          toolInput
-        })
-
-        logger.debug('Sent preload tool request via IPC', {
-          requestId,
-          toolType: toolInput.type
-        })
-      } catch (sendError: any) {
-        clearTimeout(timeout)
-        ipcMain.removeListener('preload-tool-response', responseHandler)
-
-        const sendErrorResult: ToolResult = {
-          name: toolInput.type as any,
-          success: false,
-          result: null,
-          error: sendError.message || 'Failed to send preload tool request',
-          message: 'Failed to send preload tool request'
-        }
-
-        resolve(sendErrorResult)
-      }
-    })
+    }
   }
 
   /**

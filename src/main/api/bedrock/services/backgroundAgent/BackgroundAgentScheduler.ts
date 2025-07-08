@@ -1,6 +1,6 @@
 import * as cron from 'node-cron'
 import { v4 as uuidv4 } from 'uuid'
-import { BrowserWindow } from 'electron'
+// BrowserWindow import removed - now using WindowManager utility
 import Store from 'electron-store'
 import { createCategoryLogger } from '../../../../../common/logger'
 import { ScheduleConfig, ScheduledTask, TaskExecutionResult, BackgroundAgentConfig } from './types'
@@ -585,18 +585,16 @@ export class BackgroundAgentScheduler {
     executedAt: number
   }): void {
     try {
-      // すべてのレンダラープロセスに実行開始通知イベントを送信
-      const allWindows = BrowserWindow.getAllWindows()
-      for (const window of allWindows) {
-        if (!window.isDestroyed()) {
-          window.webContents.send('background-agent:task-execution-start', params)
-        }
-      }
+      const { windowManager } = require('../../../utils/WindowManager')
+      const successCount = windowManager.broadcastToAllWindows(
+        'background-agent:task-execution-start',
+        params
+      )
 
-      logger.debug('Task execution start notification sent to all windows', {
+      logger.debug('Task execution start notification sent', {
         taskId: params.taskId,
         taskName: params.taskName,
-        windowCount: allWindows.length
+        successCount
       })
     } catch (error: any) {
       logger.error('Failed to send task execution start notification', {
@@ -624,19 +622,17 @@ export class BackgroundAgentScheduler {
     nextRun?: number
   }): void {
     try {
-      // すべてのレンダラープロセスに通知イベントを送信
-      const allWindows = BrowserWindow.getAllWindows()
-      for (const window of allWindows) {
-        if (!window.isDestroyed()) {
-          window.webContents.send('background-agent:task-notification', params)
-        }
-      }
+      const { windowManager } = require('../../../utils/WindowManager')
+      const successCount = windowManager.broadcastToAllWindows(
+        'background-agent:task-notification',
+        params
+      )
 
-      logger.debug('Task notification sent to all windows', {
+      logger.debug('Task notification sent', {
         taskId: params.taskId,
         taskName: params.taskName,
         success: params.success,
-        windowCount: allWindows.length
+        successCount
       })
     } catch (error: any) {
       logger.error('Failed to send task notification', {
@@ -656,19 +652,17 @@ export class BackgroundAgentScheduler {
     executionTime?: number
   }): void {
     try {
-      // すべてのレンダラープロセスに通知イベントを送信
-      const allWindows = BrowserWindow.getAllWindows()
-      for (const window of allWindows) {
-        if (!window.isDestroyed()) {
-          window.webContents.send('background-agent:task-skipped', params)
-        }
-      }
+      const { windowManager } = require('../../../utils/WindowManager')
+      const successCount = windowManager.broadcastToAllWindows(
+        'background-agent:task-skipped',
+        params
+      )
 
-      logger.debug('Task skipped notification sent to all windows', {
+      logger.debug('Task skipped notification sent', {
         taskId: params.taskId,
         taskName: params.taskName,
         reason: params.reason,
-        windowCount: allWindows.length
+        successCount
       })
     } catch (error: any) {
       logger.error('Failed to send task skipped notification', {
