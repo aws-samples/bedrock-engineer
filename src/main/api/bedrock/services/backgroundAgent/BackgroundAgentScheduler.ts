@@ -33,6 +33,13 @@ export class BackgroundAgentScheduler {
       }
     })
 
+    // BackgroundAgentServiceにコールバックを設定してリアルタイム更新を有効化
+    this.backgroundAgentService.setExecutionHistoryUpdateCallback(
+      (taskId: string, sessionId: string, messageCount: number) => {
+        this.updateExecutionHistoryMessageCount(taskId, sessionId, messageCount)
+      }
+    )
+
     logger.info('BackgroundAgentScheduler initialized')
 
     // アプリケーション起動時にすべてのスケジューラ状態をリセット
@@ -412,6 +419,17 @@ export class BackgroundAgentScheduler {
       executedAt: Date.now()
     })
 
+    // 実行開始時の履歴を記録
+    const executionStartTime = Date.now()
+    const initialExecutionResult: TaskExecutionResult = {
+      taskId,
+      executedAt: executionStartTime,
+      status: 'running',
+      sessionId,
+      messageCount: 0
+    }
+    this.recordExecution(taskId, initialExecutionResult)
+
     try {
       // BackgroundAgentConfigを構築
       const agentConfig: BackgroundAgentConfig = {
@@ -419,6 +437,22 @@ export class BackgroundAgentScheduler {
         agentId: task.agentId,
         projectDirectory: task.projectDirectory,
         inferenceConfig: task.inferenceConfig
+      }
+
+      // セッションを明示的に作成（新規セッションの場合）
+      if (!isSessionContinuation) {
+        this.backgroundAgentService.createSession(sessionId, {
+          taskId: task.id,
+          agentId: task.agentId,
+          modelId: task.modelId,
+          projectDirectory: task.projectDirectory
+        })
+        logger.info('New session created for task execution', {
+          taskId,
+          sessionId,
+          agentId: task.agentId,
+          modelId: task.modelId
+        })
       }
 
       // タスク実行前のメッセージ数をデバッグログ出力
@@ -452,7 +486,7 @@ export class BackgroundAgentScheduler {
       const executionResult: TaskExecutionResult = {
         taskId,
         executedAt: Date.now(),
-        success: true,
+        status: 'success',
         sessionId,
         messageCount: sessionHistory.length // 実際のセッション履歴からメッセージ数を取得
       }
@@ -530,7 +564,7 @@ export class BackgroundAgentScheduler {
       const executionResult: TaskExecutionResult = {
         taskId,
         executedAt: Date.now(),
-        success: false,
+        status: 'failed',
         error: error.message,
         sessionId,
         messageCount: 0
@@ -679,7 +713,7 @@ export class BackgroundAgentScheduler {
   }
 
   /**
-   * 実行履歴を記録
+   * 実行履歴を記録（既存エントリの更新または新規追加）
    */
   private recordExecution(taskId: string, result: TaskExecutionResult): void {
     try {
@@ -691,25 +725,99 @@ export class BackgroundAgentScheduler {
         allHistory[taskId] = []
       }
 
-      // 新しい実行結果を追加
-      allHistory[taskId].push(result)
+      const taskHistory = allHistory[taskId]
+
+      // 同じセッションIDの既存エントリを検索
+      const existingIndex = taskHistory.findIndex((entry) => entry.sessionId === result.sessionId)
+
+      if (existingIndex !== -1) {
+        // 既存エントリを更新
+        taskHistory[existingIndex] = result
+        logger.debug('Task execution entry updated', {
+          taskId,
+          sessionId: result.sessionId,
+          status: result.status,
+          historyCount: taskHistory.length
+        })
+      } else {
+        // 新しい実行結果を追加
+        taskHistory.push(result)
+        logger.debug('Task execution entry added', {
+          taskId,
+          sessionId: result.sessionId,
+          status: result.status,
+          historyCount: taskHistory.length
+        })
+      }
 
       // 履歴は最新100件まで保持
-      if (allHistory[taskId].length > 100) {
-        allHistory[taskId].splice(0, allHistory[taskId].length - 100)
+      if (taskHistory.length > 100) {
+        taskHistory.splice(0, taskHistory.length - 100)
       }
 
       // 永続化
       this.executionHistoryStore.set('executionHistory', allHistory)
-
-      logger.debug('Task execution recorded and persisted', {
-        taskId,
-        success: result.success,
-        historyCount: allHistory[taskId].length
-      })
     } catch (error: any) {
       logger.error('Failed to record execution history', {
         taskId,
+        error: error.message
+      })
+    }
+  }
+
+  /**
+   * 実行履歴のメッセージ数をリアルタイムで更新
+   */
+  private updateExecutionHistoryMessageCount(
+    taskId: string,
+    sessionId: string,
+    messageCount: number
+  ): void {
+    try {
+      // 現在の実行履歴を取得
+      const allHistory = this.executionHistoryStore.get('executionHistory')
+
+      // 該当タスクの履歴を取得
+      const taskHistory = allHistory[taskId]
+      if (!taskHistory || taskHistory.length === 0) {
+        logger.debug('No execution history found for real-time update', {
+          taskId,
+          sessionId,
+          messageCount
+        })
+        return
+      }
+
+      // 最新の実行履歴エントリを取得
+      const latestExecution = taskHistory[taskHistory.length - 1]
+
+      // セッションIDが一致する場合のみ更新
+      if (latestExecution.sessionId === sessionId) {
+        // メッセージ数を更新
+        latestExecution.messageCount = messageCount
+
+        // 永続化
+        this.executionHistoryStore.set('executionHistory', allHistory)
+
+        logger.debug('Execution history message count updated in real-time', {
+          taskId,
+          sessionId,
+          messageCount,
+          status: latestExecution.status
+        })
+      } else {
+        logger.debug('Session ID mismatch for real-time update', {
+          taskId,
+          expectedSessionId: latestExecution.sessionId,
+          actualSessionId: sessionId,
+          messageCount
+        })
+      }
+    } catch (error: any) {
+      logger.error('Failed to update execution history message count', {
+        taskId,
+        sessionId,
+        messageCount,
         error: error.message
       })
     }

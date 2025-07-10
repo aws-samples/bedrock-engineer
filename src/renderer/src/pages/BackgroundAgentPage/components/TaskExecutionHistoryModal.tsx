@@ -10,7 +10,8 @@ import {
   UserIcon,
   CpuChipIcon,
   WrenchIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline'
 import { ScheduledTask, TaskExecutionResult } from '../hooks/useBackgroundAgent'
 import JSONViewer from '../../../components/JSONViewer'
@@ -105,7 +106,7 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
     // ステータスフィルタ
     if (filter.status !== 'all') {
       filtered = filtered.filter((item) =>
-        filter.status === 'success' ? item.success : !item.success
+        filter.status === 'success' ? item.status === 'success' : item.status === 'failed'
       )
     }
 
@@ -156,12 +157,25 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
   const fetchSessionHistory = async (sessionId: string) => {
     if (sessionHistories[sessionId] || loadingSessions.has(sessionId)) return
 
+    console.log('Fetching session history for sessionId:', sessionId)
+
     try {
       setLoadingSessions((prev) => new Set([...prev, sessionId]))
       const messages = await onGetSessionHistory(sessionId)
+
+      console.log('Session history fetched successfully:', {
+        sessionId,
+        messageCount: messages?.length || 0,
+        messages: messages
+      })
+
       setSessionHistories((prev) => ({ ...prev, [sessionId]: messages }))
     } catch (error) {
-      console.error('Failed to fetch session history:', error)
+      console.error('Failed to fetch session history:', {
+        sessionId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      })
     } finally {
       setLoadingSessions((prev) => {
         const newSet = new Set(prev)
@@ -559,15 +573,19 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                         }`}
                       >
                         <div className="flex items-center space-x-1 mb-1">
-                          {execution.success ? (
+                          {execution.status === 'running' ? (
+                            <ClockIcon className="h-3 w-3 text-blue-600 dark:text-blue-400 animate-pulse" />
+                          ) : execution.status === 'success' ? (
                             <CheckCircleIcon className="h-3 w-3 text-green-600 dark:text-green-400" />
                           ) : (
                             <XCircleIcon className="h-3 w-3 text-red-600 dark:text-red-400" />
                           )}
                           <span className="text-xs font-medium text-gray-900 dark:text-white">
-                            {execution.success
-                              ? t('backgroundAgent.history.success')
-                              : t('backgroundAgent.history.failure')}
+                            {execution.status === 'running'
+                              ? t('backgroundAgent.history.running')
+                              : execution.status === 'success'
+                                ? t('backgroundAgent.history.success')
+                                : t('backgroundAgent.history.failure')}
                           </span>
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400">
@@ -591,7 +609,9 @@ export const TaskExecutionHistoryModal: React.FC<TaskExecutionHistoryModalProps>
                   {/* Execution Details */}
                   <div className="p-6 border-b border-gray-200 dark:border-gray-600">
                     <div className="flex items-center space-x-2 mb-4">
-                      {selectedExecution.success ? (
+                      {selectedExecution.status === 'running' ? (
+                        <ClockIcon className="h-6 w-6 text-blue-600 dark:text-blue-400 animate-pulse" />
+                      ) : selectedExecution.status === 'success' ? (
                         <CheckCircleIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
                       ) : (
                         <XCircleIcon className="h-6 w-6 text-red-600 dark:text-red-400" />

@@ -669,7 +669,8 @@ const BackgroundAgent = {
     sendInstruction: 'Enterで送信、Shift+Enterで改行',
     selectExecutionHistory: '実行履歴を選択してください',
     success: '成功',
-    failure: '失敗'
+    failure: '失敗',
+    running: '実行中'
   },
 
   // System Prompt

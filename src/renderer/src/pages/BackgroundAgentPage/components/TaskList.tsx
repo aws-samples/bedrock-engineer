@@ -4,7 +4,6 @@ import {
   PlayIcon,
   TrashIcon,
   ClockIcon,
-  CheckCircleIcon,
   XCircleIcon,
   ArrowPathIcon,
   CalendarIcon,
@@ -205,44 +204,33 @@ const TaskCard: React.FC<TaskCardProps> = ({
     return new Date(timestamp).toLocaleString()
   }
 
-  const getStatusColor = () => {
-    if (!task.enabled) return 'text-gray-500'
-    if (task.lastError) return 'text-red-500'
-    return 'text-green-500'
-  }
-
-  const getStatusIcon = () => {
-    if (!task.enabled) return <XCircleIcon className="h-5 w-5" />
-    if (task.lastError) return <XCircleIcon className="h-5 w-5" />
-    return <CheckCircleIcon className="h-5 w-5" />
-  }
-
   return (
     <div className="bg-white dark:bg-gray-900 rounded-lg dark:shadow-gray-900/80 border-[0.5px] border-gray-200 dark:border-gray-600 p-6 shadow-sm hover:shadow-md dark:hover:shadow-gray-900/90 transition-all duration-200">
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">{task.name}</h3>
-            <div className={`flex items-center space-x-1 ${getStatusColor()}`}>
-              {getStatusIcon()}
-              <span className="text-sm font-medium">
-                {task.enabled
-                  ? task.lastError
-                    ? t('backgroundAgent.status.error')
-                    : t('backgroundAgent.status.active')
-                  : t('backgroundAgent.status.disabled')}
+            {/* Show status badge only for error state */}
+            {task.lastError && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                <XCircleIcon className="h-3 w-3 mr-1" />
+                エラー
               </span>
-            </div>
+            )}
           </div>
 
           <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
             <div className="flex items-center space-x-2">
-              <ClockIcon className="h-4 w-4" />
+              <div className="w-5 flex justify-start items-center">
+                <ClockIcon className="h-4 w-4" />
+              </div>
               <span>{task.cronExpression}</span>
             </div>
             <div className="flex flex-col space-y-2">
-              <div className="flex items-center space-x-3">
-                <AgentIcon agent={getAgent(task.agentId)} size="md" />
+              <div className="flex items-center space-x-2">
+                <div className="w-5 flex justify-start items-center">
+                  <AgentIcon agent={getAgent(task.agentId)} size="sm" />
+                </div>
                 <span className="text-sm font-medium truncate" title={getAgentName(task.agentId)}>
                   {getAgentName(task.agentId)}
                 </span>
@@ -254,8 +242,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   <DocumentTextIcon className="h-4 w-4" />
                 </button>
               </div>
-              <div className="flex items-center space-x-3">
-                <CpuChipIcon className="h-5 w-5 text-gray-400" />
+              <div className="flex items-center space-x-2">
+                <div className="w-5 flex justify-start items-center">
+                  <CpuChipIcon className="h-4 w-4 text-gray-400" />
+                </div>
                 <span
                   className="text-xs text-gray-500 dark:text-gray-400 truncate"
                   title={getModelName(task.modelId)}
@@ -355,86 +345,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </div>
 
-      {/* Created Date */}
+      {/* Compact Statistics */}
       <div className="mb-3">
-        <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
-          <CalendarIcon className="h-3 w-3" />
-          <span>
-            {t('backgroundAgent.created')}: {formatDate(task.createdAt)}
-          </span>
-        </div>
-      </div>
-
-      {/* Wake Word Preview with Expand/Collapse */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {t('backgroundAgent.wakeWord')}:
-          </div>
-          <button
-            onClick={() => setIsWakeWordExpanded(!isWakeWordExpanded)}
-            className="text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors flex items-center space-x-1"
-          >
-            <span>{isWakeWordExpanded ? 'Show Less' : 'Show More'}</span>
-            {isWakeWordExpanded ? (
-              <ChevronUpIcon className="h-3 w-3" />
-            ) : (
-              <ChevronDownIcon className="h-3 w-3" />
-            )}
-          </button>
-        </div>
-        <div
-          className={`bg-gray-50 dark:bg-gray-700 rounded-md p-3 text-sm text-gray-600 dark:text-gray-400 transition-all duration-200 ${
-            isWakeWordExpanded ? 'max-h-48 overflow-y-auto' : 'h-16 overflow-hidden'
-          }`}
-        >
-          <div
-            className={isWakeWordExpanded ? 'whitespace-pre-wrap' : 'line-clamp-2'}
-            style={
-              !isWakeWordExpanded
-                ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }
-                : undefined
-            }
-          >
-            {task.wakeWord}
-          </div>
-        </div>
-      </div>
-
-      {/* Session Continuation Settings */}
-      {task.continueSession && (
-        <div className="mb-4">
-          <div className="flex items-center space-x-2 mb-2">
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-              {t('backgroundAgent.sessionContinuation')}
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center space-x-4 text-gray-600 dark:text-gray-400">
+            <span className="flex items-center space-x-1">
+              <span className="font-medium text-gray-900 dark:text-white">{task.runCount}</span>
+              <span>回実行</span>
             </span>
-          </div>
-          {task.continueSessionPrompt && (
-            <div>
-              <div className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-1">
-                {t('backgroundAgent.continueSessionPrompt')}:
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-md p-3 text-sm text-gray-600 dark:text-gray-400 h-16 overflow-hidden">
-                <div
-                  style={{
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical'
-                  }}
-                >
-                  {task.continueSessionPrompt}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Statistics - Always visible */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {t('backgroundAgent.stats.summary')}
+            <span className="flex items-center space-x-1">
+              <span>最終:</span>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                {task.lastRun ? new Date(task.lastRun).toLocaleDateString() : 'なし'}
+              </span>
+            </span>
           </div>
           <button
             onClick={handleStatisticsClick}
@@ -444,26 +368,61 @@ const TaskCard: React.FC<TaskCardProps> = ({
             {t('backgroundAgent.history.viewHistory')}
           </button>
         </div>
-        <div className="grid grid-cols-3 gap-4 text-sm p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
-          <div className="text-center">
-            <div className="font-medium text-gray-900 dark:text-white">{task.runCount}</div>
-            <div className="text-gray-500 dark:text-gray-400">
-              {t('backgroundAgent.executions')}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="font-medium text-gray-900 dark:text-white">
-              {formatDate(task.lastRun)}
-            </div>
-            <div className="text-gray-500 dark:text-gray-400">{t('backgroundAgent.lastRun')}</div>
-          </div>
-          <div className="text-center">
-            <div className="font-medium text-gray-900 dark:text-white">
-              {formatDate(task.nextRun)}
-            </div>
-            <div className="text-gray-500 dark:text-gray-400">{t('backgroundAgent.nextRun')}</div>
-          </div>
+      </div>
+
+      {/* Additional Info - Collapsible */}
+      <div className="mb-3">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setIsWakeWordExpanded(!isWakeWordExpanded)}
+            className="text-xs text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors flex items-center space-x-1"
+          >
+            <span>詳細</span>
+            {isWakeWordExpanded ? (
+              <ChevronUpIcon className="h-3 w-3" />
+            ) : (
+              <ChevronDownIcon className="h-3 w-3" />
+            )}
+          </button>
+          {task.continueSession && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200">
+              継続
+            </span>
+          )}
         </div>
+
+        {/* Expandable Details */}
+        {isWakeWordExpanded && (
+          <div className="mt-3 space-y-3">
+            {/* Wake Word */}
+            <div>
+              <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                ウェイクワード:
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-md p-2 text-xs text-gray-600 dark:text-gray-400 max-h-24 overflow-y-auto">
+                {task.wakeWord}
+              </div>
+            </div>
+
+            {/* Session Continuation */}
+            {task.continueSession && task.continueSessionPrompt && (
+              <div>
+                <div className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-1">
+                  継続プロンプト:
+                </div>
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-md p-2 text-xs text-gray-600 dark:text-gray-400 max-h-24 overflow-y-auto">
+                  {task.continueSessionPrompt}
+                </div>
+              </div>
+            )}
+
+            {/* Created Date */}
+            <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+              <CalendarIcon className="h-3 w-3" />
+              <span>作成: {formatDate(task.createdAt)}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Error Display */}

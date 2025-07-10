@@ -31,7 +31,7 @@ export interface ScheduledTask {
 export interface TaskExecutionResult {
   taskId: string
   executedAt: number
-  success: boolean
+  status: 'running' | 'success' | 'failed'
   error?: string
   sessionId: string
   messageCount: number
@@ -279,7 +279,7 @@ export const useBackgroundAgent = () => {
         setTaskLoading(taskId, true)
         const result = await window.api.backgroundAgent.executeTaskManually(taskId)
 
-        if (result.result.success) {
+        if (result.result.status === 'success') {
           toast.success(t('backgroundAgent.messages.taskExecuted'))
           await fetchTasks()
           return result.result

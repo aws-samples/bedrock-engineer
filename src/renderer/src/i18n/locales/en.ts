@@ -648,7 +648,8 @@ const BackgroundAgent = {
     sendInstruction: 'Press Enter to send, Shift+Enter for new line',
     selectExecutionHistory: 'Select an execution history',
     success: 'Success',
-    failure: 'Failure'
+    failure: 'Failure',
+    running: 'Running'
   },
 
   // System Prompt

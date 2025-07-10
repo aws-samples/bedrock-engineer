@@ -32,6 +32,11 @@ export class BackgroundAgentService {
   private bedrockService: BedrockService
   private sessionManager: BackgroundChatSessionManager
   private context: ServiceContext
+  private executionHistoryUpdateCallback?: (
+    taskId: string,
+    sessionId: string,
+    messageCount: number
+  ) => void
 
   constructor(context: ServiceContext) {
     this.context = context
@@ -39,6 +44,15 @@ export class BackgroundAgentService {
     this.sessionManager = new BackgroundChatSessionManager()
 
     logger.info('BackgroundAgentService initialized (using persistent sessions)')
+  }
+
+  /**
+   * 実行履歴更新のコールバックを設定
+   */
+  setExecutionHistoryUpdateCallback(
+    callback: (taskId: string, sessionId: string, messageCount: number) => void
+  ): void {
+    this.executionHistoryUpdateCallback = callback
   }
 
   /**
@@ -425,6 +439,19 @@ No tools are currently enabled for this agent.
 
         // リアルタイム通知を送信
         this.publishSessionUpdate(sessionId, userMessageObj)
+
+        // 実行履歴を更新（コールバックがあれば）
+        if (this.executionHistoryUpdateCallback) {
+          const sessionHistory = this.sessionManager.getHistory(sessionId)
+          const sessionMetadata = this.sessionManager.getSessionMetadata(sessionId)
+          if (sessionMetadata?.taskId) {
+            this.executionHistoryUpdateCallback(
+              sessionMetadata.taskId,
+              sessionId,
+              sessionHistory.length
+            )
+          }
+        }
       } catch (error: any) {
         logger.error('Failed to save user message to session', {
           sessionId,
@@ -509,6 +536,19 @@ No tools are currently enabled for this agent.
 
           // リアルタイム通知を送信
           this.publishSessionUpdate(sessionId, result.response)
+
+          // 実行履歴を更新（コールバックがあれば）
+          if (this.executionHistoryUpdateCallback) {
+            const sessionHistory = this.sessionManager.getHistory(sessionId)
+            const sessionMetadata = this.sessionManager.getSessionMetadata(sessionId)
+            if (sessionMetadata?.taskId) {
+              this.executionHistoryUpdateCallback(
+                sessionMetadata.taskId,
+                sessionId,
+                sessionHistory.length
+              )
+            }
+          }
         } catch (error: any) {
           logger.error('Failed to save assistant response to session', {
             sessionId,
@@ -802,12 +842,18 @@ No tools are currently enabled for this agent.
   createSession(
     sessionId: string,
     options?: {
+      taskId?: string
       projectDirectory?: string
       agentId?: string
       modelId?: string
     }
   ): void {
-    this.sessionManager.createSession(sessionId, options)
+    this.sessionManager.createSession(sessionId, {
+      taskId: options?.taskId,
+      agentId: options?.agentId,
+      modelId: options?.modelId,
+      projectDirectory: options?.projectDirectory
+    })
   }
 
   /**

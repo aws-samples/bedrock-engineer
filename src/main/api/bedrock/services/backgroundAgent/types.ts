@@ -82,7 +82,7 @@ export interface ScheduledTask {
 export interface TaskExecutionResult {
   taskId: string
   executedAt: number
-  success: boolean
+  status: 'running' | 'success' | 'failed'
   error?: string
   sessionId: string
   messageCount: number

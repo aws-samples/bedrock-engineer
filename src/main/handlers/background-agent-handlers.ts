@@ -496,7 +496,7 @@ export const backgroundAgentHandlers = {
 
       logger.info('Task executed manually', {
         taskId: params.taskId,
-        success: result.success
+        status: result.status
       })
 
       return { result }
