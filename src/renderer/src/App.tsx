@@ -36,24 +36,39 @@ const ListItem: React.FC<{
 const Layout: React.FC = () => {
   const location = useLocation()
 
+  // タスク履歴ウィンドウかどうかを判定
+  const isTaskHistoryWindow = location.pathname.includes('/task-history/')
+
+  // タスク履歴ウィンドウの場合はシンプルなレイアウト
+  if (isTaskHistoryWindow) {
+    return (
+      <div className="bg-gray-100 dark:bg-gray-900 min-h-screen h-screen">
+        <Outlet />
+      </div>
+    )
+  }
+
+  // 通常のレイアウト（サイドバー付き）
   return (
     <div className="bg-gray-100 dark:bg-gray-900">
       <div className="flex min-h-screen h-screen">
         <div className="bg-opacity-80 bg-white dark:bg-gray-900 m-2 border rounded-md dark:border-gray-400">
           <nav className="flex flex-col justify-between h-full">
             <ul>
-              {routes.map((page, index) => {
-                return (
-                  <ListItem
-                    key={page.name}
-                    selected={location.pathname === page.href}
-                    href={page.href}
-                    toolTipContent={page.name + ' ⌘ ' + (index + 1)}
-                  >
-                    <page.icon className="text-xl dark:text-white" />
-                  </ListItem>
-                )
-              })}
+              {routes
+                .filter((page) => page.position !== 'hidden')
+                .map((page, index) => {
+                  return (
+                    <ListItem
+                      key={page.name}
+                      selected={location.pathname === page.href}
+                      href={page.href}
+                      toolTipContent={page.name + ' ⌘ ' + (index + 1)}
+                    >
+                      <page.icon className="text-xl dark:text-white" />
+                    </ListItem>
+                  )
+                })}
             </ul>
             <ul>
               <div onClick={() => open('https://github.com/aws-samples/bedrock-engineer')}>
@@ -81,7 +96,7 @@ const router = createHashRouter([
     errorElement: <ErrorPage />,
     children: [
       ...routes.map((route) => ({
-        path: route.href,
+        path: route.href === '/' ? '/' : route.href,
         element: route.element,
         index: route.href === '/'
       })),

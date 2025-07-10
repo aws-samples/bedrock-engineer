@@ -524,6 +524,7 @@ export class BackgroundAgentScheduler {
 
       // 成功通知を送信（新しいMainNotificationServiceを使用）
       await this.notificationService.showBackgroundAgentNotification({
+        taskId: task.id,
         taskName: task.name,
         success: true,
         aiMessage
@@ -582,6 +583,7 @@ export class BackgroundAgentScheduler {
 
       // エラー通知を送信（新しいMainNotificationServiceを使用）
       await this.notificationService.showBackgroundAgentNotification({
+        taskId: task.id,
         taskName: task.name,
         success: false,
         error: error.message

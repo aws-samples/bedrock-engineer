@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BsQuestionCircle } from 'react-icons/bs'
 import { useBackgroundAgent } from './hooks/useBackgroundAgent'
-import { ScheduleTaskForm } from './components/ScheduleTaskForm'
+import { TaskFormModal } from './components/TaskFormModal'
 import { TaskList } from './components/TaskList'
 import { useBackgroundAgentHelpModal } from './components/BackgroundAgentHelpModal'
 
@@ -19,8 +19,6 @@ const BackgroundAgentPage: React.FC = () => {
     cancelTask,
     toggleTask,
     executeTaskManually,
-    getTaskExecutionHistory,
-    getSessionHistory,
     getTaskSystemPrompt,
     refreshAll
   } = useBackgroundAgent()
@@ -70,15 +68,17 @@ const BackgroundAgentPage: React.FC = () => {
         onExecuteTask={executeTaskManually}
         onUpdateTask={updateTask}
         onRefresh={refreshAll}
-        onGetExecutionHistory={getTaskExecutionHistory}
-        onGetSessionHistory={getSessionHistory}
         onGetTaskSystemPrompt={getTaskSystemPrompt}
         onCreateTask={() => setShowCreateForm(true)}
       />
 
       {/* Create Task Modal */}
       {showCreateForm && (
-        <ScheduleTaskForm onSubmit={handleCreateTask} onCancel={() => setShowCreateForm(false)} />
+        <TaskFormModal
+          mode="create"
+          onSubmit={handleCreateTask}
+          onCancel={() => setShowCreateForm(false)}
+        />
       )}
 
       {/* Background Agent Help Modal */}

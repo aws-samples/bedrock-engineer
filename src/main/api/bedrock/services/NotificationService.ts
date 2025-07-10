@@ -1,6 +1,7 @@
 import { Notification, BrowserWindow } from 'electron'
 import { createCategoryLogger } from '../../../../common/logger'
 import { ServiceContext } from '../types'
+import { windowHandlers } from '../../../handlers/window-handlers'
 
 const logger = createCategoryLogger('notification-service')
 
@@ -70,13 +71,14 @@ export class MainNotificationService {
    * BackgroundAgent タスク用の通知を表示
    */
   public async showBackgroundAgentNotification(params: {
+    taskId: string
     taskName: string
     success: boolean
     aiMessage?: string
     error?: string
   }): Promise<void> {
     try {
-      const { taskName, success, aiMessage, error } = params
+      const { taskId, taskName, success, aiMessage, error } = params
 
       let title: string
       let body: string
@@ -91,7 +93,27 @@ export class MainNotificationService {
         body = error || 'Task execution failed'
       }
 
-      await this.showNotification({
+      // 通知設定をstoreから取得
+      const notificationEnabled = this.context.store.get('notification') ?? true
+
+      if (!notificationEnabled) {
+        logger.debug('Notification disabled by user settings', {
+          title
+        })
+        return
+      }
+
+      // アプリケーションウィンドウがフォーカスされているかチェック
+      const isFocused = await this.isAppWindowFocused()
+      if (isFocused) {
+        logger.debug('App window is focused, skipping notification', {
+          title
+        })
+        return
+      }
+
+      // Electron Notification APIを使用してOS通知を表示
+      const notification = new Notification({
         title,
         body: `[${taskName}] ${body}`,
         icon:
@@ -100,8 +122,37 @@ export class MainNotificationService {
             : 'icon.png', // 他のプラットフォームではアイコンパスを指定
         silent: false
       })
+
+      // 通知がクリックされた時のハンドラーを設定
+      notification.on('click', async () => {
+        try {
+          logger.info('Background agent notification clicked, opening task history', {
+            taskId,
+            taskName
+          })
+
+          // タスク履歴ウィンドウを開く
+          await windowHandlers['window:openTaskHistory'](null as any, taskId)
+        } catch (error: any) {
+          logger.error('Failed to open task history from notification click', {
+            taskId,
+            taskName,
+            error: error.message
+          })
+        }
+      })
+
+      notification.show()
+
+      logger.info('Background agent OS notification displayed with click handler', {
+        title,
+        taskId,
+        taskName,
+        bodyLength: body.length
+      })
     } catch (error: any) {
       logger.error('Failed to show background agent notification', {
+        taskId: params.taskId,
         taskName: params.taskName,
         success: params.success,
         error: error.message

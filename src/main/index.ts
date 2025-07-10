@@ -17,7 +17,11 @@ import {
 import { registerIpcHandlers, registerLogHandler } from './lib/ipc-handler'
 import { bedrockHandlers } from './handlers/bedrock-handlers'
 import { fileHandlers } from './handlers/file-handlers'
-import { windowHandlers } from './handlers/window-handlers'
+import {
+  windowHandlers,
+  preloadTaskHistoryWindow,
+  forceCloseTaskHistoryWindow
+} from './handlers/window-handlers'
 import { agentHandlers } from './handlers/agent-handlers'
 import { utilHandlers } from './handlers/util-handlers'
 import { screenHandlers } from './handlers/screen-handlers'
@@ -418,6 +422,15 @@ app.whenReady().then(async () => {
     })
   createWindow()
 
+  // Preload task history window in the background for faster access
+  setTimeout(() => {
+    preloadTaskHistoryWindow().catch((err) => {
+      log.error('Failed to preload task history window at startup', {
+        error: err instanceof Error ? err.message : String(err)
+      })
+    })
+  }, 3000) // 3秒後にプリロード（メインウィンドウの初期化完了後）
+
   // Log where Electron Store saves config.json
   log.debug('Electron Store configuration directory', {
     userDataDir: app.getPath('userData'),
@@ -437,6 +450,16 @@ app.whenReady().then(async () => {
   // Handle before-quit to set flag for macOS
   app.on('before-quit', () => {
     isQuitting = true
+
+    // タスク履歴ウィンドウの強制終了処理
+    try {
+      forceCloseTaskHistoryWindow()
+      log.info('Task history window force close completed')
+    } catch (error) {
+      log.error('Failed to force close task history window', {
+        error: error instanceof Error ? error.message : String(error)
+      })
+    }
 
     // Background Agent Schedulerのシャットダウン処理
     try {

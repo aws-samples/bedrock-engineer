@@ -339,6 +339,14 @@ export const api = {
     stats: () => {
       return ipcRenderer.invoke('pubsub:stats')
     }
+  },
+  window: {
+    isFocused: async () => {
+      return ipcRenderer.invoke('window:isFocused')
+    },
+    openTaskHistory: async (taskId: string) => {
+      return ipcRenderer.invoke('window:openTaskHistory', taskId)
+    }
   }
 }
 

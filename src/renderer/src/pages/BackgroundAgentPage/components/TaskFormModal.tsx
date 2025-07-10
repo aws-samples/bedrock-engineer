@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import { useSettings } from '@renderer/contexts/SettingsContext'
@@ -7,16 +7,20 @@ import { DirectorySelector } from '../../ChatPage/components/InputForm/Directory
 import { AgentSelector } from '../../ChatPage/components/AgentSelector'
 import { useAgentSettingsModal } from '../../ChatPage/modals/useAgentSettingsModal'
 import { IgnoreSettingsModal } from '@renderer/components/IgnoreSettingsModal'
-import { ScheduleConfig } from '../hooks/useBackgroundAgent'
+import { ScheduleConfig, ScheduledTask } from '../hooks/useBackgroundAgent'
 
-interface ScheduleTaskFormProps {
-  onSubmit: (config: ScheduleConfig) => Promise<void>
+interface TaskFormModalProps {
+  mode: 'create' | 'edit'
+  task?: ScheduledTask // 編集時のみ
+  onSubmit: (config: ScheduleConfig, taskId?: string) => Promise<void>
   onCancel: () => void
 }
 
-export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, onCancel }) => {
+export const TaskFormModal: React.FC<TaskFormModalProps> = ({ mode, task, onSubmit, onCancel }) => {
   const { t } = useTranslation()
-  const { agents } = useSettings()
+  const { agents, availableModels } = useSettings()
+
+  const isEditMode = mode === 'edit'
 
   const CRON_PRESETS = [
     { label: t('backgroundAgent.cronPresets.everyMinute'), value: '* * * * *' },
@@ -28,19 +32,36 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
     { label: t('backgroundAgent.cronPresets.monthlyFirst9AM'), value: '0 9 1 * *' }
   ]
 
-  const [formData, setFormData] = useState({
-    name: '',
-    cronExpression: '0 9 * * 1-5', // Default: Weekdays at 9 AM
-    agentId: '',
-    modelId: 'claude-3-5-sonnet-20241022-v2:0',
-    projectDirectory: '',
-    wakeWord: '',
-    enabled: true,
-    maxTokens: 4096, // Default max tokens
-    continueSession: false, // セッション継続フラグ
-    continueSessionPrompt: '' // セッション継続時専用プロンプト
-  })
+  const getInitialFormData = useCallback(() => {
+    if (isEditMode && task) {
+      return {
+        name: task.name,
+        cronExpression: task.cronExpression,
+        agentId: task.agentId,
+        modelId: task.modelId,
+        projectDirectory: task.projectDirectory || '',
+        wakeWord: task.wakeWord,
+        enabled: task.enabled,
+        maxTokens: task.inferenceConfig?.maxTokens || 4096,
+        continueSession: task.continueSession || false,
+        continueSessionPrompt: task.continueSessionPrompt || ''
+      }
+    }
+    return {
+      name: '',
+      cronExpression: '0 9 * * 1-5', // Default: Weekdays at 9 AM
+      agentId: '',
+      modelId: '', // 動的に設定
+      projectDirectory: '',
+      wakeWord: '',
+      enabled: true,
+      maxTokens: 4096, // Default max tokens
+      continueSession: false, // セッション継続フラグ
+      continueSessionPrompt: '' // セッション継続時専用プロンプト
+    }
+  }, [isEditMode, task])
 
+  const [formData, setFormData] = useState(getInitialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [showProjectIgnoreModal, setShowProjectIgnoreModal] = useState(false)
@@ -72,12 +93,19 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
     }
   }
 
-  // デフォルトのエージェントを設定
+  // デフォルトのエージェントを設定（新規作成時のみ）
   useEffect(() => {
-    if (agents.length > 0 && !formData.agentId) {
+    if (!isEditMode && agents.length > 0 && !formData.agentId) {
       setFormData((prev) => ({ ...prev, agentId: agents[0].id }))
     }
-  }, [agents, formData.agentId])
+  }, [isEditMode, agents, formData.agentId])
+
+  // デフォルトのモデルを設定（新規作成時のみ）
+  useEffect(() => {
+    if (!isEditMode && availableModels.length > 0 && !formData.modelId) {
+      setFormData((prev) => ({ ...prev, modelId: availableModels[0].modelId }))
+    }
+  }, [isEditMode, availableModels, formData.modelId])
 
   // モデル変更時にmaxTokensの制限を調整
   useEffect(() => {
@@ -117,8 +145,21 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
       newErrors.agentId = t('backgroundAgent.form.errors.agentRequired')
     }
 
+    // モデル選択の詳細バリデーション
     if (!formData.modelId) {
       newErrors.modelId = t('backgroundAgent.form.errors.modelRequired')
+    } else if (!isEditMode) {
+      // 新規作成時のみ詳細バリデーション
+      // 利用可能なモデルリストが空の場合
+      if (availableModels.length === 0) {
+        newErrors.modelId = 'Available models are not loaded. Please check your AWS configuration.'
+      } else {
+        // 選択されたモデルが利用可能なモデルリストに存在するかチェック
+        const modelExists = availableModels.some((model) => model.modelId === formData.modelId)
+        if (!modelExists) {
+          newErrors.modelId = `Selected model "${formData.modelId}" is not available. Please choose from the available models.`
+        }
+      }
     }
 
     if (!formData.wakeWord.trim()) {
@@ -160,9 +201,9 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
         continueSessionPrompt: formData.continueSessionPrompt || undefined
       }
 
-      await onSubmit(config)
+      await onSubmit(config, isEditMode && task ? task.id : undefined)
     } catch (error) {
-      console.error('Failed to create task:', error)
+      console.error(`Failed to ${isEditMode ? 'update' : 'create'} task:`, error)
     } finally {
       setIsSubmitting(false)
     }
@@ -170,14 +211,17 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
 
   const selectedAgent = agents.find((agent) => agent.id === formData.agentId)
 
+  // 動的なテキスト
+  const modalTitle = isEditMode ? t('backgroundAgent.editTask') : t('backgroundAgent.form.title')
+  const submitButtonText = isEditMode ? t('common.update') : t('common.create')
+  const submitLoadingText = isEditMode ? t('common.updating') : t('common.creating')
+
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-10 mx-auto p-5 w-full max-w-5xl">
+      <div className="relative top-20 mx-auto p-5 w-full max-w-5xl">
         <div className="border-[0.5px] border-white dark:border-gray-100 rounded-lg shadow-xl dark:shadow-gray-900/80 bg-white dark:bg-gray-900">
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-600">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              {t('backgroundAgent.form.title')}
-            </h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">{modalTitle}</h3>
             <button
               onClick={onCancel}
               className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -268,24 +312,6 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
 
                 {/* Right Column - Execution Settings */}
                 <div className="space-y-4">
-                  {/* Model Selection */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      {t('backgroundAgent.form.model')}
-                    </label>
-                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus-within:outline-none focus-within:ring-blue-500 focus-within:border-blue-500 dark:bg-gray-800 dark:border-gray-600">
-                      <ModelSelector
-                        openable={true}
-                        value={formData.modelId}
-                        onChange={(modelId) => setFormData((prev) => ({ ...prev, modelId }))}
-                        className="w-full"
-                      />
-                    </div>
-                    {errors.modelId && (
-                      <p className="text-red-500 text-sm mt-1">{errors.modelId}</p>
-                    )}
-                  </div>
-
                   {/* Project Directory */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -304,6 +330,24 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
                     <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
                       {t('backgroundAgent.form.projectDirectoryHelp')}
                     </p>
+                  </div>
+
+                  {/* Model Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      {t('backgroundAgent.form.model')}
+                    </label>
+                    <div className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus-within:outline-none focus-within:ring-blue-500 focus-within:border-blue-500 dark:bg-gray-800 dark:border-gray-600">
+                      <ModelSelector
+                        openable={true}
+                        value={formData.modelId}
+                        onChange={(modelId) => setFormData((prev) => ({ ...prev, modelId }))}
+                        className="w-full"
+                      />
+                    </div>
+                    {errors.modelId && (
+                      <p className="text-red-500 text-sm mt-1">{errors.modelId}</p>
+                    )}
                   </div>
 
                   {/* Max Output Tokens */}
@@ -427,7 +471,7 @@ export const ScheduleTaskForm: React.FC<ScheduleTaskFormProps> = ({ onSubmit, on
                   disabled={isSubmitting}
                   className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
                 >
-                  {isSubmitting ? t('common.creating') : t('common.create')}
+                  {isSubmitting ? submitLoadingText : submitButtonText}
                 </button>
               </div>
             </form>
