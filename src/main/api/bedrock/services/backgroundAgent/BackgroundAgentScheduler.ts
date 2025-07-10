@@ -433,7 +433,7 @@ export class BackgroundAgentScheduler {
       // タスク実行
       const result = await this.backgroundAgentService.chat(sessionId, agentConfig, promptToUse, {
         enableToolExecution: true,
-        maxToolExecutions: 10,
+        maxToolExecutions: 500,
         timeoutMs: 600000 // 10分タイムアウト
       })
 

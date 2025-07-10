@@ -410,7 +410,7 @@ No tools are currently enabled for this agent.
     })
 
     const threeHourMs = 10800000
-    const { enableToolExecution = true, maxToolExecutions = 5, timeoutMs = threeHourMs } = options
+    const { enableToolExecution = true, maxToolExecutions = 500, timeoutMs = threeHourMs } = options
 
     try {
       // メッセージ履歴をAWS Bedrock形式に変換
