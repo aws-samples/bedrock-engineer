@@ -299,19 +299,41 @@ async function createWindow(): Promise<void> {
     mainWindow!.show()
   })
 
-  // Handle window close event for macOS - hide instead of close unless quitting
+  // Handle window close event with platform-specific behavior
   mainWindow.on('close', (event) => {
     if (process.platform === 'darwin' && !isQuitting) {
+      // macOS: Hide instead of close unless explicitly quitting
       event.preventDefault()
       mainWindow!.hide()
     } else {
+      // Windows/Linux: Perform cleanup and close
+      if (process.platform === 'win32') {
+        // Windows-specific cleanup before closing
+        try {
+          // Force shutdown Background Agent Scheduler
+          shutdownBackgroundAgentScheduler()
+          log.info('Windows: Background Agent Scheduler shutdown completed during window close')
+        } catch (error) {
+          log.error('Windows: Failed to shutdown Background Agent Scheduler during window close', {
+            error: error instanceof Error ? error.message : String(error)
+          })
+        }
+      }
       mainWindow = null
     }
   })
 
-  // Handle window closed event for cleanup
+  // Handle window closed event for final cleanup
   mainWindow.on('closed', () => {
     mainWindow = null
+    // Ensure all background processes are terminated
+    if (process.platform === 'win32') {
+      log.info('Windows: Main window closed, ensuring process termination')
+      // Force process exit after a brief delay to allow cleanup
+      setTimeout(() => {
+        process.exit(0)
+      }, 1000)
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -447,9 +469,19 @@ app.whenReady().then(async () => {
     }
   })
 
-  // Handle before-quit to set flag for macOS
-  app.on('before-quit', () => {
+  // Handle before-quit with enhanced cleanup
+  app.on('before-quit', (event) => {
     isQuitting = true
+
+    log.info('Application before-quit event triggered', {
+      platform: process.platform,
+      quitRequested: isQuitting
+    })
+
+    // Prevent immediate quit to allow proper cleanup
+    if (!isQuitting) {
+      event.preventDefault()
+    }
 
     // タスク履歴ウィンドウの強制終了処理
     try {
@@ -461,25 +493,67 @@ app.whenReady().then(async () => {
       })
     }
 
-    // Background Agent Schedulerのシャットダウン処理
+    // Background Agent Schedulerのシャットダウン処理（強化版）
     try {
       shutdownBackgroundAgentScheduler()
       log.info('Background Agent Scheduler shutdown completed')
+
+      // Windows環境では追加の確認処理
+      if (process.platform === 'win32') {
+        // プロセス終了前の最終確認
+        setTimeout(() => {
+          log.info('Windows: Final cleanup completed, terminating process')
+          // 強制終了（Windows環境のみ）
+          process.exit(0)
+        }, 2000) // 2秒後に強制終了
+      }
     } catch (error) {
       log.error('Failed to shutdown Background Agent Scheduler', {
         error: error instanceof Error ? error.message : String(error)
       })
+
+      // エラーが発生してもWindows環境では強制終了
+      if (process.platform === 'win32') {
+        setTimeout(() => {
+          log.error('Windows: Force exit due to cleanup error')
+          process.exit(1)
+        }, 3000)
+      }
     }
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
+// Quit when all windows are closed, with platform-specific behavior
 app.on('window-all-closed', () => {
+  log.info('All windows closed', {
+    platform: process.platform,
+    willQuit: process.platform !== 'darwin'
+  })
+
   if (process.platform !== 'darwin') {
-    app.quit()
+    // Windows/Linux: Quit immediately
+    if (process.platform === 'win32') {
+      // Windows: Ensure background processes are terminated
+      try {
+        shutdownBackgroundAgentScheduler()
+        log.info('Windows: Final scheduler shutdown on window-all-closed')
+      } catch (error) {
+        log.error('Windows: Error during final scheduler shutdown', {
+          error: error instanceof Error ? error.message : String(error)
+        })
+      }
+
+      // Force quit after brief cleanup
+      setTimeout(() => {
+        log.info('Windows: Force quit after all windows closed')
+        process.exit(0)
+      }, 1500)
+    } else {
+      // Linux: Normal quit
+      app.quit()
+    }
   }
+  // macOS: Keep running (dock behavior)
 })
 
 /**

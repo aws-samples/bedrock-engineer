@@ -50,56 +50,96 @@ export class BackgroundAgentScheduler {
   }
 
   /**
-   * アプリケーション起動時にすべてのスケジューラ状態をリセット
+   * アプリケーション起動時にすべてのスケジューラ状態をリセット（強化版）
    */
   private resetAllSchedulerState(): void {
     try {
-      logger.info('Resetting all scheduler state on startup')
+      logger.info('Resetting all scheduler state on startup', {
+        platform: process.platform
+      })
 
-      // 1. メモリ上のすべてのcronジョブを停止・削除
+      // 1. メモリ上のすべてのcronジョブを停止・削除（強化版）
       for (const [taskId, cronJob] of this.cronJobs.entries()) {
         try {
           cronJob.stop()
           if (typeof cronJob.destroy === 'function') {
             cronJob.destroy()
           }
-          logger.debug('Stopped existing cron job during reset', { taskId })
+
+          // Windows環境では追加の確認処理
+          if (process.platform === 'win32') {
+            // タスクが実行中だった場合は強制的に停止状態にリセット
+            const task = this.scheduledTasks.get(taskId)
+            if (task && task.isExecuting) {
+              task.isExecuting = false
+              task.lastExecutionStarted = undefined
+              logger.info('Windows: Force reset executing task during startup', {
+                taskId,
+                taskName: task.name
+              })
+            }
+          }
+
+          logger.debug('Stopped existing cron job during reset', {
+            taskId,
+            platform: process.platform
+          })
         } catch (error: any) {
           // エラーは無視（既に停止済みの可能性）
           logger.debug('Error stopping cron job during reset (ignored)', {
             taskId,
-            error: error.message
+            error: error.message,
+            platform: process.platform
           })
         }
       }
       this.cronJobs.clear()
 
-      // 2. 永続化されたタスクの実行状態をリセット
+      // 2. 永続化されたタスクの実行状態をリセット（強化版）
       const persistedTasksData = this.context.store.get('backgroundAgentScheduledTasks')
       if (Array.isArray(persistedTasksData)) {
         const cleanedTasks = persistedTasksData.map((task: any) => ({
           ...task,
           isExecuting: false,
-          lastExecutionStarted: undefined
+          lastExecutionStarted: undefined,
+          // Windows環境では追加のクリーンアップ
+          ...(process.platform === 'win32' && {
+            lastError: undefined // 前回のエラーもクリア
+          })
         }))
         this.context.store.set('backgroundAgentScheduledTasks', cleanedTasks)
 
         logger.info('Cleaned execution state for persisted tasks', {
-          taskCount: cleanedTasks.length
+          taskCount: cleanedTasks.length,
+          platform: process.platform
         })
       }
 
       // 3. メモリ上のタスクマップもクリア
       this.scheduledTasks.clear()
 
+      // 4. Windows環境では追加のシステムレベルクリーンアップ
+      if (process.platform === 'win32') {
+        // Node.jsプロセスの未処理ハンドラーをチェック
+        const activeHandles = (process as any)._getActiveHandles?.() || []
+        const activeRequests = (process as any)._getActiveRequests?.() || []
+
+        logger.info('Windows: Active Node.js handles/requests after cleanup', {
+          activeHandles: activeHandles.length,
+          activeRequests: activeRequests.length
+        })
+      }
+
       logger.info('All scheduler state reset completed on startup', {
         clearedCronJobs: this.cronJobs.size,
-        clearedTasks: this.scheduledTasks.size
+        clearedTasks: this.scheduledTasks.size,
+        platform: process.platform
       })
     } catch (error: any) {
       logger.error('Failed to reset scheduler state', {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
+        platform: process.platform
       })
     }
   }
@@ -1053,33 +1093,84 @@ export class BackgroundAgentScheduler {
   }
 
   /**
-   * スケジューラーをシャットダウン
+   * スケジューラーをシャットダウン（強化版）
    */
   shutdown(): void {
     logger.info('Shutting down scheduler', {
       activeCronJobs: this.cronJobs.size,
-      scheduledTasks: this.scheduledTasks.size
+      scheduledTasks: this.scheduledTasks.size,
+      platform: process.platform
     })
 
-    // すべてのCronジョブを停止
+    // すべてのCronジョブを停止（強化版）
     for (const [taskId, cronJob] of this.cronJobs.entries()) {
       try {
+        // cronジョブを停止
         cronJob.stop()
-        logger.debug('Stopped cron job', { taskId })
+
+        // destroyメソッドが利用可能な場合は呼び出し
+        if (typeof cronJob.destroy === 'function') {
+          cronJob.destroy()
+        }
+
+        // Windows環境では追加の確認処理
+        if (process.platform === 'win32') {
+          // タスクの実行状態を強制的にクリア
+          const task = this.scheduledTasks.get(taskId)
+          if (task) {
+            task.isExecuting = false
+            task.lastExecutionStarted = undefined
+            this.scheduledTasks.set(taskId, task)
+          }
+        }
+
+        logger.debug('Stopped and cleaned up cron job', {
+          taskId,
+          platform: process.platform,
+          destroyed: typeof cronJob.destroy === 'function'
+        })
       } catch (error: any) {
         logger.error('Error stopping cron job', {
           taskId,
-          error: error.message
+          error: error.message,
+          platform: process.platform
         })
       }
     }
 
+    // cronジョブマップを強制クリア
     this.cronJobs.clear()
 
-    // 最終状態を永続化
-    this.persistTasks()
+    // Windows環境では実行中タスクの状態を強制的にリセット
+    if (process.platform === 'win32') {
+      for (const [taskId, task] of this.scheduledTasks.entries()) {
+        if (task.isExecuting) {
+          task.isExecuting = false
+          task.lastExecutionStarted = undefined
+          this.scheduledTasks.set(taskId, task)
+          logger.info('Windows: Force cleared executing task state', {
+            taskId,
+            taskName: task.name
+          })
+        }
+      }
+    }
 
-    logger.info('Scheduler shutdown completed')
+    // 最終状態を永続化
+    try {
+      this.persistTasks()
+      logger.debug('Final task state persisted')
+    } catch (error: any) {
+      logger.error('Failed to persist final task state', {
+        error: error.message
+      })
+    }
+
+    logger.info('Scheduler shutdown completed', {
+      platform: process.platform,
+      cronJobsCleared: this.cronJobs.size === 0,
+      tasksCount: this.scheduledTasks.size
+    })
   }
 
   /**

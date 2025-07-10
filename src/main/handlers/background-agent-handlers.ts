@@ -51,20 +51,40 @@ function getBackgroundAgentScheduler(): BackgroundAgentScheduler {
 }
 
 /**
- * BackgroundAgentSchedulerをシャットダウン
+ * BackgroundAgentSchedulerをシャットダウン（強化版）
  */
 export function shutdownBackgroundAgentScheduler(): void {
+  logger.info('Shutdown request received', {
+    hasScheduler: !!backgroundAgentScheduler,
+    platform: process.platform
+  })
+
   if (backgroundAgentScheduler) {
     try {
       backgroundAgentScheduler.shutdown()
       logger.info('BackgroundAgentScheduler shutdown completed')
     } catch (error: any) {
       logger.error('Failed to shutdown BackgroundAgentScheduler', {
-        error: error.message
+        error: error.message,
+        stack: error.stack
       })
     } finally {
+      // インスタンスを確実にnullに設定
       backgroundAgentScheduler = null
+
+      // Windows環境では追加のクリーンアップ
+      if (process.platform === 'win32') {
+        // 初期化フラグもリセット
+        isSchedulerInitializing = false
+
+        // トグル操作のミューテックスをクリア
+        toggleOperationMutex.clear()
+
+        logger.info('Windows: Additional cleanup completed for BackgroundAgentScheduler')
+      }
     }
+  } else {
+    logger.info('BackgroundAgentScheduler was not initialized, no shutdown needed')
   }
 }
 
