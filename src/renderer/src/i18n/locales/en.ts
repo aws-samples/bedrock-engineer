@@ -661,6 +661,28 @@ const BackgroundAgent = {
     empty: 'No system prompt available'
   },
 
+  // Table View
+  table: {
+    name: 'Task Name',
+    schedule: 'Schedule',
+    agent: 'Agent',
+    status: 'Status',
+    lastRun: 'Last Run',
+    actions: 'Actions'
+  },
+
+  // UI Labels
+  ui: {
+    error: 'Error',
+    continuation: 'Continue',
+    executionCount: ' executions',
+    lastRun: 'Last',
+    details: 'Details',
+    wakeWord: 'Wake Word',
+    continuationPrompt: 'Continuation Prompt',
+    created: 'Created'
+  },
+
   // Error messages
   errors: {
     fetchTasks: 'Failed to load tasks',

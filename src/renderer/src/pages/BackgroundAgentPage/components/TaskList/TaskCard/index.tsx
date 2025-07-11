@@ -153,8 +153,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         lastRun={task.lastRun}
         onViewHistory={handleStatisticsClick}
         formatDate={formatDate}
-        executionCountLabel="回実行"
-        lastRunLabel="最終"
+        executionCountLabel={t('backgroundAgent.ui.executionCount')}
+        lastRunLabel={t('backgroundAgent.ui.lastRun')}
         viewHistoryLabel={t('backgroundAgent.history.viewHistory')}
         historyButtonTitle={t('backgroundAgent.viewExecutionHistory')}
       />
@@ -167,11 +167,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
         continueSessionPrompt={task.continueSessionPrompt}
         createdAt={task.createdAt}
         formatDate={formatDate}
-        detailsLabel="詳細"
-        continuationLabel="継続"
-        wakeWordLabel="ウェイクワード"
-        continuationPromptLabel="継続プロンプト"
-        createdLabel="作成"
+        detailsLabel={t('backgroundAgent.ui.details')}
+        continuationLabel={t('backgroundAgent.ui.continuation')}
+        wakeWordLabel={t('backgroundAgent.ui.wakeWord')}
+        continuationPromptLabel={t('backgroundAgent.ui.continuationPrompt')}
+        createdLabel={t('backgroundAgent.ui.created')}
       />
 
       {/* Error Display */}

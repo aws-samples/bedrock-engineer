@@ -144,7 +144,9 @@ export const TaskTableRow: React.FC<TaskTableRowProps> = ({
               <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">
                 {task.name}
               </div>
-              {task.lastError && <StatusBadge type="error">エラー</StatusBadge>}
+              {task.lastError && (
+                <StatusBadge type="error">{t('backgroundAgent.ui.error')}</StatusBadge>
+              )}
             </div>
             {task.projectDirectory && (
               <ProjectPathDisplay
@@ -183,7 +185,9 @@ export const TaskTableRow: React.FC<TaskTableRowProps> = ({
               enabledLabel={t('backgroundAgent.disableTask')}
               disabledLabel={t('backgroundAgent.enableTask')}
             />
-            {task.continueSession && <StatusBadge type="info">継続</StatusBadge>}
+            {task.continueSession && (
+              <StatusBadge type="info">{t('backgroundAgent.ui.continuation')}</StatusBadge>
+            )}
           </div>
         </td>
 
@@ -191,7 +195,10 @@ export const TaskTableRow: React.FC<TaskTableRowProps> = ({
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             <div>{formatDate(task.lastRun)}</div>
-            <div className="text-xs">{task.runCount}回実行</div>
+            <div className="text-xs">
+              {task.runCount}
+              {t('backgroundAgent.ui.executionCount')}
+            </div>
           </div>
         </td>
 

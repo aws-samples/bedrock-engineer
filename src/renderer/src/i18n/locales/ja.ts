@@ -692,6 +692,18 @@ const BackgroundAgent = {
     actions: 'アクション'
   },
 
+  // UI Labels
+  ui: {
+    error: 'エラー',
+    continuation: '継続',
+    executionCount: '回実行',
+    lastRun: '最終',
+    details: '詳細',
+    wakeWord: 'ウェイクワード',
+    continuationPrompt: '継続プロンプト',
+    created: '作成'
+  },
+
   // Error messages
   errors: {
     fetchTasks: 'タスクの読み込みに失敗しました',
