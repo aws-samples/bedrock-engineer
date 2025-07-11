@@ -7,6 +7,7 @@ import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
 import { ExecutionError, NetworkError } from '../../base/errors'
 import { ToolResult } from '../../../../types/tools'
+import { ipc } from '../../../ipc-client'
 
 /**
  * Input type for TavilySearchTool
@@ -152,8 +153,6 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
       this.logger.verbose('Sending request to Tavily API')
 
       // Use IPC to make the request through main process (which has proxy support)
-      const { ipc } = await import('../../../ipc-client')
-
       const fetchOptions = {
         method: 'POST',
         headers: {

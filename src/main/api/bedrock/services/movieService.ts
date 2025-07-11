@@ -520,7 +520,6 @@ export class VideoService {
 
       // Ensure output directory exists
       const outputDir = path.dirname(localPath)
-      const fs = await import('fs/promises')
       await fs.mkdir(outputDir, { recursive: true })
 
       // Stream the file to local storage

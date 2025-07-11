@@ -12,6 +12,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 import { Mermaid } from './Mermaid'
 import { ResizableContainer } from './ResizableContainer'
+import mermaid from 'mermaid'
 
 type MermaidBlockProps = {
   code: string
@@ -42,8 +43,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ code, className = ''
   const downloadAsPNG = async () => {
     try {
       // MermaidからSVGを生成
-      const mermaid = await import('mermaid')
-      const { svg } = await mermaid.default.render(`download-${Date.now()}`, code)
+      const { svg } = await mermaid.render(`download-${Date.now()}`, code)
 
       // SVGのサイズを正確に取得
       const parser = new DOMParser()

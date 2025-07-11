@@ -9,6 +9,7 @@ import {
   BackgroundAgentOptions
 } from './types'
 import { BackgroundChatSessionManager } from './BackgroundChatSessionManager'
+import { BackgroundAgentScheduler } from './BackgroundAgentScheduler'
 import { v4 as uuidv4 } from 'uuid'
 import { ToolInput, ToolName, ToolResult } from '../../../../../types/tools'
 import { agentHandlers } from '../../../../handlers/agent-handlers'
@@ -925,7 +926,6 @@ No tools are currently enabled for this agent.
   async getTaskSystemPrompt(taskId: string): Promise<string> {
     try {
       // BackgroundAgentSchedulerから対象タスクを取得
-      const { BackgroundAgentScheduler } = await import('./BackgroundAgentScheduler')
       const scheduler = new BackgroundAgentScheduler(this.context)
       const task = scheduler.getTask(taskId)
 

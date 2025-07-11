@@ -1,4 +1,5 @@
 import { IpcMainInvokeEvent } from 'electron'
+import { promises as fs } from 'fs'
 import { bedrock } from '../api'
 import { getModelMaxTokens } from '../api/bedrock/models'
 import { createCategoryLogger } from '../../common/logger'
@@ -231,7 +232,6 @@ export const bedrockHandlers = {
     const downloadedPath = await bedrock.downloadVideoFromS3(params.s3Uri, params.localPath)
 
     // Get file size for response
-    const fs = await import('fs/promises')
     const stats = await fs.stat(downloadedPath)
 
     bedrockLogger.info('Video downloaded successfully', {

@@ -19,6 +19,14 @@ module.exports = {
       { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
     ],
     'react/prop-types': 'off',
-    'no-control-regex': 0
+    'no-control-regex': 0,
+    'no-restricted-syntax': [
+      'warn',
+      {
+        selector: 'ImportExpression',
+        message:
+          'Consider using static imports instead of dynamic imports unless specifically required.'
+      }
+    ]
   }
 }
