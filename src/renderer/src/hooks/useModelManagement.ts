@@ -100,9 +100,10 @@ export const useModelManagement = ({
    *
    * @param enhancedModels - Array of enhanced standard models
    * @param overrideSettings - Optional settings override
+   * @returns The final merged model list
    */
   const handleInferenceProfilesEnabled = useCallback(
-    async (enhancedModels: LLM[], overrideSettings?: Partial<BedrockSettings>): Promise<void> => {
+    async (enhancedModels: LLM[], overrideSettings?: Partial<BedrockSettings>): Promise<LLM[]> => {
       try {
         // Fetch inference profiles from AWS
         const inferenceProfiles = await refreshInferenceProfiles(overrideSettings)
@@ -113,7 +114,9 @@ export const useModelManagement = ({
         )
 
         // Merge standard models with inference profile models
-        setAvailableModels([...enhancedModels, ...profileModels])
+        const finalModels = [...enhancedModels, ...profileModels]
+        setAvailableModels(finalModels)
+        return finalModels
       } catch (profileError) {
         console.warn(
           'Failed to fetch inference profiles, falling back to standard models only:',
@@ -121,6 +124,7 @@ export const useModelManagement = ({
         )
         // Fallback to standard models only if inference profiles fail
         setAvailableModels(enhancedModels)
+        return enhancedModels
       }
     },
     [refreshInferenceProfiles]
@@ -153,9 +157,10 @@ export const useModelManagement = ({
    *
    * @param enhancedModels - Array of enhanced standard models
    * @param overrideSettings - Optional settings override
+   * @returns The standard models list
    */
   const handleInferenceProfilesDisabled = useCallback(
-    async (enhancedModels: LLM[], overrideSettings?: Partial<BedrockSettings>): Promise<void> => {
+    async (enhancedModels: LLM[], overrideSettings?: Partial<BedrockSettings>): Promise<LLM[]> => {
       // Set only standard models (no inference profiles)
       setAvailableModels(enhancedModels)
 
@@ -169,8 +174,72 @@ export const useModelManagement = ({
       if (shouldSwitchModel) {
         switchToFirstStandardModel(enhancedModels)
       }
+
+      return enhancedModels
     },
     [currentLLM, switchToFirstStandardModel]
+  )
+
+  /**
+   * Finds the best alternative model when the current model is not available
+   *
+   * @param currentModel - The currently selected model
+   * @param availableModels - List of available models in the new region
+   * @returns Best alternative model or null if none found
+   */
+  const findBestAlternative = useCallback(
+    (currentModel: LLM, availableModels: LLM[]): LLM | null => {
+      if (availableModels.length === 0) return null
+
+      // Try to find a model from the same family (e.g., Claude 3.5 Sonnet variants)
+      const modelFamily = currentModel.modelName.split(' ').slice(0, 3).join(' ') // e.g., "Claude 3.5 Sonnet"
+      const sameFamily = availableModels.find(
+        (model) => model.modelName.includes(modelFamily) && model.toolUse === currentModel.toolUse
+      )
+
+      if (sameFamily) return sameFamily
+
+      // Try to find a model with the same tool support
+      const sameToolSupport = availableModels.find(
+        (model) => model.toolUse === currentModel.toolUse
+      )
+
+      if (sameToolSupport) return sameToolSupport
+
+      // Fallback to first available model
+      return availableModels[0]
+    },
+    []
+  )
+
+  /**
+   * Validates the current model against available models and switches if necessary
+   *
+   * @param newModels - List of newly fetched available models
+   */
+  const validateAndSwitchModel = useCallback(
+    (newModels: LLM[]): void => {
+      if (!currentLLM || !onModelUpdate) return
+
+      // Check if current model is available in the new model list
+      const isCurrentModelAvailable = newModels.some(
+        (model) => model.modelId === currentLLM.modelId
+      )
+
+      if (!isCurrentModelAvailable) {
+        // Find the best alternative model
+        const alternativeModel = findBestAlternative(currentLLM, newModels)
+        if (alternativeModel) {
+          console.info(
+            `Model automatically switched from ${currentLLM.modelName} to ${alternativeModel.modelName} due to region change`
+          )
+          onModelUpdate(alternativeModel)
+        } else {
+          console.warn('No suitable alternative model found for region change')
+        }
+      }
+    },
+    [currentLLM, onModelUpdate, findBestAlternative]
   )
 
   /**
@@ -180,6 +249,7 @@ export const useModelManagement = ({
    * 1. Retrieves base models from the API
    * 2. Conditionally fetches and merges inference profiles based on settings
    * 3. Handles automatic model switching when inference profiles are disabled
+   * 4. Validates current model and switches to alternative if needed
    *
    * @param options - Optional configuration for model fetching
    */
@@ -207,11 +277,18 @@ export const useModelManagement = ({
         // Determine effective settings (override takes precedence)
         const settings = { ...bedrockSettings, ...overrideSettings }
 
+        let finalModels: LLM[] = []
+
         // Handle inference profiles based on settings
         if (settings.enableInferenceProfiles) {
-          await handleInferenceProfilesEnabled(models, overrideSettings)
+          finalModels = await handleInferenceProfilesEnabled(models, overrideSettings)
         } else {
-          await handleInferenceProfilesDisabled(models, overrideSettings)
+          finalModels = await handleInferenceProfilesDisabled(models, overrideSettings)
+        }
+
+        // Validate current model and switch if necessary (only when not in initial load)
+        if (isInitializedRef.current) {
+          validateAndSwitchModel(finalModels)
         }
       } catch (error) {
         const modelError =
@@ -226,7 +303,12 @@ export const useModelManagement = ({
         isInitializedRef.current = true
       }
     },
-    [bedrockSettings, handleInferenceProfilesEnabled, handleInferenceProfilesDisabled]
+    [
+      bedrockSettings,
+      handleInferenceProfilesEnabled,
+      handleInferenceProfilesDisabled,
+      validateAndSwitchModel
+    ]
   )
 
   /**
