@@ -40,11 +40,13 @@ const TaskExecutionHistoryPage: React.FC = () => {
     status: 'all',
     dateRange: 'all'
   })
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
 
   // 会話継続用の状態
   const [showChatMode, setShowChatMode] = useState(false)
   const [chatMessage, setChatMessage] = useState('')
   const [isSendingMessage, setIsSendingMessage] = useState(false)
+  const [sessionError, setSessionError] = useState<string | null>(null)
 
   // 自動スクロール用のref
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -55,6 +57,10 @@ const TaskExecutionHistoryPage: React.FC = () => {
     if (taskId && tasks.length > 0) {
       const foundTask = tasks.find((t) => t.id === taskId)
       setTask(foundTask || null)
+      setIsInitialLoading(false)
+    } else if (taskId && tasks.length === 0) {
+      // まだタスクが読み込まれていない可能性があるので待機
+      setIsInitialLoading(true)
     }
   }, [taskId, tasks])
 
@@ -327,13 +333,19 @@ const TaskExecutionHistoryPage: React.FC = () => {
     const msg = chatMessage
     try {
       setIsSendingMessage(true)
+      setSessionError(null) // エラーをクリア
       setChatMessage('')
       await continueSession(selectedExecution.sessionId, task!.id, msg.trim())
 
       // メッセージ送信後、セッション履歴を再取得
       await fetchSessionHistory(selectedExecution.sessionId)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to continue session:', error)
+      // エラーメッセージを設定
+      const errorMessage = error?.message || error || 'Unknown error occurred'
+      setSessionError(errorMessage)
+      // メッセージを復元
+      setChatMessage(msg)
     } finally {
       setIsSendingMessage(false)
     }
@@ -401,12 +413,35 @@ const TaskExecutionHistoryPage: React.FC = () => {
     }
   }, [isSendingMessage, selectedExecution?.sessionId, scrollToBottom])
 
+  // 初回ローディング中の表示
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <ArrowPathIcon className="h-12 w-12 mx-auto mb-4 text-blue-600 dark:text-blue-400 animate-spin" />
+          <p className="text-gray-600 dark:text-gray-400">読み込み中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // タスクが見つからない場合の表示
   if (!task) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <DocumentTextIcon className="h-12 w-12 mx-auto mb-4 text-gray-400 dark:text-gray-600" />
-          <p className="text-gray-500 dark:text-gray-400">Task not found</p>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">タスクが見つかりません</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
+            タスクが削除されたか、まだ読み込み中の可能性があります
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center space-x-2 px-4 py-2 text-sm border border-gray-300 rounded bg-white hover:bg-gray-50 text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+          >
+            <ArrowPathIcon className="h-4 w-4" />
+            <span>ページを再読み込み</span>
+          </button>
         </div>
       </div>
     )
@@ -642,6 +677,25 @@ const TaskExecutionHistoryPage: React.FC = () => {
                 {/* Chat Input Form */}
                 {showChatMode && (
                   <div className="border-t border-gray-200 dark:border-gray-600 p-4 bg-gray-50 dark:bg-gray-800">
+                    {/* Session Error Display */}
+                    {sessionError && (
+                      <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 rounded border border-red-200 dark:border-red-800">
+                        <div className="flex items-start space-x-2">
+                          <XCircleIcon className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm text-red-800 dark:text-red-200 break-words">
+                              {sessionError}
+                            </div>
+                            <button
+                              onClick={() => setSessionError(null)}
+                              className="mt-2 text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+                            >
+                              ✕ エラーを閉じる
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <BackgroundAgentTextArea
                       value={chatMessage}
                       onChange={setChatMessage}

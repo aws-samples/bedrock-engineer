@@ -346,8 +346,16 @@ export const useBackgroundAgent = () => {
         return result
       } catch (err: any) {
         console.error('Failed to continue session:', err)
+        // エラーの詳細情報を含むオブジェクトを投げる
+        const errorMessage = err.message || 'Unknown error occurred'
+        const errorDetails = {
+          message: errorMessage,
+          stack: err.stack,
+          originalError: err
+        }
+
         toast.error(t('backgroundAgent.errors.continueSession'))
-        throw err
+        throw errorDetails
       }
     },
     [t]
