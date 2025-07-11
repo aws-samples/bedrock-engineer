@@ -682,6 +682,16 @@ const BackgroundAgent = {
     empty: 'システムプロンプトがありません'
   },
 
+  // Table View
+  table: {
+    name: 'タスク名',
+    schedule: 'スケジュール',
+    agent: 'エージェント',
+    status: 'ステータス',
+    lastRun: '最終実行',
+    actions: 'アクション'
+  },
+
   // Error messages
   errors: {
     fetchTasks: 'タスクの読み込みに失敗しました',
