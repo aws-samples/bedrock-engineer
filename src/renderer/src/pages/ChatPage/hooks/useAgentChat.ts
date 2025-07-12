@@ -28,7 +28,7 @@ import {
   addCachePointToSystem,
   addCachePointToTools,
   logCacheUsage
-} from '@renderer/lib/promptCacheUtils'
+} from '@common/utils/promptCacheUtils'
 import { calculateCost } from '@renderer/lib/pricing/modelPricing'
 
 // メッセージの送信時に、Trace を全て載せると InputToken が逼迫するので取り除く

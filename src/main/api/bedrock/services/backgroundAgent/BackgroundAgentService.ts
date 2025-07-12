@@ -1,4 +1,4 @@
-import { ContentBlock, ConversationRole } from '@aws-sdk/client-bedrock-runtime'
+import { ContentBlock, ConversationRole, Message } from '@aws-sdk/client-bedrock-runtime'
 import { BedrockService } from '../../index'
 import { ServiceContext } from '../../types'
 import { createCategoryLogger } from '../../../../../common/logger'
@@ -8,6 +8,12 @@ import {
   BackgroundChatResult,
   BackgroundAgentOptions
 } from './types'
+import {
+  addCachePointsToMessages,
+  addCachePointToSystem,
+  addCachePointToTools,
+  logCacheUsage
+} from '../../../../../common/utils/promptCacheUtils'
 import { BackgroundChatSessionManager } from './BackgroundChatSessionManager'
 import { BackgroundAgentScheduler } from './BackgroundAgentScheduler'
 import { v4 as uuidv4 } from 'uuid'
@@ -38,6 +44,8 @@ export class BackgroundAgentService {
     sessionId: string,
     messageCount: number
   ) => void
+  // キャッシュポイント追跡用マップ（セッションID → キャッシュポイント位置）
+  private cachePointMap: Map<string, number | undefined> = new Map()
 
   constructor(context: ServiceContext) {
     this.context = context
@@ -54,6 +62,35 @@ export class BackgroundAgentService {
     callback: (taskId: string, sessionId: string, messageCount: number) => void
   ): void {
     this.executionHistoryUpdateCallback = callback
+  }
+
+  /**
+   * Prompt Cache設定を取得
+   */
+  private getPromptCacheEnabled(): boolean {
+    // store経由でSettings Contextの設定を取得
+    const agentChatConfig = this.context.store.get('agentChatConfig') || {}
+    return agentChatConfig.enablePromptCache || false
+  }
+
+  /**
+   * キャッシュポイント位置を更新
+   */
+  private updateCachePoint(sessionId: string, processedMessages: Message[]): void {
+    // 最後のメッセージにキャッシュポイントがあるか確認
+    const lastMessageIndex = processedMessages.length - 1
+    const lastMessage = processedMessages[lastMessageIndex]
+
+    if (lastMessage?.content?.some((block: any) => block.cachePoint?.type)) {
+      // 次回のfirstCachePointとして現在の最後のインデックスを保存
+      this.cachePointMap.set(sessionId, lastMessageIndex)
+
+      logger.debug('Cache point updated', {
+        sessionId,
+        cachePointIndex: lastMessageIndex,
+        messageCount: processedMessages.length
+      })
+    }
   }
 
   /**
@@ -476,11 +513,34 @@ No tools are currently enabled for this agent.
       const toolConfig =
         toolStates.length > 0 ? { tools: toolStates.filter((tool) => tool.enabled) } : undefined
 
+      // Prompt Cache 設定を取得
+      const enablePromptCache = this.getPromptCacheEnabled()
+
+      // 現在のキャッシュポイントを取得
+      const currentCachePoint = this.cachePointMap.get(sessionId)
+
+      // Prompt Cache適用（enablePromptCacheが有効な場合）
+      const processedMessages = enablePromptCache
+        ? addCachePointsToMessages(messages, config.modelId, currentCachePoint)
+        : messages
+
+      const processedSystem =
+        enablePromptCache && system.length > 0
+          ? addCachePointToSystem(system, config.modelId)
+          : system
+
+      const processedToolConfig =
+        enablePromptCache && toolConfig
+          ? addCachePointToTools(toolConfig, config.modelId)
+          : toolConfig
+
       logger.debug('Calling Bedrock converse API', {
-        messageCount: messages.length,
-        hasSystem: system.length > 0,
-        hasTools: !!toolConfig,
-        toolCount: toolConfig?.tools?.length || 0
+        messageCount: processedMessages.length,
+        hasSystem: processedSystem.length > 0,
+        hasTools: !!processedToolConfig,
+        toolCount: processedToolConfig?.tools?.length || 0,
+        enablePromptCache,
+        currentCachePoint
       })
 
       // タイムアウト設定
@@ -491,9 +551,9 @@ No tools are currently enabled for this agent.
       // Bedrock Converse APIを呼び出し（タスク固有のinferenceConfigがあれば使用）
       const conversePromise = this.bedrockService.converse({
         modelId: config.modelId,
-        messages,
-        system,
-        toolConfig,
+        messages: processedMessages,
+        system: processedSystem,
+        toolConfig: processedToolConfig,
         inferenceConfig: config.inferenceConfig
       })
 
@@ -502,15 +562,34 @@ No tools are currently enabled for this agent.
       logger.debug('Received response from Bedrock', {
         hasOutput: !!response.output,
         usage: response.usage,
-        stopReason: response.stopReason
+        stopReason: response.stopReason,
+        processedMessages: processedMessages
       })
+
+      // キャッシュポイント位置の更新（enablePromptCacheが有効な場合）
+      if (enablePromptCache) {
+        this.updateCachePoint(sessionId, processedMessages)
+      }
+
+      // Prompt Cacheの使用状況をログ出力（usageプロパティを使用）
+      if (response.usage) {
+        logCacheUsage(response, config.modelId)
+      }
 
       // レスポンスメッセージを作成
       const responseMessage: BackgroundMessage = {
         id: uuidv4(),
         role: 'assistant' as ConversationRole,
         content: response.output?.message?.content || [],
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        metadata: response.usage
+          ? {
+              converseMetadata: {
+                usage: response.usage,
+                stopReason: response.stopReason
+              }
+            }
+          : undefined
       }
 
       let result: BackgroundChatResult = {
@@ -861,6 +940,8 @@ No tools are currently enabled for this agent.
    * セッション削除
    */
   deleteSession(sessionId: string): boolean {
+    // キャッシュポイント情報もクリア
+    this.cachePointMap.delete(sessionId)
     return this.sessionManager.deleteSession(sessionId)
   }
 

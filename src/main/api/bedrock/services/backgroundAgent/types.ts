@@ -17,6 +17,10 @@ export interface BackgroundMessage {
   role: ConversationRole
   content: ContentBlock[]
   timestamp: number
+  metadata?: {
+    converseMetadata?: any
+    sessionCost?: number
+  }
 }
 
 export interface BackgroundChatResult {
