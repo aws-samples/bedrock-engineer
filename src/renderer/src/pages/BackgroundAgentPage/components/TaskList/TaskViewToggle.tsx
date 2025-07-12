@@ -18,7 +18,7 @@ export const TaskViewToggle: React.FC<TaskViewToggleProps> = ({
       className={`
         relative inline-flex items-center
         bg-gray-100 dark:bg-gray-800
-        rounded p-0.5
+        rounded p-1
         border border-gray-200 dark:border-gray-700
         cursor-pointer
         ${className}
@@ -26,7 +26,7 @@ export const TaskViewToggle: React.FC<TaskViewToggleProps> = ({
     >
       {/* アニメーション背景 */}
       <motion.div
-        className="absolute top-0.5 h-5 w-8 bg-white/60 dark:bg-gray-600/60 rounded shadow-sm"
+        className="absolute top-0.5 h-6 w-8 bg-white/60 dark:bg-gray-600/60 rounded shadow-sm"
         animate={{
           x: isTableView ? 32 : 0
         }}
@@ -53,7 +53,7 @@ export const TaskViewToggle: React.FC<TaskViewToggleProps> = ({
         `}
         title="Switch to List View"
       >
-        <Squares2X2Icon className="w-3 h-3" />
+        <Squares2X2Icon className="w-5 h-5" />
       </button>
 
       {/* TABLE ボタン (テーブルアイコン) */}
@@ -71,7 +71,7 @@ export const TaskViewToggle: React.FC<TaskViewToggleProps> = ({
         `}
         title="Switch to Table View"
       >
-        <TableCellsIcon className="w-3 h-3" />
+        <TableCellsIcon className="w-5 h-5" />
       </button>
     </div>
   )
