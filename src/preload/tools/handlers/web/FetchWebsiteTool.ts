@@ -12,6 +12,7 @@ import {
   getLineRangeInfo,
   validateLineRange
 } from '../../../lib/line-range-utils'
+import { LLM } from '../../../../types/llm'
 
 /**
  * Input type for FetchWebsiteTool
@@ -177,6 +178,18 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
         })
       }
 
+      // Apply automatic truncation if content exceeds token limit
+      if (this.shouldTruncateContent(rawContent)) {
+        const originalLength = rawContent.length
+        rawContent = this.truncateContentMiddleOut(rawContent)
+        this.logger.warn(`Content truncated due to token limit`, {
+          originalLength,
+          truncatedLength: rawContent.length,
+          maxTokensLimit: this.getMaxTokensLimit(),
+          strategy: 'middle-out'
+        })
+      }
+
       // Apply line range filtering
       const filteredContent = filterByLineRange(rawContent, lines)
 
@@ -248,6 +261,107 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
     } catch {
       return false
     }
+  }
+
+  /**
+   * Get the maximum token limit from current LLM settings
+   */
+  private getMaxTokensLimit(): number {
+    const llm = this.storeManager.get<LLM>('llm')
+
+    // Use LLM-specific limit if available, otherwise use default
+    const defaultLimit = 50000 // Default fallback
+
+    if (llm?.maxTokensLimit) {
+      return llm.maxTokensLimit
+    }
+
+    return defaultLimit
+  }
+
+  /**
+   * Check if content should be truncated based on token limit
+   */
+  private shouldTruncateContent(content: string): boolean {
+    const maxTokensLimit = this.getMaxTokensLimit()
+
+    // Estimate tokens: roughly 1 character = 0.75 tokens for mixed content
+    // Being conservative and using 0.8 as approximation
+    const estimatedTokens = Math.ceil(content.length * 0.8)
+
+    return estimatedTokens > maxTokensLimit
+  }
+
+  /**
+   * Truncate content using middle-out strategy
+   * Keeps the beginning (40%) and end (40%) of content, omitting middle (20%)
+   */
+  private truncateContentMiddleOut(content: string): string {
+    const maxTokensLimit = this.getMaxTokensLimit()
+
+    // Convert token limit back to approximate character limit
+    const maxLength = Math.floor(maxTokensLimit / 0.8)
+
+    if (content.length <= maxLength) {
+      return content
+    }
+
+    // Split ratio: 40% front, 40% back
+    const frontRatio = 0.4
+    const backRatio = 0.4
+
+    const frontLength = Math.floor(maxLength * frontRatio)
+    const backLength = Math.floor(maxLength * backRatio)
+
+    // Try to break at word/line boundaries for better readability
+    const frontContent = this.smartTruncate(content, 0, frontLength, 'end')
+    const backContent = this.smartTruncate(
+      content,
+      content.length - backLength,
+      content.length,
+      'start'
+    )
+
+    const omittedLength = content.length - frontLength - backLength
+    const truncationMessage = `\n\n[Content truncated... (${omittedLength.toLocaleString()} characters omitted)]\n\n`
+
+    return frontContent + truncationMessage + backContent
+  }
+
+  /**
+   * Smart truncation that tries to break at word/line boundaries
+   */
+  private smartTruncate(
+    content: string,
+    start: number,
+    end: number,
+    breakDirection: 'start' | 'end'
+  ): string {
+    const rawSlice = content.slice(start, end)
+
+    if (breakDirection === 'end') {
+      // For front content, try to end at a complete word or line
+      const lastNewline = rawSlice.lastIndexOf('\n')
+      const lastSpace = rawSlice.lastIndexOf(' ')
+
+      if (lastNewline > rawSlice.length * 0.8) {
+        return rawSlice.slice(0, lastNewline)
+      } else if (lastSpace > rawSlice.length * 0.8) {
+        return rawSlice.slice(0, lastSpace)
+      }
+    } else {
+      // For back content, try to start at a complete word or line
+      const firstNewline = rawSlice.indexOf('\n')
+      const firstSpace = rawSlice.indexOf(' ')
+
+      if (firstNewline >= 0 && firstNewline < rawSlice.length * 0.2) {
+        return rawSlice.slice(firstNewline + 1)
+      } else if (firstSpace >= 0 && firstSpace < rawSlice.length * 0.2) {
+        return rawSlice.slice(firstSpace + 1)
+      }
+    }
+
+    return rawSlice
   }
 
   /**
