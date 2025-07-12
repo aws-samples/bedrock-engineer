@@ -180,6 +180,20 @@ You can get up and running quickly with Amazon Bedrock Agents by using the [Agen
 
 Model Context Protocol (MCP) client integration allows Bedrock Engineer to connect to external MCP servers and dynamically load and use powerful external tools. This integration extends the capabilities of your AI assistant by allowing it to access and utilize the tools provided by the MCP server.
 
+## Background Agent
+
+Schedule AI agent tasks to run automatically at specified intervals using cron expressions. Background Agent enables continuous workflow automation with real-time execution notifications.
+
+![background-agent](./assets/background-agent.png)
+
+### Key Features
+
+- 🕒 **Scheduled Execution**: Automate tasks using cron expressions (hourly, daily, weekly, etc.)
+- 🔄 **Session Continuity**: Maintain conversation context across task executions
+- ⚡ **Manual Execution**: Run tasks immediately when needed
+- 📊 **Execution Tracking**: Monitor task history and performance
+- 🔔 **Real-time Notifications**: Get instant feedback on task results
+
 ## Agent Directory
 
 The Agent Directory is a content hub where you can discover and immediately use AI agents created by skilled contributors. It offers a curated collection of pre-configured agents designed for various tasks and specialties.
