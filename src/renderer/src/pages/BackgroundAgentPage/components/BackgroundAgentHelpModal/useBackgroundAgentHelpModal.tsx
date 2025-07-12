@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { RiCloseLine } from 'react-icons/ri'
-import { FiCode, FiTarget } from 'react-icons/fi'
+import { FiCode, FiCpu, FiZap } from 'react-icons/fi'
 
 export const useBackgroundAgentHelpModal = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -49,53 +49,70 @@ export const useBackgroundAgentHelpModal = () => {
             </div>
 
             {/* Content */}
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Main Use Cases */}
               <div>
-                <h3 className="text-lg font-medium mb-4 dark:text-white flex items-center">
-                  <FiTarget className="w-5 h-5 mr-2 text-blue-500" />
+                <h3 className="text-xl font-semibold mb-6 dark:text-white text-center">
                   {t('backgroundAgent.help.useCases.title')}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 dark:text-white">
-                      {t('backgroundAgent.help.useCases.development.title')}
-                    </h4>
-                    <p className="text-sm dark:text-gray-300 leading-relaxed">
-                      {t('backgroundAgent.help.useCases.development.description')}
-                    </p>
+                <div className="space-y-6">
+                  {/* Development Tasks */}
+                  <div className="flex items-start p-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl shadow-sm transition-shadow">
+                    <div className="flex-shrink-0 mr-6">
+                      <div className="w-16 h-16 bg-green-500 dark:bg-green-600 rounded-full flex items-center justify-center">
+                        <FiCode className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold mb-3 dark:text-white">
+                        {t('backgroundAgent.help.useCases.development.title')}
+                      </h4>
+                      <p className="text-sm dark:text-gray-300 leading-relaxed">
+                        {t('backgroundAgent.help.useCases.development.description')}
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 dark:text-white">
-                      {t('backgroundAgent.help.useCases.maintenance.title')}
-                    </h4>
-                    <p className="text-sm dark:text-gray-300 leading-relaxed">
-                      {t('backgroundAgent.help.useCases.maintenance.description')}
-                    </p>
+
+                  {/* Workflow Support */}
+                  <div className="flex items-start p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl shadow-sm transition-shadow">
+                    <div className="flex-shrink-0 mr-6">
+                      <div className="w-16 h-16 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center">
+                        <FiCpu className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold mb-3 dark:text-white">
+                        {t('backgroundAgent.help.useCases.workflow.title')}
+                      </h4>
+                      <p className="text-sm dark:text-gray-300 leading-relaxed">
+                        {t('backgroundAgent.help.useCases.workflow.description')}
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 dark:text-white">
-                      {t('backgroundAgent.help.useCases.workflow.title')}
-                    </h4>
-                    <p className="text-sm dark:text-gray-300 leading-relaxed">
-                      {t('backgroundAgent.help.useCases.workflow.description')}
-                    </p>
-                  </div>
-                  <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
-                    <h4 className="font-medium mb-3 dark:text-white">
-                      {t('backgroundAgent.help.useCases.business.title')}
-                    </h4>
-                    <p className="text-sm dark:text-gray-300 leading-relaxed">
-                      {t('backgroundAgent.help.useCases.business.description')}
-                    </p>
+
+                  {/* Business Automation */}
+                  <div className="flex items-start p-6 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl shadow-sm transition-shadow">
+                    <div className="flex-shrink-0 mr-6">
+                      <div className="w-16 h-16 bg-orange-500 dark:bg-orange-600 rounded-full flex items-center justify-center">
+                        <FiZap className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-lg font-semibold mb-3 dark:text-white">
+                        {t('backgroundAgent.help.useCases.business.title')}
+                      </h4>
+                      <p className="text-sm dark:text-gray-300 leading-relaxed">
+                        {t('backgroundAgent.help.useCases.business.description')}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Prompt Tips */}
-              <div className="bg-gray-50 dark:bg-gray-900/20 p-4 rounded-lg">
-                <h4 className="font-medium mb-3 dark:text-white flex items-center">
-                  <FiCode className="w-4 h-4 mr-2" />
+              <div className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-900/20 dark:to-slate-900/20 p-6 rounded-xl">
+                <h4 className="font-semibold mb-3 dark:text-white flex items-center">
+                  <FiCode className="w-5 h-5 mr-2 text-gray-600 dark:text-gray-400" />
                   {t('backgroundAgent.help.prompts.title')}
                 </h4>
                 <p className="text-sm dark:text-gray-300 leading-relaxed">
