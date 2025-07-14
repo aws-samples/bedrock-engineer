@@ -347,6 +347,11 @@ export const api = {
     openTaskHistory: async (taskId: string) => {
       return ipcRenderer.invoke('window:openTaskHistory', taskId)
     }
+  },
+  todo: {
+    getTodoList: async () => {
+      return ipcRenderer.invoke('get-todo-list')
+    }
   }
 }
 

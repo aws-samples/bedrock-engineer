@@ -29,6 +29,8 @@ import { ThinkTool } from './handlers/thinking/ThinkTool'
 import { CodeInterpreterTool } from './handlers/interpreter/CodeInterpreterTool'
 import { ScreenCaptureTool } from './handlers/system/ScreenCaptureTool'
 import { CameraCaptureTool } from './handlers/system/CameraCaptureTool'
+import { TodoInitTool } from './handlers/todo/TodoInitTool'
+import { TodoUpdateTool } from './handlers/todo/TodoUpdateTool'
 
 /**
  * Registry for managing tools
@@ -448,6 +450,15 @@ export class ToolMetadataCollector {
       specs.push({ toolSpec: CameraCaptureTool.toolSpec })
     }
 
+    // Phase 7: Todo Tools
+    if (TodoInitTool.toolSpec) {
+      specs.push({ toolSpec: TodoInitTool.toolSpec })
+    }
+
+    if (TodoUpdateTool.toolSpec) {
+      specs.push({ toolSpec: TodoUpdateTool.toolSpec })
+    }
+
     return specs
   }
 
@@ -555,6 +566,15 @@ export class ToolMetadataCollector {
 
     if (CameraCaptureTool.systemPromptDescription) {
       descriptions.cameraCapture = CameraCaptureTool.systemPromptDescription
+    }
+
+    // Phase 7: Todo Tools
+    if (TodoInitTool.systemPromptDescription) {
+      descriptions.todoInit = TodoInitTool.systemPromptDescription
+    }
+
+    if (TodoUpdateTool.systemPromptDescription) {
+      descriptions.todoUpdate = TodoUpdateTool.systemPromptDescription
     }
 
     return descriptions

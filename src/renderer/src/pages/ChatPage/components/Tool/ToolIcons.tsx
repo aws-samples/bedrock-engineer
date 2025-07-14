@@ -22,6 +22,7 @@ import {
   FaDownload,
   FaDesktop
 } from 'react-icons/fa'
+import { FaListCheck } from 'react-icons/fa6'
 import { BiFace } from 'react-icons/bi'
 import { MdDifference } from 'react-icons/md'
 
@@ -48,7 +49,10 @@ const standardToolIcons = {
   invokeFlow: <FaProjectDiagram className="text-blue-600 size-6" />,
   codeInterpreter: <FaCode className="text-green-600 size-6" />,
   screenCapture: <FaDesktop className="text-slate-500 size-6" />,
-  cameraCapture: <FaVideo className="text-blue-500 size-6" />
+  cameraCapture: <FaVideo className="text-blue-500 size-6" />,
+  todo: <FaListCheck className="text-blue-600 size-6" />,
+  todoInit: <FaListCheck className="text-blue-600 size-6" />,
+  todoUpdate: <FaListCheck className="text-blue-600 size-6" />
 }
 
 // MCPツール用のアイコン（すべてのMCPツールで共通）

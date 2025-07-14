@@ -25,6 +25,9 @@ export type BuiltInToolName =
   | 'mcp'
   | 'screenCapture'
   | 'cameraCapture'
+  | 'todo'
+  | 'todoInit'
+  | 'todoUpdate'
 
 // MCPツール名の型安全な定義（元のツール名をそのまま使用）
 export type McpToolName = string
@@ -56,7 +59,10 @@ const BUILT_IN_TOOLS: readonly BuiltInToolName[] = [
   'codeInterpreter',
   'mcp',
   'screenCapture',
-  'cameraCapture'
+  'cameraCapture',
+  'todo',
+  'todoInit',
+  'todoUpdate'
 ] as const
 
 // 組み込みツール名であるかを判定する型ガード
@@ -341,6 +347,27 @@ export type InvokeFlowInput = {
   }
 }
 
+// todo 仮想ツールの入力型
+export type TodoInput = {
+  type: 'todo'
+}
+
+// todoInit ツールの入力型
+export type TodoInitInput = {
+  type: 'todoInit'
+  items: string[]
+}
+
+// todoUpdate ツールの入力型
+export type TodoUpdateInput = {
+  type: 'todoUpdate'
+  updates: Array<{
+    id: string
+    status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+    description?: string
+  }>
+}
+
 // MCPツールの入力型
 export type McpToolInput = {
   type: string // MCPツール名
@@ -371,6 +398,9 @@ export type ToolInput =
   | CameraCaptureInput
   | InvokeFlowInput
   | CodeInterpreterInput
+  | TodoInput
+  | TodoInitInput
+  | TodoUpdateInput
   | McpToolInput // MCPツール入力を追加
 
 // ツール名から入力型を取得するユーティリティ型
@@ -397,5 +427,8 @@ export type ToolInputTypeMap = {
   cameraCapture: CameraCaptureInput
   invokeFlow: InvokeFlowInput
   codeInterpreter: CodeInterpreterInput
+  todo: TodoInput
+  todoInit: TodoInitInput
+  todoUpdate: TodoUpdateInput
   [key: string]: any // MCPツールに対応するためのインデックスシグネチャ
 }

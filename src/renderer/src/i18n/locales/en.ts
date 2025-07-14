@@ -728,6 +728,28 @@ const ProjectIgnore = {
   saveError: 'Failed to save file'
 }
 
+const TodoModal = {
+  'View TODO List': 'View TODO List',
+  'TODO List': 'TODO List',
+  'No TODO List Available': 'No TODO List Available',
+  'Create a TODO list using the todoInit tool to see tasks here.':
+    'Create a TODO list using the todoInit tool to see tasks here.',
+  'Project Overview': 'Project Overview',
+  'Overall Progress': 'Overall Progress',
+  'Total Tasks': 'Total Tasks',
+  Pending: 'Pending',
+  'In Progress': 'In Progress',
+  Completed: 'Completed',
+  Cancelled: 'Cancelled',
+  All: 'All',
+  'No tasks found for this filter.': 'No tasks found for this filter.',
+  ID: 'ID',
+  Created: 'Created',
+  Updated: 'Updated',
+  'List created on': 'List created on',
+  'Last updated': 'Last updated'
+}
+
 const Common = {
   refresh: 'Refresh',
   close: 'Close',
@@ -768,6 +790,7 @@ const en = {
   ...agentDirectory.en,
   ...AgentFormTabs,
   ...planActMode.en,
+  ...TodoModal,
   backgroundAgent: BackgroundAgent,
   ignoreSettings: IgnoreSettings,
   projectIgnore: ProjectIgnore,

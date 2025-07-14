@@ -32,14 +32,17 @@ import {
   shutdownBackgroundAgentScheduler
 } from './handlers/background-agent-handlers'
 import { pubsubHandlers } from './handlers/pubsub-handlers'
-import fixPath from 'fix-path'
 
-// fix-pathパッケージを実行
-try {
-  fixPath()
-} catch (err) {
-  console.error('Failed to load fix-path module:', err)
-}
+// 動的インポートを使用してfix-pathパッケージを読み込む
+// eslint-disable-next-line no-restricted-syntax
+import('fix-path')
+  .then((fixPathModule) => {
+    fixPathModule.default()
+  })
+  .catch((err) => {
+    console.error('Failed to load fix-path module:', err)
+  })
+
 // No need to track project path anymore as we always read from disk
 Store.initRenderer()
 

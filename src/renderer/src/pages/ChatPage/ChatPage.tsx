@@ -11,11 +11,13 @@ import { IgnoreSettingsModal } from '@renderer/components/IgnoreSettingsModal'
 import { useToolSettingModal } from './modals/useToolSettingModal'
 import { useAgentSettingsModal } from './modals/useAgentSettingsModal'
 import { FiChevronRight, FiBarChart2 } from 'react-icons/fi'
+import { FaListCheck } from 'react-icons/fa6'
 import { useTranslation } from 'react-i18next'
 import { AttachedImage } from './components/InputForm/TextArea'
 import { ChatHistory } from './components/ChatHistory'
 import { useSystemPromptModal } from './modals/useSystemPromptModal'
 import { useTokenAnalyticsModal } from './modals/useTokenAnalyticsModal'
+import { useTodoModal } from './modals/useTodoModal'
 import { useChatHistory } from '@renderer/contexts/ChatHistoryContext'
 import { useLocation } from 'react-router'
 
@@ -104,6 +106,13 @@ export default function ChatPage() {
   } = useTokenAnalyticsModal()
 
   const {
+    show: showTodoModal,
+    handleClose: handleCloseTodoModal,
+    handleOpen: handleOpenTodoModal,
+    TodoModal
+  } = useTodoModal(messages)
+
+  const {
     show: showToolSettingModal,
     handleClose: handleCloseToolSettingModal,
     handleOpen: handleOpenToolSettingModal,
@@ -172,6 +181,12 @@ export default function ChatPage() {
             />
 
             <div className="flex items-center gap-2">
+              <FaListCheck
+                className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer"
+                onClick={() => handleOpenTodoModal()}
+                title={t('View TODO List')}
+                size={16}
+              />
               <FiBarChart2
                 className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer"
                 onClick={handleOpenTokenAnalyticsModal}
@@ -199,6 +214,7 @@ export default function ChatPage() {
             messages={messages}
             modelId={llm?.modelId || ''}
           />
+          <TodoModal isOpen={showTodoModal} onClose={handleCloseTodoModal} />
           <AgentSettingsModal
             isOpen={showAgentSettingModal}
             onClose={handleCloseAgentSettingsModal}

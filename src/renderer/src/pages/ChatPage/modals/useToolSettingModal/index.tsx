@@ -38,6 +38,9 @@ export const AVAILABLE_SHELLS = [
 // 動画生成ツールのグループ（連動ON/OFF）
 const VIDEO_TOOLS_GROUP = ['generateVideo', 'checkVideoStatus', 'downloadVideo']
 
+// Todoツールのグループ（連動ON/OFF）
+const TODO_TOOLS_GROUP = ['todoInit', 'todoUpdate']
+
 // 詳細設定が必要なツール
 const TOOLS_WITH_SETTINGS = [
   'executeCommand',
@@ -216,9 +219,50 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
 
     if (!selectedAgentId) return
 
+    // 「todo」仮想ツールの場合は、TODO_TOOLS_GROUPを制御
+    if (toolName === 'todo') {
+      const standardToolSpecs = window.api?.tools?.getToolSpecs() || []
+
+      // 現在の状態をチェック（両方とも有効な場合はtrue）
+      const todoInitTool = agentTools.find((tool) => tool.toolSpec?.name === 'todoInit')
+      const todoUpdateTool = agentTools.find((tool) => tool.toolSpec?.name === 'todoUpdate')
+      const isCurrentlyEnabled = todoInitTool?.enabled && todoUpdateTool?.enabled
+      const newEnabled = !isCurrentlyEnabled
+
+      const updatedTools = [...agentTools]
+
+      TODO_TOOLS_GROUP.forEach((todoToolName) => {
+        const existingToolIndex = updatedTools.findIndex(
+          (tool) => tool.toolSpec?.name === todoToolName
+        )
+
+        if (existingToolIndex !== -1) {
+          // 既存のツールを更新
+          updatedTools[existingToolIndex] = {
+            ...updatedTools[existingToolIndex],
+            enabled: newEnabled
+          }
+        } else {
+          // 新しいツールを追加
+          const toolSpec = standardToolSpecs.find((spec) => spec.toolSpec?.name === todoToolName)
+          if (toolSpec?.toolSpec) {
+            updatedTools.push({
+              toolSpec: toolSpec.toolSpec,
+              enabled: newEnabled
+            })
+          }
+        }
+      })
+
+      setAgentTools(updatedTools)
+      updateAgentTools(selectedAgentId, updatedTools)
+      return
+    }
+
     // 現在のツールを探す
     const existingToolIndex = agentTools.findIndex((tool) => tool.toolSpec?.name === toolName)
     const isVideoTool = VIDEO_TOOLS_GROUP.includes(toolName)
+    const isTodoTool = TODO_TOOLS_GROUP.includes(toolName)
 
     let updatedTools: ToolState[]
 
@@ -254,6 +298,33 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
             }
           }
         })
+      } else if (isTodoTool) {
+        // Todoツールの場合は、グループ全体を連動させる
+        updatedTools = agentTools.map((tool) => {
+          if (TODO_TOOLS_GROUP.includes(tool.toolSpec?.name || '')) {
+            return { ...tool, enabled: newEnabled }
+          }
+          return tool
+        })
+
+        // 不足しているTodoツールがあれば追加
+        const standardToolSpecs = window.api?.tools?.getToolSpecs() || []
+        const existingTodoToolNames = updatedTools
+          .filter((tool) => TODO_TOOLS_GROUP.includes(tool.toolSpec?.name || ''))
+          .map((tool) => tool.toolSpec?.name)
+
+        TODO_TOOLS_GROUP.forEach((todoToolName) => {
+          if (!existingTodoToolNames.includes(todoToolName)) {
+            const toolSpec = standardToolSpecs.find((spec) => spec.toolSpec?.name === todoToolName)
+            if (toolSpec?.toolSpec) {
+              const newTool: ToolState = {
+                toolSpec: toolSpec.toolSpec,
+                enabled: newEnabled
+              }
+              updatedTools.push(newTool)
+            }
+          }
+        })
       } else {
         // 通常のツールの場合は単独で切り替え
         updatedTools = agentTools.map((tool) => {
@@ -274,6 +345,25 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
           const existingTool = updatedTools.find((tool) => tool.toolSpec?.name === videoToolName)
           if (!existingTool) {
             const toolSpec = standardToolSpecs.find((spec) => spec.toolSpec?.name === videoToolName)
+            if (toolSpec?.toolSpec) {
+              const newTool: ToolState = {
+                toolSpec: toolSpec.toolSpec,
+                enabled: true
+              }
+              updatedTools.push(newTool)
+            }
+          } else {
+            // 既存のツールがある場合は有効にする
+            existingTool.enabled = true
+          }
+        })
+      } else if (isTodoTool) {
+        // Todoツールの場合は、グループ全体を追加
+        updatedTools = [...agentTools]
+        TODO_TOOLS_GROUP.forEach((todoToolName) => {
+          const existingTool = updatedTools.find((tool) => tool.toolSpec?.name === todoToolName)
+          if (!existingTool) {
+            const toolSpec = standardToolSpecs.find((spec) => spec.toolSpec?.name === todoToolName)
             if (toolSpec?.toolSpec) {
               const newTool: ToolState = {
                 toolSpec: toolSpec.toolSpec,
@@ -367,6 +457,24 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
       // 通常のカテゴリの場合：カテゴリで定義されているすべてのツールを表示
       const toolsInCategory = category.tools
         .map((toolName) => {
+          // 「todo」仮想ツールの特別処理
+          if (toolName === 'todo') {
+            // Todoツールグループの状態をチェック
+            const todoInitTool = agentTools?.find((tool) => tool.toolSpec?.name === 'todoInit')
+            const todoUpdateTool = agentTools?.find((tool) => tool.toolSpec?.name === 'todoUpdate')
+            const isEnabled = todoInitTool?.enabled && todoUpdateTool?.enabled
+
+            // 仮想的なToolSpecを作成
+            return {
+              toolSpec: {
+                name: 'todo',
+                description: 'Task management and workflow tracking',
+                inputSchema: {} // 仮想ツールなので空のスキーマ
+              },
+              enabled: isEnabled || false
+            } as ToolState
+          }
+
           // 標準ツールのToolSpecを探す
           const toolSpec = standardToolSpecs.find((spec) => spec.toolSpec?.name === toolName)
 
@@ -520,6 +628,45 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                           {t(
                             'MCP tools are provided by Model Context Protocol servers. Click the JSON button above to view the full tool specification.'
                           )}
+                        </p>
+                      </div>
+                    </div>
+                  ) : selectedTool === 'todo' ? (
+                    // Todo 仮想ツールの詳細表示
+                    <div className="prose dark:prose-invert max-w-none">
+                      <div className="flex items-center gap-2 mb-4">
+                        <p className="text-gray-700 dark:text-gray-100 font-bold mb-0">Todo</p>
+                        <PlanModeCompatibilityBadge toolName="todoInit" />
+                      </div>
+
+                      <p className="mb-4 text-gray-700 dark:text-gray-200">
+                        Task management and workflow tracking tools for systematic project
+                        management.
+                      </p>
+
+                      <div className="bg-blue-50 dark:bg-gray-800/80 dark:border dark:border-blue-700 p-4 rounded-md mt-4">
+                        <h5 className="font-medium mb-2 dark:text-blue-300">{t('Tool Group')}</h5>
+                        <p className="text-sm text-gray-700 dark:text-gray-200 mb-3">
+                          This tool enables two related functions:
+                        </p>
+                        <ul className="text-sm text-gray-700 dark:text-gray-200 space-y-2">
+                          <li>
+                            • <strong>todoInit</strong>: Initialize or replace a todo list for
+                            systematic workflow management
+                          </li>
+                          <li>
+                            • <strong>todoUpdate</strong>: Update tasks in the todo list (status,
+                            description)
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div className="bg-green-50 dark:bg-gray-800/80 dark:border dark:border-green-700 p-4 rounded-md mt-4">
+                        <h5 className="font-medium mb-2 dark:text-green-300">{t('Usage')}</h5>
+                        <p className="text-sm text-gray-700 dark:text-gray-200">
+                          Use for complex workflows requiring multiple sequential steps or when
+                          users explicitly request task tracking. Both tools work together to
+                          provide comprehensive task management capabilities.
                         </p>
                       </div>
                     </div>

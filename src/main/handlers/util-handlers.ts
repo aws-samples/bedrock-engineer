@@ -4,6 +4,8 @@ import axios from 'axios'
 import { log } from '../../common/logger'
 import { store } from '../../preload/store'
 import { createUtilProxyAgent } from '../lib/proxy-utils'
+import { StoreManager } from '../../preload/tools/common/StoreManager'
+import { TODO_STORAGE_KEY } from '../../preload/tools/handlers/todo/types'
 
 export const utilHandlers = {
   'get-app-path': async (_event: IpcMainInvokeEvent) => {
@@ -114,5 +116,19 @@ export const utilHandlers = {
         })
       }, 5000)
     })
+  },
+
+  'get-todo-list': async (_event: IpcMainInvokeEvent) => {
+    try {
+      const storeManager = new StoreManager(store)
+      const todoList = storeManager.get(TODO_STORAGE_KEY)
+      log.debug('Retrieved TODO list from store', { todoList })
+      return todoList || null
+    } catch (error) {
+      log.error('Error retrieving TODO list', {
+        error: error instanceof Error ? error.message : String(error)
+      })
+      return null
+    }
   }
 } as const

@@ -749,6 +749,28 @@ const ProjectIgnore = {
   saveError: 'ファイルの保存に失敗しました'
 }
 
+const TodoModal = {
+  'View TODO List': 'TODOリストを表示',
+  'TODO List': 'TODOリスト',
+  'No TODO List Available': 'TODOリストがありません',
+  'Create a TODO list using the todoInit tool to see tasks here.':
+    'todoInitツールを使用してTODOリストを作成すると、ここにタスクが表示されます。',
+  'Project Overview': 'プロジェクト概要',
+  'Overall Progress': '全体の進捗',
+  'Total Tasks': '総タスク数',
+  Pending: '未完了',
+  'In Progress': '進行中',
+  Completed: '完了',
+  Cancelled: 'キャンセル済み',
+  All: 'すべて',
+  'No tasks found for this filter.': 'このフィルターでタスクが見つかりませんでした。',
+  ID: 'ID',
+  Created: '作成日時',
+  Updated: '更新日時',
+  'List created on': 'リスト作成日時',
+  'Last updated': '最終更新'
+}
+
 const Common = {
   refresh: '更新',
   close: '閉じる',
@@ -789,6 +811,7 @@ const ja = {
   ...agentDirectory.ja,
   ...AgentFormTabs,
   ...planActMode.ja,
+  ...TodoModal,
   backgroundAgent: BackgroundAgent,
   ignoreSettings: IgnoreSettings,
   projectIgnore: ProjectIgnore,

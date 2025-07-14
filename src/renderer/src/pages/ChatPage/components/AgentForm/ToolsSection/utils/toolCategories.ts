@@ -47,7 +47,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     id: 'thinking',
     name: 'Thinking',
     description: 'Tools for enhanced reasoning and complex problem solving',
-    tools: ['think']
+    tools: ['think', 'todo']
   },
   {
     id: 'mcp',
