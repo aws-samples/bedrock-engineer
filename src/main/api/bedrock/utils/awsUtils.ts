@@ -1,5 +1,4 @@
 import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts'
-import type { AWSCredentials } from '../types'
 import { allModels } from '../models'
 import type { LLM } from '../../../../types/llm'
 import { fromIni } from '@aws-sdk/credential-providers'
@@ -50,7 +49,7 @@ export function getAlternateRegionOnThrottling(
   return availableRegions[randomIndex]
 }
 
-export async function getAccountId(awsCredentials: AWSCredentials) {
+export async function getAccountId(awsCredentials) {
   try {
     const { region, useProfile, profile } = awsCredentials
 

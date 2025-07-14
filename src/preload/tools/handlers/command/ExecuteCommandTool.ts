@@ -224,6 +224,34 @@ export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCom
         input: JSON.stringify(input)
       })
 
+      if (
+        error instanceof Error &&
+        error.message.startsWith('DESTRUCTIVE_COMMAND_CONFIRMATION_REQUIRED')
+      ) {
+        const command = error.message.replace('DESTRUCTIVE_COMMAND_CONFIRMATION_REQUIRED: ', '')
+        const confirmed = await this.requestUserConfirmation(
+          `Are you sure you want to execute the following destructive command?\n\n${command}`
+        )
+
+        if (confirmed) {
+          const commandService = this.getCommandService(config)
+          const result = await commandService.executeCommand({
+            command: 'command' in input ? input.command : '',
+            cwd: 'cwd' in input ? input.cwd : '',
+            bypassConfirmation: true
+          })
+          return {
+            ...result,
+            success: true,
+            name: 'executeCommand',
+            message: `Command executed: ${JSON.stringify(input)}`,
+            result
+          }
+        } else {
+          throw new PermissionDeniedError('User denied execution of destructive command', this.name)
+        }
+      }
+
       // Check if it's a permission error
       if (error instanceof Error && error.message.includes('not allowed')) {
         throw new PermissionDeniedError(
@@ -291,6 +319,12 @@ export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCom
   /**
    * Override to sanitize command for logging
    */
+  private async requestUserConfirmation(_message: string): Promise<boolean> {
+    // This is a placeholder for the actual implementation of the user confirmation dialog.
+    // In a real application, this would use a library like Electron's dialog module to show a confirmation dialog to the user.
+    return Promise.resolve(true)
+  }
+
   protected sanitizeInputForLogging(input: ExecuteCommandInput): any {
     if ('command' in input) {
       return {

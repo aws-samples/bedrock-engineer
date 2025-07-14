@@ -595,7 +595,7 @@ CMD ["python"]
       const buildResult = await this.runDockerBuild(buildDir, imageName)
 
       // Clean up temporary directory
-      await fs.rmdir(buildDir, { recursive: true }).catch(() => {
+      await fs.rm(buildDir, { recursive: true, force: true }).catch(() => {
         // Ignore cleanup errors
       })
 

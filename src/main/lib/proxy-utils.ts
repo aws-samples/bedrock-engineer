@@ -1,4 +1,4 @@
-import { ProxyConfiguration, AWSCredentials } from '../api/bedrock/types'
+import { ProxyConfiguration } from '../api/bedrock/types'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { NodeHttpHandler } from '@smithy/node-http-handler'
 import { log } from '../../common/logger'
@@ -175,21 +175,16 @@ export interface ProxyAgentResult {
  * @returns プロキシエージェントまたはnull
  */
 export function createProxyAgents(
-  config: ProxyConfiguration | AWSCredentials,
+  config: ProxyConfiguration,
   options: ProxyAgentOptions = { includeHttpsAgent: true }
 ): ProxyAgentResult | null {
   try {
     // ProxyConfigurationまたはAWSCredentialsからプロキシ設定を取得
     let proxyConfig: ProxyConfiguration | null = null
 
-    if ('proxyConfig' in config) {
-      // AWSCredentials の場合
-      proxyConfig = resolveProxyConfig(config.proxyConfig)
-    } else {
-      // ProxyConfiguration の場合
-      const proxyConf = config as ProxyConfiguration
-      proxyConfig = proxyConf.enabled && proxyConf.host ? proxyConf : null
-    }
+    // ProxyConfiguration の場合
+    const proxyConf = config as ProxyConfiguration
+    proxyConfig = proxyConf.enabled && proxyConf.host ? proxyConf : null
 
     if (!proxyConfig?.enabled || !proxyConfig.host) {
       log.debug('Proxy agent not created: disabled or no host', {
@@ -253,8 +248,11 @@ export function createProxyAgents(
  * @param awsCredentials AWS認証情報
  * @returns HTTPオプション
  */
-export function createHttpOptions(awsCredentials: AWSCredentials): object {
-  const proxyAgents = createProxyAgents(awsCredentials, { includeNodeHandler: true })
+export function createHttpOptions(awsCredentials): object {
+  if (!awsCredentials.proxyConfig) {
+    return {}
+  }
+  const proxyAgents = createProxyAgents(awsCredentials.proxyConfig, { includeNodeHandler: true })
 
   if (!proxyAgents?.requestHandler) {
     return {}
