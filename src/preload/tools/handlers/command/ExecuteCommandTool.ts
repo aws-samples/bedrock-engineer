@@ -216,6 +216,14 @@ export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCom
         success: true,
         name: 'executeCommand',
         message: `Command executed: ${JSON.stringify(input)}`,
+        result: {
+          stdout: result.stdout,
+          stderr: result.stderr,
+          exitCode: result.exitCode,
+          processInfo: result.processInfo,
+          requiresInput: result.requiresInput,
+          prompt: result.prompt
+        },
         ...result
       }
     } catch (error) {

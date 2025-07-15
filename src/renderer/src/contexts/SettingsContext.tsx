@@ -11,7 +11,7 @@ import {
 import { ToolName } from 'src/types/tools'
 
 import { CustomAgent } from '@/types/agent-chat'
-import { replacePlaceholders } from '@renderer/pages/ChatPage/utils/placeholder'
+import { replacePlaceholders } from '../../../common/utils/placeholderUtils'
 import { DEFAULT_AGENTS } from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
 import {
   InferenceParameters,
@@ -396,6 +396,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Selected Agent Settings
   const [selectedAgentId, setStateSelectedAgentId] = useState<string>('softwareAgent')
+  const [systemPrompt, setSystemPrompt] = useState<string>('')
 
   // Shell Settings
   const [shell, setStateShell] = useState<string>('/bin/bash')
@@ -1365,27 +1366,41 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [allAgents]
   )
 
-  // エージェント固有の設定を使用
-  const systemPrompt = useMemo(() => {
-    if (!currentAgent?.system) return ''
+  // Load system prompt asynchronously when agent or dependencies change
+  useEffect(() => {
+    const loadSystemPrompt = async () => {
+      if (!currentAgent?.system) {
+        setSystemPrompt('')
+        return
+      }
 
-    // 現在のエージェントの有効なツールを取得
-    const agentTools = getAgentTools(selectedAgentId)
-    // エージェント固有の環境コンテキスト設定を取得
-    const systemPromptContext = getEnvironmentContext(
-      agentTools,
-      currentAgent?.environmentContextSettings
-    )
+      try {
+        // 現在のエージェントの有効なツールを取得
+        const agentTools = getAgentTools(selectedAgentId)
+        // エージェント固有の環境コンテキスト設定を取得
+        const systemPromptContext = await getEnvironmentContext(
+          agentTools,
+          currentAgent?.environmentContextSettings
+        )
 
-    return replacePlaceholders(currentAgent.system + '\n\n' + systemPromptContext, {
-      projectPath,
-      allowedCommands: allAgents.find((a) => a.id === selectedAgentId)?.allowedCommands || [],
-      allowedWindows: allAgents.find((a) => a.id === selectedAgentId)?.allowedWindows || [],
-      allowedCameras: allAgents.find((a) => a.id === selectedAgentId)?.allowedCameras || [],
-      knowledgeBases: allAgents.find((a) => a.id === selectedAgentId)?.knowledgeBases || [],
-      bedrockAgents: allAgents.find((a) => a.id === selectedAgentId)?.bedrockAgents || [],
-      flows: allAgents.find((a) => a.id === selectedAgentId)?.flows || []
-    })
+        const fullPrompt = replacePlaceholders(currentAgent.system + '\n\n' + systemPromptContext, {
+          projectPath,
+          allowedCommands: allAgents.find((a) => a.id === selectedAgentId)?.allowedCommands || [],
+          allowedWindows: allAgents.find((a) => a.id === selectedAgentId)?.allowedWindows || [],
+          allowedCameras: allAgents.find((a) => a.id === selectedAgentId)?.allowedCameras || [],
+          knowledgeBases: allAgents.find((a) => a.id === selectedAgentId)?.knowledgeBases || [],
+          bedrockAgents: allAgents.find((a) => a.id === selectedAgentId)?.bedrockAgents || [],
+          flows: allAgents.find((a) => a.id === selectedAgentId)?.flows || []
+        })
+
+        setSystemPrompt(fullPrompt)
+      } catch (error) {
+        console.error('Failed to load system prompt:', error)
+        setSystemPrompt('')
+      }
+    }
+
+    loadSystemPrompt()
   }, [currentAgent, selectedAgentId, projectPath, allAgents, getAgentTools])
 
   // エージェントツール設定を更新する関数

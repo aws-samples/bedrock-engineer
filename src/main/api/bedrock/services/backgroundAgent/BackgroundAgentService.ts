@@ -2,6 +2,8 @@ import { ContentBlock, ConversationRole, Message } from '@aws-sdk/client-bedrock
 import { BedrockService } from '../../index'
 import { ServiceContext } from '../../types'
 import { createCategoryLogger } from '../../../../../common/logger'
+import { SystemPromptBuilder } from '../../../../../common/agents/toolRuleGenerator'
+import { replacePlaceholders } from '../../../../../common/utils/placeholderUtils'
 import {
   BackgroundAgentConfig,
   BackgroundMessage,
@@ -16,22 +18,14 @@ import {
 } from '../../../../../common/utils/promptCacheUtils'
 import { BackgroundChatSessionManager } from './BackgroundChatSessionManager'
 import { BackgroundAgentScheduler } from './BackgroundAgentScheduler'
-import { v4 as uuidv4 } from 'uuid'
 import { ToolInput, ToolName, ToolResult } from '../../../../../types/tools'
 import { agentHandlers } from '../../../../handlers/agent-handlers'
-import {
-  CustomAgent,
-  ToolState,
-  EnvironmentContextSettings,
-  CommandConfig,
-  WindowConfig,
-  CameraConfig,
-  KnowledgeBase,
-  FlowConfig
-} from '../../../../../types/agent-chat'
-import { BedrockAgent } from '../../../../../types/agent'
-import { BrowserWindow, ipcMain } from 'electron'
+import { CustomAgent, ToolState, EnvironmentContextSettings } from '../../../../../types/agent-chat'
 import { pubSubManager } from '../../../../lib/pubsub-manager'
+import { MainToolDescriptionProvider } from './MainToolDescriptionProvider'
+import { MainToolSpecProvider } from './MainToolSpecProvider'
+import { v4 as uuidv4 } from 'uuid'
+import { BrowserWindow, ipcMain } from 'electron'
 
 const logger = createCategoryLogger('background-agent')
 
@@ -46,11 +40,18 @@ export class BackgroundAgentService {
   ) => void
   // キャッシュポイント追跡用マップ（セッションID → キャッシュポイント位置）
   private cachePointMap: Map<string, number | undefined> = new Map()
+  // 動的ツール説明プロバイダー
+  private toolDescriptionProvider: MainToolDescriptionProvider
+  // ツール仕様プロバイダー
+  private toolSpecProvider: MainToolSpecProvider
 
   constructor(context: ServiceContext) {
     this.context = context
     this.bedrockService = new BedrockService(context)
     this.sessionManager = new BackgroundChatSessionManager()
+
+    this.toolDescriptionProvider = new MainToolDescriptionProvider()
+    this.toolSpecProvider = new MainToolSpecProvider()
 
     logger.info('BackgroundAgentService initialized (using persistent sessions)')
   }
@@ -131,48 +132,6 @@ export class BackgroundAgentService {
   }
 
   /**
-   * IPC経由でpreloadツール仕様を取得
-   */
-  private async getPreloadToolSpecs(): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-      const timeoutMs = 10000 // 10秒タイムアウト
-      const requestId = uuidv4()
-
-      const timeout = setTimeout(() => {
-        ipcMain.removeAllListeners(`tool-specs-response-${requestId}`)
-        reject(new Error('Tool specs request timeout'))
-      }, timeoutMs)
-
-      const responseHandler = (_event: any, specs: any[]) => {
-        clearTimeout(timeout)
-        ipcMain.removeListener(`tool-specs-response-${requestId}`, responseHandler)
-        resolve(specs)
-      }
-
-      ipcMain.once(`tool-specs-response-${requestId}`, responseHandler)
-
-      // 既存のBrowserWindowを取得
-      const allWindows = BrowserWindow.getAllWindows()
-      const mainWindow = allWindows.find((window) => !window.isDestroyed())
-
-      if (!mainWindow || !mainWindow.webContents) {
-        clearTimeout(timeout)
-        ipcMain.removeListener(`tool-specs-response-${requestId}`, responseHandler)
-        resolve([])
-        return
-      }
-
-      try {
-        mainWindow.webContents.send('get-tool-specs-request', { requestId })
-      } catch (sendError: any) {
-        clearTimeout(timeout)
-        ipcMain.removeListener(`tool-specs-response-${requestId}`, responseHandler)
-        reject(sendError)
-      }
-    })
-  }
-
-  /**
    * エージェント固有のツール設定からToolStateを生成
    * IPC経由でpreloadツール仕様を取得
    */
@@ -181,7 +140,7 @@ export class BackgroundAgentService {
       const toolStates: ToolState[] = []
 
       // IPC経由でpreloadツール仕様を取得
-      const allToolSpecs = await this.getPreloadToolSpecs()
+      const allToolSpecs = await this.toolSpecProvider.getPreloadToolSpecs()
 
       for (const toolName of toolNames) {
         // preloadツールから対応するツール仕様を検索
@@ -235,169 +194,31 @@ export class BackgroundAgentService {
   }
 
   /**
-   * プレースホルダーを置換する
-   */
-  private replacePlaceholders(
-    text: string,
-    placeholders: {
-      projectPath: string
-      allowedCommands?: CommandConfig[]
-      allowedWindows?: WindowConfig[]
-      allowedCameras?: CameraConfig[]
-      knowledgeBases?: KnowledgeBase[]
-      bedrockAgents?: BedrockAgent[]
-      flows?: FlowConfig[]
-    }
-  ): string {
-    const {
-      projectPath,
-      allowedCommands = [],
-      allowedWindows = [],
-      allowedCameras = [],
-      knowledgeBases = [],
-      bedrockAgents = [],
-      flows = []
-    } = placeholders
-
-    const yyyyMMdd = new Date().toISOString().slice(0, 10)
-
-    return text
-      .replace(/{{projectPath}}/g, projectPath)
-      .replace(/{{date}}/g, yyyyMMdd)
-      .replace(/{{allowedCommands}}/g, JSON.stringify(allowedCommands))
-      .replace(/{{allowedWindows}}/g, JSON.stringify(allowedWindows))
-      .replace(/{{allowedCameras}}/g, JSON.stringify(allowedCameras))
-      .replace(/{{knowledgeBases}}/g, JSON.stringify(knowledgeBases))
-      .replace(/{{bedrockAgents}}/g, JSON.stringify(bedrockAgents))
-      .replace(/{{flows}}/g, JSON.stringify(flows))
-  }
-
-  /**
    * 環境コンテキストを生成する
    */
-  private getEnvironmentContext(
+  private async getEnvironmentContext(
     enabledTools: ToolState[],
     contextSettings?: EnvironmentContextSettings
-  ): string {
-    // デフォルト設定（すべて有効）
-    const defaultSettings: EnvironmentContextSettings = {
-      todoListInstruction: true,
-      projectRule: true,
-      visualExpressionRules: true
-    }
-
-    // 設定が指定されていない場合はデフォルト設定を使用
-    const settings = contextSettings || defaultSettings
-
-    // 基本環境コンテキスト
-    let context = `**<context>**
-
-- working directory: {{projectPath}}
-- date: {{date}}
-
-**</context>**
-`
-
-    // プロジェクトルール
-    if (settings.projectRule) {
-      context += `
-**<project rule>**
-
-- If there are files under {{projectPath}}/.bedrock-engineer/rules, make sure to load them before working on them.
-  This folder contains project-specific rules.
-
-**</project rule>**
-`
-    }
-
-    // 視覚的表現ルール
-    if (settings.visualExpressionRules) {
-      context += `
-**<visual expression rule>**
-
-If you are acting as a voice chat, please ignore this illustration rule.
-
-- Create Mermaid.js diagrams for visual explanations (maximum 2 per response unless specified)
-- If a complex diagram is required  please express it in draw.io xml format.
-- Ask user permission before generating images with Stable Diffusion
-- Display images using Markdown syntax: \`![image-name](url)\`
-  - (example) \`![img]({{projectPath}}/generated_image.png)\`
-  - (example) \`![img]({{projectPath}}/workspaces/workspace-20250529-session_1748509562336_4xe58p/generated_image.png)\`
-  - Do not start with file://. Start with /.
-- Use KaTeX format for mathematical formulas
-- For web applications, source images from Pexels or user-specified sources
-
-**</visual expression rule>**`
-    }
-
-    // TODOリスト指示
-    if (settings.todoListInstruction) {
-      context += `
-**<todo list handling rule>**
-
-If you expect the work will take a long time, create the following file to create a work plan and TODO list, and refer to and update it as you work. Be sure to write in detail so that you can start the same work again if the AI agent's session is interrupted.
-
-{{projectPath}}/.bedrock-engineer/{{TASK_NAME}}_TODO.md
-
-**</todo list handling rule>**`
-    }
-
-    // ツールルール
-    context += this.generateToolRules(enabledTools)
-
-    return context
-  }
-
-  /**
-   * ツールルールを生成する
-   */
-  private generateToolRules(enabledTools: ToolState[]): string {
-    if (
-      !enabledTools ||
-      enabledTools.length === 0 ||
-      enabledTools.filter((tool) => tool.enabled).length === 0
-    ) {
-      return `
-**<tool usage rules>**
-No tools are currently enabled for this agent.
-**</tool usage rules>**`
-    }
-
-    const activeTools = enabledTools.filter((tool) => tool.enabled)
-
-    let rulesContent = '\n**<tool usage rules>**\n'
-    rulesContent += 'Available tools and their usage:\n\n'
-
-    // 各ツールの説明を追加
-    activeTools.forEach((tool) => {
-      const toolName = tool.toolSpec?.name || 'unknown'
-      const description = tool.toolSpec?.description || 'Tool with specific functionality.'
-      rulesContent += `**${toolName}**\n${description}\n\n`
-    })
-
-    rulesContent += 'General guidelines:\n'
-    rulesContent += '- Use tools one at a time and wait for results\n'
-    rulesContent += '- Always use absolute paths starting from {{projectPath}}\n'
-    rulesContent += '- Request permission for destructive operations\n'
-    rulesContent += '- Handle errors gracefully with clear explanations\n\n'
-
-    rulesContent += '**</tool usage rules>**'
-
-    return rulesContent
+  ): Promise<string> {
+    return await SystemPromptBuilder.generateEnvironmentContext(
+      enabledTools,
+      this.toolDescriptionProvider,
+      contextSettings
+    )
   }
 
   /**
    * エージェントのシステムプロンプトを構築する
    */
-  private buildSystemPrompt(
+  private async buildSystemPrompt(
     agent: CustomAgent,
     toolStates: ToolState[],
     projectDirectory?: string
-  ): string {
+  ): Promise<string> {
     if (!agent.system) return ''
 
     // 環境コンテキストを生成
-    const environmentContext = this.getEnvironmentContext(
+    const environmentContext = await this.getEnvironmentContext(
       toolStates,
       agent.environmentContextSettings
     )
@@ -409,7 +230,7 @@ No tools are currently enabled for this agent.
     const workingDirectory = projectDirectory || this.context.store.get('projectPath') || ''
 
     // プレースホルダーを置換
-    return this.replacePlaceholders(fullPrompt, {
+    return replacePlaceholders(fullPrompt, {
       projectPath: workingDirectory,
       allowedCommands: agent.allowedCommands || [],
       allowedWindows: agent.allowedWindows || [],
@@ -500,7 +321,7 @@ No tools are currently enabled for this agent.
       }
 
       // エージェントのシステムプロンプトを構築（環境コンテキスト＋プレースホルダー置換）
-      const systemPrompt = this.buildSystemPrompt(agent, toolStates, config.projectDirectory)
+      const systemPrompt = await this.buildSystemPrompt(agent, toolStates, config.projectDirectory)
       const system = systemPrompt ? [{ text: systemPrompt }] : []
 
       logger.debug('System prompt built', {
@@ -698,12 +519,27 @@ No tools are currently enabled for this agent.
           toolExecutions?.push(toolExecution)
 
           // ツール結果をメッセージに追加
+          let resultContent: string
+          if (toolExecution.success) {
+            // 成功の場合、output が undefined でないことを確認
+            if (toolExecution.output !== undefined && toolExecution.output !== null) {
+              resultContent = JSON.stringify(toolExecution.output)
+            } else {
+              // output が undefined の場合は基本情報を含む結果を作成
+              resultContent = JSON.stringify({
+                success: true,
+                message: 'Tool executed successfully but no output returned',
+                toolName: toolExecution.toolName
+              })
+            }
+          } else {
+            resultContent = toolExecution.error || 'Tool execution failed'
+          }
+
           toolResults.push({
             toolResult: {
               toolUseId: block.toolUse.toolUseId,
-              content: toolExecution.success
-                ? [{ text: JSON.stringify(toolExecution.output) }]
-                : [{ text: toolExecution.error || 'Tool execution failed' }],
+              content: [{ text: resultContent }],
               status: toolExecution.success ? 'success' : 'error'
             }
           })
@@ -783,7 +619,7 @@ No tools are currently enabled for this agent.
   private async executePreloadToolViaIPC(toolInput: ToolInput): Promise<ToolResult> {
     return new Promise((resolve, reject) => {
       const requestId = uuidv4()
-      const timeoutMs = 30000 // 30秒タイムアウト
+      const timeoutMs = 300000 // 300秒タイムアウト
 
       // タイムアウト設定
       const timeout = setTimeout(() => {
@@ -1024,7 +860,7 @@ No tools are currently enabled for this agent.
       const toolStates = await this.generateToolSpecs(agent.tools || [])
 
       // システムプロンプトを構築（プレースホルダー置換済み）
-      const systemPrompt = this.buildSystemPrompt(agent, toolStates, task.projectDirectory)
+      const systemPrompt = await this.buildSystemPrompt(agent, toolStates, task.projectDirectory)
 
       logger.debug('Task system prompt generated', {
         taskId,

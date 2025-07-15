@@ -1,11 +1,13 @@
-// 独自の型定義を使用
+/**
+ * Placeholder replacement utilities
+ * Provides consistent placeholder replacement functionality across main and renderer processes
+ */
 
-import { CommandConfig, FlowConfig, WindowConfig } from '@/types/agent-chat'
-import { BedrockAgent } from '@/types/agent'
-import { KnowledgeBase } from 'src/types/agent-chat'
-import { CameraConfig } from '@/types/tools'
+import { CommandConfig, FlowConfig, WindowConfig, KnowledgeBase } from '../../types/agent-chat'
+import { BedrockAgent } from '../../types/agent'
+import { CameraConfig } from '../../types/tools'
 
-type PlaceHolders = {
+export interface PlaceholderValues {
   projectPath: string
   allowedCommands?: CommandConfig[]
   allowedWindows?: WindowConfig[]
@@ -15,7 +17,10 @@ type PlaceHolders = {
   flows?: FlowConfig[]
 }
 
-export const replacePlaceholders = (text: string, placeholders: PlaceHolders) => {
+/**
+ * Replace placeholders in text with provided values
+ */
+export function replacePlaceholders(text: string, placeholders: PlaceholderValues): string {
   const {
     projectPath,
     allowedCommands = [],
@@ -25,7 +30,9 @@ export const replacePlaceholders = (text: string, placeholders: PlaceHolders) =>
     bedrockAgents = [],
     flows = []
   } = placeholders
+
   const yyyyMMdd = new Date().toISOString().slice(0, 10)
+
   return text
     .replace(/{{projectPath}}/g, projectPath)
     .replace(/{{date}}/g, yyyyMMdd)
