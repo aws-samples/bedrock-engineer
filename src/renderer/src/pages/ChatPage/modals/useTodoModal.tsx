@@ -17,6 +17,8 @@ export interface TodoList {
   items: TodoItem[]
   createdAt: string
   updatedAt: string
+  sessionId: string
+  projectPath: string
 }
 
 interface TodoModalProps {
@@ -56,7 +58,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
   if (!isOpen) return null
 
   return (
-    <div className="fixed top-4 right-4 z-50 w-80 max-h-96 overflow-hidden transform transition-all duration-200 ease-in-out opacity-100">
+    <div className="fixed top-4 right-4 z-50 w-80 max-h-196 overflow-hidden transform transition-all duration-200 ease-in-out opacity-100">
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-600">
@@ -88,7 +90,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
         </div>
 
         {/* Body */}
-        <div className="p-4 max-h-80 overflow-y-auto">
+        <div className="p-4 max-h-120 overflow-y-auto">
           {!todoList || !todoList.items.length ? (
             // Empty state
             <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500 dark:text-gray-400">
@@ -104,10 +106,10 @@ export const TodoModal: React.FC<TodoModalProps> = ({
               {todoList.items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center gap-3 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                  className="flex items-start gap-3 p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
                 >
                   <div className="flex-shrink-0">{getStatusIcon(item.status)}</div>
-                  <span className="flex-grow text-sm text-gray-900 dark:text-white truncate">
+                  <span className="flex-grow text-sm text-gray-900 dark:text-white">
                     {item.description}
                   </span>
                 </div>
@@ -121,7 +123,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 }
 
 // Custom hook for todo modal with real-time updates
-export const useTodoModal = (messages?: any[]) => {
+export const useTodoModal = (messages?: any[], currentSessionId?: string) => {
   const [show, setShow] = useState(false)
   const [todoList, setTodoList] = useState<TodoList | null>(null)
   const [loading, setLoading] = useState(false)
@@ -131,7 +133,14 @@ export const useTodoModal = (messages?: any[]) => {
     try {
       setLoading(true)
       setError(null)
-      const data = await window.api.todo.getTodoList()
+
+      // Only fetch if session ID exists (no fallback behavior)
+      if (!currentSessionId) {
+        setTodoList(null)
+        return
+      }
+
+      const data = await window.api.todo.getTodoList({ sessionId: currentSessionId })
       setTodoList(data)
     } catch (err) {
       console.error('Failed to fetch TODO list:', err)
@@ -140,11 +149,12 @@ export const useTodoModal = (messages?: any[]) => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [currentSessionId])
 
-  // Auto-refresh when messages change (indicating tool execution)
+  // Auto-refresh when messages change (indicating tool execution) or session changes
+  // Only if there are messages in the chat
   useEffect(() => {
-    if (show && messages) {
+    if (show && messages && messages.length > 0) {
       // Debounce the refresh to avoid excessive API calls
       const timer = setTimeout(() => {
         fetchTodoList()
@@ -153,7 +163,7 @@ export const useTodoModal = (messages?: any[]) => {
       return () => clearTimeout(timer)
     }
     return undefined
-  }, [messages?.length, show, fetchTodoList])
+  }, [messages?.length, show, currentSessionId, fetchTodoList])
 
   // Periodic refresh when modal is open
   useEffect(() => {
@@ -168,6 +178,11 @@ export const useTodoModal = (messages?: any[]) => {
 
   const handleOpen = useCallback(
     async (list?: TodoList | null) => {
+      // Don't open if there are no messages
+      if (!messages || messages.length === 0) {
+        return
+      }
+
       if (list) {
         setTodoList(list)
       } else {
@@ -176,7 +191,7 @@ export const useTodoModal = (messages?: any[]) => {
       }
       setShow(true)
     },
-    [fetchTodoList]
+    [fetchTodoList, messages]
   )
 
   const handleClose = useCallback(() => {

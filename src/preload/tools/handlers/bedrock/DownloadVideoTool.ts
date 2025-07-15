@@ -149,7 +149,7 @@ export class DownloadVideoTool extends BaseTool<DownloadVideoInput, DownloadVide
       let finalLocalPath = localPath
       if (!finalLocalPath) {
         // Get project path from store
-        const projectPath = this.storeManager.get<string>('projectPath')
+        const projectPath = this.store.get('projectPath')
         if (projectPath) {
           const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
           finalLocalPath = path.join(projectPath, `downloaded-video-${timestamp}.mp4`)

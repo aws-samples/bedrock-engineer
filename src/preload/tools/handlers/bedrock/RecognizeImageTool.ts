@@ -138,7 +138,7 @@ export class RecognizeImageTool extends BaseTool<RecognizeImageInput, RecognizeI
 
     try {
       // Get the configured model ID from store (using recognizeImageTool setting)
-      const recognizeImageSetting = this.storeManager.get('recognizeImageTool')
+      const recognizeImageSetting = this.store.get('recognizeImageTool')
       const modelId = recognizeImageSetting?.modelId || 'anthropic.claude-3-5-sonnet-20241022-v2:0'
 
       // Promise.all で並列処理 (following legacy implementation)

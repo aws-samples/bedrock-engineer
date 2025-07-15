@@ -12,7 +12,6 @@ import {
   getLineRangeInfo,
   validateLineRange
 } from '../../../lib/line-range-utils'
-import { LLM } from '../../../../types/llm'
 
 /**
  * Input type for FetchWebsiteTool
@@ -267,7 +266,7 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
    * Get the maximum token limit from current LLM settings
    */
   private getMaxTokensLimit(): number {
-    const llm = this.storeManager.get<LLM>('llm')
+    const llm = this.store.get('llm')
 
     // Use LLM-specific limit if available, otherwise use default
     const defaultLimit = 50000 // Default fallback

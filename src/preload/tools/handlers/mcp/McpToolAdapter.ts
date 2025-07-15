@@ -79,8 +79,8 @@ export class McpToolAdapter extends BaseTool<McpToolInput, McpToolResult> {
       this.logger.info(`Calling MCP tool: ${toolName}`)
 
       // Get agent configuration from store
-      const selectedAgentId = this.storeManager.get('selectedAgentId') as string | undefined
-      const customAgents = (this.storeManager.get('customAgents') as any[] | undefined) || []
+      const selectedAgentId = this.store.get('selectedAgentId') as string | undefined
+      const customAgents = (this.store.get('customAgents') as any[] | undefined) || []
 
       if (!selectedAgentId) {
         throw new ExecutionError(

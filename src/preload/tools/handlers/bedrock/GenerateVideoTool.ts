@@ -233,7 +233,7 @@ export class GenerateVideoTool extends BaseTool<GenerateVideoInput, GenerateVide
     const { prompt, durationSeconds, outputPath, seed, inputImages, prompts } = input
 
     // Check S3 URI configuration
-    const generateVideoConfig = this.storeManager.get<{ s3Uri?: string }>('generateVideoTool')
+    const generateVideoConfig = this.store.get('generateVideoTool')
     const s3Uri = generateVideoConfig?.s3Uri
 
     if (!s3Uri) {
@@ -353,7 +353,7 @@ export class GenerateVideoTool extends BaseTool<GenerateVideoInput, GenerateVide
    * Override to sanitize prompt for logging
    */
   protected sanitizeInputForLogging(input: GenerateVideoInput): any {
-    const config = this.storeManager.get<{ s3Uri?: string }>('generateVideoTool')
+    const config = this.store.get('generateVideoTool')
 
     return {
       ...input,

@@ -167,7 +167,7 @@ export const api = {
     }
   },
   bedrock: {
-    executeTool,
+    executeTool: (toolInput: any, context?: any) => executeTool(toolInput, context),
     applyGuardrail: async (request: ApplyGuardrailRequest) => {
       const bedrock = new BedrockService({ store })
       const res = await bedrock.applyGuardrail(request)
@@ -349,8 +349,8 @@ export const api = {
     }
   },
   todo: {
-    getTodoList: async () => {
-      return ipcRenderer.invoke('get-todo-list')
+    getTodoList: async (params?: { sessionId?: string }) => {
+      return ipcRenderer.invoke('get-todo-list', params)
     }
   }
 }

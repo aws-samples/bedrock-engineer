@@ -6,7 +6,15 @@ import { z } from 'zod'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
-import { TodoInitInput, TodoList, TodoItem, generateTodoId, TODO_STORAGE_KEY } from './types'
+import {
+  TodoInitInput,
+  TodoList,
+  TodoItem,
+  generateTodoId,
+  getTodoFilePath,
+  getTodosDirectoryPath,
+  getGitignoreFilePath
+} from './types'
 
 /**
  * Input schema for todo initialization
@@ -138,7 +146,8 @@ When uncertain, deploy this tool. Proactive task management demonstrates diligen
    * Execute the tool
    */
   protected async executeInternal(
-    input: TodoInitInput
+    input: TodoInitInput,
+    context?: any
   ): Promise<{ name: string; success: boolean; result: TodoList; message?: string }> {
     const { items } = input
 
@@ -148,6 +157,10 @@ When uncertain, deploy this tool. Proactive task management demonstrates diligen
     })
 
     try {
+      // Get project path and session ID from context or generate one
+      const projectPath = this.store.get('projectPath') ?? require('os').homedir()
+      const sessionId = context?.sessionId || this.generateSessionId()
+
       // Create new todo list
       const now = new Date().toISOString()
       const todoList: TodoList = {
@@ -162,15 +175,22 @@ When uncertain, deploy this tool. Proactive task management demonstrates diligen
           })
         ),
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        sessionId,
+        projectPath
       }
 
-      // Save to store
-      this.storeManager.set(TODO_STORAGE_KEY, todoList)
+      // Ensure directory structure exists
+      await this.ensureTodoDirectoryExists(projectPath)
+
+      // Save to file
+      await this.saveTodoListToFile(todoList, projectPath, sessionId)
 
       this.logger.info('Todo list initialized successfully', {
         listId: todoList.id,
-        itemCount: todoList.items.length
+        itemCount: todoList.items.length,
+        sessionId,
+        projectPath
       })
 
       // Return structured result with TodoList
@@ -188,6 +208,72 @@ When uncertain, deploy this tool. Proactive task management demonstrates diligen
       throw new Error(
         `Failed to initialize todo list: ${error instanceof Error ? error.message : String(error)}`
       )
+    }
+  }
+
+  /**
+   * Generate a session ID for the current context
+   * Use a format that's compatible with chat session IDs
+   */
+  private generateSessionId(): string {
+    const timestamp = Date.now()
+    return `session_${timestamp}`
+  }
+
+  /**
+   * Ensure the todos directory structure exists
+   */
+  private async ensureTodoDirectoryExists(projectPath: string): Promise<void> {
+    const fs = require('fs').promises
+    const path = require('path')
+
+    try {
+      // Create .bedrock-engineer directory
+      const bedrockEngineerDir = path.join(projectPath, '.bedrock-engineer')
+      await fs.mkdir(bedrockEngineerDir, { recursive: true })
+
+      // Create todos directory
+      const todosDir = getTodosDirectoryPath(projectPath)
+      await fs.mkdir(todosDir, { recursive: true })
+
+      // Create .gitignore file to exclude todos from version control
+      const gitignoreFile = getGitignoreFilePath(projectPath)
+      const gitignoreContent = '*.json\n'
+
+      try {
+        await fs.access(gitignoreFile)
+      } catch {
+        // File doesn't exist, create it
+        await fs.writeFile(gitignoreFile, gitignoreContent, 'utf8')
+      }
+    } catch (error) {
+      this.logger.error('Failed to create todos directory structure', {
+        error: error instanceof Error ? error.message : String(error),
+        projectPath
+      })
+      throw error
+    }
+  }
+
+  /**
+   * Save todo list to file
+   */
+  private async saveTodoListToFile(
+    todoList: TodoList,
+    projectPath: string,
+    sessionId: string
+  ): Promise<void> {
+    const fs = require('fs').promises
+    const filePath = getTodoFilePath(projectPath, sessionId)
+
+    try {
+      await fs.writeFile(filePath, JSON.stringify(todoList, null, 2), 'utf8')
+    } catch (error) {
+      this.logger.error('Failed to save todo list to file', {
+        error: error instanceof Error ? error.message : String(error),
+        filePath
+      })
+      throw error
     }
   }
 

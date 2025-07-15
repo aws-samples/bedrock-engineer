@@ -145,7 +145,7 @@ export class ListFilesTool extends BaseTool<ListFilesInput, string> {
     const { path: dirPath, options } = input
 
     // Get default ignoreFiles from store if not provided
-    const agentChatConfig = this.storeManager.get('agentChatConfig') as
+    const agentChatConfig = this.store.get('agentChatConfig') as
       | { ignoreFiles?: string[] }
       | undefined
     const defaultIgnoreFiles = agentChatConfig?.ignoreFiles || []

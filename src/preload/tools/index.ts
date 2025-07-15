@@ -5,7 +5,7 @@
 import { ToolInput, ToolResult } from '../../types/tools'
 import type { ToolDependencies, ITool, ToolCategory } from './base/types'
 import { createToolRegistry, ToolRegistry } from './registry'
-import { StoreManager } from './common/StoreManager'
+import { store } from '../store'
 import { createToolLogger } from './common/Logger'
 import { createFilesystemTools } from './handlers/filesystem'
 import { createWebTools } from './handlers/web'
@@ -32,7 +32,7 @@ export function initializeToolSystem(): void {
   // Create dependencies
   const dependencies: ToolDependencies = {
     logger: createToolLogger('system'),
-    storeManager: new StoreManager()
+    store: store
   }
 
   // Create registry
@@ -62,12 +62,15 @@ export function initializeToolSystem(): void {
  * Execute a tool (new implementation)
  * This will eventually replace the old executeTool function
  */
-export async function executeToolNew(input: ToolInput): Promise<string | ToolResult> {
+export async function executeToolNew(
+  input: ToolInput,
+  context?: any
+): Promise<string | ToolResult> {
   if (!toolRegistry) {
     throw new Error('Tool system not initialized. Call initializeToolSystem() first.')
   }
 
-  return toolRegistry.execute(input)
+  return toolRegistry.execute(input, context)
 }
 
 /**
@@ -101,7 +104,6 @@ export type {
   ITool,
   ToolDependencies,
   ToolLogger,
-  StoreManager as IStoreManager,
   ToolCategory,
   ToolRegistration,
   ValidationResult,
@@ -112,7 +114,6 @@ export type {
   ToolErrorMetadata
 } from './base/types'
 export { ToolErrorType } from './base/types'
-export { StoreManager, storeManager } from './common/StoreManager'
 export { Logger, createToolLogger, toolSystemLogger } from './common/Logger'
 
 /**
@@ -131,7 +132,7 @@ export function registerTools(
 
   const dependencies: ToolDependencies = {
     logger: createToolLogger('system'),
-    storeManager: new StoreManager()
+    store: store
   }
 
   registrations.forEach(({ ToolClass, category }) => {
@@ -143,13 +144,13 @@ export function registerTools(
 /**
  * Main entry point for executing tools
  */
-export async function executeTool(input: ToolInput): Promise<string | ToolResult> {
+export async function executeTool(input: ToolInput, context?: any): Promise<string | ToolResult> {
   // Initialize the system if not already done
   if (!isInitialized) {
     initializeToolSystem()
   }
 
-  return executeToolNew(input)
+  return executeToolNew(input, context)
 }
 
 /**

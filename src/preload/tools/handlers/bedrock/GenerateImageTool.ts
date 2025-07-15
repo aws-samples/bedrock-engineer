@@ -192,7 +192,7 @@ export class GenerateImageTool extends BaseTool<GenerateImageInput, GenerateImag
     let modelId: string = input.modelId || ''
     if (!modelId) {
       // Get configured model from store
-      const generateImageConfig = this.storeManager.get<{ modelId?: string }>('generateImageTool')
+      const generateImageConfig = this.store.get('generateImageTool')
       modelId = generateImageConfig?.modelId || DEFAULT_IMAGE_MODEL
     }
 
@@ -202,7 +202,7 @@ export class GenerateImageTool extends BaseTool<GenerateImageInput, GenerateImag
       outputPath,
       aspect_ratio,
       usingDefaultModel: !input.modelId,
-      configuredModel: this.storeManager.get<{ modelId?: string }>('generateImageTool')?.modelId
+      configuredModel: this.store.get('generateImageTool')?.modelId
     })
 
     try {
@@ -307,9 +307,7 @@ export class GenerateImageTool extends BaseTool<GenerateImageInput, GenerateImag
    * Override to sanitize prompt for logging
    */
   protected sanitizeInputForLogging(input: GenerateImageInput): any {
-    const configuredModel = this.storeManager.get<{ modelId?: string }>(
-      'generateImageTool'
-    )?.modelId
+    const configuredModel = this.store.get('generateImageTool')?.modelId
     const effectiveModelId = input.modelId || configuredModel || DEFAULT_IMAGE_MODEL
 
     return {

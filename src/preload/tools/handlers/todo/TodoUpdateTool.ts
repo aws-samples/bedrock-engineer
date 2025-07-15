@@ -11,7 +11,8 @@ import {
   TodoList,
   TodoItemUpdate,
   TodoUpdateResult,
-  TODO_STORAGE_KEY
+  getTodoFilePath,
+  getTodosDirectoryPath
 } from './types'
 
 /**
@@ -179,7 +180,8 @@ If your update request is invalid, an error will be returned with the current to
    * Execute the tool
    */
   protected async executeInternal(
-    input: TodoUpdateInput
+    input: TodoUpdateInput,
+    _context?: any
   ): Promise<{ name: string; success: boolean; result: TodoList; message?: string }> {
     const { updates } = input
 
@@ -193,8 +195,11 @@ If your update request is invalid, an error will be returned with the current to
     })
 
     try {
-      // Get current todo list
-      const currentTodoList = this.storeManager.get<TodoList>(TODO_STORAGE_KEY)
+      // Get project path
+      const projectPath = this.store.get('projectPath') ?? require('os').homedir()
+
+      // Get current todo list from file
+      const currentTodoList = await this.getCurrentTodoList(projectPath)
       if (!currentTodoList) {
         throw new Error('No todo list found. Please initialize a todo list first using todoInit.')
       }
@@ -206,12 +211,14 @@ If your update request is invalid, an error will be returned with the current to
         throw new Error(`Update failed: ${result.error}`)
       }
 
-      // Save updated list
-      this.storeManager.set(TODO_STORAGE_KEY, result.updatedList!)
+      // Save updated list to file
+      await this.saveTodoListToFile(result.updatedList!, projectPath, result.updatedList!.sessionId)
 
       this.logger.info('Todo tasks updated successfully', {
         updateCount: updates.length,
-        listId: result.updatedList!.id
+        listId: result.updatedList!.id,
+        sessionId: result.updatedList!.sessionId,
+        projectPath
       })
 
       // Return structured result with updated TodoList
@@ -229,6 +236,82 @@ If your update request is invalid, an error will be returned with the current to
       throw new Error(
         `Failed to update todo tasks: ${error instanceof Error ? error.message : String(error)}`
       )
+    }
+  }
+
+  /**
+   * Get the current todo list from the most recent file
+   */
+  private async getCurrentTodoList(projectPath: string): Promise<TodoList | null> {
+    const fs = require('fs').promises
+    const path = require('path')
+
+    try {
+      const todosDir = getTodosDirectoryPath(projectPath)
+
+      // Check if todos directory exists
+      try {
+        await fs.access(todosDir)
+      } catch {
+        return null // Directory doesn't exist, no todos
+      }
+
+      // Get all todo files
+      const files = await fs.readdir(todosDir)
+      const todoFiles = files.filter(
+        (file) => file.startsWith('session_') && file.endsWith('_todos.json')
+      )
+
+      if (todoFiles.length === 0) {
+        return null
+      }
+
+      // Find the most recently modified file
+      let mostRecentFile = ''
+      let mostRecentTime = 0
+
+      for (const file of todoFiles) {
+        const filePath = path.join(todosDir, file)
+        const stats = await fs.stat(filePath)
+        if (stats.mtime.getTime() > mostRecentTime) {
+          mostRecentTime = stats.mtime.getTime()
+          mostRecentFile = filePath
+        }
+      }
+
+      // Read and parse the most recent todo file
+      const fileContent = await fs.readFile(mostRecentFile, 'utf8')
+      const todoList: TodoList = JSON.parse(fileContent)
+
+      return todoList
+    } catch (error) {
+      this.logger.error('Failed to read current todo list', {
+        error: error instanceof Error ? error.message : String(error),
+        projectPath
+      })
+      return null
+    }
+  }
+
+  /**
+   * Save todo list to file
+   */
+  private async saveTodoListToFile(
+    todoList: TodoList,
+    projectPath: string,
+    sessionId: string
+  ): Promise<void> {
+    const fs = require('fs').promises
+    const filePath = getTodoFilePath(projectPath, sessionId)
+
+    try {
+      await fs.writeFile(filePath, JSON.stringify(todoList, null, 2), 'utf8')
+    } catch (error) {
+      this.logger.error('Failed to save todo list to file', {
+        error: error instanceof Error ? error.message : String(error),
+        filePath
+      })
+      throw error
     }
   }
 

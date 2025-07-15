@@ -247,10 +247,10 @@ export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCom
    */
   private getCommandConfig(): CommandConfig {
     // Get basic shell setting
-    const shell = (this.storeManager.get('shell') as string) || '/bin/bash'
+    const shell = (this.store.get('shell') as string) || '/bin/bash'
 
     // Get current selected agent ID
-    const selectedAgentId = this.storeManager.get('selectedAgentId') as string | undefined
+    const selectedAgentId = this.store.get('selectedAgentId') as string | undefined
 
     // Get agent-specific allowed commands
     let allowedCommands: CommandPatternConfig[] = []

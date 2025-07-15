@@ -143,7 +143,7 @@ export class ScreenCaptureTool extends BaseTool<ScreenCaptureInput, ScreenCaptur
 
         try {
           // Get the configured model ID from store (using recognizeImageTool setting)
-          const recognizeImageSetting = this.storeManager.get('recognizeImageTool')
+          const recognizeImageSetting = this.store.get('recognizeImageTool')
           const modelId =
             recognizeImageSetting?.modelId || 'anthropic.claude-3-5-sonnet-20241022-v2:0'
 

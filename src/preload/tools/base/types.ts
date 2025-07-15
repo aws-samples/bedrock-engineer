@@ -4,7 +4,7 @@
 
 import { ToolInput, ToolResult } from '../../../types/tools'
 import { BedrockService } from '../../../main/api/bedrock'
-import type ElectronStore from 'electron-store'
+import { ConfigStore } from '../../store'
 import { LineRange } from '../../lib/line-range-utils'
 
 /**
@@ -12,7 +12,7 @@ import { LineRange } from '../../lib/line-range-utils'
  */
 export interface ToolDependencies {
   logger: ToolLogger
-  storeManager: StoreManager
+  store: ConfigStore
   bedrock?: BedrockService
 }
 
@@ -28,23 +28,12 @@ export interface ToolLogger {
 }
 
 /**
- * Store manager interface
- */
-export interface StoreManager {
-  get<T = any>(key: string): T | undefined
-  set<T = any>(key: string, value: T): void
-  has(key: string): boolean
-  delete(key: string): void
-  getStore(): ElectronStore
-}
-
-/**
  * Base tool interface
  */
 export interface ITool<TInput extends ToolInput = ToolInput, TResult = ToolResult | string> {
   readonly name: string
   readonly description: string
-  execute(input: TInput): Promise<TResult>
+  execute(input: TInput, context?: any): Promise<TResult>
 }
 
 /**

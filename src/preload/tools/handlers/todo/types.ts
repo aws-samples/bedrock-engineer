@@ -17,6 +17,8 @@ export interface TodoList {
   items: TodoItem[]
   createdAt: string
   updatedAt: string
+  sessionId: string
+  projectPath: string
 }
 
 export interface TodoItemUpdate {
@@ -46,9 +48,26 @@ export interface TodoUpdateInput {
 }
 
 /**
- * Storage keys
+ * File management utilities
  */
-export const TODO_STORAGE_KEY = 'todoList'
+export function getTodoFilePath(projectPath: string, sessionId: string): string {
+  const path = require('path')
+  // Check if sessionId already starts with 'session_' to avoid duplication
+  const fileName = sessionId.startsWith('session_')
+    ? `${sessionId}_todos.json`
+    : `session_${sessionId}_todos.json`
+  return path.join(projectPath, '.bedrock-engineer', 'todos', fileName)
+}
+
+export function getTodosDirectoryPath(projectPath: string): string {
+  const path = require('path')
+  return path.join(projectPath, '.bedrock-engineer', 'todos')
+}
+
+export function getGitignoreFilePath(projectPath: string): string {
+  const path = require('path')
+  return path.join(projectPath, '.bedrock-engineer', 'todos', '.gitignore')
+}
 
 /**
  * Utility functions

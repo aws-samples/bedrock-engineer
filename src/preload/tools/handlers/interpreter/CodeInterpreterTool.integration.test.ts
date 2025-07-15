@@ -45,14 +45,11 @@ describe('CodeInterpreterTool Integration Tests', () => {
     }
 
     const storeManager = {
-      get: () => undefined,
-      set: () => {},
-      has: () => false,
-      delete: () => {},
-      getStore: () => ({}) as any
+      get: () => undefined as any,
+      set: () => {}
     }
 
-    dependencies = { logger, storeManager }
+    dependencies = { logger, store: storeManager }
     tool = new CodeInterpreterTool(dependencies)
 
     // Check Docker availability using the tool's internal executor

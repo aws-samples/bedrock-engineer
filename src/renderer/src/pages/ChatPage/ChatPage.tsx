@@ -110,7 +110,7 @@ export default function ChatPage() {
     handleClose: handleCloseTodoModal,
     handleOpen: handleOpenTodoModal,
     TodoModal
-  } = useTodoModal(messages)
+  } = useTodoModal(messages, currentSessionId)
 
   const {
     show: showToolSettingModal,
@@ -181,12 +181,15 @@ export default function ChatPage() {
             />
 
             <div className="flex items-center gap-2">
-              <FaListCheck
-                className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer"
-                onClick={() => handleOpenTodoModal()}
-                title={t('View TODO List')}
-                size={16}
-              />
+              {/* Only show TODO icon when there are messages */}
+              {messages.length > 0 && (
+                <FaListCheck
+                  className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer"
+                  onClick={() => handleOpenTodoModal()}
+                  title={t('View TODO List')}
+                  size={16}
+                />
+              )}
               <FiBarChart2
                 className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer"
                 onClick={handleOpenTokenAnalyticsModal}

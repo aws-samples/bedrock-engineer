@@ -131,7 +131,7 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
     this.logger.debug(`Executing Tavily search with query: ${query}`)
 
     // Get API key from store
-    const tavilyConfig = this.storeManager.get('tavilySearch') as { apikey?: string } | undefined
+    const tavilyConfig = this.store.get('tavilySearch') as { apikey?: string } | undefined
     const apiKey = tavilyConfig?.apikey
 
     this.logger.debug('Tavily API key configuration check', {

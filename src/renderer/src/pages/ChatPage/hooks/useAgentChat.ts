@@ -737,7 +737,9 @@ export const useAgentChat = (
             }
             setExecutingTool(toolInput.type)
 
-            const toolResult = await window.api.bedrock.executeTool(toolInput)
+            const toolResult = await window.api.bedrock.executeTool(toolInput, {
+              sessionId: currentSessionId
+            })
             setExecutingTool(null)
 
             // ツール実行結果用のContentBlockを作成

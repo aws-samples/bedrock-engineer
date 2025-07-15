@@ -206,7 +206,7 @@ Two environments available: "basic" and "datascience" (default).
     const pythonEnvironment = this.validateEnvironment(environment)
 
     // Get user configuration from store
-    const userConfig = this.storeManager.get('codeInterpreterTool')
+    const userConfig = this.store.get('codeInterpreterTool')
 
     // Use user configuration or fall back to defaults
     const config = {
@@ -254,7 +254,7 @@ Two environments available: "basic" and "datascience" (default).
 
     // Initialize simplified workspace configuration
     this.workspaceConfig = {
-      basePath: this.storeManager.get('projectPath') ?? os.homedir(),
+      basePath: this.store.get('projectPath') ?? os.homedir(),
       sessionId: this.generateSessionId(),
       maxFiles: 20,
       maxFileSize: 1024 * 1024, // 1MB
@@ -266,9 +266,8 @@ Two environments available: "basic" and "datascience" (default).
     this.fileManager = new FileManager(this.logger, this.securityManager, this.workspaceConfig)
     this.dockerExecutor = new DockerExecutor(this.logger, this.securityManager)
 
-    // Initialize task manager with configuration from store
-    const taskManagerConfig: Partial<TaskManagerConfig> =
-      this.storeManager.get('taskManagerConfig') || {}
+    // Initialize task manager with default configuration
+    const taskManagerConfig: Partial<TaskManagerConfig> = {}
     this.taskManager = new TaskManager(this.logger, taskManagerConfig)
   }
 

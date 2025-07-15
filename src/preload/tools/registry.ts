@@ -159,7 +159,7 @@ export class ToolRegistry {
   /**
    * Execute a tool
    */
-  async execute(input: ToolInput): Promise<string | ToolResult> {
+  async execute(input: ToolInput, context?: any): Promise<string | ToolResult> {
     const toolName = this.resolveToolName(input.type)
 
     // JSON Parse Error の事前チェック
@@ -198,7 +198,7 @@ export class ToolRegistry {
         throw new ToolNotFoundError(toolName)
       }
 
-      return await tool.execute(input)
+      return await tool.execute(input, context)
     } catch (error) {
       // Log the error
       toolSystemLogger.error(`Tool execution failed: ${toolName}`, {
