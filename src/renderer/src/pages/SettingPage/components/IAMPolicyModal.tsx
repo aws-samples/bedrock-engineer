@@ -13,8 +13,10 @@ export const IAMPolicyModal: React.FC<IAMPolicyModalProps> = ({ isOpen, onClose 
 
   const policies = [
     {
-      name: 'Recommended Policy',
-      description: t('Standard permissions including streaming responses'),
+      name: 'Recommended Policy (Complete)',
+      description: t(
+        'Complete permissions for all Bedrock Engineer features including translation and video generation'
+      ),
       example: `{
   "Version": "2012-10-17",
   "Statement": [
@@ -22,12 +24,71 @@ export const IAMPolicyModal: React.FC<IAMPolicyModalProps> = ({ isOpen, onClose 
       "Effect": "Allow",
       "Action": [
         "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
         "bedrock:GetFoundationModel",
         "bedrock:ListFoundationModels",
-        "bedrock:InvokeModelWithResponseStream",
+        "bedrock:ApplyGuardrail",
+        "bedrock:InvokeAgent",
         "bedrock:Retrieve",
+        "bedrock:RetrieveAndGenerate",
+        "bedrock:InvokeFlow",
         "bedrock:ListPromptRouters",
-        "bedrock:RetrieveAndGenerate"
+        "bedrock:GetAsyncInvoke",
+        "bedrock:ListInferenceProfiles",
+        "bedrock:GetInferenceProfile"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "translate:TranslateText"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::*/*",
+        "arn:aws:s3:::*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+`
+    },
+    {
+      name: 'Basic Policy (LLM Only)',
+      description: t('Minimal permissions for basic LLM interactions only'),
+      example: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "bedrock:GetFoundationModel",
+        "bedrock:ListFoundationModels"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity"
       ],
       "Resource": "*"
     }

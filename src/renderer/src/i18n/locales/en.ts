@@ -109,7 +109,11 @@ const SettingPage = {
   'Send the message': 'Send the message',
   'Start a new line (use': 'Start a new line (use',
   'to send)': 'to send)',
-  'Invalid model': 'Invalid model'
+  'Invalid model': 'Invalid model',
+  'Complete permissions for all Bedrock Engineer features including translation and video generation':
+    'Complete permissions for all Bedrock Engineer features including translation and video generation',
+  'Minimal permissions for basic LLM interactions only':
+    'Minimal permissions for basic LLM interactions only'
 }
 
 const StepFunctionsGeneratorPage = {
