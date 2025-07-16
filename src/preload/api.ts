@@ -351,6 +351,34 @@ export const api = {
   todo: {
     getTodoList: async (params?: { sessionId?: string }) => {
       return ipcRenderer.invoke('get-todo-list', params)
+    },
+    initTodoList: async (params: { sessionId: string; items: string[] }) => {
+      return ipcRenderer.invoke('todo-init', params)
+    },
+    updateTodoList: async (params: {
+      sessionId: string
+      updates: Array<{
+        id: string
+        status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+        description?: string
+      }>
+    }) => {
+      return ipcRenderer.invoke('todo-update', params)
+    },
+    deleteTodoList: async (params: { sessionId: string }) => {
+      return ipcRenderer.invoke('delete-todo-list', params)
+    },
+    getRecentTodos: async () => {
+      return ipcRenderer.invoke('get-recent-todos')
+    },
+    getAllTodoMetadata: async () => {
+      return ipcRenderer.invoke('get-all-todo-metadata')
+    },
+    setActiveTodoList: async (params: { sessionId?: string }) => {
+      return ipcRenderer.invoke('set-active-todo-list', params)
+    },
+    getActiveTodoListId: async () => {
+      return ipcRenderer.invoke('get-active-todo-list-id')
     }
   }
 }

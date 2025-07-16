@@ -340,6 +340,57 @@ export interface IPCChannelDefinitions {
       lastChecked: Date
     }
   }
+  'get-todo-list': {
+    params?: { sessionId?: string }
+    result: any | null // TodoList | null
+  }
+
+  // TODO管理関連
+  'todo-init': {
+    params: { sessionId: string; items: string[] }
+    result: {
+      success: boolean
+      result?: any // TodoList
+      message?: string
+      error?: string
+    }
+  }
+  'todo-update': {
+    params: {
+      sessionId: string
+      updates: Array<{
+        id: string
+        status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
+        description?: string
+      }>
+    }
+    result: {
+      success: boolean
+      updatedList?: any // TodoList
+      currentList?: any // TodoList
+      error?: string
+    }
+  }
+  'delete-todo-list': {
+    params: { sessionId: string }
+    result: { success: boolean; error?: string }
+  }
+  'get-recent-todos': {
+    params: void
+    result: any[] // TodoMetadata[]
+  }
+  'get-all-todo-metadata': {
+    params: void
+    result: any[] // TodoMetadata[]
+  }
+  'set-active-todo-list': {
+    params: { sessionId?: string }
+    result: { success: boolean; error?: string }
+  }
+  'get-active-todo-list-id': {
+    params: void
+    result: string | null
+  }
 
   // エージェント関連
   'read-shared-agents': {

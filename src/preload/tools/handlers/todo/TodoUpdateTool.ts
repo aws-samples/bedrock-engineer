@@ -6,14 +6,8 @@ import { z } from 'zod'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
-import {
-  TodoUpdateInput,
-  TodoList,
-  TodoItemUpdate,
-  TodoUpdateResult,
-  getTodoFilePath,
-  getTodosDirectoryPath
-} from './types'
+import { TodoUpdateInput } from './types'
+import { api } from '../../../api'
 
 /**
  * Input schema for todo updates
@@ -40,7 +34,7 @@ const todoUpdateInputSchema = z.object({
  */
 export class TodoUpdateTool extends BaseTool<
   TodoUpdateInput,
-  { name: string; success: boolean; result: TodoList; message?: string }
+  { name: string; success: boolean; result: any; message?: string }
 > {
   readonly name = 'todoUpdate'
   readonly description = 'Update tasks in the todo list (status, description)'
@@ -181,8 +175,8 @@ If your update request is invalid, an error will be returned with the current to
    */
   protected async executeInternal(
     input: TodoUpdateInput,
-    _context?: any
-  ): Promise<{ name: string; success: boolean; result: TodoList; message?: string }> {
+    context?: any
+  ): Promise<{ name: string; success: boolean; result: any; message?: string }> {
     const { updates } = input
 
     this.logger.info('Updating todo tasks', {
@@ -195,38 +189,29 @@ If your update request is invalid, an error will be returned with the current to
     })
 
     try {
-      // Get project path
-      const projectPath = this.store.get('projectPath') ?? require('os').homedir()
+      // Get session ID from context or use most recent
+      const sessionId = context?.sessionId || 'most_recent'
 
-      // Get current todo list from file
-      const currentTodoList = await this.getCurrentTodoList(projectPath)
-      if (!currentTodoList) {
-        throw new Error('No todo list found. Please initialize a todo list first using todoInit.')
-      }
-
-      // Update the todo items
-      const result = this.updateTodoItems(currentTodoList, updates)
-
-      if (!result.success) {
-        throw new Error(`Update failed: ${result.error}`)
-      }
-
-      // Save updated list to file
-      await this.saveTodoListToFile(result.updatedList!, projectPath, result.updatedList!.sessionId)
-
-      this.logger.info('Todo tasks updated successfully', {
-        updateCount: updates.length,
-        listId: result.updatedList!.id,
-        sessionId: result.updatedList!.sessionId,
-        projectPath
+      // Call the main process via API client
+      const result = await api.todo.updateTodoList({
+        sessionId,
+        updates
       })
 
-      // Return structured result with updated TodoList
-      return {
-        name: this.name,
-        success: true,
-        result: result.updatedList!,
-        message: `Updated ${updates.length} task${updates.length > 1 ? 's' : ''} successfully`
+      if (result.success) {
+        this.logger.info('Todo tasks updated successfully', {
+          updateCount: updates.length,
+          sessionId
+        })
+
+        return {
+          name: this.name,
+          success: true,
+          result: result.updatedList,
+          message: `Updated ${updates.length} task${updates.length > 1 ? 's' : ''} successfully`
+        }
+      } else {
+        throw new Error(result.error || 'Failed to update todo tasks')
       }
     } catch (error) {
       this.logger.error('Failed to update todo tasks', {
@@ -236,140 +221,6 @@ If your update request is invalid, an error will be returned with the current to
       throw new Error(
         `Failed to update todo tasks: ${error instanceof Error ? error.message : String(error)}`
       )
-    }
-  }
-
-  /**
-   * Get the current todo list from the most recent file
-   */
-  private async getCurrentTodoList(projectPath: string): Promise<TodoList | null> {
-    const fs = require('fs').promises
-    const path = require('path')
-
-    try {
-      const todosDir = getTodosDirectoryPath(projectPath)
-
-      // Check if todos directory exists
-      try {
-        await fs.access(todosDir)
-      } catch {
-        return null // Directory doesn't exist, no todos
-      }
-
-      // Get all todo files
-      const files = await fs.readdir(todosDir)
-      const todoFiles = files.filter(
-        (file) => file.startsWith('session_') && file.endsWith('_todos.json')
-      )
-
-      if (todoFiles.length === 0) {
-        return null
-      }
-
-      // Find the most recently modified file
-      let mostRecentFile = ''
-      let mostRecentTime = 0
-
-      for (const file of todoFiles) {
-        const filePath = path.join(todosDir, file)
-        const stats = await fs.stat(filePath)
-        if (stats.mtime.getTime() > mostRecentTime) {
-          mostRecentTime = stats.mtime.getTime()
-          mostRecentFile = filePath
-        }
-      }
-
-      // Read and parse the most recent todo file
-      const fileContent = await fs.readFile(mostRecentFile, 'utf8')
-      const todoList: TodoList = JSON.parse(fileContent)
-
-      return todoList
-    } catch (error) {
-      this.logger.error('Failed to read current todo list', {
-        error: error instanceof Error ? error.message : String(error),
-        projectPath
-      })
-      return null
-    }
-  }
-
-  /**
-   * Save todo list to file
-   */
-  private async saveTodoListToFile(
-    todoList: TodoList,
-    projectPath: string,
-    sessionId: string
-  ): Promise<void> {
-    const fs = require('fs').promises
-    const filePath = getTodoFilePath(projectPath, sessionId)
-
-    try {
-      await fs.writeFile(filePath, JSON.stringify(todoList, null, 2), 'utf8')
-    } catch (error) {
-      this.logger.error('Failed to save todo list to file', {
-        error: error instanceof Error ? error.message : String(error),
-        filePath
-      })
-      throw error
-    }
-  }
-
-  /**
-   * Update todo items
-   */
-  private updateTodoItems(todoList: TodoList, updates: TodoItemUpdate[]): TodoUpdateResult {
-    try {
-      const updatedItems = [...todoList.items]
-      const now = new Date().toISOString()
-
-      // Validate all updates first
-      for (const update of updates) {
-        const itemIndex = updatedItems.findIndex((item) => item.id === update.id)
-        if (itemIndex === -1) {
-          return {
-            success: false,
-            error: `Task with ID "${update.id}" not found`,
-            currentList: todoList
-          }
-        }
-      }
-
-      // Apply updates
-      for (const update of updates) {
-        const itemIndex = updatedItems.findIndex((item) => item.id === update.id)
-        const item = updatedItems[itemIndex]
-
-        // Update status if provided
-        if (update.status) {
-          item.status = update.status
-        }
-
-        // Update description if provided
-        if (update.description) {
-          item.description = update.description.trim()
-        }
-
-        // Update timestamp
-        item.updatedAt = now
-      }
-
-      const updatedList: TodoList = {
-        ...todoList,
-        items: updatedItems,
-        updatedAt: now
-      }
-
-      return {
-        success: true,
-        updatedList
-      }
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : String(error),
-        currentList: todoList
-      }
     }
   }
 

@@ -4,8 +4,6 @@ import axios from 'axios'
 import { log } from '../../common/logger'
 import { store } from '../../preload/store'
 import { createUtilProxyAgent } from '../lib/proxy-utils'
-import { getTodoFilePath, TodoList } from '../../preload/tools/handlers/todo/types'
-import { promises as fs } from 'fs'
 
 export const utilHandlers = {
   'get-app-path': async (_event: IpcMainInvokeEvent) => {
@@ -116,56 +114,5 @@ export const utilHandlers = {
         })
       }, 5000)
     })
-  },
-
-  'get-todo-list': async (_event: IpcMainInvokeEvent, params?: { sessionId?: string }) => {
-    try {
-      // Always get projectPath from store
-      const projectPath = store.get('projectPath') || require('os').homedir()
-
-      // Only get specific session TODO list, no fallback
-      if (params?.sessionId) {
-        const todoList = await getTodoListFromFile(projectPath, params.sessionId)
-        log.debug('Retrieved session-specific TODO list from file', {
-          todoList: todoList ? { id: todoList.id, itemCount: todoList.items.length } : null,
-          sessionId: params.sessionId,
-          projectPath,
-          found: !!todoList
-        })
-        return todoList
-      }
-
-      // No session ID provided, return null
-      log.debug('No session ID provided for TODO list retrieval')
-      return null
-    } catch (error) {
-      log.error('Error retrieving TODO list', {
-        error: error instanceof Error ? error.message : String(error),
-        params
-      })
-      return null
-    }
   }
 } as const
-
-/**
- * Get a specific todo list from file
- */
-async function getTodoListFromFile(
-  projectPath: string,
-  sessionId: string
-): Promise<TodoList | null> {
-  try {
-    const filePath = getTodoFilePath(projectPath, sessionId)
-    const fileContent = await fs.readFile(filePath, 'utf8')
-    const todoList: TodoList = JSON.parse(fileContent)
-    return todoList
-  } catch (error) {
-    log.debug('Todo file not found or could not be read', {
-      projectPath,
-      sessionId,
-      error: error instanceof Error ? error.message : String(error)
-    })
-    return null
-  }
-}

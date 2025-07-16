@@ -6,15 +6,8 @@ import { z } from 'zod'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
-import {
-  TodoInitInput,
-  TodoList,
-  TodoItem,
-  generateTodoId,
-  getTodoFilePath,
-  getTodosDirectoryPath,
-  getGitignoreFilePath
-} from './types'
+import { TodoInitInput } from './types'
+import { api } from '../../../api'
 
 /**
  * Input schema for todo initialization
@@ -34,7 +27,7 @@ const todoInitInputSchema = z.object({
  */
 export class TodoInitTool extends BaseTool<
   TodoInitInput,
-  { name: string; success: boolean; result: TodoList; message?: string }
+  { name: string; success: boolean; result: any; message?: string }
 > {
   readonly name = 'todoInit'
   readonly description = 'Initialize or replace a todo list for systematic workflow management'
@@ -148,7 +141,7 @@ When uncertain, deploy this tool. Proactive task management demonstrates diligen
   protected async executeInternal(
     input: TodoInitInput,
     context?: any
-  ): Promise<{ name: string; success: boolean; result: TodoList; message?: string }> {
+  ): Promise<{ name: string; success: boolean; result: any; message?: string }> {
     const { items } = input
 
     this.logger.info('Initializing todo list', {
@@ -157,48 +150,29 @@ When uncertain, deploy this tool. Proactive task management demonstrates diligen
     })
 
     try {
-      // Get project path and session ID from context or generate one
-      const projectPath = this.store.get('projectPath') ?? require('os').homedir()
+      // Get session ID from context or generate one
       const sessionId = context?.sessionId || this.generateSessionId()
 
-      // Create new todo list
-      const now = new Date().toISOString()
-      const todoList: TodoList = {
-        id: `todolist-${Date.now()}`,
-        items: items.map(
-          (description): TodoItem => ({
-            id: generateTodoId(),
-            description: description.trim(),
-            status: 'pending',
-            createdAt: now,
-            updatedAt: now
-          })
-        ),
-        createdAt: now,
-        updatedAt: now,
+      // Call the main process via API client
+      const result = await api.todo.initTodoList({
         sessionId,
-        projectPath
-      }
-
-      // Ensure directory structure exists
-      await this.ensureTodoDirectoryExists(projectPath)
-
-      // Save to file
-      await this.saveTodoListToFile(todoList, projectPath, sessionId)
-
-      this.logger.info('Todo list initialized successfully', {
-        listId: todoList.id,
-        itemCount: todoList.items.length,
-        sessionId,
-        projectPath
+        items
       })
 
-      // Return structured result with TodoList
-      return {
-        name: this.name,
-        success: true,
-        result: todoList,
-        message: `Todo list initialized with ${todoList.items.length} tasks`
+      if (result.success) {
+        this.logger.info('Todo list initialized successfully', {
+          sessionId,
+          itemCount: items.length
+        })
+
+        return {
+          name: this.name,
+          success: true,
+          result: result.result,
+          message: result.message
+        }
+      } else {
+        throw new Error(result.error || 'Failed to initialize todo list')
       }
     } catch (error) {
       this.logger.error('Failed to initialize todo list', {
@@ -218,63 +192,6 @@ When uncertain, deploy this tool. Proactive task management demonstrates diligen
   private generateSessionId(): string {
     const timestamp = Date.now()
     return `session_${timestamp}`
-  }
-
-  /**
-   * Ensure the todos directory structure exists
-   */
-  private async ensureTodoDirectoryExists(projectPath: string): Promise<void> {
-    const fs = require('fs').promises
-    const path = require('path')
-
-    try {
-      // Create .bedrock-engineer directory
-      const bedrockEngineerDir = path.join(projectPath, '.bedrock-engineer')
-      await fs.mkdir(bedrockEngineerDir, { recursive: true })
-
-      // Create todos directory
-      const todosDir = getTodosDirectoryPath(projectPath)
-      await fs.mkdir(todosDir, { recursive: true })
-
-      // Create .gitignore file to exclude todos from version control
-      const gitignoreFile = getGitignoreFilePath(projectPath)
-      const gitignoreContent = '*.json\n'
-
-      try {
-        await fs.access(gitignoreFile)
-      } catch {
-        // File doesn't exist, create it
-        await fs.writeFile(gitignoreFile, gitignoreContent, 'utf8')
-      }
-    } catch (error) {
-      this.logger.error('Failed to create todos directory structure', {
-        error: error instanceof Error ? error.message : String(error),
-        projectPath
-      })
-      throw error
-    }
-  }
-
-  /**
-   * Save todo list to file
-   */
-  private async saveTodoListToFile(
-    todoList: TodoList,
-    projectPath: string,
-    sessionId: string
-  ): Promise<void> {
-    const fs = require('fs').promises
-    const filePath = getTodoFilePath(projectPath, sessionId)
-
-    try {
-      await fs.writeFile(filePath, JSON.stringify(todoList, null, 2), 'utf8')
-    } catch (error) {
-      this.logger.error('Failed to save todo list to file', {
-        error: error instanceof Error ? error.message : String(error),
-        filePath
-      })
-      throw error
-    }
   }
 
   /**
