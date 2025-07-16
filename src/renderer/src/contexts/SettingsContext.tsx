@@ -27,7 +27,7 @@ import { AgentCategory } from '@/types/agent-chat'
 import { getToolsForCategory } from '../constants/defaultToolSets'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { CodeInterpreterContainerConfig } from 'src/preload/tools/handlers/interpreter/types'
-import { getEnvironmentContext } from '@renderer/pages/ChatPage/constants/AGENTS_ENVIRONMENT_CONTEXT'
+import { SystemPromptBuilder } from '@/common/agents/toolRuleGenerator'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -1279,18 +1279,45 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     (agentId: string): ToolState[] => {
       // 現在選択されているエージェントを見つける
       const agent = allAgents.find((a) => a.id === agentId)
+
+      // プレースホルダー値を準備
+      const placeholderValues = {
+        projectPath,
+        allowedCommands: agent?.allowedCommands || [],
+        allowedWindows: agent?.allowedWindows || [],
+        allowedCameras: agent?.allowedCameras || [],
+        knowledgeBases: agent?.knowledgeBases || [],
+        bedrockAgents: agent?.bedrockAgents || [],
+        flows: agent?.flows || []
+      }
+
       // MCP ツールを取得（常に有効）
       const mcpTools = agent?.mcpTools || []
       const agentMcpTools = mcpTools.map((tool) => ({
         ...tool,
-        enabled: true // MCP ツールは常に有効
-      }))
+        enabled: true, // MCP ツールは常に有効
+        toolSpec: tool.toolSpec
+          ? {
+              ...tool.toolSpec,
+              description: replacePlaceholders(tool.toolSpec.description || '', placeholderValues)
+            }
+          : undefined
+      })) as ToolState[]
 
       // 標準ツールのみを処理（MCP ツールは別途管理）
       // エージェント固有のツール設定がある場合
       if (agent && agent.tools && agent.tools.length > 0) {
         // 標準ツールの ToolState[] を生成（デフォルトは無効）
-        const standardToolStates = tools.map((tool) => ({ ...tool, enabled: false }))
+        const standardToolStates = tools.map((tool) => ({
+          ...tool,
+          enabled: false,
+          toolSpec: tool.toolSpec
+            ? {
+                ...tool.toolSpec,
+                description: replacePlaceholders(tool.toolSpec.description || '', placeholderValues)
+              }
+            : undefined
+        })) as ToolState[]
 
         // エージェントのツール名リストに含まれる標準ツールを有効化
         const enabledStandardTools = standardToolStates.map((toolState) => {
@@ -1311,7 +1338,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // MCP ツールだけを返す
       return agentMcpTools
     },
-    [allAgents, tools]
+    [allAgents, tools, projectPath]
   )
 
   // エージェント固有の許可コマンドを取得する関数
@@ -1375,11 +1402,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
 
       try {
-        // 現在のエージェントの有効なツールを取得
-        const agentTools = getAgentTools(selectedAgentId)
         // エージェント固有の環境コンテキスト設定を取得
-        const systemPromptContext = await getEnvironmentContext(
-          agentTools,
+        const systemPromptContext = await SystemPromptBuilder.generateEnvironmentContext(
           currentAgent?.environmentContextSettings
         )
 

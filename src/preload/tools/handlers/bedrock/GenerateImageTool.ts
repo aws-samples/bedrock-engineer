@@ -49,7 +49,7 @@ interface GenerateImageResult extends ToolResult {
 export class GenerateImageTool extends BaseTool<GenerateImageInput, GenerateImageResult> {
   static readonly toolName = 'generateImage'
   static readonly toolDescription =
-    'Generate an image using Amazon Bedrock Foundation Models. By default uses stability.sd3-5-large-v1:0. Images are saved to the specified path. For Titan models, specific aspect ratios and sizes are supported.'
+    'Generate an image using Amazon Bedrock Foundation Models. By default uses stability.sd3-5-large-v1:0. Images are saved to the specified path. For Titan models, specific aspect ratios and sizes are supported.\n\nGenerate images using AI models. Always ask user permission before creating images.'
 
   readonly name = GenerateImageTool.toolName
   readonly description = GenerateImageTool.toolDescription
@@ -117,12 +117,6 @@ export class GenerateImageTool extends BaseTool<GenerateImageInput, GenerateImag
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Generate images using AI models.\nAlways ask user permission before creating images.'
 
   /**
    * Validate input

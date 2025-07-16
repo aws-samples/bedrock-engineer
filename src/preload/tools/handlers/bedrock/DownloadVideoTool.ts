@@ -72,9 +72,6 @@ export class DownloadVideoTool extends BaseTool<DownloadVideoInput, DownloadVide
   /**
    * System prompt description
    */
-  static readonly systemPromptDescription =
-    'Download completed video from S3 using invocation ARN.\nOnly use this tool when checkVideoStatus shows status as "Completed".\nAutomatically retrieves S3 location and downloads to specified or default local path.'
-
   /**
    * Validate input
    */

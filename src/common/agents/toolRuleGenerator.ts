@@ -1,81 +1,8 @@
 /**
- * System prompt builder utilities
- * Provides consistent system prompt and environment context formatting for both renderer and main processes
- */
-
-import { ToolState } from '../../types/agent-chat'
-import { isMcpTool } from '../../types/tools'
-import { IToolDescriptionProvider } from './toolDescriptionProvider'
-
-/**
  * Static class for building system prompts and environment contexts
  * Provides functional cohesion for all prompt-related generation functionality
  */
 export class SystemPromptBuilder {
-  /**
-   * Generate tool usage rules based on enabled tools
-   */
-  private static async generateToolRules(
-    enabledTools: ToolState[],
-    descriptionProvider: IToolDescriptionProvider
-  ): Promise<string> {
-    if (
-      !enabledTools ||
-      enabledTools.length === 0 ||
-      enabledTools.filter((tool) => tool.enabled).length === 0
-    ) {
-      return `**<tool usage rules>**No tools are currently enabled for this agent.**</tool usage rules>**`
-    }
-
-    // Filter active tools
-    const activeTools = enabledTools.filter((tool) => tool.enabled)
-
-    let rulesContent = '\n**<tool usage rules>**\n'
-    rulesContent += 'Available tools and their usage:\n\n'
-
-    // Separate tools into built-in and MCP categories
-    const builtInTools: ToolState[] = []
-    const mcpTools: ToolState[] = []
-
-    activeTools.forEach((tool) => {
-      const toolName = tool.toolSpec?.name || 'unknown'
-      if (isMcpTool(toolName)) {
-        mcpTools.push(tool)
-      } else {
-        builtInTools.push(tool)
-      }
-    })
-
-    // Add built-in tool descriptions individually
-    for (const tool of builtInTools) {
-      const toolName = tool.toolSpec?.name || 'unknown'
-      const displayName = toolName
-      const description = await descriptionProvider.getToolDescription(toolName)
-
-      rulesContent += `**${displayName}**\n${description}\n\n`
-    }
-
-    // Add MCP tools as a grouped block
-    if (mcpTools.length > 0) {
-      const mcpToolNames = mcpTools.map((tool) => tool.toolSpec?.name || 'unknown')
-      rulesContent += `**MCP Tools**\n`
-      rulesContent += `Available MCP tools: ${mcpToolNames.join(', ')}\n`
-      rulesContent += `External tools with specific functionality.\n`
-      rulesContent += `Refer to tool documentation for usage.\n\n`
-    }
-
-    // Add general guidelines
-    rulesContent += 'General guidelines:\n'
-    rulesContent += '- Use tools one at a time and wait for results\n'
-    rulesContent += '- Always use absolute paths starting from {{projectPath}}\n'
-    rulesContent += '- Request permission for destructive operations\n'
-    rulesContent += '- Handle errors gracefully with clear explanations\n\n'
-
-    rulesContent += '**</tool usage rules>**'
-
-    return rulesContent
-  }
-
   /**
    * Generate basic environment context sections
    */
@@ -142,15 +69,11 @@ If you are acting as a voice chat, please ignore this illustration rule.
   /**
    * Generate complete environment context with all sections
    */
-  static async generateEnvironmentContext(
-    enabledTools: ToolState[],
-    descriptionProvider: IToolDescriptionProvider,
-    contextSettings?: {
-      todoListInstruction?: boolean
-      projectRule?: boolean
-      visualExpressionRules?: boolean
-    }
-  ): Promise<string> {
+  static async generateEnvironmentContext(contextSettings?: {
+    todoListInstruction?: boolean
+    projectRule?: boolean
+    visualExpressionRules?: boolean
+  }): Promise<string> {
     // Default settings (all enabled)
     const defaultSettings = {
       todoListInstruction: true,
@@ -174,10 +97,6 @@ If you are acting as a voice chat, please ignore this illustration rule.
     if (settings.todoListInstruction) {
       context += this.generateTodoListInstruction()
     }
-
-    // Always add tool rules
-    const toolRules = await this.generateToolRules(enabledTools, descriptionProvider)
-    context += toolRules
 
     return context
   }

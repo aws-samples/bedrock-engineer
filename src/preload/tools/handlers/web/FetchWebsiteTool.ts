@@ -97,9 +97,6 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
   /**
    * System prompt description
    */
-  static readonly systemPromptDescription =
-    'Retrieve content from specific URLs.\nSupports content cleaning and line filtering.'
-
   /**
    * Validate input
    */

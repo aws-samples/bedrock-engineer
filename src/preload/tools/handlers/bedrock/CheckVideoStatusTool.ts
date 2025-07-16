@@ -70,9 +70,6 @@ export class CheckVideoStatusTool extends BaseTool<CheckVideoStatusInput, CheckV
   /**
    * System prompt description
    */
-  static readonly systemPromptDescription =
-    'Check video generation status using invocation ARN.\nUse this tool to monitor progress of video generation jobs.\nWhen status is "Completed", you can use downloadVideo to download the video.'
-
   /**
    * Validate input
    */

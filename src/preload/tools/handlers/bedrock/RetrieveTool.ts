@@ -43,7 +43,7 @@ interface RetrieveResult extends ToolResult {
 export class RetrieveTool extends BaseTool<RetrieveInput, RetrieveResult> {
   static readonly toolName = 'retrieve'
   static readonly toolDescription =
-    'Retrieve information from a knowledge base using Amazon Bedrock Knowledge Base. Use this when you need to get information from a knowledge base.'
+    'Retrieve information from a knowledge base using Amazon Bedrock Knowledge Base. Use this when you need to get information from a knowledge base.\n\nQuery knowledge bases for information. Use for domain-specific data retrieval. Only use Bedrock Knowledgebase from allowed list: {{knowledgeBases}}'
 
   readonly name = RetrieveTool.toolName
   readonly description = RetrieveTool.toolDescription
@@ -71,12 +71,6 @@ export class RetrieveTool extends BaseTool<RetrieveInput, RetrieveResult> {
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Query knowledge bases for information.\nUse for domain-specific data retrieval.\nOnly use Bedrock Knowledgebase from allowed list: {{knowledgeBases}}'
 
   /**
    * Validate input

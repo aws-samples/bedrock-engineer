@@ -215,7 +215,7 @@ class CameraStreamManager {
 export class CameraCaptureTool extends BaseTool<CameraCaptureInput, CameraCaptureResult> {
   static readonly toolName = 'cameraCapture'
   static readonly toolDescription =
-    'Capture images from PC camera using HTML5 getUserMedia API and save as an image file. Optionally analyze the captured image with AI to extract text content, identify objects, and provide detailed visual descriptions for analysis and documentation purposes.'
+    'Capture images from PC camera using HTML5 getUserMedia API and save as an image file. Optionally analyze the captured image with AI to extract text content, identify objects, and provide detailed visual descriptions for analysis and documentation purposes.\n\nCapture images from camera using HTML5 getUserMedia API for AI analysis. Useful for real-time visual input, object recognition, and document scanning. Available cameras: {{allowedCameras}}'
 
   readonly name = CameraCaptureTool.toolName
   readonly description = CameraCaptureTool.toolDescription
@@ -255,12 +255,6 @@ export class CameraCaptureTool extends BaseTool<CameraCaptureInput, CameraCaptur
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Capture images from camera using HTML5 getUserMedia API for AI analysis.\nUseful for real-time visual input, object recognition, and document scanning.\nAvailable cameras: {{allowedCameras}}'
 
   /**
    * Validate input parameters

@@ -28,7 +28,7 @@ interface ReadFilesInput {
 export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
   static readonly toolName = 'readFiles'
   static readonly toolDescription =
-    'Read the content of multiple files at the specified paths with line range filtering support. For Excel files, the content is converted to CSV format.'
+    'Read the content of multiple files at the specified paths with line range filtering support. For Excel files, the content is converted to CSV format.\n\nRead content from multiple files simultaneously. Supports line range filtering and Excel conversion.'
 
   readonly name = ReadFilesTool.toolName
   readonly description = ReadFilesTool.toolDescription
@@ -80,12 +80,6 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Read content from multiple files simultaneously.\nSupports line range filtering and Excel conversion.'
 
   /**
    * Validate input

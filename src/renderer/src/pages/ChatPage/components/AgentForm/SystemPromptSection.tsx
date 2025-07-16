@@ -4,8 +4,8 @@ import { FiZap, FiEye, FiEyeOff, FiChevronDown, FiChevronUp, FiMic } from 'react
 import { ToggleSwitch } from 'flowbite-react'
 import { SystemPromptSectionProps } from './types'
 import { replacePlaceholders } from '../../../../../../common/utils/placeholderUtils'
-import { getEnvironmentContext } from '../../constants/AGENTS_ENVIRONMENT_CONTEXT'
 import { motion } from 'framer-motion'
+import { SystemPromptBuilder } from '@/common/agents/toolRuleGenerator'
 
 const PLACEHOLDERS = [
   { key: 'projectPath', translationKey: 'projectPathPlaceholder' },
@@ -58,8 +58,7 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
     const loadEnvironmentContext = async () => {
       try {
         const path = projectPath || t('noProjectPath')
-        const environmentContext = await getEnvironmentContext(
-          tools || [],
+        const environmentContext = await SystemPromptBuilder.generateEnvironmentContext(
           environmentContextSettings
         )
         const replacedContext = replacePlaceholders(environmentContext, {

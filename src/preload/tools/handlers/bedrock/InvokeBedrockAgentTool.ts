@@ -55,7 +55,7 @@ export class InvokeBedrockAgentTool extends BaseTool<
 > {
   static readonly toolName = 'invokeBedrockAgent'
   static readonly toolDescription =
-    'Invoke an Amazon Bedrock Agent using the specified agent ID and alias ID. Use this when you need to interact with an agent.'
+    'Invoke an Amazon Bedrock Agent using the specified agent ID and alias ID. Use this when you need to interact with an agent.\n\nInteract with AWS Bedrock agents. Only use Bedrock Agents from allowed list: {{bedrockAgents}}'
 
   readonly name = InvokeBedrockAgentTool.toolName
   readonly description = InvokeBedrockAgentTool.toolDescription
@@ -109,12 +109,6 @@ export class InvokeBedrockAgentTool extends BaseTool<
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Interact with AWS Bedrock agents.\nOnly use Bedrock Agents from allowed list: {{bedrockAgents}}'
 
   /**
    * Validate input - matches legacy implementation

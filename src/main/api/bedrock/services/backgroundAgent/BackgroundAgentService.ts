@@ -22,7 +22,6 @@ import { ToolInput, ToolName, ToolResult } from '../../../../../types/tools'
 import { agentHandlers } from '../../../../handlers/agent-handlers'
 import { CustomAgent, ToolState, EnvironmentContextSettings } from '../../../../../types/agent-chat'
 import { pubSubManager } from '../../../../lib/pubsub-manager'
-import { MainToolDescriptionProvider } from './MainToolDescriptionProvider'
 import { MainToolSpecProvider } from './MainToolSpecProvider'
 import { v4 as uuidv4 } from 'uuid'
 import { BrowserWindow, ipcMain } from 'electron'
@@ -40,8 +39,7 @@ export class BackgroundAgentService {
   ) => void
   // キャッシュポイント追跡用マップ（セッションID → キャッシュポイント位置）
   private cachePointMap: Map<string, number | undefined> = new Map()
-  // 動的ツール説明プロバイダー
-  private toolDescriptionProvider: MainToolDescriptionProvider
+
   // ツール仕様プロバイダー
   private toolSpecProvider: MainToolSpecProvider
 
@@ -50,7 +48,6 @@ export class BackgroundAgentService {
     this.bedrockService = new BedrockService(context)
     this.sessionManager = new BackgroundChatSessionManager()
 
-    this.toolDescriptionProvider = new MainToolDescriptionProvider()
     this.toolSpecProvider = new MainToolSpecProvider()
 
     logger.info('BackgroundAgentService initialized (using persistent sessions)')
@@ -135,9 +132,25 @@ export class BackgroundAgentService {
    * エージェント固有のツール設定からToolStateを生成
    * IPC経由でpreloadツール仕様を取得
    */
-  private async generateToolSpecs(toolNames: ToolName[]): Promise<ToolState[]> {
+  private async generateToolSpecs(
+    toolNames: ToolName[],
+    agent: CustomAgent,
+    projectDirectory?: string
+  ): Promise<ToolState[]> {
     try {
       const toolStates: ToolState[] = []
+
+      // プレースホルダー値を準備
+      const workingDirectory = projectDirectory || this.context.store.get('projectPath') || ''
+      const placeholderValues = {
+        projectPath: workingDirectory,
+        allowedCommands: agent.allowedCommands || [],
+        allowedWindows: agent.allowedWindows || [],
+        allowedCameras: agent.allowedCameras || [],
+        knowledgeBases: agent.knowledgeBases || [],
+        bedrockAgents: agent.bedrockAgents || [],
+        flows: agent.flows || []
+      }
 
       // IPC経由でpreloadツール仕様を取得
       const allToolSpecs = await this.toolSpecProvider.getPreloadToolSpecs()
@@ -149,7 +162,13 @@ export class BackgroundAgentService {
         if (toolSpec && toolSpec.toolSpec) {
           const toolState: ToolState = {
             enabled: true,
-            toolSpec: toolSpec.toolSpec
+            toolSpec: {
+              ...toolSpec.toolSpec,
+              description: replacePlaceholders(
+                toolSpec.toolSpec.description || '',
+                placeholderValues
+              )
+            }
           }
           toolStates.push(toolState)
           logger.debug('Found preload tool spec', { toolName })
@@ -162,7 +181,7 @@ export class BackgroundAgentService {
             enabled: true,
             toolSpec: {
               name: toolName,
-              description: `${toolName} tool`,
+              description: replacePlaceholders(`${toolName} tool`, placeholderValues),
               inputSchema: {
                 json: {
                   type: 'object',
@@ -197,31 +216,19 @@ export class BackgroundAgentService {
    * 環境コンテキストを生成する
    */
   private async getEnvironmentContext(
-    enabledTools: ToolState[],
     contextSettings?: EnvironmentContextSettings
   ): Promise<string> {
-    return await SystemPromptBuilder.generateEnvironmentContext(
-      enabledTools,
-      this.toolDescriptionProvider,
-      contextSettings
-    )
+    return await SystemPromptBuilder.generateEnvironmentContext(contextSettings)
   }
 
   /**
    * エージェントのシステムプロンプトを構築する
    */
-  private async buildSystemPrompt(
-    agent: CustomAgent,
-    toolStates: ToolState[],
-    projectDirectory?: string
-  ): Promise<string> {
+  private async buildSystemPrompt(agent: CustomAgent, projectDirectory?: string): Promise<string> {
     if (!agent.system) return ''
 
     // 環境コンテキストを生成
-    const environmentContext = await this.getEnvironmentContext(
-      toolStates,
-      agent.environmentContextSettings
-    )
+    const environmentContext = await this.getEnvironmentContext(agent.environmentContextSettings)
 
     // システムプロンプトと環境コンテキストを結合
     const fullPrompt = agent.system + '\n\n' + environmentContext
@@ -257,7 +264,11 @@ export class BackgroundAgentService {
     }
 
     // エージェント固有のツール設定を生成
-    const toolStates = await this.generateToolSpecs(agent.tools || [])
+    const toolStates = await this.generateToolSpecs(
+      agent.tools || [],
+      agent,
+      config.projectDirectory
+    )
 
     // セッション履歴を取得
     const conversationHistory = this.sessionManager.getHistory(sessionId)
@@ -321,7 +332,7 @@ export class BackgroundAgentService {
       }
 
       // エージェントのシステムプロンプトを構築（環境コンテキスト＋プレースホルダー置換）
-      const systemPrompt = await this.buildSystemPrompt(agent, toolStates, config.projectDirectory)
+      const systemPrompt = await this.buildSystemPrompt(agent, config.projectDirectory)
       const system = systemPrompt ? [{ text: systemPrompt }] : []
 
       logger.debug('System prompt built', {
@@ -856,18 +867,14 @@ export class BackgroundAgentService {
         throw new Error(`Agent not found: ${task.agentId}`)
       }
 
-      // エージェント固有のツール設定を生成
-      const toolStates = await this.generateToolSpecs(agent.tools || [])
-
       // システムプロンプトを構築（プレースホルダー置換済み）
-      const systemPrompt = await this.buildSystemPrompt(agent, toolStates, task.projectDirectory)
+      const systemPrompt = await this.buildSystemPrompt(agent, task.projectDirectory)
 
       logger.debug('Task system prompt generated', {
         taskId,
         agentId: task.agentId,
         agentName: agent.name,
-        systemPromptLength: systemPrompt.length,
-        toolCount: toolStates.length
+        systemPromptLength: systemPrompt.length
       })
 
       return systemPrompt

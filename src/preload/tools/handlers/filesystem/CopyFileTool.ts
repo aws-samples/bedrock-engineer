@@ -24,7 +24,7 @@ interface CopyFileInput {
 export class CopyFileTool extends BaseTool<CopyFileInput, string> {
   static readonly toolName = 'copyFile'
   static readonly toolDescription =
-    'Copy a file from one location to another. Use this when you need to duplicate a file in the project structure.'
+    'Copy a file from one location to another. Use this when you need to duplicate a file in the project structure.\n\nCopy files to new locations. Preserves original file content.'
 
   readonly name = CopyFileTool.toolName
   readonly description = CopyFileTool.toolDescription
@@ -52,12 +52,6 @@ export class CopyFileTool extends BaseTool<CopyFileInput, string> {
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Copy files to new locations.\nPreserves original file content.'
 
   /**
    * Validate input

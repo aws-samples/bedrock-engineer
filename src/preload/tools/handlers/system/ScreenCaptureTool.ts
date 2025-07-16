@@ -41,7 +41,7 @@ interface ScreenCaptureResult extends ToolResult {
 export class ScreenCaptureTool extends BaseTool<ScreenCaptureInput, ScreenCaptureResult> {
   static readonly toolName = 'screenCapture'
   static readonly toolDescription =
-    'Capture the current screen and save as an image file. Optionally analyze the captured image with AI to extract text content, identify UI elements, and provide detailed visual descriptions for debugging and documentation purposes.'
+    'Capture the current screen and save as an image file. Optionally analyze the captured image with AI to extract text content, identify UI elements, and provide detailed visual descriptions for debugging and documentation purposes.\n\nCapture screen for AI analysis. Useful for debugging, UI analysis, and creating documentation. Available windows for screen capture:{{allowedWindows}}'
 
   readonly name = ScreenCaptureTool.toolName
   readonly description = ScreenCaptureTool.toolDescription
@@ -70,12 +70,6 @@ export class ScreenCaptureTool extends BaseTool<ScreenCaptureInput, ScreenCaptur
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Capture screen for AI analysis.\nUseful for debugging, UI analysis, and creating documentation.\nAvailable windows for screen capture:{{allowedWindows}}'
 
   /**
    * Validate input parameters
