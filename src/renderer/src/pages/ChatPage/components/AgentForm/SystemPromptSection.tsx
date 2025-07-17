@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FiZap, FiEye, FiEyeOff, FiChevronDown, FiChevronUp, FiMic } from 'react-icons/fi'
 import { ToggleSwitch } from 'flowbite-react'
 import { SystemPromptSectionProps } from './types'
-import { replacePlaceholders } from '../../utils/placeholder'
-import { getEnvironmentContext } from '../../constants/AGENTS_ENVIRONMENT_CONTEXT'
+import { replacePlaceholders } from '../../../../../../common/utils/placeholderUtils'
 import { motion } from 'framer-motion'
+import { SystemPromptBuilder } from '@/common/agents/toolRuleGenerator'
 
 const PLACEHOLDERS = [
   { key: 'projectPath', translationKey: 'projectPathPlaceholder' },
@@ -39,6 +39,7 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
   const { t } = useTranslation()
   const [showPreview, setShowPreview] = useState(false)
   const [showAdditionalInstructionForm, setShowAdditionalInstructionForm] = useState(false)
+  const [environmentContextText, setEnvironmentContextText] = useState<string>('')
 
   const getPreviewText = (text: string): string => {
     if (!text) return text
@@ -52,17 +53,39 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
     })
   }
 
-  const getEnvironmentContextText = (): string => {
-    const path = projectPath || t('noProjectPath')
-    const environmentContext = getEnvironmentContext(tools || [], environmentContextSettings)
-    return replacePlaceholders(environmentContext, {
-      projectPath: path,
-      allowedCommands,
-      knowledgeBases,
-      bedrockAgents,
-      flows
-    })
-  }
+  // Load environment context asynchronously
+  useEffect(() => {
+    const loadEnvironmentContext = async () => {
+      try {
+        const path = projectPath || t('noProjectPath')
+        const environmentContext = await SystemPromptBuilder.generateEnvironmentContext(
+          environmentContextSettings
+        )
+        const replacedContext = replacePlaceholders(environmentContext, {
+          projectPath: path,
+          allowedCommands,
+          knowledgeBases,
+          bedrockAgents,
+          flows
+        })
+        setEnvironmentContextText(replacedContext)
+      } catch (error) {
+        console.error('Failed to load environment context:', error)
+        setEnvironmentContextText('Error loading environment context')
+      }
+    }
+
+    loadEnvironmentContext()
+  }, [
+    tools,
+    environmentContextSettings,
+    projectPath,
+    allowedCommands,
+    knowledgeBases,
+    bedrockAgents,
+    flows,
+    t
+  ])
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -241,7 +264,7 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
                   {t('autoAddedEnvironmentContext')}
                 </p>
                 <div className="whitespace-pre-wrap bg-gray-100 dark:bg-gray-700/50 p-3 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300">
-                  {getEnvironmentContextText()}
+                  {environmentContextText}
                 </div>
               </div>
             </div>

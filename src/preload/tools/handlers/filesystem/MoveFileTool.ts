@@ -24,7 +24,7 @@ interface MoveFileInput {
 export class MoveFileTool extends BaseTool<MoveFileInput, string> {
   static readonly toolName = 'moveFile'
   static readonly toolDescription =
-    'Move a file from one location to another. Use this when you need to organize files in the project structure.'
+    'Move a file from one location to another. Use this when you need to organize files in the project structure.\n\nMove files between locations. Use absolute paths for source and destination.'
 
   readonly name = MoveFileTool.toolName
   readonly description = MoveFileTool.toolDescription
@@ -52,12 +52,6 @@ export class MoveFileTool extends BaseTool<MoveFileInput, string> {
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Move files between locations.\nUse absolute paths for source and destination.'
 
   /**
    * Validate input

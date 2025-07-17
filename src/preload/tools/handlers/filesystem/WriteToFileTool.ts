@@ -24,7 +24,7 @@ interface WriteToFileInput {
 export class WriteToFileTool extends BaseTool<WriteToFileInput, string> {
   static readonly toolName = 'writeToFile'
   static readonly toolDescription =
-    'Write content to an existing file at the specified path. Use this when you need to add or update content in an existing file. \n !IMPORTANT: Be careful not to exceed the output_tokens limit.'
+    'Write content to an existing file at the specified path. Use this when you need to add or update content in an existing file. \n !IMPORTANT: Be careful not to exceed the output_tokens limit.\n\nWrite content to files in your project. Always provide complete file content.'
 
   readonly name = WriteToFileTool.toolName
   readonly description = WriteToFileTool.toolDescription
@@ -52,12 +52,6 @@ export class WriteToFileTool extends BaseTool<WriteToFileInput, string> {
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Write content to files in your project.\nAlways provide complete file content.'
 
   /**
    * Validate input

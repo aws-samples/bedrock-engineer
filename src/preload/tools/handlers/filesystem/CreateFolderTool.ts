@@ -22,7 +22,7 @@ interface CreateFolderInput {
 export class CreateFolderTool extends BaseTool<CreateFolderInput, string> {
   static readonly toolName = 'createFolder'
   static readonly toolDescription =
-    'Create a new folder at the specified path. Use this when you need to create a new directory in the project structure.'
+    'Create a new folder at the specified path. Use this when you need to create a new directory in the project structure.\n\nCreate directories in your project. Use absolute paths starting from {{projectPath}}.'
 
   readonly name = CreateFolderTool.toolName
   readonly description = CreateFolderTool.toolDescription
@@ -46,12 +46,6 @@ export class CreateFolderTool extends BaseTool<CreateFolderInput, string> {
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Create directories in your project.\nUse absolute paths starting from {{projectPath}}.'
 
   /**
    * Validate input

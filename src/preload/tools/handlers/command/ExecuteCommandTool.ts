@@ -53,7 +53,7 @@ let commandServiceState: CommandServiceState | null = null
 export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCommandResult> {
   static readonly toolName = 'executeCommand'
   static readonly toolDescription =
-    'Execute a command or send input to a running process. First execute the command to get a PID, then use that PID to send input if needed. Usage: 1) First call with command and cwd to start process, 2) If input is required, call again with pid and stdin.'
+    'Execute a command or send input to a running process. First execute the command to get a PID, then use that PID to send input if needed. Usage: 1) First call with command and cwd to start process, 2) If input is required, call again with pid and stdin.\n\nRun system commands with user permission. Only use commands from allowed list: {{allowedCommands}}.'
 
   readonly name = ExecuteCommandTool.toolName
   readonly description = ExecuteCommandTool.toolDescription
@@ -88,12 +88,6 @@ export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCom
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Run system commands with user permission.\nOnly use commands from allowed list: {{allowedCommands}}.'
 
   /**
    * Get or create command service instance
@@ -216,6 +210,14 @@ export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCom
         success: true,
         name: 'executeCommand',
         message: `Command executed: ${JSON.stringify(input)}`,
+        result: {
+          stdout: result.stdout,
+          stderr: result.stderr,
+          exitCode: result.exitCode,
+          processInfo: result.processInfo,
+          requiresInput: result.requiresInput,
+          prompt: result.prompt
+        },
         ...result
       }
     } catch (error) {

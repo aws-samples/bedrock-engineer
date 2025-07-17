@@ -107,9 +107,6 @@ export class GenerateVideoTool extends BaseTool<GenerateVideoInput, GenerateVide
   /**
    * System prompt description
    */
-  static readonly systemPromptDescription =
-    'Generate video using Amazon Nova Reel AI model (non-blocking).\nSupports Text-to-Video and Image-to-Video generation.\n\nModes:\n- TEXT_VIDEO (6s): Text only or single image input\n- MULTI_SHOT_AUTOMATED (12-120s): Text only, multiple shots\n- MULTI_SHOT_MANUAL (12-120s): Multiple images with individual prompts\n\nImage requirements: 1280x720 resolution, PNG/JPEG format.\nRequires S3 configuration in tool settings.\nReturns immediately with job ARN for status tracking.\nUse checkVideoStatus to monitor progress and downloadVideo when completed.'
-
   /**
    * Validate input
    */

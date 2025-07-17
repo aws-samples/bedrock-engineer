@@ -11,7 +11,7 @@ import {
 import { ToolName } from 'src/types/tools'
 
 import { CustomAgent } from '@/types/agent-chat'
-import { replacePlaceholders } from '@renderer/pages/ChatPage/utils/placeholder'
+import { replacePlaceholders } from '../../../common/utils/placeholderUtils'
 import { DEFAULT_AGENTS } from '@renderer/pages/ChatPage/constants/DEFAULT_AGENTS'
 import {
   InferenceParameters,
@@ -27,7 +27,7 @@ import { AgentCategory } from '@/types/agent-chat'
 import { getToolsForCategory } from '../constants/defaultToolSets'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { CodeInterpreterContainerConfig } from 'src/preload/tools/handlers/interpreter/types'
-import { getEnvironmentContext } from '@renderer/pages/ChatPage/constants/AGENTS_ENVIRONMENT_CONTEXT'
+import { SystemPromptBuilder } from '@/common/agents/toolRuleGenerator'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -396,6 +396,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Selected Agent Settings
   const [selectedAgentId, setStateSelectedAgentId] = useState<string>('softwareAgent')
+  const [systemPrompt, setSystemPrompt] = useState<string>('')
 
   // Shell Settings
   const [shell, setStateShell] = useState<string>('/bin/bash')
@@ -1278,18 +1279,45 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     (agentId: string): ToolState[] => {
       // 現在選択されているエージェントを見つける
       const agent = allAgents.find((a) => a.id === agentId)
+
+      // プレースホルダー値を準備
+      const placeholderValues = {
+        projectPath,
+        allowedCommands: agent?.allowedCommands || [],
+        allowedWindows: agent?.allowedWindows || [],
+        allowedCameras: agent?.allowedCameras || [],
+        knowledgeBases: agent?.knowledgeBases || [],
+        bedrockAgents: agent?.bedrockAgents || [],
+        flows: agent?.flows || []
+      }
+
       // MCP ツールを取得（常に有効）
       const mcpTools = agent?.mcpTools || []
       const agentMcpTools = mcpTools.map((tool) => ({
         ...tool,
-        enabled: true // MCP ツールは常に有効
-      }))
+        enabled: true, // MCP ツールは常に有効
+        toolSpec: tool.toolSpec
+          ? {
+              ...tool.toolSpec,
+              description: replacePlaceholders(tool.toolSpec.description || '', placeholderValues)
+            }
+          : undefined
+      })) as ToolState[]
 
       // 標準ツールのみを処理（MCP ツールは別途管理）
       // エージェント固有のツール設定がある場合
       if (agent && agent.tools && agent.tools.length > 0) {
         // 標準ツールの ToolState[] を生成（デフォルトは無効）
-        const standardToolStates = tools.map((tool) => ({ ...tool, enabled: false }))
+        const standardToolStates = tools.map((tool) => ({
+          ...tool,
+          enabled: false,
+          toolSpec: tool.toolSpec
+            ? {
+                ...tool.toolSpec,
+                description: replacePlaceholders(tool.toolSpec.description || '', placeholderValues)
+              }
+            : undefined
+        })) as ToolState[]
 
         // エージェントのツール名リストに含まれる標準ツールを有効化
         const enabledStandardTools = standardToolStates.map((toolState) => {
@@ -1310,7 +1338,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // MCP ツールだけを返す
       return agentMcpTools
     },
-    [allAgents, tools]
+    [allAgents, tools, projectPath]
   )
 
   // エージェント固有の許可コマンドを取得する関数
@@ -1365,27 +1393,39 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [allAgents]
   )
 
-  // エージェント固有の設定を使用
-  const systemPrompt = useMemo(() => {
-    if (!currentAgent?.system) return ''
+  // Load system prompt asynchronously when agent or dependencies change
+  useEffect(() => {
+    const loadSystemPrompt = async () => {
+      if (!currentAgent?.system) {
+        setSystemPrompt('')
+        return
+      }
 
-    // 現在のエージェントの有効なツールを取得
-    const agentTools = getAgentTools(selectedAgentId)
-    // エージェント固有の環境コンテキスト設定を取得
-    const systemPromptContext = getEnvironmentContext(
-      agentTools,
-      currentAgent?.environmentContextSettings
-    )
+      try {
+        // エージェント固有の環境コンテキスト設定を取得
+        const systemPromptContext = await SystemPromptBuilder.generateEnvironmentContext(
+          currentAgent?.environmentContextSettings,
+          planMode ? 'PLAN MODE' : 'ACT MODE'
+        )
 
-    return replacePlaceholders(currentAgent.system + '\n\n' + systemPromptContext, {
-      projectPath,
-      allowedCommands: allAgents.find((a) => a.id === selectedAgentId)?.allowedCommands || [],
-      allowedWindows: allAgents.find((a) => a.id === selectedAgentId)?.allowedWindows || [],
-      allowedCameras: allAgents.find((a) => a.id === selectedAgentId)?.allowedCameras || [],
-      knowledgeBases: allAgents.find((a) => a.id === selectedAgentId)?.knowledgeBases || [],
-      bedrockAgents: allAgents.find((a) => a.id === selectedAgentId)?.bedrockAgents || [],
-      flows: allAgents.find((a) => a.id === selectedAgentId)?.flows || []
-    })
+        const fullPrompt = replacePlaceholders(currentAgent.system + '\n\n' + systemPromptContext, {
+          projectPath,
+          allowedCommands: allAgents.find((a) => a.id === selectedAgentId)?.allowedCommands || [],
+          allowedWindows: allAgents.find((a) => a.id === selectedAgentId)?.allowedWindows || [],
+          allowedCameras: allAgents.find((a) => a.id === selectedAgentId)?.allowedCameras || [],
+          knowledgeBases: allAgents.find((a) => a.id === selectedAgentId)?.knowledgeBases || [],
+          bedrockAgents: allAgents.find((a) => a.id === selectedAgentId)?.bedrockAgents || [],
+          flows: allAgents.find((a) => a.id === selectedAgentId)?.flows || []
+        })
+
+        setSystemPrompt(fullPrompt)
+      } catch (error) {
+        console.error('Failed to load system prompt:', error)
+        setSystemPrompt('')
+      }
+    }
+
+    loadSystemPrompt()
   }, [currentAgent, selectedAgentId, projectPath, allAgents, getAgentTools])
 
   // エージェントツール設定を更新する関数

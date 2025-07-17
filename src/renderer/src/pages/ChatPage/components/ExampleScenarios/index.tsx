@@ -2,7 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Scenario } from '@/types/agent-chat'
 import { useTranslation } from 'react-i18next'
-import { replacePlaceholders } from '../../utils/placeholder'
+import { replacePlaceholders } from '../../../../../../common/utils/placeholderUtils'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 
 type ExampleScenariosProps = {

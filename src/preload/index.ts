@@ -10,6 +10,7 @@ import { ipcClient } from './ipc-client'
 import { executeTool } from './tools'
 import { ToolResult } from '../types/tools'
 import { ToolMetadataCollector } from './tools/registry'
+import { getSystemPromptDescriptions } from './tools/common/ToolMetadataHelper'
 
 // Initialize preload logger with category
 const log = createRendererCategoryLogger('preload')
@@ -117,6 +118,35 @@ if (process.contextIsolated) {
 
             // エラー時は空配列を返す
             ipcRenderer.send(`tool-specs-response-${data.requestId}`, [])
+          }
+        })
+
+        // ツール説明取得用のIPCハンドラー
+        ipcRenderer.on('get-tool-descriptions-request', async (_event, data) => {
+          try {
+            log.debug('Received tool descriptions request', {
+              requestId: data.requestId
+            })
+
+            // ToolMetadataHelperからシステムプロンプト説明を取得
+            const descriptions = getSystemPromptDescriptions()
+
+            log.debug('Sending tool descriptions response', {
+              requestId: data.requestId,
+              descriptionsCount: Object.keys(descriptions).length
+            })
+
+            // レスポンスを送信
+            ipcRenderer.send(`tool-descriptions-response-${data.requestId}`, descriptions)
+          } catch (error: any) {
+            log.error('Failed to get tool descriptions', {
+              requestId: data.requestId,
+              error: error.message,
+              stack: error.stack
+            })
+
+            // エラー時は空オブジェクトを返す
+            ipcRenderer.send(`tool-descriptions-response-${data.requestId}`, {})
           }
         })
       }

@@ -52,7 +52,7 @@ interface TavilySearchResult extends ToolResult {
 export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchResult> {
   static readonly toolName = 'tavilySearch'
   static readonly toolDescription =
-    'Perform a web search using Tavily API to get up-to-date information or additional context. Use this when you need current information or feel a search could provide a better answer.'
+    'Perform a web search using Tavily API to get up-to-date information or additional context. Use this when you need current information or feel a search could provide a better answer.\n\nSearch the web for current information. Always cite sources and provide URLs.'
 
   readonly name = TavilySearchTool.toolName
   readonly description = TavilySearchTool.toolDescription
@@ -87,12 +87,6 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Search the web for current information.\nAlways cite sources and provide URLs.'
 
   /**
    * Validate input

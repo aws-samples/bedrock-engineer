@@ -109,7 +109,10 @@ const SettingPage = {
   'Send the message': 'メッセージを送信',
   'Start a new line (use': '改行（',
   'to send)': 'で送信）',
-  'Invalid model': '無効なモデル'
+  'Invalid model': '無効なモデル',
+  'Complete permissions for all Bedrock Engineer features including translation and video generation':
+    '翻訳と動画生成を含む、Bedrock Engineer の全機能に対する完全な権限',
+  'Minimal permissions for basic LLM interactions only': '基本的な LLM 対話のみに必要な最小限の権限'
 }
 
 const StepFunctionsGeneratorPage = {

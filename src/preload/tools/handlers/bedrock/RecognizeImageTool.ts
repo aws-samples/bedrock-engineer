@@ -39,7 +39,7 @@ interface RecognizeImageResult extends ToolResult {
 export class RecognizeImageTool extends BaseTool<RecognizeImageInput, RecognizeImageResult> {
   static readonly toolName = 'recognizeImage'
   static readonly toolDescription =
-    "Analyze and describe multiple images (up to 5) using Amazon Bedrock's Claude vision capabilities. The tool processes images in parallel and returns detailed descriptions."
+    "Analyze and describe multiple images (up to 5) using Amazon Bedrock's Claude vision capabilities. The tool processes images in parallel and returns detailed descriptions.\n\nAnalyze and describe image content. Supports multiple images simultaneously."
 
   readonly name = RecognizeImageTool.toolName
   readonly description = RecognizeImageTool.toolDescription
@@ -72,12 +72,6 @@ export class RecognizeImageTool extends BaseTool<RecognizeImageInput, RecognizeI
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Analyze and describe image content.\nSupports multiple images simultaneously.'
 
   /**
    * Validate input

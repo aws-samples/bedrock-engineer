@@ -38,6 +38,8 @@ export class ApplyDiffEditTool extends BaseTool<ApplyDiffEditInput, ApplyDiffEdi
   static readonly toolName = 'applyDiffEdit'
   static readonly toolDescription = `Apply a diff edit to a file. This tool replaces the specified original text with updated text at the exact location in the file. Use this when you need to make precise modifications to existing file content. The tool ensures that only the specified text is replaced, keeping the rest of the file intact.
 
+Make precise edits to existing files. Requires exact text matching including whitespace.
+
 Example:
 {
    path: '/path/to/file.ts',
@@ -79,12 +81,6 @@ Example:
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Make precise edits to existing files.\nRequires exact text matching including whitespace.'
 
   /**
    * Validate input

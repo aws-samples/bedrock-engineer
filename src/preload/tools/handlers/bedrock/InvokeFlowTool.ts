@@ -48,7 +48,7 @@ interface InvokeFlowResult extends ToolResult {
 export class InvokeFlowTool extends BaseTool<InvokeFlowInput, InvokeFlowResult> {
   static readonly toolName = 'invokeFlow'
   static readonly toolDescription =
-    'Invoke AWS Bedrock Flow to execute the specified flow. Flows can be used to automate workflows consisting of multiple steps.'
+    'Invoke AWS Bedrock Flow to execute the specified flow. Flows can be used to automate workflows consisting of multiple steps.\n\nExecute AWS Bedrock Flows. Only use Bedrock Flows from allowed list: {{bedrockFlows}}'
 
   readonly name = InvokeFlowTool.toolName
   readonly description = InvokeFlowTool.toolDescription
@@ -100,12 +100,6 @@ export class InvokeFlowTool extends BaseTool<InvokeFlowInput, InvokeFlowResult> 
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'Execute AWS Bedrock Flows.\nOnly use Bedrock Flows from allowed list: {{bedrockFlows}}'
 
   /**
    * Parse input if it's a string

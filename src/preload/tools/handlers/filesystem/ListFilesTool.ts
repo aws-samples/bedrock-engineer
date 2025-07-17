@@ -30,7 +30,7 @@ interface ListFilesInput {
 export class ListFilesTool extends BaseTool<ListFilesInput, string> {
   static readonly toolName = 'listFiles'
   static readonly toolDescription =
-    'List the entire directory structure, including all subdirectories and files, in a hierarchical format with line range filtering support. Use maxDepth to limit directory depth and lines to filter output.'
+    'List the entire directory structure, including all subdirectories and files, in a hierarchical format with line range filtering support. Use maxDepth to limit directory depth and lines to filter output.\n\nList directory contents with optional filtering. Use to understand project structure before modifications.'
 
   readonly name = ListFilesTool.toolName
   readonly description = ListFilesTool.toolDescription
@@ -89,12 +89,6 @@ export class ListFilesTool extends BaseTool<ListFilesInput, string> {
       }
     }
   } as const
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription =
-    'List directory contents with optional filtering.\nUse to understand project structure before modifications.'
 
   /**
    * Validate input

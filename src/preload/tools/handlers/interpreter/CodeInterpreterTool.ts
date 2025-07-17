@@ -164,32 +164,6 @@ Optional parameter to show only tasks with specific status.`,
     }
   } as const
 
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription = `Execute Python code in secure Docker environment with no internet access.
-Two environments available: "basic" and "datascience" (default).
-
-**Basic Environment Libraries:**
-- Core: numpy==1.26.2, pandas==2.1.4
-- Visualization: matplotlib==3.8.2
-- Web: requests==2.31.0
-- System: gcc, libffi-dev
-
-**Data Science Environment Libraries:**
-- Scientific: numpy==1.26.2, pandas==2.1.4, scipy==1.11.4
-- Visualization: matplotlib==3.8.2, seaborn==0.13.0, plotly==5.17.0
-- ML/Stats: scikit-learn==1.3.2, statsmodels==0.14.0
-- Data Processing: openpyxl==3.1.2, beautifulsoup4==4.12.2, lxml==4.9.3
-- Image: pillow==10.1.0
-- Utils: ipython==8.18.1, requests==2.31.0
-- System: gcc, g++, image processing libraries
-
-**File Handling:**
-- Input files: Mounted at /data/ (read-only)
-- Output files: Save to /workspace (persisted on host)
-- Environment variables: MPLBACKEND='Agg', PYTHONUNBUFFERED='1'`
-
   private dockerExecutor: DockerExecutor
   private fileManager: FileManager
   private taskManager: TaskManager
