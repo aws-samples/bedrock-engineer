@@ -1404,7 +1404,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         // エージェント固有の環境コンテキスト設定を取得
         const systemPromptContext = await SystemPromptBuilder.generateEnvironmentContext(
-          currentAgent?.environmentContextSettings
+          currentAgent?.environmentContextSettings,
+          planMode ? 'PLAN MODE' : 'ACT MODE'
         )
 
         const fullPrompt = replacePlaceholders(currentAgent.system + '\n\n' + systemPromptContext, {
