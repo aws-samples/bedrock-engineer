@@ -640,23 +640,20 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                       </div>
 
                       <p className="mb-4 text-gray-700 dark:text-gray-200">
-                        Task management and workflow tracking tools for systematic project
-                        management.
+                        {t('tool info.todo.description')}
                       </p>
 
                       <div className="bg-blue-50 dark:bg-gray-800/80 dark:border dark:border-blue-700 p-4 rounded-md mt-4">
                         <h5 className="font-medium mb-2 dark:text-blue-300">{t('Tool Group')}</h5>
                         <p className="text-sm text-gray-700 dark:text-gray-200 mb-3">
-                          This tool enables two related functions:
+                          {t('tool info.todo.functions')}
                         </p>
                         <ul className="text-sm text-gray-700 dark:text-gray-200 space-y-2">
                           <li>
-                            • <strong>todoInit</strong>: Initialize or replace a todo list for
-                            systematic workflow management
+                            • <strong>todoInit</strong>: {t('tool info.todo.todoInit')}
                           </li>
                           <li>
-                            • <strong>todoUpdate</strong>: Update tasks in the todo list (status,
-                            description)
+                            • <strong>todoUpdate</strong>: {t('tool info.todo.todoUpdate')}
                           </li>
                         </ul>
                       </div>
@@ -664,9 +661,7 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                       <div className="bg-green-50 dark:bg-gray-800/80 dark:border dark:border-green-700 p-4 rounded-md mt-4">
                         <h5 className="font-medium mb-2 dark:text-green-300">{t('Usage')}</h5>
                         <p className="text-sm text-gray-700 dark:text-gray-200">
-                          Use for complex workflows requiring multiple sequential steps or when
-                          users explicitly request task tracking. Both tools work together to
-                          provide comprehensive task management capabilities.
+                          {t('tool info.todo.usage')}
                         </p>
                       </div>
                     </div>

@@ -167,6 +167,17 @@ export const agentToolsSettings = {
     'MCP Tool Info': 'MCP Tool Info',
     'MCP tools are provided by Model Context Protocol servers. Click the JSON button above to view the full tool specification.':
       'MCP tools are provided by Model Context Protocol servers. Click the JSON button above to view the full tool specification.',
+    // TODO tool specific translations
+    'tool info.todo.description':
+      'Task management and workflow tracking tools for systematic project management.',
+    'tool info.todo.functions': 'This tool enables two related functions:',
+    'tool info.todo.todoInit':
+      'Initialize or replace a todo list for systematic workflow management',
+    'tool info.todo.todoUpdate': 'Update tasks in the todo list (status, description)',
+    'tool info.todo.usage':
+      'Use for complex workflows requiring multiple sequential steps or when users explicitly request task tracking. Both tools work together to provide comprehensive task management capabilities.',
+    'Tool Group': 'Tool Group',
+    Usage: 'Usage',
     // CameraCapture tool specific translations
     'tool info.cameraCapture.description':
       'The cameraCapture tool captures images from PC camera and saves them as image files. When a recognition prompt is provided, the captured image will be automatically analyzed with AI to extract text content, identify objects, and provide detailed visual descriptions for analysis and documentation purposes.',
@@ -264,6 +275,7 @@ export const agentToolsSettings = {
       executeCommand: 'Execute a command or send input to a running process',
       invokeFlow: 'Execute an AWS Bedrock Flow to automate multi-step workflows',
       think: 'Use enhanced reasoning for complex problem solving',
+      todo: 'Task management and workflow tracking tools for systematic project management',
       cameraCapture: 'Capture images from PC camera and analyze with AI vision capabilities',
       codeInterpreter: 'Execute Python code with data analysis capabilities and file operations',
       screenCapture: 'Capture screenshots of the screen for analysis and documentation'
@@ -434,6 +446,16 @@ export const agentToolsSettings = {
     'MCP Tool Info': 'MCPツール情報',
     'MCP tools are provided by Model Context Protocol servers. Click the JSON button above to view the full tool specification.':
       'MCPツールはModel Context Protocolサーバーによって提供されます。完全なツール仕様を表示するには、上記のJSONボタンをクリックしてください。',
+    // TODO tool specific translations
+    'tool info.todo.description':
+      'システム的なプロジェクト管理のためのタスク管理とワークフロー追跡ツール。',
+    'tool info.todo.functions': 'このツールは2つの関連する機能を有効にします：',
+    'tool info.todo.todoInit': 'システム的なワークフロー管理のためのTODOリストを初期化または置換',
+    'tool info.todo.todoUpdate': 'TODOリストのタスクを更新（ステータス、説明）',
+    'tool info.todo.usage':
+      '複数の順次ステップを必要とする複雑なワークフローや、ユーザーが明示的にタスクトラッキングを要求する場合に使用します。両方のツールが連携して包括的なタスク管理機能を提供します。',
+    'Tool Group': 'ツールグループ',
+    Usage: '使用方法',
     // CameraCapture tool specific translations
     'tool info.cameraCapture.description':
       'cameraCaptureツールはPCのカメラから画像をキャプチャし、画像ファイルとして保存します。認識プロンプトが提供されると、キャプチャされた画像は自動的にAIで分析され、テキスト内容の抽出、オブジェクトの識別、分析・文書化目的での詳細な視覚的説明が提供されます。',
@@ -531,6 +553,7 @@ export const agentToolsSettings = {
       executeCommand: 'コマンドを実行または実行中のプロセスに入力を送信',
       invokeFlow: 'AWS Bedrock Flowを実行して複数ステップのワークフローを自動化',
       think: '複雑な問題解決のための高度な推論を使用',
+      todo: 'タスク管理とワークフロー追跡ツール',
       cameraCapture: 'PCカメラから画像をキャプチャしてAIビジョン機能で分析',
       codeInterpreter: 'Pythonコードを実行しデータ分析機能とファイル操作を提供',
       screenCapture: 'スクリーンのスクリーンショットをキャプチャして分析・文書化'

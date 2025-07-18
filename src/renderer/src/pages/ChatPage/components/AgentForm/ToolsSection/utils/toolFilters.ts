@@ -32,6 +32,27 @@ export const extractNonMcpTools = (tools: ToolState[]): ToolState[] => {
 }
 
 /**
+ * TODOツールの仮想ツール状態を作成する
+ */
+export const createVirtualTodoTool = (tools: ToolState[]): ToolState => {
+  // todoInit と todoUpdate の状態をチェック
+  const todoInitTool = tools.find((tool) => tool.toolSpec?.name === 'todoInit')
+  const todoUpdateTool = tools.find((tool) => tool.toolSpec?.name === 'todoUpdate')
+
+  // 両方とも有効な場合のみ todo ツールを有効とする
+  const isEnabled = todoInitTool?.enabled && todoUpdateTool?.enabled
+
+  return {
+    toolSpec: {
+      name: 'todo',
+      description: 'Task management and workflow tracking',
+      inputSchema: undefined // 仮想ツールなので未定義
+    },
+    enabled: isEnabled || false
+  }
+}
+
+/**
  * ツールをカテゴリごとに分類する
  */
 export const categorizeTools = (
@@ -66,14 +87,33 @@ export const categorizeTools = (
     }
 
     // 通常のツールカテゴリの場合
-    // MCPツールは除外するが、他のすべての標準ツールはカテゴリに含める
-    const toolsInCategory =
-      tools?.filter((tool) => {
-        const toolName = tool.toolSpec?.name
-        if (!toolName) return false
-        // MCPツールは除外し、カテゴリに含まれるツールを表示
-        return category.tools.includes(toolName) && !isMcpTool(toolName)
-      }) || []
+    const toolsInCategory: ToolState[] = []
+
+    category.tools.forEach((toolName) => {
+      // TODO仮想ツールの特別処理
+      if (toolName === 'todo') {
+        const virtualTodoTool = createVirtualTodoTool(tools)
+        toolsInCategory.push(virtualTodoTool)
+        return
+      }
+
+      // 通常のツール処理
+      const tool = tools?.find((t) => t.toolSpec?.name === toolName && !isMcpTool(toolName))
+      if (tool) {
+        toolsInCategory.push(tool)
+      } else {
+        // ツールが見つからない場合は、デフォルトの無効状態で追加
+        // これによりカテゴリに定義されたすべてのツールが表示される
+        const standardToolSpecs = window.api?.tools?.getToolSpecs() || []
+        const toolSpec = standardToolSpecs.find((spec) => spec.toolSpec?.name === toolName)
+        if (toolSpec?.toolSpec) {
+          toolsInCategory.push({
+            toolSpec: toolSpec.toolSpec,
+            enabled: false
+          })
+        }
+      }
+    })
 
     return {
       ...category,

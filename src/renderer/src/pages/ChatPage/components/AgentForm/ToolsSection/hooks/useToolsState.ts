@@ -40,6 +40,48 @@ export function useToolsState(
         return
       }
 
+      // TODO仮想ツールの特別処理
+      if (toolName === 'todo') {
+        const standardToolSpecs = window.api?.tools?.getToolSpecs() || []
+
+        // 現在の状態をチェック（両方とも有効な場合はtrue）
+        const todoInitTool = agentTools.find((tool) => tool.toolSpec?.name === 'todoInit')
+        const todoUpdateTool = agentTools.find((tool) => tool.toolSpec?.name === 'todoUpdate')
+        const isCurrentlyEnabled = todoInitTool?.enabled && todoUpdateTool?.enabled
+        const newEnabled = !isCurrentlyEnabled
+
+        const updatedTools = [...agentTools]
+        const TODO_TOOLS_GROUP = ['todoInit', 'todoUpdate']
+
+        TODO_TOOLS_GROUP.forEach((todoToolName) => {
+          const existingToolIndex = updatedTools.findIndex(
+            (tool) => tool.toolSpec?.name === todoToolName
+          )
+
+          if (existingToolIndex !== -1) {
+            // 既存のツールを更新
+            updatedTools[existingToolIndex] = {
+              ...updatedTools[existingToolIndex],
+              enabled: newEnabled
+            }
+          } else {
+            // 新しいツールを追加
+            const toolSpec = standardToolSpecs.find((spec) => spec.toolSpec?.name === todoToolName)
+            if (toolSpec?.toolSpec) {
+              updatedTools.push({
+                toolSpec: toolSpec.toolSpec,
+                enabled: newEnabled
+              })
+            }
+          }
+        })
+
+        setAgentTools(updatedTools)
+        onChange(updatedTools)
+        return
+      }
+
+      // 通常のツール処理
       const updatedTools = agentTools.map((tool) => {
         if (tool.toolSpec?.name === toolName) {
           return { ...tool, enabled: !tool.enabled }
