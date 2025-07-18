@@ -4,7 +4,7 @@
 
 import { z } from 'zod'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
-import { BaseTool } from '../../base/BaseTool'
+import { BaseTool, zodToJsonSchemaBody } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
 import { TodoUpdateInput } from './types'
 import { api } from '../../../api'
@@ -104,50 +104,9 @@ Update task description:
 
 If your update request is invalid, an error will be returned with the current todo list state.`,
     inputSchema: {
-      json: {
-        type: 'object',
-        properties: {
-          type: {
-            type: 'string',
-            enum: ['todoUpdate'],
-            description: 'Tool type identifier'
-          },
-          updates: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: {
-                  type: 'string',
-                  description: 'The ID of the task to update'
-                },
-                status: {
-                  type: 'string',
-                  enum: ['pending', 'in_progress', 'completed', 'cancelled'],
-                  description: 'The new status for the task'
-                },
-                description: {
-                  type: 'string',
-                  description: 'Optional new description for the task'
-                }
-              },
-              required: ['id'],
-              additionalProperties: false
-            },
-            minItems: 1,
-            description: 'Array of task updates to process in batch'
-          }
-        },
-        required: ['type', 'updates'],
-        additionalProperties: false
-      }
+      json: zodToJsonSchemaBody(todoUpdateInputSchema)
     }
   }
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription = `Tool for updating todo list tasks. Use to change task status (pending/in_progress/completed/cancelled) or descriptions. Supports batch updates for multiple tasks.`
 
   /**
    * Validate input parameters

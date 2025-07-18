@@ -4,7 +4,7 @@
 
 import { z } from 'zod'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
-import { BaseTool } from '../../base/BaseTool'
+import { BaseTool, zodToJsonSchemaBody } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
 import { TodoInitInput } from './types'
 import { api } from '../../../api'
@@ -85,34 +85,9 @@ IMPORTANT: Refrain from using this tool for single elementary tasks. Direct exec
 
 When uncertain, deploy this tool. Proactive task management demonstrates diligence and ensures comprehensive requirement fulfillment.`,
     inputSchema: {
-      json: {
-        type: 'object',
-        properties: {
-          type: {
-            type: 'string',
-            enum: ['todoInit'],
-            description: 'Tool type identifier'
-          },
-          items: {
-            type: 'array',
-            items: {
-              type: 'string'
-            },
-            minItems: 1,
-            description:
-              'Array of task descriptions to initialize the list with. All tasks are initially marked as pending.'
-          }
-        },
-        required: ['type', 'items'],
-        additionalProperties: false
-      }
+      json: zodToJsonSchemaBody(todoInitInputSchema)
     }
   }
-
-  /**
-   * System prompt description
-   */
-  static readonly systemPromptDescription = `Tool for initializing or replacing todo lists. Use for complex workflows requiring multiple sequential steps or when users explicitly request task tracking. Avoid for single simple tasks.`
 
   /**
    * Validate input parameters

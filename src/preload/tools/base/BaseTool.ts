@@ -3,10 +3,21 @@
  */
 
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
+import { ZodSchema } from 'zod'
+import { zodToJsonSchema } from 'zod-to-json-schema'
 import { ToolInput, ToolResult, ToolName } from '../../../types/tools'
 import { ITool, ToolDependencies, ToolLogger, ValidationResult } from './types'
 import { wrapError, ValidationError } from './errors'
 import { ConfigStore } from '../../store'
+
+/**
+ * Utility function to convert Zod schema to JSON Schema body
+ */
+export const zodToJsonSchemaBody = (schema: ZodSchema) => {
+  const key = 'mySchema'
+  const jsonSchema = zodToJsonSchema(schema, key)
+  return jsonSchema.definitions?.[key] as any
+}
 
 /**
  * Abstract base class that all tools must extend
@@ -28,11 +39,6 @@ export abstract class BaseTool<TInput extends ToolInput = ToolInput, TResult = T
    * AWS Bedrock tool specification - should be defined as static in each tool
    */
   static readonly toolSpec?: Tool['toolSpec']
-
-  /**
-   * System prompt description - should be defined as static in each tool
-   */
-  static readonly systemPromptDescription?: string
 
   /**
    * Dependencies injected into the tool
