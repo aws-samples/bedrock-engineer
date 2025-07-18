@@ -53,7 +53,6 @@ const generateConfigHash = (servers: McpServerConfig[]): string => {
 const hasConfigChanged = (servers: McpServerConfig[] = []): boolean => {
   // サーバー数が変わった場合は明らかに変更
   if (servers.length !== lastMcpServerLength) {
-    console.log(`MCP server count changed: ${lastMcpServerLength} -> ${servers.length}`)
     return true
   }
 
@@ -69,7 +68,6 @@ const hasConfigChanged = (servers: McpServerConfig[] = []): boolean => {
     currentNames.every((name, i) => name === lastMcpServerNames[i])
 
   if (!sameNames) {
-    console.log(`MCP server names changed`)
     return true
   }
 
@@ -85,51 +83,39 @@ const updateConfigCache = (servers: McpServerConfig[] = []): void => {
   lastMcpServerConfigHash = generateConfigHash(servers)
   lastMcpServerLength = servers.length
   lastMcpServerNames = servers.map((s) => s.name).sort()
-  console.log(`Updated MCP config cache with ${servers.length} server(s)`)
 }
 
 // エージェントからMCPサーバー設定を受け取る関数
 export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = []) => {
-  // 明示的なデバッグ情報の表示
-  console.log(`initMcpFromAgentConfig called with ${mcpServers.length} server(s)`)
-
   // 変更があるかどうか確認
   if (!hasConfigChanged(mcpServers)) {
-    console.log('MCP configuration unchanged, skipping initialization')
     return
   }
 
   // 初期化が進行中なら待機
   if (initializationInProgress) {
-    console.log('MCP initialization already in progress, waiting...')
     try {
       await initializationInProgress
-      console.log('Finished waiting for previous MCP initialization')
 
       // 待機中に他のプロセスが同じ構成で初期化を完了した場合はスキップ
       if (!hasConfigChanged(mcpServers)) {
-        console.log('MCP already initialized with same configuration during wait')
         return
       }
     } catch (error) {
-      console.log('Previous MCP initialization failed:', error)
       // エラーがあっても継続して新しい初期化を開始
     }
   }
-
-  console.log(`Starting MCP initialization with ${mcpServers.length} server(s)...`)
 
   // 初期化処理を開始
   try {
     initializationInProgress = (async () => {
       // 既存のクライアントをクリーンアップ
-      console.log(`Cleaning up ${clients.length} existing MCP clients...`)
       await Promise.all(
         clients.map(async ({ client }) => {
           try {
             await client.cleanup()
           } catch (e) {
-            console.log(`Failed to clean up MCP client: ${e}`)
+            // クリーンアップエラーは無視
           }
         })
       )
@@ -137,7 +123,6 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
 
       // 新しいクライアントを作成
       if (mcpServers.length === 0) {
-        console.log('No MCP servers configured for this agent')
         updateConfigCache(mcpServers)
         return
       }
@@ -164,12 +149,10 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
         throw new Error('Invalid MCP server configuration')
       }
 
-      console.log(`Creating ${mcpServers.length} new MCP clients...`)
       clients = (
         await Promise.all(
           mcpServers.map(async (serverConfig) => {
             try {
-              console.log(`Starting MCP server: ${serverConfig.name}`)
               const client = await MCPClient.fromCommand(
                 serverConfig.command,
                 serverConfig.args,
@@ -177,9 +160,6 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
               )
               return { name: serverConfig.name, client }
             } catch (e) {
-              console.log(
-                `MCP server ${serverConfig.name} failed to start: ${e}. Ignoring the server...`
-              )
               return undefined
             }
           })
@@ -188,7 +168,6 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
 
       // 初期化が完了したら構成ハッシュを更新
       updateConfigCache(mcpServers)
-      console.log(`MCP initialization complete with ${clients.length} server(s)`)
     })()
 
     await initializationInProgress
@@ -305,7 +284,6 @@ export const testMcpServerConnection = async (
     startupTime?: number
   }
 }> => {
-  console.log(`Testing connection to MCP server: ${mcpServer.name}`)
   const startTime = Date.now()
 
   try {

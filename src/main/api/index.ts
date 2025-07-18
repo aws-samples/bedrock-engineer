@@ -248,8 +248,6 @@ api.get(
 
 // Socket.IO connection handler
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id)
-
   // storeからAWS設定を取得してNova Sonicクライアントを作成
   const awsConfig = store.get('aws')
 
@@ -293,10 +291,8 @@ io.on('connection', (socket) => {
         sessionState.audioStartSent
       ) {
         try {
-          console.log(`All setup events received, initiating AWS stream for session ${sessionId}`)
           sessionState.initialized = true
           await sonicClient.initiateSession(sessionId)
-          console.log(`AWS stream initiated successfully for session ${sessionId}`)
         } catch (error) {
           console.error(`Error initiating session ${sessionId}:`, error)
           socket.emit('error', {
@@ -307,19 +303,12 @@ io.on('connection', (socket) => {
       }
     }
 
-    setInterval(() => {
-      const connectionCount = Object.keys(io.sockets.sockets).length
-      console.log(`Active socket connections: ${connectionCount}`)
-    }, 60000)
-
     // Set up event handlers
     session.onEvent('contentStart', (data) => {
-      console.log('contentStart:', data)
       socket.emit('contentStart', data)
     })
 
     session.onEvent('textOutput', (data) => {
-      console.log('Text output:', data)
       socket.emit('textOutput', data)
     })
 
@@ -333,22 +322,18 @@ io.on('connection', (socket) => {
     })
 
     session.onEvent('toolUse', (data) => {
-      console.log('Tool use detected:', data.toolName)
       socket.emit('toolUse', data)
     })
 
     session.onEvent('toolResult', (data) => {
-      console.log('Tool result received')
       socket.emit('toolResult', data)
     })
 
     session.onEvent('contentEnd', (data) => {
-      console.log('Content end received: ', data)
       socket.emit('contentEnd', data)
     })
 
     session.onEvent('streamComplete', () => {
-      console.log('Stream completed for client:', socket.id)
       socket.emit('streamComplete')
     })
 
@@ -372,12 +357,6 @@ io.on('connection', (socket) => {
 
     socket.on('promptStart', async (data) => {
       try {
-        console.log(
-          'Prompt start received with tools:',
-          data?.tools?.length || 0,
-          'voiceId:',
-          data?.voiceId
-        )
         await session.setupPromptStart(data?.tools, data?.voiceId)
         sessionState.promptStartSent = true
         await checkAndInitializeSession()
@@ -392,7 +371,6 @@ io.on('connection', (socket) => {
 
     socket.on('systemPrompt', async (data) => {
       try {
-        console.log('System prompt received', data)
         await session.setupSystemPrompt(undefined, data)
         sessionState.systemPromptSent = true
         await checkAndInitializeSession()
@@ -405,9 +383,8 @@ io.on('connection', (socket) => {
       }
     })
 
-    socket.on('audioStart', async (data) => {
+    socket.on('audioStart', async (_data) => {
       try {
-        console.log('Audio start received', data)
         await session.setupStartAudio()
         sessionState.audioStartSent = true
         await checkAndInitializeSession()
@@ -422,15 +399,12 @@ io.on('connection', (socket) => {
 
     socket.on('stopAudio', async () => {
       try {
-        console.log('Stop audio requested, beginning proper shutdown sequence')
-
         // Chain the closing sequence
         await Promise.all([
           session
             .endAudioContent()
             .then(() => session.endPrompt())
             .then(() => session.close())
-            .then(() => console.log('Session cleanup complete'))
         ])
       } catch (error) {
         console.error('Error processing streaming end events:', error)
@@ -443,12 +417,8 @@ io.on('connection', (socket) => {
 
     // Handle disconnection
     socket.on('disconnect', async () => {
-      console.log('Client disconnected abruptly:', socket.id)
-
       if (sonicClient.isSessionActive(sessionId)) {
         try {
-          console.log(`Beginning cleanup for abruptly disconnected session: ${socket.id}`)
-
           // Add explicit timeouts to avoid hanging promises
           const cleanupPromise = Promise.race([
             (async () => {
@@ -462,12 +432,10 @@ io.on('connection', (socket) => {
           ])
 
           await cleanupPromise
-          console.log(`Successfully cleaned up session after abrupt disconnect: ${socket.id}`)
         } catch (error) {
           console.error(`Error cleaning up session after disconnect: ${socket.id}`, error)
           try {
             sonicClient.forceCloseSession(sessionId)
-            console.log(`Force closed session: ${sessionId}`)
           } catch (e) {
             console.error(`Failed even force close for session: ${sessionId}`, e)
           }

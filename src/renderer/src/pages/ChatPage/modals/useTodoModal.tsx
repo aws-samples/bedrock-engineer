@@ -3,23 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { FaClock, FaCheckCircle, FaTimesCircle, FaSpinner, FaTimes, FaSync } from 'react-icons/fa'
 import { FaListCheck } from 'react-icons/fa6'
 
-// Todo types (matching preload types)
-export interface TodoItem {
-  id: string
-  description: string
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled'
-  createdAt: string
-  updatedAt: string
-}
-
-export interface TodoList {
-  id: string
-  items: TodoItem[]
-  createdAt: string
-  updatedAt: string
-  sessionId: string
-  projectPath: string
-}
+// Import shared types from common location
+import type { TodoList } from '../../../../../types/tools'
 
 interface TodoModalProps {
   isOpen: boolean

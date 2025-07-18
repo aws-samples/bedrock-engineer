@@ -347,6 +347,39 @@ export type InvokeFlowInput = {
   }
 }
 
+// Todo 関連の詳細型定義
+export type TodoItemStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
+
+export interface TodoItem {
+  id: string
+  description: string
+  status: TodoItemStatus
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TodoList {
+  id: string
+  items: TodoItem[]
+  createdAt: string
+  updatedAt: string
+  sessionId: string
+  projectPath: string
+}
+
+export interface TodoItemUpdate {
+  id: string
+  status?: TodoItemStatus
+  description?: string
+}
+
+export interface TodoUpdateResult {
+  success: boolean
+  updatedList?: TodoList
+  currentList?: TodoList
+  error?: string
+}
+
 // todo 仮想ツールの入力型
 export type TodoInput = {
   type: 'todo'
@@ -361,11 +394,7 @@ export type TodoInitInput = {
 // todoUpdate ツールの入力型
 export type TodoUpdateInput = {
   type: 'todoUpdate'
-  updates: Array<{
-    id: string
-    status?: 'pending' | 'in_progress' | 'completed' | 'cancelled'
-    description?: string
-  }>
+  updates: TodoItemUpdate[]
 }
 
 // MCPツールの入力型

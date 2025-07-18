@@ -72,7 +72,6 @@ export class StreamSession {
     if (this.audioBufferQueue.length >= this.maxQueueSize) {
       // Queue is full, drop oldest chunk
       this.audioBufferQueue.shift()
-      console.log('Audio queue full, dropping oldest chunk')
     }
 
     // Queue the audio chunk for streaming
@@ -597,16 +596,12 @@ export class NovaSonicBidirectionalStreamClient {
       // Create the bidirectional stream with session-specific async iterator
       const asyncIterable = this.createSessionAsyncIterable(sessionId)
 
-      console.log(`Starting bidirectional stream for session ${sessionId}...`)
-
       const response = await this.bedrockRuntimeClient.send(
         new InvokeModelWithBidirectionalStreamCommand({
           modelId: 'amazon.nova-sonic-v1:0',
           body: asyncIterable
         })
       )
-
-      console.log(`Stream established for session ${sessionId}, processing responses...`)
 
       // Process responses for this session
       await this.processResponseStream(sessionId, response)
