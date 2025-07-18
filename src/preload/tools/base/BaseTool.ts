@@ -9,6 +9,7 @@ import { ToolInput, ToolResult, ToolName } from '../../../types/tools'
 import { ITool, ToolDependencies, ToolLogger, ValidationResult } from './types'
 import { wrapError, ValidationError } from './errors'
 import { ConfigStore } from '../../store'
+import { ContentChunker } from '../../lib/contentChunker'
 
 /**
  * Utility function to convert Zod schema to JSON Schema body
@@ -76,15 +77,19 @@ export abstract class BaseTool<TInput extends ToolInput = ToolInput, TResult = T
       // Execute the tool
       const result = await this.executeInternal(input, context)
 
+      // Check if result should be chunked based on store settings
+      const processedResult = this.processResultForModel(result)
+
       // Log success
       const duration = Date.now() - startTime
       this.logger.info(`Tool execution successful: ${this.name}`, {
         toolName: this.name,
         duration,
-        resultType: typeof result
+        resultType: typeof processedResult,
+        wasChunked: processedResult !== result
       })
 
-      return result
+      return processedResult
     } catch (error) {
       // Log error
       const duration = Date.now() - startTime
@@ -200,5 +205,73 @@ export abstract class BaseTool<TInput extends ToolInput = ToolInput, TResult = T
    */
   protected isFeatureEnabled(featureKey: Parameters<ConfigStore['get']>[0]): boolean {
     return this.store.get(featureKey) === true
+  }
+
+  /**
+   * Process result for token limitations based on store settings
+   */
+  protected processResultForModel(result: TResult): TResult {
+    if (!this.shouldUseChunking()) {
+      return result
+    }
+
+    // Serialize result to string for size checking
+    let serialized: string
+    const isOriginallyString = typeof result === 'string'
+
+    try {
+      serialized = isOriginallyString ? (result as string) : JSON.stringify(result, null, 2)
+    } catch (error) {
+      // If JSON.stringify fails, convert to string representation
+      serialized = String(result)
+      this.logger.warn(`Failed to serialize result for chunking: ${error}`)
+    }
+
+    const contentChunker = new ContentChunker(this.store)
+    if (!contentChunker.isContentTooLarge(serialized)) {
+      return result
+    }
+
+    const inferenceParams = this.store.get('inferenceParams')
+    const maxTokens = inferenceParams?.maxTokens || 4096
+
+    this.logger.info(`Result too large for configured maxTokens (${maxTokens}), chunking content`, {
+      toolName: this.name,
+      originalLength: serialized.length,
+      estimatedTokens: ContentChunker.estimateToken(serialized),
+      maxTokens,
+      resultType: typeof result
+    })
+
+    // Create chunked content with first chunk and continuation info
+    const chunks = contentChunker.splitContent(serialized)
+
+    if (chunks.length === 0) {
+      return result
+    }
+
+    const firstChunk = chunks[0]
+    const continuationInfo =
+      chunks.length > 1
+        ? `\n\n[Content truncated due to token limit. This is chunk ${firstChunk.index} of ${firstChunk.total}. The content was split to fit within the configured ${firstChunk.metadata?.tokenLimit} token limit.]`
+        : ''
+
+    const truncatedContent = firstChunk.content + continuationInfo
+
+    // Return in appropriate format based on original type
+    if (isOriginallyString) {
+      return truncatedContent as TResult
+    } else {
+      // For non-string results, return as truncated string representation
+      return truncatedContent as TResult
+    }
+  }
+
+  /**
+   * Check if this tool should use chunking
+   * Can be overridden by subclasses to disable chunking
+   */
+  protected shouldUseChunking(): boolean {
+    return true
   }
 }
