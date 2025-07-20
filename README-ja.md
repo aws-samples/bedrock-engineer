@@ -57,7 +57,7 @@ PKGファイルを開く際に、以下のセキュリティ警告が表示さ�
 
 このセキュリティ警告は、アプリケーションがMac App Store経由で配布されていないために表示されます。
 
-![PKG Security Warning Privacy Setting](macos-security-warning-pkg-privacy-setting.png)
+![PKG Security Warning Privacy Setting](./assets/macos-security-warning-pkg-privacy-setting.png)
 
 ### 設定ファイルの問題
 

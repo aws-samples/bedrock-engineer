@@ -57,7 +57,7 @@ When opening the PKG file, you may see this security warning:
 
 This security warning appears because the application is not distributed through the Mac App Store.
 
-![PKG Security Warning Privacy Setting](macos-security-warning-pkg-privacy-setting.png)
+![PKG Security Warning Privacy Setting](./assets/macos-security-warning-pkg-privacy-setting.png)
 
 ### Configuration Issues
 
