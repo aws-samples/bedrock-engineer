@@ -400,6 +400,9 @@ export type TodoUpdateInput = {
 // MCPツールの入力型
 export type McpToolInput = {
   type: string // MCPツール名
+  // BackgroundAgentService用のメタデータ（オプション）
+  _agentId?: string
+  _mcpServers?: any[] // McpServerConfig[]だが循環依存回避のためanyを使用
   [key: string]: any // MCPツールの任意のパラメータ
 }
 

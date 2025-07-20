@@ -66,58 +66,78 @@ export class McpToolAdapter extends BaseTool<McpToolInput, McpToolResult> {
       toolName = input.type.replace(/^mcp_/, '')
     }
 
-    // Extract arguments (exclude type and mcpToolName)
-    const { type, mcpToolName: _mcpToolName, ...args } = input
+    // Extract arguments (exclude type, mcpToolName, and internal BackgroundAgentService metadata)
+    const { type, mcpToolName: _mcpToolName, _agentId, _mcpServers, ...args } = input
 
     this.logger.debug(`Executing MCP tool: ${toolName}`, {
       originalType: type,
       toolName,
-      hasArgs: Object.keys(args).length > 0
+      hasArgs: Object.keys(args).length > 0,
+      hasBackgroundAgentContext: !!_agentId
     })
 
     try {
       this.logger.info(`Calling MCP tool: ${toolName}`)
 
-      // Get agent configuration from store
-      const selectedAgentId = this.store.get('selectedAgentId') as string | undefined
-      const customAgents = (this.store.get('customAgents') as any[] | undefined) || []
+      let mcpServers: McpServerConfig[] | undefined
+      let agentId: string | undefined
+      let agentName: string | undefined
 
-      if (!selectedAgentId) {
-        throw new ExecutionError(
-          'No agent selected. Please select an agent to use MCP tools.',
-          this.name,
-          undefined,
-          { toolName }
-        )
+      // Check if this is called from BackgroundAgentService (priority)
+      if (_agentId && _mcpServers) {
+        this.logger.debug('Using BackgroundAgentService context', {
+          agentId: _agentId,
+          mcpServersCount: _mcpServers.length
+        })
+
+        agentId = _agentId
+        mcpServers = _mcpServers
+        agentName = `BackgroundAgent-${_agentId}`
+      } else {
+        // Fallback to frontend store (original behavior)
+        this.logger.debug('Using frontend store context')
+
+        const selectedAgentId = this.store.get('selectedAgentId') as string | undefined
+        const customAgents = (this.store.get('customAgents') as any[] | undefined) || []
+
+        if (!selectedAgentId) {
+          throw new ExecutionError(
+            'No agent selected. Please select an agent to use MCP tools.',
+            this.name,
+            undefined,
+            { toolName }
+          )
+        }
+
+        // Find the current agent
+        const currentAgent = customAgents.find((agent: any) => agent.id === selectedAgentId)
+
+        if (!currentAgent) {
+          throw new ExecutionError(
+            `Agent not found: ${selectedAgentId}. Please check your agent configuration.`,
+            this.name,
+            undefined,
+            { toolName, selectedAgentId }
+          )
+        }
+
+        agentId = selectedAgentId
+        mcpServers = currentAgent.mcpServers as McpServerConfig[] | undefined
+        agentName = currentAgent.name
       }
-
-      // Find the current agent
-      const currentAgent = customAgents.find((agent: any) => agent.id === selectedAgentId)
-
-      if (!currentAgent) {
-        throw new ExecutionError(
-          `Agent not found: ${selectedAgentId}. Please check your agent configuration.`,
-          this.name,
-          undefined,
-          { toolName, selectedAgentId }
-        )
-      }
-
-      // Get MCP server configuration from the current agent
-      const mcpServers = currentAgent.mcpServers as McpServerConfig[] | undefined
 
       if (!mcpServers || mcpServers.length === 0) {
         throw new ExecutionError(
           'No MCP servers configured for this agent. Please configure MCP servers in agent settings.',
           this.name,
           undefined,
-          { toolName, agentId: selectedAgentId }
+          { toolName, agentId }
         )
       }
 
-      this.logger.debug(`Found ${mcpServers.length} MCP servers for agent: ${currentAgent.name}`, {
-        agentId: selectedAgentId,
-        agentName: currentAgent.name,
+      this.logger.debug(`Found ${mcpServers.length} MCP servers for agent: ${agentName}`, {
+        agentId,
+        agentName,
         serverCount: mcpServers.length,
         serverNames: mcpServers.map((s) => s.name)
       })

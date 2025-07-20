@@ -155,8 +155,9 @@ export class BackgroundAgentService {
       // IPC経由でpreloadツール仕様を取得
       const allToolSpecs = await this.toolSpecProvider.getPreloadToolSpecs()
 
+      // 1. 静的ツールの処理（toolNamesに基づく）
       for (const toolName of toolNames) {
-        // preloadツールから対応するツール仕様を検索
+        // 静的ツール仕様から対応するツール仕様を検索
         const toolSpec = allToolSpecs.find((spec) => spec.toolSpec?.name === toolName)
 
         if (toolSpec && toolSpec.toolSpec) {
@@ -171,10 +172,10 @@ export class BackgroundAgentService {
             }
           }
           toolStates.push(toolState)
-          logger.debug('Found preload tool spec', { toolName })
+          logger.debug('Found static tool spec', { toolName })
         } else {
           // 仕様が見つからない場合は基本的な仕様を生成
-          logger.warn('Preload tool spec not found, generating basic spec', {
+          logger.warn('Static tool spec not found, generating basic spec', {
             toolName
           })
           const basicToolState: ToolState = {
@@ -195,9 +196,44 @@ export class BackgroundAgentService {
         }
       }
 
-      logger.info('Generated tool specs from preload tools', {
-        requestedCount: toolNames.length,
-        generatedCount: toolStates.length,
+      // 2. MCPツールの処理（agent.mcpServersが設定されている場合は常に追加）
+      if (agent.mcpServers && agent.mcpServers.length > 0) {
+        try {
+          const mcpToolSpecs = await this.toolSpecProvider.getMcpToolSpecs(agent.mcpServers)
+          logger.debug('Fetched MCP tool specs', {
+            mcpServersCount: agent.mcpServers.length,
+            mcpToolsCount: mcpToolSpecs.length
+          })
+
+          // MCPツール仕様をすべてtoolStatesに追加
+          for (const mcpToolSpec of mcpToolSpecs) {
+            if (mcpToolSpec.toolSpec) {
+              const toolState: ToolState = {
+                enabled: true,
+                toolSpec: {
+                  ...mcpToolSpec.toolSpec,
+                  description: replacePlaceholders(
+                    mcpToolSpec.toolSpec.description || '',
+                    placeholderValues
+                  )
+                }
+              }
+              toolStates.push(toolState)
+              logger.debug('Added MCP tool spec', { toolName: mcpToolSpec.toolSpec.name })
+            }
+          }
+        } catch (error: any) {
+          logger.error('Failed to fetch MCP tool specs', {
+            error: error.message,
+            stack: error.stack
+          })
+        }
+      }
+
+      logger.info('Generated tool specs from static and MCP tools', {
+        staticToolsRequested: toolNames.length,
+        totalGeneratedCount: toolStates.length,
+        mcpServersCount: agent.mcpServers?.length || 0,
         tools: toolStates.map((ts) => ts.toolSpec?.name).filter(Boolean)
       })
 
@@ -503,6 +539,12 @@ export class BackgroundAgentService {
     const currentMessages = [...messages]
     let executionCount = 0
 
+    // エージェント設定を取得
+    const agent = await this.getAgentById(config.agentId)
+    if (!agent) {
+      throw new Error(`Agent not found: ${config.agentId}`)
+    }
+
     while (executionCount < maxExecutions) {
       const lastMessage = currentMessages[currentMessages.length - 1]
 
@@ -526,7 +568,7 @@ export class BackgroundAgentService {
 
       for (const block of toolUseBlocks) {
         if ('toolUse' in block && block.toolUse) {
-          const toolExecution = await this.executeTool(block.toolUse)
+          const toolExecution = await this.executeTool(block.toolUse, agent, config)
           toolExecutions?.push(toolExecution)
 
           // ツール結果をメッセージに追加
@@ -702,7 +744,9 @@ export class BackgroundAgentService {
    * preloadツールのみを使用（IPC経由）
    */
   private async executeTool(
-    toolUse: any
+    toolUse: any,
+    agent: CustomAgent,
+    config: BackgroundAgentConfig
   ): Promise<NonNullable<BackgroundChatResult['toolExecutions']>[0]> {
     try {
       logger.debug('Executing tool via preload tool system', {
@@ -713,6 +757,9 @@ export class BackgroundAgentService {
 
       const toolInput: ToolInput = {
         type: toolUse.name,
+        // BackgroundAgentService用のメタデータを追加
+        _agentId: config.agentId,
+        _mcpServers: agent.mcpServers,
         ...toolUse.input
       } as ToolInput
 
