@@ -23,9 +23,7 @@ Bedrock Engineer はネイティブアプリです。アプリをダウンロー
 
 MacOS:
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.16.3.dmg)
-
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.16.3.pkg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.16.3.pkg)
 
 Windows:
 
@@ -36,20 +34,32 @@ MacOS に最適化されていますが、Windows, Linux OS でもビルドし�
 <details>
 <summary>Tips for Installation</summary>
 
-### Installation
+### インストール
 
-1. 最新リリースをダウンロードします
-2. DMG ファイルを開き、アプリをアプリケーション フォルダにドラッグします
-3. アプリを起動し、AWS 認証情報を設定します（プロキシ環境の場合はプロキシ設定も併せて設定してください）
-4. システム環境設定を開き、[セキュリティとプライバシー] をクリックして、下にスクロールして「このまま開く」ボタンをクリックして、アプリを開きます。
+1. 最新リリース（PKGファイル）をダウンロードします
+2. PKGファイルをダブルクリックしてインストールを開始します
+3. セキュリティ警告が表示された場合、以下の手順に従います
+4. アプリを起動し、AWS認証情報を設定します（プロキシ環境の場合はプロキシ設定も併せて設定してください）
 
-### Opening the Application
+### macOS セキュリティ警告
 
-「Apple が悪意のあるソフトウェアをチェックできないため、「Bedrock Engineer」を開くことができません」と表示される場合:
+PKGファイルを開く際に、以下のセキュリティ警告が表示される場合があります：
 
-1. システム環境設定を開きます
-2. プライバシーとセキュリティをクリックします
-3. 下にスクロールして、「Mac を保護するために、Bedrock Engineer がブロックされました」の横にある「とにかく開く」をクリックします。
+![PKG セキュリティ警告](./assets/macos-security-warning-pkg.png)
+
+**解決方法：**
+
+1. 「完了」をクリックして警告ダイアログを閉じます
+2. システム環境設定 → プライバシーとセキュリティを開きます
+3. セキュリティセクションまでスクロールします
+4. 「お使いのMacを保護するために "bedrock-engineer-1.16.3.pkg" がブロックされました」を見つけます
+5. 「このまま開く」ボタンをクリックします
+
+このセキュリティ警告は、アプリケーションがMac App Store経由で配布されていないために表示されます。
+
+![PKG Security Warning Privacy Setting](macos-security-warning-pkg-privacy-setting.png)
+
+### 設定ファイルの問題
 
 アプリケーション起動時に設定ファイルエラーが発生する場合、以下の設定ファイルを確認ください。設定ファイルを削除してアプリケーションを再起動し直しても起動できない場合、issue に起票ください。
 

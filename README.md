@@ -23,9 +23,7 @@ Bedrock Engineer is a native app, you can download the app or build the source c
 
 MacOS:
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(DMG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.16.3.dmg)
-
-[<img src="https://img.shields.io/badge/Download_FOR_MAC_(PKG)-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.16.3.pkg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.16.3.pkg)
 
 Windows:
 
@@ -38,18 +36,30 @@ It is optimized for MacOS, but can also be built and used on Windows and Linux O
 
 ### Installation
 
-1. Download the latest release
-2. Open the DMG file and drag the app to your Applications folder
-3. Launch the app and configure your AWS credentials
-4. Open System Preferences, click Security & Privacy, then put a checkmark to "Allow apps downloaded from anywhere" -> Click OK and enter your password
+1. Download the latest release (PKG file)
+2. Double-click the PKG file to start installation
+3. If you see a security warning, follow the steps below
+4. Launch the app and configure your AWS credentials
 
-### Opening the Application
+### macOS Security Warning
 
-If you see "'Bedrock Engineer' can't be opened because Apple cannot check it for malicious software":
+When opening the PKG file, you may see this security warning:
 
-1. Open System Preferences
-2. Click Privacy & Security
-3. Scroll down and click "Open Anyway" next to "Bedrock Engineer was blocked to protect your Mac."
+![PKG Security Warning](./assets/macos-security-warning-pkg.png)
+
+**To resolve this:**
+
+1. Click "Done" to dismiss the warning dialog
+2. Open System Preferences → Privacy & Security
+3. Scroll down to the Security section
+4. Find "bedrock-engineer-1.16.3.pkg was blocked to protect your Mac"
+5. Click "Open Anyway" button
+
+This security warning appears because the application is not distributed through the Mac App Store.
+
+![PKG Security Warning Privacy Setting](macos-security-warning-pkg-privacy-setting.png)
+
+### Configuration Issues
 
 If a configuration file error occurs when starting the application, please check the following configuration files. If you cannot start the application even after deleting the configuration files and restarting it, please file an issue.
 
