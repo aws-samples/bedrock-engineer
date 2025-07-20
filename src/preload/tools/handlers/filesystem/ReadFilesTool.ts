@@ -12,6 +12,7 @@ import {
   getLineRangeInfo,
   validateLineRange
 } from '../../../lib/line-range-utils'
+import { PdfReader } from '../../../lib/PdfReader'
 
 /**
  * Input type for ReadFilesTool
@@ -28,7 +29,7 @@ interface ReadFilesInput {
 export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
   static readonly toolName = 'readFiles'
   static readonly toolDescription =
-    'Read the content of multiple files at the specified paths with line range filtering support. For Excel files, the content is converted to CSV format.\n\nRead content from multiple files simultaneously. Supports line range filtering and Excel conversion.'
+    'Read the content of multiple files at the specified paths with line range filtering support. For Excel files, the content is converted to CSV format. For PDF files, text content is extracted.\n\nRead content from multiple files simultaneously. Supports line range filtering, Excel conversion, and PDF text extraction.'
 
   readonly name = ReadFilesTool.toolName
   readonly description = ReadFilesTool.toolDescription
@@ -49,7 +50,7 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
               type: 'string'
             },
             description:
-              'Array of file paths to read. Supports text files and Excel files (.xlsx, .xls).'
+              'Array of file paths to read. Supports text files, Excel files (.xlsx, .xls), and PDF files (.pdf).'
           },
           options: {
             type: 'object',
@@ -143,6 +144,11 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
     this.logger.debug(`Reading single file: ${filePath}`)
 
     try {
+      // Check if it's a PDF file
+      if (PdfReader.isPdfFile(filePath)) {
+        return this.readPdfFile(filePath, options)
+      }
+
       const content = await fs.readFile(filePath, options?.encoding || 'utf-8')
 
       this.logger.debug(`File read successfully: ${filePath}`, {
@@ -164,6 +170,55 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
   }
 
   /**
+   * Read PDF file with optional line range filtering
+   */
+  private async readPdfFile(filePath: string, options?: ReadFileOptions): Promise<string> {
+    this.logger.debug(`Reading PDF file: ${filePath}`, {
+      hasLineRange: !!options?.lines
+    })
+
+    try {
+      // Extract text from PDF with line range support
+      const content = await PdfReader.extractText(filePath, options?.lines)
+
+      // Log metadata for large PDFs without line range
+      if (!options?.lines) {
+        const pdfContent = await PdfReader.extractTextWithMetadata(filePath)
+        this.logger.info(`PDF processed successfully`, {
+          filePath,
+          totalLines: pdfContent.totalLines,
+          pages: pdfContent.metadata.pages,
+          title: pdfContent.metadata.title
+        })
+
+        // Suggest line range for very large PDFs
+        if (pdfContent.totalLines > 400) {
+          const suggestion = PdfReader.suggestLineRange(pdfContent.totalLines)
+          if (suggestion.warning) {
+            this.logger.warn(`Large PDF detected`, {
+              filePath,
+              totalLines: pdfContent.totalLines,
+              suggestion: suggestion.warning
+            })
+          }
+        }
+      }
+
+      return this.formatFileContent(filePath, content, options)
+    } catch (error) {
+      this.logger.error(`Error reading PDF file: ${filePath}`, {
+        error: error instanceof Error ? error.message : String(error)
+      })
+
+      throw new ExecutionError(
+        `Error reading PDF file ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+        this.name,
+        error instanceof Error ? error : undefined
+      )
+    }
+  }
+
+  /**
    * Read multiple files
    */
   private async readMultipleFiles(paths: string[], options?: ReadFileOptions): Promise<string> {
@@ -175,12 +230,22 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
     for (const filePath of paths) {
       try {
         this.logger.verbose(`Reading file: ${filePath}`)
-        const content = await fs.readFile(filePath, options?.encoding || 'utf-8')
-        const formattedContent = this.formatFileContent(filePath, content, options)
+
+        let formattedContent: string
+
+        // Check if it's a PDF file
+        if (PdfReader.isPdfFile(filePath)) {
+          const content = await PdfReader.extractText(filePath, options?.lines)
+          formattedContent = this.formatFileContent(filePath, content, options)
+        } else {
+          const content = await fs.readFile(filePath, options?.encoding || 'utf-8')
+          formattedContent = this.formatFileContent(filePath, content, options)
+        }
+
         fileContents.push(formattedContent)
 
         this.logger.verbose(`File read successfully: ${filePath}`, {
-          contentLength: content.length
+          contentLength: formattedContent.length
         })
       } catch (error) {
         this.logger.error(`Error reading file: ${filePath}`, {

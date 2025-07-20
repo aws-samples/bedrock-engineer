@@ -312,6 +312,51 @@ export interface IPCChannelDefinitions {
     result: { success: boolean }
   }
 
+  // PDF操作関連
+  'pdf-extract-text': {
+    params: {
+      filePath: string
+      lineRange?: {
+        from?: number
+        to?: number
+      }
+    }
+    result: string
+  }
+  'pdf-extract-metadata': {
+    params: {
+      filePath: string
+    }
+    result: {
+      text: string
+      totalLines: number
+      metadata: {
+        pages: number
+        title?: string
+        author?: string
+        creationDate?: Date
+        creator?: string
+        producer?: string
+      }
+    }
+  }
+  'pdf-get-info': {
+    params: {
+      filePath: string
+    }
+    result: {
+      pages: number
+      title?: string
+      author?: string
+    }
+  }
+  'pdf-is-pdf-file': {
+    params: {
+      filePath: string
+    }
+    result: boolean
+  }
+
   // ウィンドウ関連
   'window:isFocused': {
     params: void
