@@ -1426,7 +1426,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     loadSystemPrompt()
-  }, [currentAgent, selectedAgentId, projectPath, allAgents, getAgentTools])
+  }, [currentAgent, selectedAgentId, projectPath, allAgents, getAgentTools, planMode])
 
   // エージェントツール設定を更新する関数
   const updateAgentTools = useCallback(
