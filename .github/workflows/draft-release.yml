@@ -132,16 +132,16 @@ jobs:
           cat > RELEASE_NOTES.md << EOF
           # Bedrock Engineer v$VERSION
 
-          ## 新機能
-          ${FEATURES:-"なし"}
+          ## New Feature
+          ${FEATURES:-"-"}
 
-          ## 修正
-          ${FIXES:-"なし"}
+          ## Fix
+          ${FIXES:-"-"}
 
-          ## その他の変更
-          ${OTHERS:-"なし"}
+          ## Other
+          ${OTHERS:-"-"}
 
-          ## プラットフォーム
+          ## Platform
           - macOS (Universal)
           - Windows
           EOF
@@ -165,11 +165,10 @@ jobs:
 
       - name: Post Release Information
         run: |
-          echo "ドラフトリリース v${{ env.VERSION }} が作成されました。"
+          echo "Draft release v${{ env.VERSION }} has been created."
           echo "URL: ${{ steps.create_release.outputs.url }}"
           echo ""
-          echo "次のステップ："
-          echo "1. リリース内容とビルド成果物を確認してください"
-          echo "2. 問題なければ手動でPRを作成し、mainブランチへのマージをリクエストしてください"
-          echo "   PR作成時の説明に、作成したリリースのURLを含めることをお勧めします"
-          echo "3. PRがマージされると、リリースが自動的に公開されます"
+          echo "1. Check the release contents and build artifacts"
+          echo "2. If there are no problems, manually create a PR and request a merge to the main branch"
+          echo "We recommend including the URL of the release you created in the description when creating the PR"
+          echo "3. Once the PR is merged, the release will be published automatically"

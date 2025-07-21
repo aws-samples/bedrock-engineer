@@ -18,6 +18,7 @@ import { registerIpcHandlers, registerLogHandler } from './lib/ipc-handler'
 import { bedrockHandlers } from './handlers/bedrock-handlers'
 import { fileHandlers } from './handlers/file-handlers'
 import { pdfHandlers } from './handlers/pdf-handlers'
+import { docxHandlers } from './handlers/docx-handlers'
 import {
   windowHandlers,
   preloadTaskHistoryWindow,
@@ -420,6 +421,7 @@ app.whenReady().then(async () => {
   registerIpcHandlers(bedrockHandlers, { loggerCategory: 'bedrock:ipc' })
   registerIpcHandlers(fileHandlers, { loggerCategory: 'file:ipc' })
   registerIpcHandlers(pdfHandlers, { loggerCategory: 'pdf:ipc' })
+  registerIpcHandlers(docxHandlers, { loggerCategory: 'docx:ipc' })
   registerIpcHandlers(windowHandlers, { loggerCategory: 'window:ipc' })
   registerIpcHandlers(agentHandlers, { loggerCategory: 'agents:ipc' })
   registerIpcHandlers(utilHandlers, { loggerCategory: 'utils:ipc' })

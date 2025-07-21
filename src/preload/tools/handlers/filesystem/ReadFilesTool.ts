@@ -13,6 +13,7 @@ import {
   validateLineRange
 } from '../../../lib/line-range-utils'
 import { PdfReader } from '../../../lib/PdfReader'
+import { DocxReader } from '../../../lib/DocxReader'
 
 /**
  * Input type for ReadFilesTool
@@ -29,7 +30,7 @@ interface ReadFilesInput {
 export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
   static readonly toolName = 'readFiles'
   static readonly toolDescription =
-    'Read the content of multiple files at the specified paths with line range filtering support. For Excel files, the content is converted to CSV format. For PDF files, text content is extracted.\n\nRead content from multiple files simultaneously. Supports line range filtering, Excel conversion, and PDF text extraction.'
+    'Read the content of multiple files at the specified paths with line range filtering support. For Excel files, the content is converted to CSV format. For PDF files, text content is extracted. For Word documents (.docx), text content is extracted.\n\nRead content from multiple files simultaneously. Supports line range filtering, Excel conversion, PDF text extraction, and DOCX text extraction.'
 
   readonly name = ReadFilesTool.toolName
   readonly description = ReadFilesTool.toolDescription
@@ -50,7 +51,7 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
               type: 'string'
             },
             description:
-              'Array of file paths to read. Supports text files, Excel files (.xlsx, .xls), and PDF files (.pdf).'
+              'Array of file paths to read. Supports text files, Excel files (.xlsx, .xls), PDF files (.pdf), and Word documents (.docx).'
           },
           options: {
             type: 'object',
@@ -149,6 +150,11 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
         return this.readPdfFile(filePath, options)
       }
 
+      // Check if it's a DOCX file
+      if (DocxReader.isDocxFile(filePath)) {
+        return this.readDocxFile(filePath, options)
+      }
+
       const content = await fs.readFile(filePath, options?.encoding || 'utf-8')
 
       this.logger.debug(`File read successfully: ${filePath}`, {
@@ -219,6 +225,55 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
   }
 
   /**
+   * Read DOCX file with optional line range filtering
+   */
+  private async readDocxFile(filePath: string, options?: ReadFileOptions): Promise<string> {
+    this.logger.debug(`Reading DOCX file: ${filePath}`, {
+      hasLineRange: !!options?.lines
+    })
+
+    try {
+      // Extract text from DOCX with line range support
+      const content = await DocxReader.extractText(filePath, options?.lines)
+
+      // Log metadata for large DOCX files without line range
+      if (!options?.lines) {
+        const docxContent = await DocxReader.extractTextWithMetadata(filePath)
+        this.logger.info(`DOCX processed successfully`, {
+          filePath,
+          totalLines: docxContent.totalLines,
+          wordCount: docxContent.metadata.wordCount,
+          characterCount: docxContent.metadata.characterCount
+        })
+
+        // Suggest line range for very large DOCX files
+        if (docxContent.totalLines > 400) {
+          const suggestion = DocxReader.suggestLineRange(docxContent.totalLines)
+          if (suggestion.warning) {
+            this.logger.warn(`Large DOCX detected`, {
+              filePath,
+              totalLines: docxContent.totalLines,
+              suggestion: suggestion.warning
+            })
+          }
+        }
+      }
+
+      return this.formatFileContent(filePath, content, options)
+    } catch (error) {
+      this.logger.error(`Error reading DOCX file: ${filePath}`, {
+        error: error instanceof Error ? error.message : String(error)
+      })
+
+      throw new ExecutionError(
+        `Error reading DOCX file ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+        this.name,
+        error instanceof Error ? error : undefined
+      )
+    }
+  }
+
+  /**
    * Read multiple files
    */
   private async readMultipleFiles(paths: string[], options?: ReadFileOptions): Promise<string> {
@@ -236,6 +291,10 @@ export class ReadFilesTool extends BaseTool<ReadFilesInput, string> {
         // Check if it's a PDF file
         if (PdfReader.isPdfFile(filePath)) {
           const content = await PdfReader.extractText(filePath, options?.lines)
+          formattedContent = this.formatFileContent(filePath, content, options)
+        } else if (DocxReader.isDocxFile(filePath)) {
+          // Check if it's a DOCX file
+          const content = await DocxReader.extractText(filePath, options?.lines)
           formattedContent = this.formatFileContent(filePath, content, options)
         } else {
           const content = await fs.readFile(filePath, options?.encoding || 'utf-8')

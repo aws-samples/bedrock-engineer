@@ -357,6 +357,51 @@ export interface IPCChannelDefinitions {
     result: boolean
   }
 
+  // DOCX操作関連
+  'docx-extract-text': {
+    params: {
+      filePath: string
+      lineRange?: {
+        from?: number
+        to?: number
+      }
+    }
+    result: string
+  }
+  'docx-extract-metadata': {
+    params: {
+      filePath: string
+    }
+    result: {
+      text: string
+      totalLines: number
+      metadata: {
+        title?: string
+        author?: string
+        creationDate?: Date
+        modifiedDate?: Date
+        wordCount?: number
+        characterCount?: number
+      }
+    }
+  }
+  'docx-get-info': {
+    params: {
+      filePath: string
+    }
+    result: {
+      title?: string
+      author?: string
+      wordCount?: number
+    }
+  }
+  'docx-is-docx-file': {
+    params: {
+      filePath: string
+    }
+    result: boolean
+  }
+
   // ウィンドウ関連
   'window:isFocused': {
     params: void
