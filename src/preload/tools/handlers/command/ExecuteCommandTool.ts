@@ -22,6 +22,7 @@ import { findAgentById } from '../../../helpers/agent-helpers'
  */
 type ExecuteCommandInput = {
   type: 'executeCommand'
+  _agentId?: string // BackgroundAgentService用のメタデータ
 } & (CommandInput | CommandStdinInput)
 
 /**
@@ -150,7 +151,7 @@ export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCom
    */
   protected async executeInternal(input: ExecuteCommandInput): Promise<ExecuteCommandResult> {
     // Get command configuration
-    const config = this.getCommandConfig()
+    const config = this.getCommandConfig(input)
 
     this.logger.debug('Executing command', {
       input: JSON.stringify(input),
@@ -247,19 +248,19 @@ export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCom
   /**
    * Get command configuration from store
    */
-  private getCommandConfig(): CommandConfig {
+  private getCommandConfig(input?: ExecuteCommandInput): CommandConfig {
     // Get basic shell setting
     const shell = (this.store.get('shell') as string) || '/bin/bash'
 
-    // Get current selected agent ID
-    const selectedAgentId = this.store.get('selectedAgentId') as string | undefined
+    // Get agent ID - prioritize _agentId from BackgroundAgentService, fallback to selectedAgentId
+    const agentId = input?._agentId || (this.store.get('selectedAgentId') as string | undefined)
 
     // Get agent-specific allowed commands
     let allowedCommands: CommandPatternConfig[] = []
 
-    if (selectedAgentId) {
+    if (agentId) {
       // Find agent and get allowed commands
-      const currentAgent = findAgentById(selectedAgentId)
+      const currentAgent = findAgentById(agentId)
       if (currentAgent && currentAgent.allowedCommands) {
         // Convert to CommandPatternConfig format
         allowedCommands = currentAgent.allowedCommands.map((cmd) => ({
@@ -267,6 +268,18 @@ export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCom
           description: cmd.description || ''
         }))
       }
+
+      this.logger.debug('Found agent configuration', {
+        agentId,
+        agentName: currentAgent?.name,
+        allowedCommandsCount: allowedCommands.length,
+        isFromBackgroundAgent: !!input?._agentId
+      })
+    } else {
+      this.logger.warn('No agent ID found for command configuration', {
+        hasInputAgentId: !!input?._agentId,
+        hasSelectedAgentId: !!this.store.get('selectedAgentId')
+      })
     }
 
     return {
