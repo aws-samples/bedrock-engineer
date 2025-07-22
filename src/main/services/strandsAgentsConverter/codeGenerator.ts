@@ -89,10 +89,12 @@ export class CodeGenerator {
     const supportedStrandsTools = toolMapping.supportedTools.map((t) => t.strandsTool)
     const imports = generateImportStatement(supportedStrandsTools)
 
-    // Generate basic tools list
-    const basicTools = supportedStrandsTools
-      .filter((tool) => !tool.providerClass)
-      .map((tool) => tool.strandsName)
+    // Generate basic tools list (remove duplicates)
+    const basicTools = [
+      ...new Set(
+        supportedStrandsTools.filter((tool) => !tool.providerClass).map((tool) => tool.strandsName)
+      )
+    ]
 
     // Generate tools setup code
     const toolsSetup = generateToolsSetupCode(basicTools)

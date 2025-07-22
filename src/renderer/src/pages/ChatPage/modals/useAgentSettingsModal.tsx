@@ -124,6 +124,39 @@ const AgentSettingsModal = React.memo(
       }
     }
 
+    // Handler to convert agent to Strands Agents
+    const handleConvertToStrands = async (agentId: string) => {
+      try {
+        // Show directory selection dialog
+        const directory = await window.api.openDirectory()
+        if (!directory) {
+          return // User cancelled directory selection
+        }
+
+        // Show loading toast
+        const loadingToast = toast.loading('Converting agent to Strands Agents...')
+
+        // Convert and save agent
+        const result = await window.api.strandsConverter.convertAndSave(agentId, directory)
+
+        // Dismiss loading toast
+        toast.dismiss(loadingToast)
+
+        if (result.success) {
+          toast.success(`Strands Agents files saved to ${directory}`, {
+            duration: 5000
+          })
+          console.log('Conversion successful:', result.savedFiles)
+        } else {
+          toast.error(result.error || 'Failed to convert agent to Strands Agents')
+          console.error('Conversion failed:', result.errors)
+        }
+      } catch (error) {
+        console.error('Error converting agent to Strands Agents:', error)
+        toast.error('Failed to convert agent to Strands Agents')
+      }
+    }
+
     const [isExpanded, setIsExpanded] = useState(false)
 
     const togglePanel = () => {
@@ -197,6 +230,7 @@ const AgentSettingsModal = React.memo(
                   onDuplicateAgent={handleDuplicateAgent}
                   onDeleteAgent={handleDeleteAgent}
                   onSaveAsShared={handleSaveAsShared}
+                  onConvertToStrands={handleConvertToStrands}
                 />
               )}
             </div>

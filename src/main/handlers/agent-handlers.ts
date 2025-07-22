@@ -5,6 +5,7 @@ import yaml from 'js-yaml'
 import { CustomAgent } from '../../types/agent-chat'
 import { createCategoryLogger } from '../../common/logger'
 import { store } from '../../preload/store'
+import { StrandsAgentsConverter } from '../services/strandsAgentsConverter'
 
 const agentsLogger = createCategoryLogger('agents:ipc')
 
@@ -181,6 +182,68 @@ export const agentHandlers = {
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error)
+      }
+    }
+  },
+
+  'convert-agent-to-strands': async (
+    _event: IpcMainInvokeEvent,
+    agentId: string,
+    outputDirectory: string
+  ) => {
+    try {
+      agentsLogger.info('Converting agent to Strands Agents', { agentId, outputDirectory })
+
+      // First, try to find the agent in shared agents
+      const { agents: sharedAgents } = await loadSharedAgents()
+      let agent = sharedAgents.find((a) => a.id === agentId)
+
+      // If not found in shared agents, try to get it from user settings
+      if (!agent) {
+        const userAgents = store.get('customAgents') || []
+        agent = userAgents.find((a) => a.id === agentId)
+      }
+
+      if (!agent) {
+        return {
+          success: false,
+          error: `Agent with ID ${agentId} not found`
+        }
+      }
+
+      // Initialize converter and convert agent
+      const converter = new StrandsAgentsConverter()
+      const saveOptions = {
+        outputDirectory,
+        includeConfig: false,
+        overwrite: true
+      }
+
+      const result = await converter.convertAndSaveAgent(agent, saveOptions)
+
+      agentsLogger.info('Strands Agents conversion completed', {
+        success: result.success,
+        savedFiles: result.savedFiles.length
+      })
+
+      return result
+    } catch (error) {
+      agentsLogger.error('Error converting agent to Strands Agents', {
+        agentId,
+        error: error instanceof Error ? error.message : String(error)
+      })
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+        outputDirectory,
+        savedFiles: [],
+        errors: [
+          {
+            file: 'conversion',
+            error: error instanceof Error ? error.message : String(error)
+          }
+        ]
       }
     }
   }

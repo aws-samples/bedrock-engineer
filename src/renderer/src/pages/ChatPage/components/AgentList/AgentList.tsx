@@ -14,6 +14,7 @@ interface AgentListProps {
   onDuplicateAgent: (agent: CustomAgent) => void
   onDeleteAgent: (agentId: string) => void
   onSaveAsShared?: (agent: CustomAgent) => void
+  onConvertToStrands?: (agentId: string) => void
 }
 
 export const AgentList: React.FC<AgentListProps> = ({
@@ -24,7 +25,8 @@ export const AgentList: React.FC<AgentListProps> = ({
   onEditAgent,
   onDuplicateAgent,
   onDeleteAgent,
-  onSaveAsShared
+  onSaveAsShared,
+  onConvertToStrands
 }) => {
   const { t } = useTranslation()
   const { searchQuery, setSearchQuery, selectedTags, availableTags, filteredAgents, toggleTag } =
@@ -99,6 +101,7 @@ export const AgentList: React.FC<AgentListProps> = ({
               onDuplicate={onDuplicateAgent}
               onDelete={isEditable ? onDeleteAgent : undefined}
               onSaveAsShared={onSaveAsShared}
+              onConvertToStrands={onConvertToStrands}
             />
           )
         })}

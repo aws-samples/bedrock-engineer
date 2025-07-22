@@ -100,10 +100,8 @@ export const TOOL_MAPPING: Record<BuiltInToolName, StrandsTool> = {
 
   // Code execution
   codeInterpreter: {
-    strandsName: 'code_interpreter',
-    importPath: 'strands_tools.code_interpreter',
-    providerClass: 'AgentCoreCodeInterpreter',
-    initParams: { region: 'us-west-2' },
+    strandsName: 'python_repl',
+    importPath: 'strands_tools',
     supported: true
   },
 
@@ -162,14 +160,8 @@ export const TOOL_MAPPING: Record<BuiltInToolName, StrandsTool> = {
 }
 
 // Generate special initialization code
-export function generateSpecialSetupCode(toolName: string, tool: StrandsTool): string {
+export function generateSpecialSetupCode(toolName: string, _tool: StrandsTool): string {
   switch (toolName) {
-    case 'code_interpreter':
-      return `
-# Code Interpreter setup
-code_interpreter = AgentCoreCodeInterpreter(region="${tool.initParams?.region || 'us-west-2'}")
-tools.append(code_interpreter.code_interpreter)`
-
     default:
       return ''
   }

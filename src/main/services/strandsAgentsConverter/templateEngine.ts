@@ -126,13 +126,28 @@ This agent was automatically converted from a Bedrock Engineer CustomAgent.
 
 ## Usage
 
-### 1. Install Dependencies
+### 1. Create Virtual Environment
+
+Create and activate a Python virtual environment:
+
+\`\`\`bash
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+# On Windows:
+.venv\\Scripts\\activate
+# On macOS/Linux:
+source .venv/bin/activate
+\`\`\`
+
+### 2. Install Dependencies
 
 \`\`\`bash
 pip install -r requirements.txt
 \`\`\`
 
-### 2. Set Environment Variables
+### 3. Set Environment Variables
 
 Set the required environment variables:
 
@@ -140,13 +155,13 @@ Set the required environment variables:
 {{environmentSetup}}
 \`\`\`
 
-### 3. Run the Agent
+### 4. Run the Agent
 
 \`\`\`bash
 python agent.py
 \`\`\`
 
-### 4. Programmatic Usage
+### 5. Programmatic Usage
 
 \`\`\`python
 from agent import create_agent

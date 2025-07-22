@@ -15,6 +15,7 @@ interface AgentCardProps {
   onDuplicate?: (agent: CustomAgent) => void
   onDelete?: (agentId: string) => void
   onSaveAsShared?: (agent: CustomAgent) => void
+  onConvertToStrands?: (agentId: string) => void
 }
 
 export const AgentCard: React.FC<AgentCardProps> = ({
@@ -25,7 +26,8 @@ export const AgentCard: React.FC<AgentCardProps> = ({
   onEdit,
   onDuplicate,
   onDelete,
-  onSaveAsShared
+  onSaveAsShared,
+  onConvertToStrands
 }) => {
   const { t } = useTranslation()
 
@@ -110,6 +112,11 @@ export const AgentCard: React.FC<AgentCardProps> = ({
               <Dropdown.Item onClick={() => onDuplicate?.(agent)} className="w-48">
                 {t('duplicate')}
               </Dropdown.Item>
+              {onConvertToStrands && (
+                <Dropdown.Item onClick={() => onConvertToStrands(agent.id!)} className="w-48">
+                  {t('convertToStrands')}
+                </Dropdown.Item>
+              )}
               {!agent.isShared && onSaveAsShared && (
                 <Dropdown.Item onClick={() => onSaveAsShared(agent)} className="w-48">
                   {t('saveAsShared')}

@@ -367,6 +367,11 @@ export const api = {
     getActiveTodoListId: async () => {
       return ipcRenderer.invoke('get-active-todo-list-id')
     }
+  },
+  strandsConverter: {
+    convertAndSave: async (agentId: string, outputDirectory: string) => {
+      return ipcRenderer.invoke('convert-agent-to-strands', agentId, outputDirectory)
+    }
   }
 }
 
