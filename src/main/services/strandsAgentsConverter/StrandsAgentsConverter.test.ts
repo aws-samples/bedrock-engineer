@@ -426,9 +426,8 @@ describe('StrandsAgentsConverter', () => {
 
       // Assert
       expect(result.pythonCode).toContain('from strands import Agent')
-      expect(result.pythonCode).toContain('from strands_tools import file_read, file_write')
       expect(result.pythonCode).toContain(
-        'from strands_tools.code_interpreter import AgentCoreCodeInterpreter'
+        'from strands_tools import file_read, file_write, python_repl'
       )
       expect(result.pythonCode).toContain('def setup_tools():')
       expect(result.pythonCode).toContain('def create_agent():')

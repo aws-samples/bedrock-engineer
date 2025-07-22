@@ -18,10 +18,8 @@ describe('toolMapper', () => {
       })
 
       expect(TOOL_MAPPING.codeInterpreter).toEqual({
-        strandsName: 'code_interpreter',
-        importPath: 'strands_tools.code_interpreter',
-        providerClass: 'AgentCoreCodeInterpreter',
-        initParams: { region: 'us-west-2' },
+        strandsName: 'python_repl',
+        importPath: 'strands_tools',
         supported: true
       })
     })
@@ -64,23 +62,18 @@ describe('toolMapper', () => {
   })
 
   describe('generateSpecialSetupCode', () => {
-    it('should generate setup code for code_interpreter', () => {
+    it('should return empty string for python_repl', () => {
       const tool: StrandsTool = {
-        strandsName: 'code_interpreter',
-        importPath: 'strands_tools.code_interpreter',
-        providerClass: 'AgentCoreCodeInterpreter',
-        initParams: { region: 'us-west-2' },
+        strandsName: 'python_repl',
+        importPath: 'strands_tools',
         supported: true
       }
 
-      const setupCode = generateSpecialSetupCode('code_interpreter', tool)
-
-      expect(setupCode).toContain('AgentCoreCodeInterpreter')
-      expect(setupCode).toContain('region="us-west-2"')
-      expect(setupCode).toContain('tools.append(code_interpreter.code_interpreter)')
+      const setupCode = generateSpecialSetupCode('codeInterpreter', tool)
+      expect(setupCode).toBe('')
     })
 
-    it('should return empty string for unsupported tools', () => {
+    it('should return empty string for regular tools', () => {
       const tool: StrandsTool = {
         strandsName: 'file_read',
         importPath: 'strands_tools',
