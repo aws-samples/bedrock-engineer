@@ -421,6 +421,20 @@ export interface IPCChannelDefinitions {
       data: any
     }
   }
+  'save-website-content': {
+    params: {
+      content: string
+      url: string
+      filename?: string
+      directory?: string
+      format: 'html' | 'txt'
+    }
+    result: {
+      success: boolean
+      filePath?: string
+      error?: string
+    }
+  }
   'check-docker-availability': {
     params: void
     result: {

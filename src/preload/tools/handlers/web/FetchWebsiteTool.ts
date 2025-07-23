@@ -84,6 +84,26 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
                     description: 'Ending line number (1-based, inclusive)'
                   }
                 }
+              },
+              saveToFile: {
+                type: 'object',
+                description: 'Save the fetched content to a file',
+                properties: {
+                  filename: {
+                    type: 'string',
+                    description: 'Custom filename (optional, auto-generated if not provided)'
+                  },
+                  directory: {
+                    type: 'string',
+                    description:
+                      'Directory to save the file (optional, uses project downloads directory if not provided)'
+                  },
+                  format: {
+                    type: 'string',
+                    description: 'Format to save the content',
+                    enum: ['original', 'cleaned', 'both']
+                  }
+                }
               }
             }
           }
@@ -137,7 +157,7 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
    */
   protected async executeInternal(input: FetchWebsiteInput): Promise<string> {
     const { url, options } = input
-    const { cleaning, lines, ...requestOptions } = options || {}
+    const { cleaning, lines, saveToFile, ...requestOptions } = options || {}
 
     this.logger.debug(`Fetching website: ${url}`, {
       options: JSON.stringify({
@@ -162,43 +182,105 @@ export class FetchWebsiteTool extends BaseTool<FetchWebsiteInput, string> {
         contentType: response.headers['content-type']
       })
 
-      let rawContent =
+      const originalContent =
         typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2)
+      let processedContent = originalContent
 
       // Apply content cleaning if requested
+      let cleanedContent: string | undefined
       if (cleaning) {
-        rawContent = this.extractMainContent(rawContent)
+        cleanedContent = this.extractMainContent(originalContent)
+        processedContent = cleanedContent
         this.logger.debug(`Content cleaned`, {
-          originalLength: rawContent.length,
-          cleanedLength: rawContent.length
+          originalLength: originalContent.length,
+          cleanedLength: cleanedContent.length
         })
       }
 
       // Apply automatic truncation if content exceeds token limit
-      if (this.shouldTruncateContent(rawContent)) {
-        const originalLength = rawContent.length
-        rawContent = this.truncateContentMiddleOut(rawContent)
+      if (this.shouldTruncateContent(processedContent)) {
+        const originalLength = processedContent.length
+        processedContent = this.truncateContentMiddleOut(processedContent)
         this.logger.warn(`Content truncated due to token limit`, {
           originalLength,
-          truncatedLength: rawContent.length,
+          truncatedLength: processedContent.length,
           maxTokensLimit: this.getMaxTokensLimit(),
           strategy: 'middle-out'
         })
       }
 
+      // Handle file saving if requested
+      const saveResults: string[] = []
+      if (saveToFile) {
+        try {
+          const savePromises: Promise<any>[] = []
+
+          if (
+            saveToFile.format === 'original' ||
+            saveToFile.format === 'both' ||
+            !saveToFile.format
+          ) {
+            savePromises.push(
+              ipc('save-website-content', {
+                content: originalContent,
+                url,
+                filename: saveToFile.filename,
+                directory: saveToFile.directory,
+                format: 'html'
+              })
+            )
+          }
+
+          if (saveToFile.format === 'cleaned' || saveToFile.format === 'both') {
+            const contentToSave = cleanedContent || this.extractMainContent(originalContent)
+            savePromises.push(
+              ipc('save-website-content', {
+                content: contentToSave,
+                url,
+                filename: saveToFile.filename ? `${saveToFile.filename}_cleaned` : undefined,
+                directory: saveToFile.directory,
+                format: 'txt'
+              })
+            )
+          }
+
+          const results = await Promise.all(savePromises)
+
+          for (const result of results) {
+            if (result.success) {
+              saveResults.push(`✓ File saved successfully: ${result.filePath}`)
+              this.logger.info('File saved successfully', { filePath: result.filePath })
+            } else {
+              saveResults.push(`✗ Failed to save file: ${result.error}`)
+              this.logger.error('File save failed', { error: result.error })
+            }
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          saveResults.push(`✗ File save error: ${errorMessage}`)
+          this.logger.error('File save error', { error: errorMessage })
+        }
+      }
+
       // Apply line range filtering
-      const filteredContent = filterByLineRange(rawContent, lines)
+      const filteredContent = filterByLineRange(processedContent, lines)
 
       // Generate line range info for header
-      const totalLines = rawContent.split('\n').length
+      const totalLines = processedContent.split('\n').length
       const lineInfo = getLineRangeInfo(totalLines, lines)
-      const header = `Website Content: ${url}${lineInfo}\n${'='.repeat(url.length + lineInfo.length + 18)}\n`
+      let header = `Website Content: ${url}${lineInfo}\n${'='.repeat(url.length + lineInfo.length + 18)}\n`
+
+      // Add save results to header if any
+      if (saveResults.length > 0) {
+        header += `\nSave Results:\n${saveResults.join('\n')}\n\n`
+      }
 
       this.logger.info(`Website content retrieved successfully`, {
         url,
         totalLines,
         hasLineRange: !!lines,
-        contentLength: filteredContent.length
+        contentLength: filteredContent.length,
+        filesSaved: saveResults.length
       })
 
       return header + filteredContent

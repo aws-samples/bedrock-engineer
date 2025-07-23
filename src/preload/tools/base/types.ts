@@ -99,6 +99,11 @@ export interface ListDirectoryOptions {
 export interface FetchWebsiteOptions extends RequestInit {
   cleaning?: boolean
   lines?: LineRange
+  saveToFile?: {
+    filename?: string
+    directory?: string
+    format?: 'original' | 'cleaned' | 'both'
+  }
 }
 
 /**

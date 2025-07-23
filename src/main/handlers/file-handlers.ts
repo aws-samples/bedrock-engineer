@@ -108,5 +108,119 @@ export const fileHandlers = {
       })
       return { success: false }
     }
+  },
+
+  'save-website-content': async (
+    _event: IpcMainInvokeEvent,
+    {
+      content,
+      url,
+      filename,
+      directory,
+      format
+    }: {
+      content: string
+      url: string
+      filename?: string
+      directory?: string
+      format: 'html' | 'txt'
+    }
+  ) => {
+    try {
+      // プロジェクトパスを取得
+      const projectPath = store.get('projectPath') || process.cwd()
+
+      // 保存先ディレクトリを決定
+      const targetDirectory = directory
+        ? path.resolve(directory)
+        : path.join(projectPath, 'downloads')
+
+      // ディレクトリが存在しない場合は作成
+      try {
+        await fs.promises.access(targetDirectory)
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+          await fs.promises.mkdir(targetDirectory, { recursive: true })
+          log.info('Created downloads directory', { targetDirectory })
+        } else {
+          throw error
+        }
+      }
+
+      // ファイル名の生成
+      let finalFilename: string
+      if (filename) {
+        // 拡張子が指定されていない場合は追加
+        const extension = format === 'html' ? '.html' : '.txt'
+        finalFilename = filename.endsWith(extension) ? filename : filename + extension
+      } else {
+        // URLからドメイン名を抽出してファイル名を生成
+        try {
+          const urlObj = new URL(url)
+          const domain = urlObj.hostname.replace(/^www\./, '')
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+          const extension = format === 'html' ? '.html' : '.txt'
+          finalFilename = `${domain}_${timestamp}${extension}`
+        } catch {
+          // URLが無効な場合のフォールバック
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)
+          const extension = format === 'html' ? '.html' : '.txt'
+          finalFilename = `website_${timestamp}${extension}`
+        }
+      }
+
+      const filePath = path.join(targetDirectory, finalFilename)
+
+      // ファイル名の重複を避ける
+      let finalPath = filePath
+      let counter = 1
+      let fileExists = true
+      while (fileExists) {
+        try {
+          await fs.promises.access(finalPath)
+          // ファイルが存在する場合、番号を付けて再試行
+          const extension = path.extname(finalFilename)
+          const basename = path.basename(finalFilename, extension)
+          const newFilename = `${basename}_${counter}${extension}`
+          finalPath = path.join(targetDirectory, newFilename)
+          counter++
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+            // ファイルが存在しない場合は使用可能
+            fileExists = false
+          } else {
+            throw error
+          }
+        }
+      }
+
+      // ファイルを保存
+      await fs.promises.writeFile(finalPath, content, 'utf-8')
+
+      log.info('Website content saved successfully', {
+        url,
+        filePath: finalPath,
+        format,
+        fileSize: content.length
+      })
+
+      return {
+        success: true,
+        filePath: finalPath
+      }
+    } catch (error) {
+      log.error('Failed to save website content', {
+        url,
+        filename,
+        directory,
+        format,
+        error: error instanceof Error ? error.message : String(error)
+      })
+
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      }
+    }
   }
 } as const
