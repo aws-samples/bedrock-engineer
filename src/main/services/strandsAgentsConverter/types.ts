@@ -1,4 +1,4 @@
-import { CustomAgent } from '../../../types/agent-chat'
+import { CustomAgent, McpServerConfig } from '../../../types/agent-chat'
 import { ToolName } from '../../../types/tools'
 
 // Strands Agents tool information
@@ -28,11 +28,23 @@ export interface ToolMappingResult {
   }> // Tools requiring special initialization
 }
 
+// MCP server mapping result
+export interface McpServerMappingResult {
+  servers: Array<{
+    original: McpServerConfig
+    strandsCode: string
+    clientVarName: string
+  }>
+  imports: Set<string>
+  requiresContextManager: boolean
+}
+
 // Code generation parameters
 export interface CodeGenerationParams {
   agent: CustomAgent
   toolMapping: ToolMappingResult
   processedPrompt: string
+  mcpServerMapping?: McpServerMappingResult
 }
 
 // Agent configuration
@@ -43,6 +55,7 @@ export interface AgentConfig {
   toolsUsed: string[]
   unsupportedTools: string[]
   environment: Record<string, string>
+  mcpServers?: string[] // MCP server names
 }
 
 // Conversion result
@@ -50,6 +63,7 @@ export interface StrandsAgentOutput {
   pythonCode: string
   config: AgentConfig
   toolMapping: ToolMappingResult
+  mcpServerMapping?: McpServerMappingResult
   warnings: Array<{
     originalName: ToolName
     reason: string

@@ -38,8 +38,16 @@ export class StrandsAgentsConverter {
       const output = this.codeGenerator.generateStrandsAgent(agent)
 
       logger.info(`Successfully converted agent: ${agent.name}`)
-      logger.info(`Supported tools: ${output.toolMapping.supportedTools}`)
-      logger.info(`Unsupported tools: ${output.toolMapping.unsupportedTools}`)
+      logger.info(`Supported tools: ${output.toolMapping.supportedTools.length}`)
+      logger.info(`Unsupported tools: ${output.toolMapping.unsupportedTools.length}`)
+
+      // MCP server conversion results
+      if (output.mcpServerMapping) {
+        logger.info(`MCP servers: ${output.mcpServerMapping.servers.length}`)
+        output.mcpServerMapping.servers.forEach((server) => {
+          logger.info(`  - ${server.original.name}: ${server.original.command}`)
+        })
+      }
 
       return output
     } catch (error) {

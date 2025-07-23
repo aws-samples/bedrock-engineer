@@ -1,3 +1,92 @@
+// MCP integrated Python agent template
+export const MCP_INTEGRATED_TEMPLATE = `#!/usr/bin/env python3
+"""
+Generated Strands Agent with MCP Server Integration
+Agent: {{agentName}}
+Description: {{agentDescription}}
+Generated on: {{generationDate}}
+"""
+
+{{imports}}
+
+# System prompt
+SYSTEM_PROMPT = """{{systemPrompt}}"""
+
+# AWS configuration
+session = boto3.Session(
+    region_name="{{awsRegion}}",
+)
+
+{{mcpClientSetup}}
+
+def setup_basic_tools():
+    """Configure basic tools used by the agent"""
+    tools = []
+    {{basicToolsSetup}}
+    {{specialSetupCode}}
+    return tools
+
+def create_model():
+    """Create Bedrock model"""
+    bedrock_model = BedrockModel(
+        model_id="{{modelConfig}}",
+        temperature=0.3,
+        top_p=0.8,
+        boto_session=session
+    )
+    return bedrock_model
+
+def main():
+    """Main agent execution function"""
+    try:
+        # Setup basic tools
+        basic_tools = setup_basic_tools()
+
+        # Connect to MCP servers and collect tools
+        all_tools = basic_tools.copy()
+
+        {{mcpContextManager}}:
+{{mcpToolsCollection}}
+
+            # Create and configure agent
+            agent = Agent(
+                system_prompt=SYSTEM_PROMPT,
+                tools=all_tools,
+                model=create_model()
+            )
+
+            # Interactive chat loop
+            print(f"🤖 {{agentName}} agent is ready!")
+            print("Type 'quit' or 'exit' to terminate the session")
+
+            while True:
+                try:
+                    user_input = input("\\n👤 You: ")
+                    if user_input.lower().strip() in ['quit', 'exit']:
+                        break
+
+                    if not user_input.strip():
+                        continue
+
+                    response = agent(user_input)
+                    print(f"🤖 Agent: {response}")
+
+                except KeyboardInterrupt:
+                    print("\\n👋 Goodbye!")
+                    break
+                except Exception as e:
+                    print(f"❌ Error occurred: {e}")
+
+    except Exception as e:
+        print(f"❌ Agent initialization error: {e}")
+        return 1
+
+    return 0
+
+if __name__ == "__main__":
+    exit(main())
+`
+
 // Python code generation template
 export const PYTHON_AGENT_TEMPLATE = `#!/usr/bin/env python3
 """
@@ -84,6 +173,9 @@ if __name__ == "__main__":
 export const REQUIREMENTS_TEMPLATE = `# Strands Agents dependencies
 strands-agents>=1.0.0
 strands-agents-tools>=0.2.0
+
+# MCP dependencies (if MCP servers are used)
+{{mcpDependencies}}
 
 # AWS dependencies (if needed)
 boto3>=1.26.0
@@ -239,4 +331,49 @@ export function generateEnvironmentSetup(envVars: Record<string, string>): strin
   }
 
   return entries.map(([key, value]) => `export ${key}="${value}"`).join('\n')
+}
+
+// Generate MCP client setup code
+export function generateMcpClientSetup(servers: Array<{ strandsCode: string }>): string {
+  if (servers.length === 0) {
+    return '# No MCP server configuration'
+  }
+
+  return servers.map((server) => server.strandsCode).join('\n\n')
+}
+
+// Generate MCP context manager code
+export function generateMcpContextManager(clientNames: string[]): string {
+  if (clientNames.length === 0) {
+    return '# No MCP servers'
+  }
+
+  return `with ${clientNames.join(', ')}`
+}
+
+// Generate MCP tools collection code
+export function generateMcpToolsCollection(
+  servers: Array<{ original: { name: string }; clientVarName: string }>
+): string {
+  if (servers.length === 0) {
+    return '            # No MCP tools'
+  }
+
+  return servers
+    .map(
+      (server) =>
+        `            # Get tools from ${server.original.name}
+            ${server.clientVarName}_tools = ${server.clientVarName}_client.list_tools_sync()
+            all_tools.extend(${server.clientVarName}_tools)`
+    )
+    .join('\n')
+}
+
+// Generate MCP dependencies for requirements.txt
+export function generateMcpDependencies(hasMcpServers: boolean): string {
+  if (!hasMcpServers) {
+    return ''
+  }
+
+  return `mcp>=1.12.1`
 }
