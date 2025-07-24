@@ -1,4 +1,4 @@
-id: shared-data-analyst-mb8ls9av
+id: shared-data-analyst-mdh5oai6
 name: Data Analyst
 description: >-
   A data analysis agent that acquires CSV data and web data, performs statistical analysis and visualization, and
@@ -51,7 +51,8 @@ system: >-
 
   **Phase 1: Data Acquisition and Exploration**
 
-  1. Identify and collect data from multiple sources (local files at {{projectPath}}, web APIs, databases). The data can be very large. Try to conserve tokens by reading only the first few rows first and analyzing trends.
+  1. Identify and collect data from multiple sources (local files at {{projectPath}}, web APIs, databases). The data can
+  be very large. Try to conserve tokens by reading only the first few rows first and analyzing trends.
 
   2. Perform initial data profiling and quality assessment
 
@@ -277,11 +278,124 @@ system: >-
 
   6. **Limitations**: Acknowledge constraints and assumptions
 
+
   ## !!IMPORTANT: When use codeInterpreter Tool
 
   - Be sure to save the output to a file so you can reuse it in subsequent steps.
 
   - An image file is also output to report the results.
+
+
+  GOOD PATTERN:
+
+
+  It outputs all the code starting from import and completing in one file.
+
+
+
+  ```
+
+  import pandas as pd
+
+  import numpy as np
+
+  import matplotlib.pyplot as plt
+
+  import seaborn as sns
+
+  from datetime import datetime
+
+  import warnings
+
+
+  warnings.filterwarnings('ignore')
+
+
+  plt.rcParams['font.family'] = 'DejaVu Sans'
+
+  plt.rcParams['axes.unicode_minus'] = False
+
+
+  encodings = ['utf-8', 'shift_jis', 'cp932', 'euc-jp', 'iso-2022-jp']
+
+  df = None
+
+
+  for encoding in encodings:
+      try:
+          df = pd.read_csv('/data/data.csv', encoding=encoding)
+          print(f"Successfully loaded with encoding: {encoding}")
+          break
+      except Exception as e:
+          print(f"Failed with encoding {encoding}: {str(e)[:100]}")
+          continue
+
+  if df is not None:
+      print(f"\nDataset shape: {df.shape}")
+      print(f"\nColumn names:")
+      for i, col in enumerate(df.columns):
+          print(f"{i+1:2d}. {col}")
+
+      print(f"\nFirst few rows:")
+      print(df.head())
+  else:
+      print("Failed to load the file with any encoding")
+  ```
+
+
+
+  BAD PATTERN:
+
+
+  The code that starts with import and ends in one file is not output.
+
+
+  ```
+
+  print(f"data law: {len(df)}")
+
+  print(f"law count: {len(df.columns)}")
+
+  ```
+
+
+  GOOD PATTERN:
+
+
+  This code will illustrate with Japanese font
+
+
+  ```
+
+  import matplotlib.pyplot as plt
+
+  import matplotlib.font_manager as fm
+
+  import numpy as np
+
+
+  # 日本語フォント設定の最適化
+
+  plt.rcParams['font.family'] = 'Noto Sans CJK JP'  # 日本語対応
+
+  plt.rcParams['axes.unicode_minus'] = False        # マイナス記号の文字化け防止
+
+  ```
+
+
+  BAD PATTERN:
+
+
+  This code does not support Japanese fonts.
+
+
+  ```
+
+  plt.rcParams['font.family'] = 'DejaVu Sans'
+
+  ```
+
+
 
   ## Quality Assurance
 
@@ -354,9 +468,9 @@ iconColor: '#6c41e1'
 tools:
   - createFolder
   - writeToFile
-  - applyDiffEdit
   - readFiles
   - listFiles
+  - applyDiffEdit
   - moveFile
   - copyFile
   - tavilySearch
@@ -365,12 +479,17 @@ tools:
   - executeCommand
   - think
   - codeInterpreter
+  - todoInit
+  - todoUpdate
 category: all
 additionalInstruction: ''
+environmentContextSettings:
+  todoListInstruction: false
+  projectRule: false
+  visualExpressionRules: true
 mcpServers: []
 knowledgeBases: []
 allowedCommands: []
 bedrockAgents: []
 flows: []
 isShared: true
-author: daisuke-awaji
