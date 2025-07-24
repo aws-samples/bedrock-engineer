@@ -16,10 +16,10 @@
   }
   ```
 
-- `npm ci` コマンドを実行して、package-lock.json も更新します。
+- `npm i` コマンドを実行して、package-lock.json も更新します。
 
 ```bash
-npm ci
+npm i
 ```
 
 - README.md, README-ja.md の該当箇所のバージョンを更新します。
