@@ -35,10 +35,7 @@ import {
 } from './handlers/background-agent-handlers'
 import { pubsubHandlers } from './handlers/pubsub-handlers'
 import { todoHandlers } from './handlers/todo-handlers'
-import {
-  setupMcpHandlers as registerMcpHandlers,
-  cleanupMcpHandlers
-} from './handlers/mcp-handlers'
+import { registerMcpHandlers, cleanupMcpHandlers } from './handlers/mcp-handlers'
 import { cleanupMcpClients } from './mcp/index'
 
 // 動的インポートを使用してfix-pathパッケージを読み込む

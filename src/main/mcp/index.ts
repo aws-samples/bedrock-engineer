@@ -2,6 +2,7 @@ import { MCPClient } from './mcp-client'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { McpServerConfig } from '../../types/agent-chat'
 import { mcpServerConfigSchema } from '../../common/mcp/schemas'
+import { inferConnectionType } from '../../common/mcp/utils'
 
 let clients: { name: string; client: MCPClient }[] = []
 
@@ -13,7 +14,7 @@ let initializationInProgress: Promise<void> | null = null
 
 /**
  * サーバー設定の安定した比較用のハッシュ値を生成する
- * 構成の本質的な部分のみを考慮し、不要な変動要素を除外する
+ * 構成の本質的な部分のみを考慮し、不要な変動要素を除外する（後方互換性あり）
  */
 const generateConfigHash = (servers: McpServerConfig[]): string => {
   if (!servers || servers.length === 0) {
@@ -24,25 +25,29 @@ const generateConfigHash = (servers: McpServerConfig[]): string => {
   const sortedServers = [...servers].sort((a, b) => a.name.localeCompare(b.name))
 
   // 本質的な設定のみを含むオブジェクトの配列を作成
-  const essentialConfigs = sortedServers.map((server) => ({
-    name: server.name,
-    connectionType: server.connectionType,
-    // コマンド形式の場合
-    ...(server.connectionType === 'command' && server.command && server.args
-      ? {
-          command: server.command,
-          args: [...server.args] // 配列のコピーを作成して安定させる
-        }
-      : {}),
-    // URL形式の場合
-    ...(server.connectionType === 'url' && server.url
-      ? {
-          url: server.url
-        }
-      : {}),
-    // 環境変数がある場合のみ含める
-    ...(server.env && Object.keys(server.env).length > 0 ? { env: { ...server.env } } : {})
-  }))
+  const essentialConfigs = sortedServers.map((server) => {
+    const connectionType = inferConnectionType(server)
+
+    return {
+      name: server.name,
+      connectionType,
+      // コマンド形式の場合
+      ...(connectionType === 'command' && server.command && server.args
+        ? {
+            command: server.command,
+            args: [...server.args] // 配列のコピーを作成して安定させる
+          }
+        : {}),
+      // URL形式の場合
+      ...(connectionType === 'url' && server.url
+        ? {
+            url: server.url
+          }
+        : {}),
+      // 環境変数がある場合のみ含める
+      ...(server.env && Object.keys(server.env).length > 0 ? { env: { ...server.env } } : {})
+    }
+  })
 
   return JSON.stringify(essentialConfigs)
 }
@@ -131,10 +136,10 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
         return
       }
 
-      // コマンド形式とURL形式のサーバーを分別
+      // コマンド形式とURL形式のサーバーを分別（後方互換性あり）
       const commandServers = mcpServers.filter(
         (server): server is McpServerConfig & { command: string; args: string[] } =>
-          server.connectionType === 'command' &&
+          inferConnectionType(server) === 'command' &&
           typeof server.command === 'string' &&
           Array.isArray(server.args) &&
           server.args.length > 0
@@ -142,7 +147,9 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
 
       const urlServers = mcpServers.filter(
         (server): server is McpServerConfig & { url: string } =>
-          server.connectionType === 'url' && typeof server.url === 'string' && server.url.length > 0
+          inferConnectionType(server) === 'url' &&
+          typeof server.url === 'string' &&
+          server.url.length > 0
       )
 
       console.log('[Main Process] Command servers:', commandServers.length)
@@ -357,7 +364,10 @@ export const testMcpServerConnection = async (
   try {
     let client: MCPClient
 
-    if (mcpServer.connectionType === 'command') {
+    // 後方互換性のためconnectionTypeを自動推測
+    const connectionType = inferConnectionType(mcpServer)
+
+    if (connectionType === 'command') {
       // コマンド形式のサーバーの検証
       if (!mcpServer.command || !mcpServer.args) {
         return {
@@ -370,7 +380,7 @@ export const testMcpServerConnection = async (
         }
       }
       client = await MCPClient.fromCommand(mcpServer.command, mcpServer.args, mcpServer.env)
-    } else if (mcpServer.connectionType === 'url') {
+    } else if (connectionType === 'url') {
       // URL形式のサーバーの検証
       if (!mcpServer.url) {
         return {

@@ -1,6 +1,7 @@
 import { McpServerConfig } from '@/types/agent-chat'
 import { ParsedServerConfig } from '../types/mcpServer.types'
 import { validateMcpServerConfig } from '@/common/mcp/schemas'
+import { inferConnectionType } from '@/common/mcp/utils'
 
 /**
  * JSON文字列からMCPサーバー設定を解析する
@@ -95,7 +96,7 @@ export function parseServerConfigJson(
 
 /**
  * サーバー設定を編集する際のJSONを生成する
- * URL形式とコマンド形式の両方をサポート
+ * URL形式とコマンド形式の両方をサポート（後方互換性あり）
  * @param server 編集対象のサーバー設定（単一サーバー）
  * @param servers 編集対象のサーバー設定（複数サーバー）
  * @returns {string} JSON文字列
@@ -105,13 +106,16 @@ export function generateEditJson(server?: McpServerConfig, servers?: McpServerCo
   const mcpServers: Record<string, any> = {}
 
   serversToProcess.forEach((srv) => {
-    if (srv.connectionType === 'command') {
+    // connectionTypeを自動推測（後方互換性）
+    const connectionType = inferConnectionType(srv)
+
+    if (connectionType === 'command') {
       mcpServers[srv.name] = {
         command: srv.command,
         args: srv.args,
         ...(srv.env && Object.keys(srv.env).length > 0 ? { env: srv.env } : {})
       }
-    } else if (srv.connectionType === 'url') {
+    } else if (connectionType === 'url') {
       mcpServers[srv.name] = {
         url: srv.url,
         enabled: true

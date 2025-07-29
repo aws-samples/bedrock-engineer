@@ -264,7 +264,7 @@ export type FlowConfig = {
 export interface McpServerConfig {
   name: string
   description: string
-  connectionType: 'command' | 'url'
+  connectionType?: 'command' | 'url'
   // コマンド形式用
   command?: string
   args?: string[]

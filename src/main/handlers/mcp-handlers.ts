@@ -12,7 +12,7 @@ import {
 /**
  * MCP関連のIPCハンドラーを設定する
  */
-export const setupMcpHandlers = () => {
+export const registerMcpHandlers = () => {
   console.log('[Main Process] Setting up MCP IPC handlers')
 
   // MCP初期化
