@@ -619,6 +619,63 @@ export interface IPCChannelDefinitions {
       }
     }
   }
+
+  // MCP関連
+  'mcp:init': {
+    params: any[] // McpServerConfig[]
+    result: { success: boolean; error?: string }
+  }
+  'mcp:getTools': {
+    params: any[] // McpServerConfig[]
+    result: { success: boolean; tools?: any[]; error?: string }
+  }
+  'mcp:executeTool': {
+    params: [string, any, any[]] // toolName, input, mcpServers
+    result: {
+      found: boolean
+      success: boolean
+      name: string
+      error?: string
+      message?: string
+      result?: any
+    }
+  }
+  'mcp:testConnection': {
+    params: any // McpServerConfig
+    result: {
+      success: boolean
+      message: string
+      details?: {
+        toolCount?: number
+        toolNames?: string[]
+        error?: string
+        errorDetails?: string
+        startupTime?: number
+      }
+    }
+  }
+  'mcp:testAllConnections': {
+    params: any[] // McpServerConfig[]
+    result: {
+      success: boolean
+      results?: Record<string, any>
+      error?: string
+    }
+  }
+  'mcp:cleanup': {
+    params: void
+    result: { success: boolean; error?: string }
+  }
+
+  // プロキシ関連
+  'proxy:test-connection': {
+    params: any // ProxyConfiguration
+    result: { success: boolean; connected?: boolean; error?: string }
+  }
+  'proxy:update-settings': {
+    params: void
+    result: { success: boolean; error?: string }
+  }
 }
 
 // 型ヘルパー

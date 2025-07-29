@@ -28,14 +28,14 @@ import { agentHandlers } from './handlers/agent-handlers'
 import { utilHandlers } from './handlers/util-handlers'
 import { screenHandlers } from './handlers/screen-handlers'
 import { cameraHandlers } from './handlers/camera-handlers'
-import { registerProxyHandlers } from './handlers/proxy-handlers'
+import { proxyHandlers } from './handlers/proxy-handlers'
 import {
   backgroundAgentHandlers,
   shutdownBackgroundAgentScheduler
 } from './handlers/background-agent-handlers'
 import { pubsubHandlers } from './handlers/pubsub-handlers'
 import { todoHandlers } from './handlers/todo-handlers'
-import { registerMcpHandlers, cleanupMcpHandlers } from './handlers/mcp-handlers'
+import { mcpHandlers, cleanupMcpHandlers } from './handlers/mcp-handlers'
 import { cleanupMcpClients } from './mcp/index'
 
 // 動的インポートを使用してfix-pathパッケージを読み込む
@@ -432,12 +432,8 @@ app.whenReady().then(async () => {
   registerIpcHandlers(backgroundAgentHandlers, { loggerCategory: 'background-agent:ipc' })
   registerIpcHandlers(pubsubHandlers, { loggerCategory: 'pubsub:ipc' })
   registerIpcHandlers(todoHandlers, { loggerCategory: 'todo:ipc' })
-
-  // MCP関連IPCハンドラーの登録
-  registerMcpHandlers()
-
-  // プロキシ関連IPCハンドラーの登録
-  registerProxyHandlers()
+  registerIpcHandlers(mcpHandlers, { loggerCategory: 'mcp:ipc' })
+  registerIpcHandlers(proxyHandlers, { loggerCategory: 'proxy:ipc' })
 
   // ログハンドラーの登録
   registerLogHandler()

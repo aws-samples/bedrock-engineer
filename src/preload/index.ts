@@ -119,36 +119,6 @@ if (process.contextIsolated) {
             ipcRenderer.send(`tool-specs-response-${data.requestId}`, [])
           }
         })
-
-        // MCPツール仕様取得用のIPCハンドラー (Main Process経由)
-        ipcRenderer.on('get-mcp-tool-specs-request', async (_event, data) => {
-          try {
-            log.debug('Received MCP tool specs request', {
-              requestId: data.requestId,
-              mcpServersCount: data.mcpServers?.length || 0
-            })
-
-            // Main Process経由でMCPツール仕様を取得
-            const mcpToolSpecs = await ipcRenderer.invoke('mcp:getTools', data.mcpServers)
-
-            log.debug('Sending MCP tool specs response', {
-              requestId: data.requestId,
-              specsCount: mcpToolSpecs.length
-            })
-
-            // レスポンスを送信
-            ipcRenderer.send(`mcp-tool-specs-response-${data.requestId}`, mcpToolSpecs)
-          } catch (error: any) {
-            log.error('Failed to get MCP tool specs', {
-              requestId: data.requestId,
-              error: error.message,
-              stack: error.stack
-            })
-
-            // エラー時は空配列を返す
-            ipcRenderer.send(`mcp-tool-specs-response-${data.requestId}`, [])
-          }
-        })
       }
     })
 

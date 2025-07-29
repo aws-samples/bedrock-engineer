@@ -10,13 +10,11 @@ import {
 } from '../mcp/index'
 
 /**
- * MCP関連のIPCハンドラーを設定する
+ * MCP関連のIPCハンドラー定義
  */
-export const registerMcpHandlers = () => {
-  console.log('[Main Process] Setting up MCP IPC handlers')
-
+export const mcpHandlers = {
   // MCP初期化
-  ipcMain.handle('mcp:init', async (_, mcpServers: McpServerConfig[]) => {
+  'mcp:init': async (_, mcpServers: McpServerConfig[]) => {
     try {
       console.log(`[Main Process] IPC: mcp:init called with ${mcpServers.length} servers`)
       await initMcpFromAgentConfig(mcpServers)
@@ -26,10 +24,10 @@ export const registerMcpHandlers = () => {
       console.error('[Main Process] IPC: mcp:init error:', errorMessage)
       return { success: false, error: errorMessage }
     }
-  })
+  },
 
   // ツール取得
-  ipcMain.handle('mcp:getTools', async (_, mcpServers: McpServerConfig[]) => {
+  'mcp:getTools': async (_, mcpServers: McpServerConfig[]) => {
     try {
       console.log(`[Main Process] IPC: mcp:getTools called with ${mcpServers.length} servers`)
       const tools = await getMcpToolSpecs(mcpServers)
@@ -40,34 +38,31 @@ export const registerMcpHandlers = () => {
       console.error('[Main Process] IPC: mcp:getTools error:', errorMessage)
       return { success: false, error: errorMessage, tools: [] }
     }
-  })
+  },
 
   // ツール実行
-  ipcMain.handle(
-    'mcp:executeTool',
-    async (_, toolName: string, input: any, mcpServers: McpServerConfig[]) => {
-      try {
-        console.log(`[Main Process] IPC: mcp:executeTool called for tool: ${toolName}`)
-        const result = await tryExecuteMcpTool(toolName, input, mcpServers)
-        console.log(`[Main Process] IPC: mcp:executeTool result for ${toolName}:`, result.success)
-        return result
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
-        console.error(`[Main Process] IPC: mcp:executeTool error for ${toolName}:`, errorMessage)
-        return {
-          found: false,
-          success: false,
-          name: toolName,
-          error: errorMessage,
-          message: `Error executing MCP tool "${toolName}": ${errorMessage}`,
-          result: null
-        }
+  'mcp:executeTool': async (_, toolName: string, input: any, mcpServers: McpServerConfig[]) => {
+    try {
+      console.log(`[Main Process] IPC: mcp:executeTool called for tool: ${toolName}`)
+      const result = await tryExecuteMcpTool(toolName, input, mcpServers)
+      console.log(`[Main Process] IPC: mcp:executeTool result for ${toolName}:`, result.success)
+      return result
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.error(`[Main Process] IPC: mcp:executeTool error for ${toolName}:`, errorMessage)
+      return {
+        found: false,
+        success: false,
+        name: toolName,
+        error: errorMessage,
+        message: `Error executing MCP tool "${toolName}": ${errorMessage}`,
+        result: null
       }
     }
-  )
+  },
 
   // 単一サーバー接続テスト
-  ipcMain.handle('mcp:testConnection', async (_, mcpServer: McpServerConfig) => {
+  'mcp:testConnection': async (_, mcpServer: McpServerConfig) => {
     try {
       console.log(`[Main Process] IPC: mcp:testConnection called for server: ${mcpServer.name}`)
       const result = await testMcpServerConnection(mcpServer)
@@ -91,10 +86,10 @@ export const registerMcpHandlers = () => {
         }
       }
     }
-  })
+  },
 
   // 複数サーバー接続テスト
-  ipcMain.handle('mcp:testAllConnections', async (_, mcpServers: McpServerConfig[]) => {
+  'mcp:testAllConnections': async (_, mcpServers: McpServerConfig[]) => {
     try {
       console.log(
         `[Main Process] IPC: mcp:testAllConnections called with ${mcpServers.length} servers`
@@ -107,10 +102,10 @@ export const registerMcpHandlers = () => {
       console.error('[Main Process] IPC: mcp:testAllConnections error:', errorMessage)
       return { success: false, error: errorMessage, results: {} }
     }
-  })
+  },
 
   // MCPクライアントクリーンアップ
-  ipcMain.handle('mcp:cleanup', async () => {
+  'mcp:cleanup': async () => {
     try {
       console.log('[Main Process] IPC: mcp:cleanup called')
       await cleanupMcpClients()
@@ -121,9 +116,7 @@ export const registerMcpHandlers = () => {
       console.error('[Main Process] IPC: mcp:cleanup error:', errorMessage)
       return { success: false, error: errorMessage }
     }
-  })
-
-  console.log('[Main Process] MCP IPC handlers setup completed')
+  }
 }
 
 /**

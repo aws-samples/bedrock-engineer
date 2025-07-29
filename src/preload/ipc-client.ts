@@ -6,14 +6,7 @@ import { IPCChannels, IPCParams, IPCResult } from '../types/ipc'
  */
 export function createIpcClient() {
   return {
-    invoke: <C extends IPCChannels>(
-      channel: C,
-      ...args: IPCParams<C> extends void
-        ? []
-        : IPCParams<C> extends any[]
-          ? IPCParams<C>
-          : [IPCParams<C>]
-    ): Promise<IPCResult<C>> => {
+    invoke: <C extends IPCChannels>(channel: C, ...args: any[]): Promise<IPCResult<C>> => {
       return ipcRenderer.invoke(channel, ...args)
     }
   }
