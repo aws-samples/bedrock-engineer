@@ -88,8 +88,11 @@ const updateConfigCache = (servers: McpServerConfig[] = []): void => {
 
 // エージェントからMCPサーバー設定を受け取る関数
 export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = []) => {
+  console.log('[Main Process] Initializing MCP servers:', mcpServers.length)
+
   // 変更があるかどうか確認
   if (!hasConfigChanged(mcpServers)) {
+    console.log('[Main Process] No MCP server config changes detected')
     return
   }
 
@@ -142,6 +145,9 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
           server.connectionType === 'url' && typeof server.url === 'string' && server.url.length > 0
       )
 
+      console.log('[Main Process] Command servers:', commandServers.length)
+      console.log('[Main Process] URL servers:', urlServers.length)
+
       // McpServerConfig[] 形式から configSchema 用のフォーマットに変換
       const configData = {
         mcpServers: {
@@ -172,7 +178,7 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
       // mcpServerConfigSchema によるバリデーション
       const { success, error } = mcpServerConfigSchema.safeParse(configData)
       if (!success) {
-        console.error('Invalid MCP server configuration:', error)
+        console.error('[Main Process] Invalid MCP server configuration:', error)
         throw new Error('Invalid MCP server configuration')
       }
 
@@ -181,30 +187,42 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
         // コマンド形式のサーバー
         ...commandServers.map(async (serverConfig) => {
           try {
+            console.log(`[Main Process] Connecting to command server: ${serverConfig.name}`)
             const client = await MCPClient.fromCommand(
               serverConfig.command,
               serverConfig.args,
               serverConfig.env
             )
+            console.log(
+              `[Main Process] Successfully connected to command server: ${serverConfig.name}`
+            )
             return { name: serverConfig.name, client }
           } catch (e) {
-            console.log(`Failed to connect to command server ${serverConfig.name}:`, e)
+            console.log(
+              `[Main Process] Failed to connect to command server ${serverConfig.name}:`,
+              e
+            )
             return undefined
           }
         }),
         // URL形式のサーバー
         ...urlServers.map(async (serverConfig) => {
           try {
+            console.log(
+              `[Main Process] Connecting to URL server: ${serverConfig.name} (${serverConfig.url})`
+            )
             const client = await MCPClient.fromUrl(serverConfig.url)
+            console.log(`[Main Process] Successfully connected to URL server: ${serverConfig.name}`)
             return { name: serverConfig.name, client }
           } catch (e) {
-            console.log(`Failed to connect to URL server ${serverConfig.name}:`, e)
+            console.log(`[Main Process] Failed to connect to URL server ${serverConfig.name}:`, e)
             return undefined
           }
         })
       ])
 
       clients = allClients.filter((c): c is { name: string; client: MCPClient } => c != null)
+      console.log(`[Main Process] Total connected clients: ${clients.length}`)
 
       // 初期化が完了したら構成ハッシュを更新
       updateConfigCache(mcpServers)
@@ -212,7 +230,7 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
 
     await initializationInProgress
   } catch (error) {
-    console.error('Error during MCP initialization:', error)
+    console.error('[Main Process] Error during MCP initialization:', error)
     // エラーが発生した場合はキャッシュをクリアして次回再試行できるようにする
     lastMcpServerConfigHash = null
     lastMcpServerLength = 0
@@ -224,6 +242,8 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
 }
 
 export const getMcpToolSpecs = async (mcpServers?: McpServerConfig[]): Promise<Tool[]> => {
+  console.log('[Main Process] Getting MCP tool specs')
+
   // MCPサーバー設定がない場合は空配列を返す
   if (!mcpServers || mcpServers.length === 0) {
     return []
@@ -232,7 +252,7 @@ export const getMcpToolSpecs = async (mcpServers?: McpServerConfig[]): Promise<T
   // エージェント固有のMCPサーバー設定を使用する
   await initMcpFromAgentConfig(mcpServers)
 
-  return clients.flatMap(({ client }) => {
+  const tools = clients.flatMap(({ client }) => {
     // ツールをそのまま返す（プリフィックスなし）
     return client.tools.map((tool) => {
       // ディープコピーして元のオブジェクトを変更しないようにする
@@ -241,6 +261,9 @@ export const getMcpToolSpecs = async (mcpServers?: McpServerConfig[]): Promise<T
       return clonedTool
     })
   })
+
+  console.log(`[Main Process] Retrieved ${tools.length} tools from ${clients.length} clients`)
+  return tools
 }
 
 export const tryExecuteMcpTool = async (
@@ -248,6 +271,8 @@ export const tryExecuteMcpTool = async (
   input: any,
   mcpServers?: McpServerConfig[]
 ) => {
+  console.log(`[Main Process] Executing MCP tool: ${toolName}`)
+
   // MCPサーバー設定がない場合はツールが見つからない旨を返す
   if (!mcpServers || mcpServers.length === 0) {
     return {
@@ -285,6 +310,7 @@ export const tryExecuteMcpTool = async (
     const params = { ...input }
     const res = await client.client.callTool(toolName, params)
 
+    console.log(`[Main Process] Successfully executed MCP tool: ${toolName}`)
     return {
       found: true,
       success: true,
@@ -294,6 +320,7 @@ export const tryExecuteMcpTool = async (
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error(`[Main Process] Error executing MCP tool ${toolName}:`, errorMessage)
 
     return {
       found: true,
@@ -324,6 +351,7 @@ export const testMcpServerConnection = async (
     startupTime?: number
   }
 }> => {
+  console.log(`[Main Process] Testing MCP server connection: ${mcpServer.name}`)
   const startTime = Date.now()
 
   try {
@@ -377,6 +405,10 @@ export const testMcpServerConnection = async (
     await client.cleanup()
 
     const endTime = Date.now()
+    console.log(
+      `[Main Process] Successfully tested MCP server: ${mcpServer.name} (${toolNames.length} tools)`
+    )
+
     return {
       success: true,
       message: `Successfully connected to MCP server "${mcpServer.name}" via ${mcpServer.connectionType}`,
@@ -388,6 +420,7 @@ export const testMcpServerConnection = async (
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error(`[Main Process] Failed to test MCP server ${mcpServer.name}:`, errorMessage)
 
     // 詳細なエラー分析
     const errorAnalysis = analyzeServerError(errorMessage)
@@ -426,6 +459,8 @@ export const testAllMcpServerConnections = async (
     }
   >
 > => {
+  console.log(`[Main Process] Testing ${mcpServers.length} MCP server connections`)
+
   // MCPサーバー設定がない場合は空オブジェクトを返す
   if (!mcpServers || mcpServers.length === 0) {
     return {}
@@ -463,5 +498,32 @@ function analyzeServerError(errorMessage: string): string {
     return 'The port is already in use. Please make sure that no other process is using the same port.'
   }
 
+  if (lowerError.includes('cors') || lowerError.includes('access-control-allow-origin')) {
+    return 'CORS policy blocked the request. This error should not occur in Main Process - please check the implementation.'
+  }
+
   return 'Please make sure your command and arguments are correct.'
+}
+
+/**
+ * MCPクライアントのクリーンアップ
+ */
+export const cleanupMcpClients = async (): Promise<void> => {
+  console.log('[Main Process] Cleaning up MCP clients')
+
+  await Promise.all(
+    clients.map(async ({ client, name }) => {
+      try {
+        await client.cleanup()
+        console.log(`[Main Process] Cleaned up MCP client: ${name}`)
+      } catch (e) {
+        console.error(`[Main Process] Error cleaning up MCP client ${name}:`, e)
+      }
+    })
+  )
+
+  clients = []
+  lastMcpServerConfigHash = null
+  lastMcpServerLength = 0
+  lastMcpServerNames = []
 }

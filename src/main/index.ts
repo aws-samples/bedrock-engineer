@@ -35,6 +35,11 @@ import {
 } from './handlers/background-agent-handlers'
 import { pubsubHandlers } from './handlers/pubsub-handlers'
 import { todoHandlers } from './handlers/todo-handlers'
+import {
+  setupMcpHandlers as registerMcpHandlers,
+  cleanupMcpHandlers
+} from './handlers/mcp-handlers'
+import { cleanupMcpClients } from './mcp/index'
 
 // 動的インポートを使用してfix-pathパッケージを読み込む
 // eslint-disable-next-line no-restricted-syntax
@@ -431,6 +436,9 @@ app.whenReady().then(async () => {
   registerIpcHandlers(pubsubHandlers, { loggerCategory: 'pubsub:ipc' })
   registerIpcHandlers(todoHandlers, { loggerCategory: 'todo:ipc' })
 
+  // MCP関連IPCハンドラーの登録
+  registerMcpHandlers()
+
   // プロキシ関連IPCハンドラーの登録
   registerProxyHandlers()
 
@@ -497,6 +505,25 @@ app.whenReady().then(async () => {
       log.info('Task history window force close completed')
     } catch (error) {
       log.error('Failed to force close task history window', {
+        error: error instanceof Error ? error.message : String(error)
+      })
+    }
+
+    // MCP クライアントのクリーンアップ処理
+    try {
+      cleanupMcpHandlers()
+      // 非同期クリーンアップは fire-and-forget で実行（before-quit は同期）
+      cleanupMcpClients()
+        .then(() => {
+          log.info('MCP clients cleanup completed')
+        })
+        .catch((error) => {
+          log.error('Failed to cleanup MCP clients', {
+            error: error instanceof Error ? error.message : String(error)
+          })
+        })
+    } catch (error) {
+      log.error('Failed to cleanup MCP clients', {
         error: error instanceof Error ? error.message : String(error)
       })
     }

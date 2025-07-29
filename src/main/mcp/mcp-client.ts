@@ -30,7 +30,9 @@ export class MCPClient {
     // コマンドパスを解決
     const resolvedCommand = resolveCommand(command)
     if (resolvedCommand !== command) {
-      console.log(`Using resolved command path: ${resolvedCommand} (original: ${command})`)
+      console.log(
+        `[Main Process] Using resolved command path: ${resolvedCommand} (original: ${command})`
+      )
     }
     await client.connectToServer(resolvedCommand, args, env ?? {})
     return client
@@ -42,14 +44,14 @@ export class MCPClient {
       const client = new MCPClient()
       client.transport = new StreamableHTTPClientTransport(baseUrl)
       await client.connectAndInitialize()
-      console.log('Connected using Streamable HTTP transport')
+      console.log('[Main Process] Connected using Streamable HTTP transport')
       return client
     } catch (error) {
-      console.log('Streamable HTTP connection failed, falling back to SSE transport')
+      console.log('[Main Process] Streamable HTTP connection failed, falling back to SSE transport')
       const client = new MCPClient()
       client.transport = new SSEClientTransport(baseUrl)
       await client.connectAndInitialize()
-      console.log('Connected using SSE transport')
+      console.log('[Main Process] Connected using SSE transport')
       return client
     }
   }
@@ -73,7 +75,7 @@ export class MCPClient {
       }
     })
     console.log(
-      'Connected to server with tools:',
+      '[Main Process] Connected to server with tools:',
       this._tools.map(({ toolSpec }) => toolSpec!.name)
     )
   }
@@ -93,7 +95,7 @@ export class MCPClient {
       })
       await this.connectAndInitialize()
     } catch (e) {
-      console.log('Failed to connect to MCP server: ', e)
+      console.log('[Main Process] Failed to connect to MCP server: ', e)
       throw e
     }
   }
@@ -124,5 +126,3 @@ export class MCPClient {
     await this.mcp.close()
   }
 }
-
-// MCPClient.fromCommand('npx', ['-y', '@modelcontextprotocol/server-aws-kb-retrieval'], { aa: 'aa' });

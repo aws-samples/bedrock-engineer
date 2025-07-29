@@ -10,7 +10,6 @@ import { ipcClient } from './ipc-client'
 import { executeTool } from './tools'
 import { ToolResult } from '../types/tools'
 import { ToolMetadataCollector } from './tools/registry'
-import { getMcpToolSpecs } from './mcp'
 
 // Initialize preload logger with category
 const log = createRendererCategoryLogger('preload')
@@ -121,7 +120,7 @@ if (process.contextIsolated) {
           }
         })
 
-        // MCPツール仕様取得用のIPCハンドラー
+        // MCPツール仕様取得用のIPCハンドラー (Main Process経由)
         ipcRenderer.on('get-mcp-tool-specs-request', async (_event, data) => {
           try {
             log.debug('Received MCP tool specs request', {
@@ -129,8 +128,8 @@ if (process.contextIsolated) {
               mcpServersCount: data.mcpServers?.length || 0
             })
 
-            // MCPツール仕様を取得
-            const mcpToolSpecs = await getMcpToolSpecs(data.mcpServers)
+            // Main Process経由でMCPツール仕様を取得
+            const mcpToolSpecs = await ipcRenderer.invoke('mcp:getTools', data.mcpServers)
 
             log.debug('Sending MCP tool specs response', {
               requestId: data.requestId,

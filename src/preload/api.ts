@@ -2,7 +2,6 @@ import { Message, ToolConfiguration, ApplyGuardrailRequest } from '@aws-sdk/clie
 import { ipcRenderer } from 'electron'
 import { store } from './store'
 import { BedrockService } from '../main/api/bedrock'
-import { getMcpToolSpecs, testMcpServerConnection, testAllMcpServerConnections } from './mcp'
 import { McpServerConfig } from '../types/agent-chat'
 import { getImageGenerationModelsForRegion } from '../main/api/bedrock/models'
 import { BedrockSupportRegion } from '../types/llm'
@@ -234,15 +233,44 @@ export const api = {
     return ipcRenderer.invoke('write-project-ignore', { projectPath, content })
   },
   mcp: {
-    getToolSpecs: async (mcpServers?: any) => {
-      return getMcpToolSpecs(mcpServers)
+    // MCP初期化
+    init: async (mcpServers: McpServerConfig[]) => {
+      const result = await ipcRenderer.invoke('mcp:init', mcpServers)
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      return result
     },
-    // 接続テスト関連の関数を追加
+    // ツール取得
+    getToolSpecs: async (mcpServers: McpServerConfig[]) => {
+      const result = await ipcRenderer.invoke('mcp:getTools', mcpServers)
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      return result.tools
+    },
+    // ツール実行
+    executeTool: async (toolName: string, input: any, mcpServers: McpServerConfig[]) => {
+      return ipcRenderer.invoke('mcp:executeTool', toolName, input, mcpServers)
+    },
+    // 接続テスト関連の関数
     testConnection: async (mcpServer: McpServerConfig) => {
-      return testMcpServerConnection(mcpServer)
+      return ipcRenderer.invoke('mcp:testConnection', mcpServer)
     },
     testAllConnections: async (mcpServers: McpServerConfig[]) => {
-      return testAllMcpServerConnections(mcpServers)
+      const result = await ipcRenderer.invoke('mcp:testAllConnections', mcpServers)
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      return result.results
+    },
+    // クリーンアップ
+    cleanup: async () => {
+      const result = await ipcRenderer.invoke('mcp:cleanup')
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      return result
     }
   },
   codeInterpreter: {

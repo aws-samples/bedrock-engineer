@@ -700,7 +700,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // MCPツールをロードする - 状態を更新せずツールのみを返すように修正
   const fetchMcpTools = useCallback(async (mcpServers?: McpServerConfig[]) => {
     try {
-      if (window.api?.mcp?.getToolSpecs) {
+      if (window.api?.mcp?.getToolSpecs && mcpServers && mcpServers.length > 0) {
         const fetchedTools = await window.api.mcp.getToolSpecs(mcpServers)
         // 取得したツールの生データを返す（状態管理は呼び出し側で行う）
         return fetchedTools || []

@@ -6,8 +6,8 @@ import { BaseTool } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
 import { ExecutionError } from '../../base/errors'
 import { ToolResult } from '../../../../types/tools'
-import { tryExecuteMcpTool } from '../../../mcp'
 import { McpServerConfig } from '../../../../types/agent-chat'
+import { ipcRenderer } from 'electron'
 
 /**
  * Input type for McpToolAdapter
@@ -142,8 +142,8 @@ export class McpToolAdapter extends BaseTool<McpToolInput, McpToolResult> {
         serverNames: mcpServers.map((s) => s.name)
       })
 
-      // Execute the MCP tool
-      const result = await tryExecuteMcpTool(toolName, args, mcpServers)
+      // Execute the MCP tool via direct IPC to Main Process
+      const result = await ipcRenderer.invoke('mcp:executeTool', toolName, args, mcpServers)
 
       this.logger.info(`MCP tool execution completed`, {
         toolName,
