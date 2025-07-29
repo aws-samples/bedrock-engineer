@@ -264,9 +264,13 @@ export type FlowConfig = {
 export interface McpServerConfig {
   name: string
   description: string
-  command: string
-  args: string[]
+  connectionType: 'command' | 'url'
+  // コマンド形式用
+  command?: string
+  args?: string[]
   env?: Record<string, string>
+  // URL形式用
+  url?: string
 }
 
 // Tavily検索設定の型定義

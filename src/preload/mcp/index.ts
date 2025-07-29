@@ -1,18 +1,7 @@
-import { z } from 'zod'
 import { MCPClient } from './mcp-client'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { McpServerConfig } from '../../types/agent-chat'
-
-const configSchema = z.object({
-  mcpServers: z.record(
-    z.string(),
-    z.object({
-      command: z.string(),
-      args: z.array(z.string()),
-      env: z.record(z.string(), z.string()).optional()
-    })
-  )
-})
+import { mcpServerConfigSchema } from '../../common/mcp/schemas'
 
 let clients: { name: string; client: MCPClient }[] = []
 
@@ -37,8 +26,20 @@ const generateConfigHash = (servers: McpServerConfig[]): string => {
   // 本質的な設定のみを含むオブジェクトの配列を作成
   const essentialConfigs = sortedServers.map((server) => ({
     name: server.name,
-    command: server.command,
-    args: [...server.args], // 配列のコピーを作成して安定させる
+    connectionType: server.connectionType,
+    // コマンド形式の場合
+    ...(server.connectionType === 'command' && server.command && server.args
+      ? {
+          command: server.command,
+          args: [...server.args] // 配列のコピーを作成して安定させる
+        }
+      : {}),
+    // URL形式の場合
+    ...(server.connectionType === 'url' && server.url
+      ? {
+          url: server.url
+        }
+      : {}),
     // 環境変数がある場合のみ含める
     ...(server.env && Object.keys(server.env).length > 0 ? { env: { ...server.env } } : {})
   }))
@@ -127,44 +128,83 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
         return
       }
 
+      // コマンド形式とURL形式のサーバーを分別
+      const commandServers = mcpServers.filter(
+        (server): server is McpServerConfig & { command: string; args: string[] } =>
+          server.connectionType === 'command' &&
+          typeof server.command === 'string' &&
+          Array.isArray(server.args) &&
+          server.args.length > 0
+      )
+
+      const urlServers = mcpServers.filter(
+        (server): server is McpServerConfig & { url: string } =>
+          server.connectionType === 'url' && typeof server.url === 'string' && server.url.length > 0
+      )
+
       // McpServerConfig[] 形式から configSchema 用のフォーマットに変換
       const configData = {
-        mcpServers: mcpServers.reduce(
-          (acc, server) => {
-            acc[server.name] = {
-              command: server.command,
-              args: server.args,
-              env: server.env || {}
-            }
-            return acc
-          },
-          {} as Record<string, { command: string; args: string[]; env?: Record<string, string> }>
-        )
+        mcpServers: {
+          ...commandServers.reduce(
+            (acc, server) => {
+              acc[server.name] = {
+                command: server.command,
+                args: server.args,
+                env: server.env || {}
+              }
+              return acc
+            },
+            {} as Record<string, { command: string; args: string[]; env?: Record<string, string> }>
+          ),
+          ...urlServers.reduce(
+            (acc, server) => {
+              acc[server.name] = {
+                url: server.url,
+                enabled: true
+              }
+              return acc
+            },
+            {} as Record<string, { url: string; enabled?: boolean }>
+          )
+        }
       }
 
-      // configSchema によるバリデーション
-      const { success, error } = configSchema.safeParse(configData)
+      // mcpServerConfigSchema によるバリデーション
+      const { success, error } = mcpServerConfigSchema.safeParse(configData)
       if (!success) {
         console.error('Invalid MCP server configuration:', error)
         throw new Error('Invalid MCP server configuration')
       }
 
-      clients = (
-        await Promise.all(
-          mcpServers.map(async (serverConfig) => {
-            try {
-              const client = await MCPClient.fromCommand(
-                serverConfig.command,
-                serverConfig.args,
-                serverConfig.env
-              )
-              return { name: serverConfig.name, client }
-            } catch (e) {
-              return undefined
-            }
-          })
-        )
-      ).filter((c): c is { name: string; client: MCPClient } => c != null)
+      // 両方の形式のサーバーに接続
+      const allClients = await Promise.all([
+        // コマンド形式のサーバー
+        ...commandServers.map(async (serverConfig) => {
+          try {
+            const client = await MCPClient.fromCommand(
+              serverConfig.command,
+              serverConfig.args,
+              serverConfig.env
+            )
+            return { name: serverConfig.name, client }
+          } catch (e) {
+            console.log(`Failed to connect to command server ${serverConfig.name}:`, e)
+            return undefined
+          }
+        }),
+        // URL形式のサーバー
+        ...urlServers.map(async (serverConfig) => {
+          try {
+            const client = await MCPClient.fromUrl(serverConfig.url)
+            return { name: serverConfig.name, client }
+          } catch (e) {
+            console.log(`Failed to connect to URL server ${serverConfig.name}:`, e)
+            return undefined
+          }
+        })
+      ])
+
+      clients = allClients.filter((c): c is { name: string; client: MCPClient } => c != null)
 
       // 初期化が完了したら構成ハッシュを更新
       updateConfigCache(mcpServers)
@@ -287,8 +327,44 @@ export const testMcpServerConnection = async (
   const startTime = Date.now()
 
   try {
-    // 単一サーバー用の一時的なクライアントを作成
-    const client = await MCPClient.fromCommand(mcpServer.command, mcpServer.args, mcpServer.env)
+    let client: MCPClient
+
+    if (mcpServer.connectionType === 'command') {
+      // コマンド形式のサーバーの検証
+      if (!mcpServer.command || !mcpServer.args) {
+        return {
+          success: false,
+          message: `MCP server "${mcpServer.name}" is missing required command or args`,
+          details: {
+            error: 'Invalid server configuration',
+            errorDetails: 'Command and args fields are required for command-type servers'
+          }
+        }
+      }
+      client = await MCPClient.fromCommand(mcpServer.command, mcpServer.args, mcpServer.env)
+    } else if (mcpServer.connectionType === 'url') {
+      // URL形式のサーバーの検証
+      if (!mcpServer.url) {
+        return {
+          success: false,
+          message: `MCP server "${mcpServer.name}" is missing required URL`,
+          details: {
+            error: 'Invalid server configuration',
+            errorDetails: 'URL field is required for URL-type servers'
+          }
+        }
+      }
+      client = await MCPClient.fromUrl(mcpServer.url)
+    } else {
+      return {
+        success: false,
+        message: `MCP server "${mcpServer.name}" has unsupported connection type`,
+        details: {
+          error: 'Invalid server configuration',
+          errorDetails: 'Connection type must be either "command" or "url"'
+        }
+      }
+    }
 
     // ツール情報を取得
     const tools = client.tools || []
@@ -303,7 +379,7 @@ export const testMcpServerConnection = async (
     const endTime = Date.now()
     return {
       success: true,
-      message: `Successfully connected to MCP server "${mcpServer.name}"`,
+      message: `Successfully connected to MCP server "${mcpServer.name}" via ${mcpServer.connectionType}`,
       details: {
         toolCount: tools.length,
         toolNames,
@@ -312,15 +388,13 @@ export const testMcpServerConnection = async (
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
-    // 未使用変数を削除
-    // const errorStack = error instanceof Error ? error.stack : undefined
 
     // 詳細なエラー分析
     const errorAnalysis = analyzeServerError(errorMessage)
 
     return {
       success: false,
-      message: `Failed to connect to MCP server "${mcpServer.name}"`,
+      message: `Failed to connect to MCP server "${mcpServer.name}" via ${mcpServer.connectionType}`,
       details: {
         error: errorMessage,
         errorDetails: errorAnalysis

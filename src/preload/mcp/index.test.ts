@@ -11,11 +11,12 @@ jest.mock('./mcp-client', () => {
         return {
           tools: [
             {
-              toolSpec: {
-                name: 'mockTool',
-                description: 'A mocked tool for testing',
-                inputSchema: { json: { type: 'object' } }
-              }
+              name: 'mock-server',
+              description: 'Mock MCP Server',
+              connectionType: 'command' as const,
+              command: 'mock-command',
+              args: ['--arg1', 'value1'],
+              env: { TEST_ENV: 'test_value' }
             }
           ],
           callTool: jest.fn().mockImplementation((toolName) => {
@@ -37,6 +38,7 @@ describe('MCP Module Tests', () => {
     {
       name: 'mock-server',
       description: 'Mock MCP server for testing',
+      connectionType: 'command',
       command: 'mock-command',
       args: ['arg1', 'arg2'],
       env: { TEST_ENV: 'test_value' }

@@ -1,75 +1,10 @@
 import { McpServerConfig } from '@/types/agent-chat'
-import { ParsedServerConfig, ValidationResult } from '../types/mcpServer.types'
-
-/**
- * JSONフォーマットのMCPサーバー設定を検証する
- * @param jsonConfig パースされたJSON設定オブジェクト
- * @returns {ValidationResult} 検証結果
- */
-export function validateServerConfig(jsonConfig: any): ValidationResult {
-  // 単一サーバー形式の検証
-  if (jsonConfig.name && jsonConfig.command) {
-    // 必須フィールドの検証
-    if (!jsonConfig.description || !Array.isArray(jsonConfig.args)) {
-      return {
-        isValid: false,
-        error: 'Required fields are missing or invalid. Check the JSON format.'
-      }
-    }
-
-    // envが指定されている場合はオブジェクト型であることを確認
-    if (jsonConfig.env && typeof jsonConfig.env !== 'object') {
-      return {
-        isValid: false,
-        error: 'The "env" field must be an object.'
-      }
-    }
-
-    return { isValid: true }
-  }
-
-  // claude_desktop_config.json互換形式の検証
-  if (jsonConfig.mcpServers && typeof jsonConfig.mcpServers === 'object') {
-    const errorMessages: string[] = []
-    let hasValidServer = false
-
-    Object.entries(jsonConfig.mcpServers).forEach(([name, config]) => {
-      const serverConfig = config as any
-
-      // 必須フィールドの検証
-      if (!serverConfig.command || !Array.isArray(serverConfig.args)) {
-        errorMessages.push(`Server "${name}": missing required fields`)
-        return
-      }
-
-      // envが指定されている場合はオブジェクト型であることを確認
-      if (serverConfig.env && typeof serverConfig.env !== 'object') {
-        errorMessages.push(`Server "${name}": "env" field must be an object`)
-        return
-      }
-
-      hasValidServer = true
-    })
-
-    if (!hasValidServer) {
-      return { isValid: false, error: 'No valid server configurations found' }
-    }
-
-    if (errorMessages.length > 0) {
-      return {
-        isValid: false,
-        error: `Some servers could not be added: \n${errorMessages.join('\n')}`
-      }
-    }
-
-    return { isValid: true }
-  }
-
-  return { isValid: false, error: 'Invalid JSON format.' }
-}
+import { ParsedServerConfig } from '../types/mcpServer.types'
+import { validateMcpServerConfig } from '@/common/mcp/schemas'
 
 /**
  * JSON文字列からMCPサーバー設定を解析する
+ * 共通スキーマを使用してURL形式とコマンド形式の両方をサポート
  * @param jsonString JSON形式の文字列
  * @param existingServers 既存のサーバー設定（重複チェック用）
  * @returns {ParsedServerConfig} 解析結果
@@ -86,35 +21,44 @@ export function parseServerConfigJson(
 
     // claude_desktop_config.json互換形式の処理
     if (parsedConfig.mcpServers && typeof parsedConfig.mcpServers === 'object') {
+      const validation = validateMcpServerConfig(parsedConfig)
+
+      if (!validation.success) {
+        return {
+          success: false,
+          error: validation.error || 'Invalid server configuration'
+        }
+      }
+
       const errorMessages: string[] = []
 
-      Object.entries(parsedConfig.mcpServers).forEach(([name, config]) => {
-        const serverConfig = config as any
-
-        // 必須フィールドの検証
-        if (!serverConfig.command || !Array.isArray(serverConfig.args)) {
-          errorMessages.push(`Server "${name}": missing required fields`)
-          return
-        }
-
-        // envが指定されている場合はオブジェクト型であることを確認
-        if (serverConfig.env && typeof serverConfig.env !== 'object') {
-          errorMessages.push(`Server "${name}": "env" field must be an object`)
-          return
-        }
-
+      Object.entries(validation.data!.mcpServers).forEach(([name, config]) => {
         // 既存のサーバー名との重複チェック
         if (existingNames.includes(name)) {
           errorMessages.push(`Server "${name}" already exists`)
           return
         }
 
-        const newServer = {
-          name,
-          description: name, // デフォルトでは名前と同じ
-          command: serverConfig.command,
-          args: serverConfig.args,
-          env: serverConfig.env || {}
+        let newServer: McpServerConfig
+
+        if ('command' in config) {
+          // コマンド形式のサーバー
+          newServer = {
+            name,
+            description: name, // デフォルトでは名前と同じ
+            connectionType: 'command',
+            command: config.command,
+            args: config.args,
+            env: config.env || {}
+          }
+        } else {
+          // URL形式のサーバー
+          newServer = {
+            name,
+            description: name, // デフォルトでは名前と同じ
+            connectionType: 'url',
+            url: config.url
+          }
         }
 
         newServers.push(newServer)
@@ -139,36 +83,10 @@ export function parseServerConfigJson(
       return { success: true, servers: newServers, newlyAddedServer }
     }
 
-    // 従来の単一サーバー形式の処理
-    const serverConfig = parsedConfig
-
-    // 必須フィールドの検証
-    if (
-      !serverConfig.name ||
-      !serverConfig.description ||
-      !serverConfig.command ||
-      !Array.isArray(serverConfig.args)
-    ) {
-      return {
-        success: false,
-        error: 'Required fields are missing or invalid. Check the JSON format.'
-      }
-    }
-
-    // envが指定されている場合はオブジェクト型であることを確認
-    if (serverConfig.env && typeof serverConfig.env !== 'object') {
-      return { success: false, error: 'The "env" field must be an object.' }
-    }
-
-    // 既存のサーバー名との重複チェック
-    if (existingNames.includes(serverConfig.name)) {
-      return { success: false, error: 'A server with this name already exists.' }
-    }
-
+    // mcpServers フィールドが存在しない場合は無効なフォーマット
     return {
-      success: true,
-      servers: [serverConfig],
-      newlyAddedServer: serverConfig
+      success: false,
+      error: 'Invalid JSON format. Expected "mcpServers" field with server configurations.'
     }
   } catch (error) {
     return { success: false, error: 'Invalid JSON format.' }
@@ -177,62 +95,40 @@ export function parseServerConfigJson(
 
 /**
  * サーバー設定を編集する際のJSONを生成する
+ * URL形式とコマンド形式の両方をサポート
  * @param server 編集対象のサーバー設定（単一サーバー）
  * @param servers 編集対象のサーバー設定（複数サーバー）
  * @returns {string} JSON文字列
  */
 export function generateEditJson(server?: McpServerConfig, servers?: McpServerConfig[]): string {
-  // 複数サーバーの場合
-  if (servers) {
-    const mcpServers: Record<string, any> = {}
+  const serversToProcess = servers || (server ? [server] : [])
+  const mcpServers: Record<string, any> = {}
 
-    servers.forEach((srv) => {
+  serversToProcess.forEach((srv) => {
+    if (srv.connectionType === 'command') {
       mcpServers[srv.name] = {
         command: srv.command,
         args: srv.args,
         ...(srv.env && Object.keys(srv.env).length > 0 ? { env: srv.env } : {})
       }
-    })
-
-    return JSON.stringify({ mcpServers }, null, 2)
-  }
-
-  // 単一サーバーの場合（後方互換性）
-  if (server) {
-    const mcpServers: Record<string, any> = {}
-
-    mcpServers[server.name] = {
-      command: server.command,
-      args: server.args,
-      ...(server.env && Object.keys(server.env).length > 0 ? { env: server.env } : {})
+    } else if (srv.connectionType === 'url') {
+      mcpServers[srv.name] = {
+        url: srv.url,
+        enabled: true
+      }
     }
+  })
 
-    return JSON.stringify({ mcpServers }, null, 2)
-  }
-
-  return JSON.stringify({ mcpServers: {} }, null, 2)
+  return JSON.stringify({ mcpServers }, null, 2)
 }
 
 /**
  * サンプルのMCPサーバー設定JSONを生成する
+ * URL形式のサンプルも含む
  * @param type 生成するJSONのタイプ
  * @returns {string} サンプルJSON文字列
  */
-export function generateSampleJson(type: 'simple' | 'multiple' = 'multiple'): string {
-  if (type === 'simple') {
-    return JSON.stringify(
-      {
-        name: 'fetch',
-        description: 'Fetch MCP Server',
-        command: 'uvx',
-        args: ['mcp-server-fetch'],
-        env: {}
-      },
-      null,
-      2
-    )
-  }
-
+export function generateSampleJson(): string {
   return JSON.stringify(
     {
       mcpServers: {
@@ -243,6 +139,9 @@ export function generateSampleJson(type: 'simple' | 'multiple' = 'multiple'): st
         filesystem: {
           command: 'npx',
           args: ['-y', '@modelcontextprotocol/server-filesystem', '~/']
+        },
+        DeepWiki: {
+          url: 'https://mcp.deepwiki.com/sse'
         }
       }
     },

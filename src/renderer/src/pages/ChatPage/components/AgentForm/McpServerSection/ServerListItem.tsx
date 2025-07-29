@@ -41,7 +41,7 @@ export const ServerListItem: React.FC<ServerListItemProps> = ({
           <p className="text-xs text-gray-500 dark:text-gray-400">{server.description}</p>
           <p className="text-xs font-mono text-gray-600 dark:text-gray-300 mt-1">
             <code className="text-gray-600 dark:text-gray-300">
-              {server.command} {server.args.join(' ')}
+              {server.command} {server.args?.join(' ') || ''}
             </code>
           </p>
 

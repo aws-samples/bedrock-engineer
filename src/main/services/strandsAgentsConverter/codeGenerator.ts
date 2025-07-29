@@ -351,7 +351,7 @@ ${clientVarName}_client = MCPClient(lambda: stdio_client(
           .map(
             (server) =>
               `- **${server.original.name}**: ${server.original.description || 'No description'}\n` +
-              `  - Command: \`${server.original.command} ${server.original.args.join(' ')}\``
+              `  - Command: \`${server.original.command} ${server.original.args?.join(' ') || ''}\``
           )
           .join('\n')
     }

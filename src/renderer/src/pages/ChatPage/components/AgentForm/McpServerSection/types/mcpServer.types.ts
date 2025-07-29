@@ -32,14 +32,6 @@ export interface ParsedServerConfig {
 }
 
 /**
- * サーバー設定の検証結果
- */
-export interface ValidationResult {
-  isValid: boolean
-  error?: string
-}
-
-/**
  * 接続テスト結果のサマリー
  */
 export interface ConnectionSummary {

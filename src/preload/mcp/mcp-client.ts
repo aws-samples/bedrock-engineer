@@ -1,13 +1,17 @@
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js'
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { z } from 'zod'
 import { resolveCommand } from './command-resolver'
+
+type Transport = StdioClientTransport | SSEClientTransport | StreamableHTTPClientTransport
 
 // https://github.com/modelcontextprotocol/quickstart-resources/blob/main/mcp-client-typescript/index.ts
 export class MCPClient {
   private mcp: Client
-  private transport: StdioClientTransport | null = null
+  private transport: Transport | null = null
   private _tools: Tool[] = []
 
   private constructor() {
@@ -32,8 +36,46 @@ export class MCPClient {
     return client
   }
 
+  static async fromUrl(url: string) {
+    const baseUrl = new URL(url)
+    try {
+      const client = new MCPClient()
+      client.transport = new StreamableHTTPClientTransport(baseUrl)
+      await client.connectAndInitialize()
+      console.log('Connected using Streamable HTTP transport')
+      return client
+    } catch (error) {
+      console.log('Streamable HTTP connection failed, falling back to SSE transport')
+      const client = new MCPClient()
+      client.transport = new SSEClientTransport(baseUrl)
+      await client.connectAndInitialize()
+      console.log('Connected using SSE transport')
+      return client
+    }
+  }
+
   public get tools() {
     return this._tools
+  }
+
+  private async connectAndInitialize() {
+    if (!this.transport) throw new Error('Transport not initialized')
+    await this.mcp.connect(this.transport)
+
+    const toolsResult = await this.mcp.listTools()
+    this._tools = toolsResult.tools.map((tool) => {
+      return {
+        toolSpec: {
+          name: tool.name,
+          description: tool.description,
+          inputSchema: { json: JSON.parse(JSON.stringify(tool.inputSchema)) }
+        }
+      }
+    })
+    console.log(
+      'Connected to server with tools:',
+      this._tools.map(({ toolSpec }) => toolSpec!.name)
+    )
   }
 
   async connectToServer(command: string, args: string[], env: Record<string, string>) {
@@ -49,23 +91,7 @@ export class MCPClient {
           PATH: process.env.PATH || ''
         }
       })
-      await this.mcp.connect(this.transport)
-
-      // List available tools
-      const toolsResult = await this.mcp.listTools()
-      this._tools = toolsResult.tools.map((tool) => {
-        return {
-          toolSpec: {
-            name: tool.name,
-            description: tool.description,
-            inputSchema: { json: JSON.parse(JSON.stringify(tool.inputSchema)) }
-          }
-        }
-      })
-      console.log(
-        'Connected to server with tools:',
-        this._tools.map(({ toolSpec }) => toolSpec!.name)
-      )
+      await this.connectAndInitialize()
     } catch (e) {
       console.log('Failed to connect to MCP server: ', e)
       throw e
