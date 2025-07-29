@@ -139,10 +139,7 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
       // コマンド形式とURL形式のサーバーを分別（後方互換性あり）
       const commandServers = mcpServers.filter(
         (server): server is McpServerConfig & { command: string; args: string[] } =>
-          inferConnectionType(server) === 'command' &&
-          typeof server.command === 'string' &&
-          Array.isArray(server.args) &&
-          server.args.length > 0
+          inferConnectionType(server) === 'command' && typeof server.command === 'string'
       )
 
       const urlServers = mcpServers.filter(
