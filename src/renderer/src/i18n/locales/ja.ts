@@ -91,6 +91,18 @@ const SettingPage = {
   tavilySearchUrl: 'https://tavily.com/',
   'Learn more about Tavily Search, go to':
     'Tavily Searchについて詳しく知るには、こちらをご覧ください',
+  'Domain Settings': 'ドメイン設定',
+  'Quick Presets': 'クイックプリセット',
+  'Technical Sites': '技術サイト',
+  'News Sites': 'ニュースサイト',
+  'Academic Sites': '学術サイト',
+  'Exclude Social Media': 'ソーシャルメディアを除外',
+  'Include Domains': '含めるドメイン',
+  'Exclude Domains': '除外するドメイン',
+  'Domain Settings Help':
+    '含めるドメインで特定のWebサイトに検索を制限し、除外するドメインで特定のWebサイトを除外できます。変更は自動的に保存されます。',
+  'Learn more about domain settings at': 'ドメイン設定について詳しく知るには',
+  'Clear All': 'すべて削除',
   'Context Length (number of messages to include in API requests)':
     'コンテキスト長（APIリクエストに含めるメッセージ数）',
   minContextLength: '1',

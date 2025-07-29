@@ -146,6 +146,15 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
     try {
       this.logger.verbose('Sending request to Tavily API')
 
+      // Get current agent's Tavily search configuration
+      const selectedAgentId = this.store.get('selectedAgentId') as string
+      const customAgents = this.store.get('customAgents') || []
+      const currentAgent = customAgents.find((agent: any) => agent.id === selectedAgentId)
+      const domainConfig = currentAgent?.tavilySearchConfig || {
+        includeDomains: [],
+        excludeDomains: []
+      }
+
       // Use IPC to make the request through main process (which has proxy support)
       const fetchOptions = {
         method: 'POST',
@@ -160,8 +169,8 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
           include_images: true,
           include_raw_content: option?.include_raw_content ?? false,
           max_results: 5,
-          include_domains: [],
-          exclude_domains: []
+          include_domains: domainConfig.includeDomains,
+          exclude_domains: domainConfig.excludeDomains
         })
       }
 

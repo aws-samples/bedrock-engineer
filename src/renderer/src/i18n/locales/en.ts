@@ -91,6 +91,18 @@ const SettingPage = {
   tavilySearchApiKeyPlaceholder: 'tvly-xxxxxxxxxxxxxxx',
   tavilySearchUrl: 'https://tavily.com/',
   'Learn more about Tavily Search, go to': 'Learn more about Tavily Search, go to',
+  'Domain Settings': 'Domain Settings',
+  'Quick Presets': 'Quick Presets',
+  'Technical Sites': 'Technical Sites',
+  'News Sites': 'News Sites',
+  'Academic Sites': 'Academic Sites',
+  'Exclude Social Media': 'Exclude Social Media',
+  'Include Domains': 'Include Domains',
+  'Exclude Domains': 'Exclude Domains',
+  'Domain Settings Help':
+    'Include domains to limit search to specific websites. Exclude domains to avoid certain websites. Changes are saved automatically.',
+  'Learn more about domain settings at': 'Learn more about domain settings at',
+  'Clear All': 'Clear All',
   'Context Length (number of messages to include in API requests)':
     'Context Length (number of messages to include in API requests)',
   minContextLength: '1',

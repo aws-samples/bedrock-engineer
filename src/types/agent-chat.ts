@@ -235,6 +235,7 @@ export type CustomAgent = Agent & {
   flows?: FlowConfig[] // エージェント固有のFlow設定
   mcpServers?: McpServerConfig[] // エージェント固有のMCPサーバー設定
   mcpTools?: ToolState[] // エージェント固有のMCPツール設定
+  tavilySearchConfig?: TavilySearchConfig // エージェント固有のTavily検索設定
   additionalInstruction?: string // エージェント生成時の追加指示
   environmentContextSettings?: EnvironmentContextSettings // エージェント固有の環境コンテキスト設定
 }
@@ -266,6 +267,12 @@ export interface McpServerConfig {
   command: string
   args: string[]
   env?: Record<string, string>
+}
+
+// Tavily検索設定の型定義
+export interface TavilySearchConfig {
+  includeDomains: string[]
+  excludeDomains: string[]
 }
 
 // 環境コンテキスト設定の型定義

@@ -179,7 +179,9 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
     getAgentBedrockAgents,
     updateAgentBedrockAgents,
     getAgentFlows,
-    updateAgentFlows
+    updateAgentFlows,
+    getAgentTavilySearchConfig,
+    updateAgentTavilySearchConfig
   } = useSettings()
 
   // 選択されたツールの状態管理
@@ -701,10 +703,20 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                           }
                         />
                       )}
-                      {selectedTool === 'tavilySearch' && (
+                      {selectedTool === 'tavilySearch' && selectedAgentId && (
                         <TavilySearchSettingForm
                           tavilySearchApiKey={tavilySearchApiKey}
                           setTavilySearchApiKey={setTavilySearchApiKey}
+                          selectedAgentId={selectedAgentId}
+                          includeDomains={
+                            getAgentTavilySearchConfig(selectedAgentId).includeDomains
+                          }
+                          excludeDomains={
+                            getAgentTavilySearchConfig(selectedAgentId).excludeDomains
+                          }
+                          onUpdateTavilyConfig={(config) =>
+                            updateAgentTavilySearchConfig(selectedAgentId, config)
+                          }
                         />
                       )}
                       {selectedTool === 'recognizeImage' && <RecognizeImageSettingForm />}

@@ -6,7 +6,8 @@ import {
   SendMsgKey,
   ToolState,
   WindowConfig,
-  CameraConfig
+  CameraConfig,
+  TavilySearchConfig
 } from 'src/types/agent-chat'
 import { ToolName } from 'src/types/tools'
 
@@ -222,6 +223,10 @@ export interface SettingsContextType {
   // エージェント固有のFlow設定
   getAgentFlows: (agentId: string) => FlowConfig[]
   updateAgentFlows: (agentId: string, flows: FlowConfig[]) => void
+
+  // エージェント固有のTavily検索設定
+  getAgentTavilySearchConfig: (agentId: string) => TavilySearchConfig
+  updateAgentTavilySearchConfig: (agentId: string, config: TavilySearchConfig) => void
 
   // エージェント設定の一括更新
   updateAgentSettings: (
@@ -1567,6 +1572,38 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [customAgents]
   )
 
+  // エージェント固有のTavily検索設定を取得する関数
+  const getAgentTavilySearchConfig = useCallback(
+    (agentId: string): TavilySearchConfig => {
+      // 現在選択されているエージェントを見つける
+      const agent = allAgents.find((a) => a.id === agentId)
+
+      // エージェント固有のTavily検索設定がある場合はそれを返す
+      // それ以外はデフォルト値を返す
+      return (
+        agent?.tavilySearchConfig || {
+          includeDomains: [],
+          excludeDomains: []
+        }
+      )
+    },
+    [allAgents]
+  )
+
+  // エージェントのTavily検索設定を更新する関数
+  const updateAgentTavilySearchConfig = useCallback(
+    (agentId: string, config: TavilySearchConfig) => {
+      // カスタムエージェントの場合のみ更新可能
+      const updatedAgents = customAgents.map((agent) =>
+        agent.id === agentId ? { ...agent, tavilySearchConfig: config } : agent
+      )
+
+      setCustomAgents(updatedAgents)
+      window.store.set('customAgents', updatedAgents)
+    },
+    [customAgents]
+  )
+
   // エージェント設定の一括更新関数
   const updateAgentSettings = useCallback(
     (
@@ -1807,6 +1844,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     updateAgentKnowledgeBases,
     getAgentFlows,
     updateAgentFlows,
+    getAgentTavilySearchConfig,
+    updateAgentTavilySearchConfig,
     updateAgentSettings,
 
     // Shell Settings
