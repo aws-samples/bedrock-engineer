@@ -225,6 +225,15 @@ The Agent Directory is a content hub where you can discover and immediately use 
 3. **View Details** - Select any agent to view its complete system prompt, supported tools, and usage scenarios
 4. **Add to Your Collection** - Click "Add to My Agents" to add the agent to your personal collection
 
+### Organization Sharing
+
+Share agents within your team or organization using AWS S3 storage. This feature enables:
+
+- **Team Collaboration** - Share custom agents with specific teams or departments
+- **Centralized Management** - Manage organization-specific agents through S3 buckets
+
+For detailed setup instructions, see the [Organization Sharing Guide](./docs/agent-directory-organization/).
+
 ### Contribute Your Agents
 
 Become a contributor and share your custom agents with the community:
