@@ -28,6 +28,7 @@ export const en = {
   organization: {
     editOrganization: 'Edit Organization',
     addOrganization: 'Add Organization',
+    deleteOrganization: 'Delete Organization',
     organizationName: 'Organization Name',
     enterOrganizationName: 'Enter organization name',
     description: 'Description',
@@ -44,9 +45,21 @@ export const en = {
     update: 'Update',
     add: 'Add',
     cancel: 'Cancel',
+    delete: 'Delete',
+    deleteConfirmTitle: 'Confirm Organization Deletion',
+    deleteConfirmMessage:
+      'Are you sure you want to delete this organization?\nThis action cannot be undone.',
+    deleteSuccess: 'Organization deleted successfully',
+    deleteError: 'Error occurred while deleting',
     organizationNameRequired: 'Organization name is required',
     s3BucketRequired: 'S3 bucket is required',
-    unknownError: 'Unknown error occurred'
+    unknownError: 'Unknown error occurred',
+    toast: {
+      organizationAdded: '"{{name}}" has been added',
+      organizationUpdated: '"{{name}}" has been updated',
+      organizationDeleted: '"{{name}}" has been deleted',
+      organizationError: 'Error occurred: {{error}}'
+    }
   },
 
   // Contributor Modal

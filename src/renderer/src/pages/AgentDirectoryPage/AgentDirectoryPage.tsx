@@ -52,7 +52,11 @@ export const AgentDirectoryPage: React.FC = () => {
   const { ContributorModal, openModal } = useContributorModal()
 
   // Use the organization modal hook
-  const { OrganizationModal, openModal: openOrganizationModal } = useOrganizationModal()
+  const {
+    OrganizationModal,
+    openModal: openOrganizationModal,
+    openDeleteModal: openDeleteOrganizationModal
+  } = useOrganizationModal()
 
   return (
     <div className="px-4 py-6">
@@ -67,6 +71,7 @@ export const AgentDirectoryPage: React.FC = () => {
               onSelectOrganization={handleOrganizationSelect}
               onAddOrganization={() => openOrganizationModal()}
               onEditOrganization={(org) => openOrganizationModal(org)}
+              onDeleteOrganization={(org) => openDeleteOrganizationModal(org)}
             />
           </div>
 

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { OrganizationConfig } from '@/types/agent-chat'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 import { AWS_REGIONS } from '@/types/aws-regions'
+import { HiExclamationTriangle } from 'react-icons/hi2'
+import { useToast } from '@renderer/hooks/useToast'
 
 interface OrganizationModalProps {
   organization?: OrganizationConfig
@@ -11,9 +13,74 @@ interface OrganizationModalProps {
   onClose: () => void
 }
 
+interface DeleteConfirmModalProps {
+  organization: OrganizationConfig
+  isOpen: boolean
+  onClose: () => void
+  onConfirmDelete: () => Promise<void>
+}
+
+const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
+  organization,
+  isOpen,
+  onClose,
+  onConfirmDelete
+}) => {
+  const { t } = useTranslation()
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await onConfirmDelete()
+      onClose()
+    } catch (error) {
+      console.error('Delete error:', error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  return (
+    <Modal show={isOpen} onClose={onClose} size="md" className="dark:bg-gray-900">
+      <div className="border-[0.5px] border-white dark:border-gray-100 rounded-lg shadow-xl dark:shadow-gray-900/80">
+        <Modal.Header className="border-b border-gray-200 dark:border-gray-700/50 dark:bg-gray-900 rounded-t-lg">
+          {t('organization.deleteConfirmTitle')}
+        </Modal.Header>
+        <Modal.Body className="p-0 bg-white dark:bg-gray-900">
+          <div className="p-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <HiExclamationTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <p className="text-gray-900 dark:text-gray-100 mb-2">
+                  <strong>{organization.name}</strong>
+                </p>
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                  {t('organization.deleteConfirmMessage')}
+                </p>
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700/50 dark:bg-gray-900 rounded-b-lg">
+          <Button onClick={handleDelete} disabled={isDeleting} color="failure">
+            {isDeleting ? t('organization.saving') : t('organization.delete')}
+          </Button>
+          <Button color="gray" onClick={onClose} disabled={isDeleting}>
+            {t('organization.cancel')}
+          </Button>
+        </Modal.Footer>
+      </div>
+    </Modal>
+  )
+}
+
 const OrganizationModal: React.FC<OrganizationModalProps> = ({ organization, isOpen, onClose }) => {
   const { t } = useTranslation()
   const { addOrganization, updateOrganization } = useSettings()
+  const toast = useToast()
 
   const [formData, setFormData] = useState({
     name: organization?.name || '',
@@ -57,8 +124,10 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({ organization, isO
 
       if (organization) {
         updateOrganization(organizationData)
+        toast.success(t('organization.toast.organizationUpdated', { name: organizationData.name }))
       } else {
         addOrganization(organizationData)
+        toast.success(t('organization.toast.organizationAdded', { name: organizationData.name }))
       }
 
       onClose()
@@ -73,7 +142,9 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({ organization, isO
         }
       })
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('organization.unknownError'))
+      const errorMessage = err instanceof Error ? err.message : t('organization.unknownError')
+      setError(errorMessage)
+      toast.error(t('organization.toast.organizationError', { error: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -241,8 +312,17 @@ const OrganizationModal: React.FC<OrganizationModalProps> = ({ organization, isO
 }
 
 export const useOrganizationModal = () => {
+  const { t } = useTranslation()
+  const { removeOrganization } = useSettings()
+  const toast = useToast()
   const [isOpen, setIsOpen] = useState(false)
   const [editingOrganization, setEditingOrganization] = useState<OrganizationConfig | undefined>(
+    undefined
+  )
+
+  // 削除確認モーダル用の状態
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [deletingOrganization, setDeletingOrganization] = useState<OrganizationConfig | undefined>(
     undefined
   )
 
@@ -256,13 +336,51 @@ export const useOrganizationModal = () => {
     setEditingOrganization(undefined)
   }
 
+  const openDeleteModal = (organization: OrganizationConfig) => {
+    setDeletingOrganization(organization)
+    setIsDeleteOpen(true)
+  }
+
+  const closeDeleteModal = () => {
+    setIsDeleteOpen(false)
+    setDeletingOrganization(undefined)
+  }
+
+  const handleConfirmDelete = async (): Promise<void> => {
+    if (!deletingOrganization) return
+
+    try {
+      const organizationName = deletingOrganization.name
+      removeOrganization(deletingOrganization.id)
+      toast.success(t('organization.toast.organizationDeleted', { name: organizationName }))
+      // 削除成功後はAgentDirectoryContextで選択中組織の処理が必要
+    } catch (error) {
+      console.error('Failed to delete organization:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      toast.error(t('organization.toast.organizationError', { error: errorMessage }))
+      throw error
+    }
+  }
+
   const OrganizationModalComponent = () => (
-    <OrganizationModal organization={editingOrganization} isOpen={isOpen} onClose={closeModal} />
+    <>
+      <OrganizationModal organization={editingOrganization} isOpen={isOpen} onClose={closeModal} />
+      {deletingOrganization && (
+        <DeleteConfirmModal
+          organization={deletingOrganization}
+          isOpen={isDeleteOpen}
+          onClose={closeDeleteModal}
+          onConfirmDelete={handleConfirmDelete}
+        />
+      )}
+    </>
   )
 
   return {
     OrganizationModal: OrganizationModalComponent,
     openModal,
-    closeModal
+    closeModal,
+    openDeleteModal,
+    closeDeleteModal
   }
 }

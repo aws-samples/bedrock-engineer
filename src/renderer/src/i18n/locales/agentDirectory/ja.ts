@@ -29,6 +29,7 @@ export const ja = {
   organization: {
     editOrganization: '組織を編集',
     addOrganization: '組織を追加',
+    deleteOrganization: '組織を削除',
     organizationName: '組織名',
     enterOrganizationName: '組織名を入力してください',
     description: '説明',
@@ -46,9 +47,21 @@ export const ja = {
     update: '更新',
     add: '追加',
     cancel: 'キャンセル',
+    delete: '削除',
+    deleteConfirmTitle: '組織の削除確認',
+    deleteConfirmMessage:
+      'この組織を削除してもよろしいですか？\n削除すると元に戻すことはできません。',
+    deleteSuccess: '組織を削除しました',
+    deleteError: '削除中にエラーが発生しました',
     organizationNameRequired: '組織名は必須です',
     s3BucketRequired: 'S3バケットは必須です',
-    unknownError: '不明なエラーが発生しました'
+    unknownError: '不明なエラーが発生しました',
+    toast: {
+      organizationAdded: '「{{name}}」を追加しました',
+      organizationUpdated: '「{{name}}」を更新しました',
+      organizationDeleted: '「{{name}}」を削除しました',
+      organizationError: 'エラーが発生しました: {{error}}'
+    }
   },
 
   // Organization Setup

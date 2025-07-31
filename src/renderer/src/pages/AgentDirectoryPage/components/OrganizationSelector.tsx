@@ -1,7 +1,7 @@
 import React from 'react'
 import { Dropdown } from 'flowbite-react'
 import { useTranslation } from 'react-i18next'
-import { HiOfficeBuilding, HiChevronDown, HiPlus, HiPencil } from 'react-icons/hi'
+import { HiOfficeBuilding, HiChevronDown, HiPlus, HiPencil, HiTrash } from 'react-icons/hi'
 import { BsGlobeAmericas } from 'react-icons/bs'
 import { HiUserGroup } from 'react-icons/hi2'
 
@@ -13,6 +13,7 @@ interface OrganizationSelectorProps {
   onSelectOrganization: (orgId: string | 'all' | 'contributors') => void
   onAddOrganization: () => void
   onEditOrganization: (org: OrganizationConfig) => void
+  onDeleteOrganization: (org: OrganizationConfig) => void
 }
 
 export const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
@@ -20,7 +21,8 @@ export const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
   organizations,
   onSelectOrganization,
   onAddOrganization,
-  onEditOrganization
+  onEditOrganization,
+  onDeleteOrganization
 }) => {
   const { t } = useTranslation()
 
@@ -92,19 +94,34 @@ export const OrganizationSelector: React.FC<OrganizationSelectorProps> = ({
                 <HiOfficeBuilding className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">{org.name}</span>
               </div>
-              {/* 編集ボタン */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onEditOrganization(org)
-                }}
-                className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300
-                           opacity-0 group-hover:opacity-100 transition-opacity duration-200 ml-2
-                           rounded hover:bg-gray-200 dark:hover:bg-gray-600"
-                title={t('editOrganization', 'Edit Organization')}
-              >
-                <HiPencil className="w-3 h-3" />
-              </button>
+              <div className="flex items-center gap-1 ml-2">
+                {/* 編集ボタン */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onEditOrganization(org)
+                  }}
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300
+                             opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                             rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                  title={t('organization.editOrganization')}
+                >
+                  <HiPencil className="w-3 h-3" />
+                </button>
+                {/* 削除ボタン */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteOrganization(org)
+                  }}
+                  className="p-1 text-gray-500 hover:text-red-600 dark:hover:text-red-400
+                             opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                             rounded hover:bg-red-100 dark:hover:bg-red-900/20"
+                  title={t('organization.deleteOrganization')}
+                >
+                  <HiTrash className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           </Dropdown.Item>
         ))}

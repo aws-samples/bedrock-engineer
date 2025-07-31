@@ -12,6 +12,7 @@ import { ChatHistoryProvider } from './contexts/ChatHistoryContext'
 import { AgentDirectoryProvider } from './contexts/AgentDirectoryContext'
 import { StepType, TourProvider } from '@reactour/tour'
 import { useTranslation } from 'react-i18next'
+import { ToastService } from './services/ToastService'
 
 const ListItem: React.FC<{
   children: any
@@ -149,7 +150,7 @@ function App(): JSX.Element {
         <ChatHistoryProvider>
           <AgentDirectoryProvider>
             <div>
-              <Toaster position="top-right" />
+              <Toaster {...ToastService.getToasterConfig()} />
               <RouterProvider router={router} />
             </div>
           </AgentDirectoryProvider>

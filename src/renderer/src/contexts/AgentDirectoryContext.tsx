@@ -178,6 +178,31 @@ export const AgentDirectoryProvider: React.FC<{ children: React.ReactNode }> = (
     loadDirectoryAgents()
   }, [])
 
+  // 組織リストが変更された際の処理（削除された組織の状態をクリア）
+  useEffect(() => {
+    const currentOrgIds = organizations.map((org) => org.id)
+
+    // 削除された組織のキャッシュをクリア
+    setOrganizationAgents((prev) => {
+      const updatedAgents = { ...prev }
+      Object.keys(updatedAgents).forEach((orgId) => {
+        if (!currentOrgIds.includes(orgId)) {
+          delete updatedAgents[orgId]
+        }
+      })
+      return updatedAgents
+    })
+
+    // 現在選択中の組織が削除された場合、'contributors'に切り替え
+    if (
+      selectedOrganization !== 'all' &&
+      selectedOrganization !== 'contributors' &&
+      !currentOrgIds.includes(selectedOrganization)
+    ) {
+      setSelectedOrganization('contributors')
+    }
+  }, [organizations, selectedOrganization])
+
   // 総合的なローディング状態を計算
   const isLoading = isDirectoryAgentLoading || isLoadingOrganizationAgents
 
