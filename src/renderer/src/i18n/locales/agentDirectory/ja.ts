@@ -25,6 +25,32 @@ export const ja = {
   noAgentsFound: 'エージェントが見つかりませんでした',
   retryButton: '再試行',
 
+  // Organization Modal
+  organization: {
+    editOrganization: '組織を編集',
+    addOrganization: '組織を追加',
+    organizationName: '組織名',
+    enterOrganizationName: '組織名を入力してください',
+    description: '説明',
+    enterDescription: '説明を入力してください',
+    organizationSetupDescription:
+      '組織のエージェント共有環境を設定します。S3バケットを指定して、チーム内でカスタムエージェントを共有・管理できます。',
+    s3Settings: 'S3設定',
+    openS3Console: 'S3コンソールを開く ↗',
+    s3Bucket: 'S3バケット',
+    awsRegion: 'AWSリージョン',
+    pathPrefix: 'パスプリフィックス',
+    pathPrefixHelper:
+      '任意: エージェントをサブディレクトリで整理します（例：「team1/」、「prod/」）',
+    saving: '保存中...',
+    update: '更新',
+    add: '追加',
+    cancel: 'キャンセル',
+    organizationNameRequired: '組織名は必須です',
+    s3BucketRequired: 'S3バケットは必須です',
+    unknownError: '不明なエラーが発生しました'
+  },
+
   // Organization Setup
   organizationSetupDescription:
     '組織のエージェント共有環境を設定します。S3バケットを指定して、チーム内でカスタムエージェントを共有・管理できます。',

@@ -24,6 +24,31 @@ export const en = {
   noAgentsFound: 'No agents found',
   retryButton: 'Retry',
 
+  // Organization Modal
+  organization: {
+    editOrganization: 'Edit Organization',
+    addOrganization: 'Add Organization',
+    organizationName: 'Organization Name',
+    enterOrganizationName: 'Enter organization name',
+    description: 'Description',
+    enterDescription: 'Enter description',
+    organizationSetupDescription:
+      'Set up your organization agent sharing environment. Specify an S3 bucket to share and manage custom agents within your team.',
+    s3Settings: 'S3 Settings',
+    openS3Console: 'Open S3 Console ↗',
+    s3Bucket: 'S3 Bucket',
+    awsRegion: 'AWS Region',
+    pathPrefix: 'Path Prefix',
+    pathPrefixHelper: 'Optional: Organize agents in subdirectories (e.g., "team1/", "prod/")',
+    saving: 'Saving...',
+    update: 'Update',
+    add: 'Add',
+    cancel: 'Cancel',
+    organizationNameRequired: 'Organization name is required',
+    s3BucketRequired: 'S3 bucket is required',
+    unknownError: 'Unknown error occurred'
+  },
+
   // Contributor Modal
   contributor: {
     tooltip: 'Become a contributor',
