@@ -2,10 +2,12 @@ import { IpcMainInvokeEvent } from 'electron'
 import { resolve } from 'path'
 import fs from 'fs'
 import yaml from 'js-yaml'
+import { ListObjectsV2Command, GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
 import { CustomAgent } from '../../types/agent-chat'
 import { createCategoryLogger } from '../../common/logger'
 import { store } from '../../preload/store'
 import { StrandsAgentsConverter } from '../services/strandsAgentsConverter'
+import { createS3Client } from '../api/bedrock/client'
 
 const agentsLogger = createCategoryLogger('agents:ipc')
 
@@ -194,12 +196,20 @@ export const agentHandlers = {
         region: organizationConfig.s3Config.region
       })
 
+      // AWS認証情報を取得し、組織設定のリージョンを適用
+      const awsCredentials = store.get('aws') as any
+      if (!awsCredentials) {
+        return { agents: [], error: 'AWS credentials not configured' }
+      }
+
       // AWS SDK を使用してS3からエージェントファイルを取得
-      const AWS = require('@aws-sdk/client-s3')
-      const s3Client = new AWS.S3Client({ region: organizationConfig.s3Config.region })
+      const s3Client = createS3Client({
+        ...awsCredentials,
+        region: organizationConfig.s3Config.region
+      })
 
       // S3からオブジェクト一覧を取得
-      const listCommand = new AWS.ListObjectsV2Command({
+      const listCommand = new ListObjectsV2Command({
         Bucket: organizationConfig.s3Config.bucket,
         Prefix: organizationConfig.s3Config.prefix || ''
       })
@@ -219,7 +229,7 @@ export const agentHandlers = {
       // 各ファイルを並行して処理
       const agentPromises = agentFiles.map(async (file: any) => {
         try {
-          const getCommand = new AWS.GetObjectCommand({
+          const getCommand = new GetObjectCommand({
             Bucket: organizationConfig.s3Config.bucket,
             Key: file.Key
           })
@@ -332,11 +342,19 @@ export const agentHandlers = {
         })
       }
 
-      // AWS SDK を使用してS3にアップロード
-      const AWS = require('@aws-sdk/client-s3')
-      const s3Client = new AWS.S3Client({ region: organizationConfig.s3Config.region })
+      // AWS認証情報を取得し、組織設定のリージョンを適用
+      const awsCredentials = store.get('aws') as any
+      if (!awsCredentials) {
+        return { success: false, error: 'AWS credentials not configured' }
+      }
 
-      const putCommand = new AWS.PutObjectCommand({
+      // AWS SDK を使用してS3にアップロード
+      const s3Client = createS3Client({
+        ...awsCredentials,
+        region: organizationConfig.s3Config.region
+      })
+
+      const putCommand = new PutObjectCommand({
         Bucket: organizationConfig.s3Config.bucket,
         Key: s3Key,
         Body: fileContent,
