@@ -6,6 +6,8 @@ Language: [English](./README.md) / [Japanese](./README-ja.md)
 
 Bedrock Engineer is Autonomous software development agent apps using [Amazon Bedrock](https://aws.amazon.com/bedrock/), capable of customize to create/edit files, execute commands, search the web, use knowledge base, use multi-agents, generative images and more.
 
+<!-- Test comment for PR delay testing -->
+
 ## 💻 Demo
 
 https://github.com/user-attachments/assets/f6ed028d-f3c3-4e2c-afff-de2dd9444759
