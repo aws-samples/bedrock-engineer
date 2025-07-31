@@ -1,7 +1,7 @@
 export const ja = {
   title: 'Agent Directory',
   description:
-    'コントリビューターによって作成されたエージェントを閲覧し、コレクションに追加できます',
+    'コントリビューターや組織によって作成されたエージェントを閲覧し、コレクションに追加できます',
   searchAgents: 'エージェントを検索...',
 
   // Agent Card
@@ -24,6 +24,10 @@ export const ja = {
   loadingAgents: 'エージェントを読み込み中...',
   noAgentsFound: 'エージェントが見つかりませんでした',
   retryButton: '再試行',
+
+  // Organization Setup
+  organizationSetupDescription:
+    '組織のエージェント共有環境を設定します。S3バケットを指定して、チーム内でカスタムエージェントを共有・管理できます。',
 
   // Contributor Modal
   contributor: {

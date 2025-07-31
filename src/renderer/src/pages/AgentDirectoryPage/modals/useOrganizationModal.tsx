@@ -1,0 +1,285 @@
+import React, { useState } from 'react'
+import { Modal, Button, Label, TextInput, Textarea, Select } from 'flowbite-react'
+import { useTranslation } from 'react-i18next'
+import { OrganizationConfig } from '@/types/agent-chat'
+import { useSettings } from '@renderer/contexts/SettingsContext'
+
+// AWS リージョンの定義
+const AWS_REGIONS = [
+  { value: 'us-east-1', label: 'US East (N. Virginia)' },
+  { value: 'us-west-2', label: 'US West (Oregon)' },
+  { value: 'ap-northeast-1', label: 'Asia Pacific (Tokyo)' },
+  { value: 'ap-southeast-1', label: 'Asia Pacific (Singapore)' },
+  { value: 'eu-west-1', label: 'Europe (Ireland)' },
+  { value: 'eu-central-1', label: 'Europe (Frankfurt)' }
+]
+
+interface OrganizationModalProps {
+  organization?: OrganizationConfig
+  isOpen: boolean
+  onClose: () => void
+}
+
+const OrganizationModal: React.FC<OrganizationModalProps> = ({ organization, isOpen, onClose }) => {
+  const { t } = useTranslation()
+  const { addOrganization, updateOrganization } = useSettings()
+
+  const [formData, setFormData] = useState({
+    name: organization?.name || '',
+    description: organization?.description || '',
+    s3Config: {
+      bucket: organization?.s3Config.bucket || '',
+      prefix: organization?.s3Config.prefix || '',
+      region: organization?.s3Config.region || 'us-east-1'
+    }
+  })
+
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSave = async () => {
+    // バリデーション
+    if (!formData.name.trim()) {
+      setError(t('organizationNameRequired', 'Organization name is required'))
+      return
+    }
+
+    if (!formData.s3Config.bucket.trim()) {
+      setError(t('s3BucketRequired', 'S3 bucket is required'))
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const organizationData: OrganizationConfig = {
+        id: organization?.id || `org-${Date.now()}`,
+        name: formData.name.trim(),
+        description: formData.description.trim() || undefined,
+        s3Config: {
+          bucket: formData.s3Config.bucket.trim(),
+          prefix: formData.s3Config.prefix.trim() || undefined,
+          region: formData.s3Config.region
+        }
+      }
+
+      if (organization) {
+        updateOrganization(organizationData)
+      } else {
+        addOrganization(organizationData)
+      }
+
+      onClose()
+      // フォームリセット
+      setFormData({
+        name: '',
+        description: '',
+        s3Config: {
+          bucket: '',
+          prefix: '',
+          region: 'us-east-1'
+        }
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('unknownError', 'Unknown error occurred'))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleClose = () => {
+    if (!organization) {
+      // 新規作成の場合のみフォームリセット
+      setFormData({
+        name: '',
+        description: '',
+        s3Config: {
+          bucket: '',
+          prefix: '',
+          region: 'us-east-1'
+        }
+      })
+    }
+    setError(null)
+    onClose()
+  }
+
+  return (
+    <Modal show={isOpen} onClose={handleClose} size="lg" className="dark:bg-gray-900">
+      <div className="border-[0.5px] border-white dark:border-gray-100 rounded-lg shadow-xl dark:shadow-gray-900/80">
+        <Modal.Header className="border-b border-gray-200 dark:border-gray-700/50 dark:bg-gray-900 rounded-t-lg">
+          {organization
+            ? t('editOrganization', 'Edit Organization')
+            : t('addOrganization', 'Add Organization')}
+        </Modal.Header>
+        <Modal.Body className="p-0 bg-white dark:bg-gray-900">
+          <div className="space-y-4 p-6">
+            {error && (
+              <div className="p-3 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-md">
+                <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
+              </div>
+            )}
+
+            {/* 組織名 */}
+            <div>
+              <Label htmlFor="orgName">
+                {t('organizationName', 'Organization Name')} <span className="text-red-500">*</span>
+              </Label>
+              <TextInput
+                id="orgName"
+                value={formData.name}
+                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder={t('enterOrganizationName', 'Enter organization name')}
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* 説明 */}
+            <div>
+              <Label htmlFor="orgDesc">Description</Label>
+              <Textarea
+                id="orgDesc"
+                value={formData.description}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                placeholder={t('enterDescription', 'Enter description')}
+                rows={2}
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* 組織の説明文 */}
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                {t(
+                  'organizationSetupDescription',
+                  '組織のエージェント共有環境を設定します。S3バケットを指定して、チーム内でカスタムエージェントを共有・管理できます。'
+                )}
+              </p>
+            </div>
+
+            {/* S3設定 */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  {t('s3Settings', 'S3 Settings')}
+                </h3>
+                <a
+                  href={`https://${formData.s3Config.region}.console.aws.amazon.com/s3/home?region=${formData.s3Config.region}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                >
+                  S3コンソールを開く ↗
+                </a>
+              </div>
+
+              {/* S3バケット */}
+              <div className="mb-3">
+                <Label htmlFor="s3Bucket">
+                  {t('s3Bucket', 'S3 Bucket')} <span className="text-red-500">*</span>
+                </Label>
+                <TextInput
+                  id="s3Bucket"
+                  value={formData.s3Config.bucket}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      s3Config: { ...prev.s3Config, bucket: e.target.value }
+                    }))
+                  }
+                  placeholder="my-organization-agents"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* リージョン */}
+              <div className="mb-3">
+                <Label htmlFor="s3Region">{t('awsRegion', 'AWS Region')}</Label>
+                <Select
+                  id="s3Region"
+                  value={formData.s3Config.region}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      s3Config: { ...prev.s3Config, region: e.target.value }
+                    }))
+                  }
+                  disabled={isLoading}
+                >
+                  {AWS_REGIONS.map((region) => (
+                    <option key={region.value} value={region.value}>
+                      {region.label}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* パスプリフィックス */}
+              <div>
+                <Label htmlFor="s3Prefix">{t('pathPrefix', 'Path Prefix')}</Label>
+                <TextInput
+                  id="s3Prefix"
+                  value={formData.s3Config.prefix}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      s3Config: { ...prev.s3Config, prefix: e.target.value }
+                    }))
+                  }
+                  placeholder="agents/"
+                  disabled={isLoading}
+                  helperText={t(
+                    'pathPrefixHelper',
+                    'Optional: Organize agents in subdirectories (e.g., "team1/", "prod/")'
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="border-t border-gray-200 dark:border-gray-700/50 dark:bg-gray-900 rounded-b-lg">
+          <Button onClick={handleSave} disabled={isLoading} color="blue">
+            {isLoading
+              ? t('saving', 'Saving...')
+              : organization
+                ? t('update', 'Update')
+                : t('add', 'Add')}
+          </Button>
+          <Button color="gray" onClick={handleClose} disabled={isLoading}>
+            {t('cancel', 'Cancel')}
+          </Button>
+        </Modal.Footer>
+      </div>
+    </Modal>
+  )
+}
+
+export const useOrganizationModal = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [editingOrganization, setEditingOrganization] = useState<OrganizationConfig | undefined>(
+    undefined
+  )
+
+  const openModal = (organization?: OrganizationConfig) => {
+    setEditingOrganization(organization)
+    setIsOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsOpen(false)
+    setEditingOrganization(undefined)
+  }
+
+  const OrganizationModalComponent = () => (
+    <OrganizationModal organization={editingOrganization} isOpen={isOpen} onClose={closeModal} />
+  )
+
+  return {
+    OrganizationModal: OrganizationModalComponent,
+    openModal,
+    closeModal
+  }
+}

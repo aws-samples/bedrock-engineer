@@ -1,6 +1,12 @@
 import Store from 'electron-store'
 import { LLM, InferenceParameters, ThinkingMode, ThinkingModeBudget } from '../types/llm'
-import { AgentChatConfig, KnowledgeBase, SendMsgKey, ToolState } from '../types/agent-chat'
+import {
+  AgentChatConfig,
+  KnowledgeBase,
+  SendMsgKey,
+  ToolState,
+  OrganizationConfig
+} from '../types/agent-chat'
 import { CustomAgent } from '../types/agent-chat'
 import { BedrockAgent } from '../types/agent'
 import { AWSCredentials } from '../main/api/bedrock/types'
@@ -167,6 +173,9 @@ type StoreScheme = {
 
   /** バックグラウンドエージェントのスケジュールタスク */
   backgroundAgentScheduledTasks?: any[]
+
+  /** 組織設定の一覧 */
+  organizations?: OrganizationConfig[]
 }
 
 const electronStore = new Store<StoreScheme>()

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Modal } from 'flowbite-react'
 import { AgentForm } from '../components/AgentForm/AgentForm'
 import { AgentList } from '../components/AgentList'
+import { useShareToOrganizationModal } from './useShareToOrganizationModal'
 import toast from 'react-hot-toast'
 import { FiInfo } from 'react-icons/fi'
 
@@ -34,6 +35,10 @@ const AgentSettingsModal = React.memo(
     const [editingAgent, setEditingAgent] = useState<CustomAgent | null>(null)
     const { customAgents, saveCustomAgents, agents, loadSharedAgents } = useSetting()
     const { t } = useTranslation()
+
+    // 組織共有モーダル
+    const { ShareToOrganizationModal, openModal: openShareToOrganizationModal } =
+      useShareToOrganizationModal()
 
     const handleSaveAgent = (agent: CustomAgent) => {
       console.log('handleSaveAgent called with agent:', agent)
@@ -221,17 +226,23 @@ const AgentSettingsModal = React.memo(
                   onCancel={() => setEditingAgent(null)}
                 />
               ) : (
-                <AgentList
-                  agents={agents}
-                  selectedAgentId={selectedAgentId}
-                  onSelectAgent={handleSelectAgent}
-                  onAddNewAgent={() => setEditingAgent({} as CustomAgent)}
-                  onEditAgent={setEditingAgent}
-                  onDuplicateAgent={handleDuplicateAgent}
-                  onDeleteAgent={handleDeleteAgent}
-                  onSaveAsShared={handleSaveAsShared}
-                  onConvertToStrands={handleConvertToStrands}
-                />
+                <>
+                  <AgentList
+                    agents={agents}
+                    selectedAgentId={selectedAgentId}
+                    onSelectAgent={handleSelectAgent}
+                    onAddNewAgent={() => setEditingAgent({} as CustomAgent)}
+                    onEditAgent={setEditingAgent}
+                    onDuplicateAgent={handleDuplicateAgent}
+                    onDeleteAgent={handleDeleteAgent}
+                    onSaveAsShared={handleSaveAsShared}
+                    onShareToOrganization={openShareToOrganizationModal}
+                    onConvertToStrands={handleConvertToStrands}
+                  />
+
+                  {/* 組織共有モーダル */}
+                  <ShareToOrganizationModal />
+                </>
               )}
             </div>
           </Modal.Body>

@@ -155,12 +155,61 @@ async function saveSharedAgent(
   }
 }
 
+/**
+ * Load organization agents from S3
+ * @param organizationConfig The organization configuration
+ * @returns Result with agents and error details
+ */
+async function loadOrganizationAgents(
+  organizationConfig: any
+): Promise<{ agents: CustomAgent[]; error?: string }> {
+  try {
+    return await ipcRenderer.invoke('load-organization-agents', organizationConfig)
+  } catch (error) {
+    console.error('Error loading organization agents:', error)
+    return {
+      agents: [],
+      error: error instanceof Error ? error.message : String(error)
+    }
+  }
+}
+
+/**
+ * Save an agent to organization S3
+ * @param agent The agent to save
+ * @param organizationConfig The organization configuration
+ * @param options Optional settings for saving (format)
+ * @returns Result with success status and details
+ */
+async function saveAgentToOrganization(
+  agent: CustomAgent,
+  organizationConfig: any,
+  options?: { format?: 'json' | 'yaml' }
+): Promise<{ success: boolean; s3Key?: string; format?: string; error?: string }> {
+  try {
+    return await ipcRenderer.invoke(
+      'save-agent-to-organization',
+      agent,
+      organizationConfig,
+      options
+    )
+  } catch (error) {
+    console.error('Error saving agent to organization:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    }
+  }
+}
+
 export const file = {
   handleFolderOpen: () => ipcRenderer.invoke('open-directory'),
   handleFileOpen: () => ipcRenderer.invoke('open-file'),
   readSharedAgents,
   readDirectoryAgents,
-  saveSharedAgent
+  saveSharedAgent,
+  loadOrganizationAgents,
+  saveAgentToOrganization
 }
 
 export default file

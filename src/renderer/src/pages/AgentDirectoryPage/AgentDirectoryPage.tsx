@@ -5,7 +5,9 @@ import { BsQuestionCircle } from 'react-icons/bs'
 import { AgentDetailModal } from './components/AgentDetailModal'
 import { AgentList } from './components/AgentList'
 import { TagFilter } from './components/TagFilter'
+import { OrganizationSelector } from './components/OrganizationSelector'
 import { useContributorModal } from './components/ContributorModal'
+import { useOrganizationModal } from './modals/useOrganizationModal'
 import { useAgentDirectory } from '@renderer/contexts/AgentDirectoryContext'
 import { CustomAgent } from '@/types/agent-chat'
 
@@ -21,7 +23,12 @@ export const AgentDirectoryPage: React.FC = () => {
     addSelectedAgentToMyAgents,
     allTags,
     selectedTags,
-    handleTagToggle
+    handleTagToggle,
+    // 組織関連
+    selectedOrganization,
+    setSelectedOrganization,
+    organizations,
+    loadOrganizationAgents
   } = useAgentDirectory()
 
   const handleSelectAgent = (agent: CustomAgent) => {
@@ -32,27 +39,53 @@ export const AgentDirectoryPage: React.FC = () => {
     setSelectedAgent(null)
   }
 
+  const handleOrganizationSelect = async (orgId: string | 'all' | 'contributors') => {
+    setSelectedOrganization(orgId)
+
+    // 特定の組織が選択され、まだ読み込まれていない場合は読み込む
+    if (orgId !== 'all' && orgId !== 'contributors') {
+      await loadOrganizationAgents(orgId)
+    }
+  }
+
   // Use the contributor modal hook
   const { ContributorModal, openModal } = useContributorModal()
+
+  // Use the organization modal hook
+  const { OrganizationModal, openModal: openOrganizationModal } = useOrganizationModal()
 
   return (
     <div className="px-4 py-6">
       <header className="mb-6">
-        <h1 className="text-3xl font-bold mb-2 dark:text-white">{t('title')}</h1>
-        <div className="flex items-center">
-          <p className="text-gray-600 dark:text-gray-400">{t('description')}</p>
-          <div className="relative ml-2 group">
-            <BsQuestionCircle
-              className="w-4 h-4 text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 cursor-pointer"
-              onClick={openModal}
+        <div>
+          {/* タイトル行と組織セレクター */}
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold dark:text-white">{t('title')}</h1>
+            <OrganizationSelector
+              selectedOrganization={selectedOrganization}
+              organizations={organizations}
+              onSelectOrganization={handleOrganizationSelect}
+              onAddOrganization={() => openOrganizationModal()}
+              onEditOrganization={(org) => openOrganizationModal(org)}
             />
-            <div
-              className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs 
-                            font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 
+          </div>
+
+          {/* 説明行 */}
+          <div className="flex items-center">
+            <p className="text-gray-600 dark:text-gray-400">{t('description')}</p>
+            <div className="relative ml-2 group">
+              <BsQuestionCircle
+                className="w-4 h-4 text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 cursor-pointer"
+                onClick={openModal}
+              />
+              <div
+                className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs
+                            font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-lg shadow-sm opacity-0 group-hover:opacity-100
                             transition-opacity duration-300 whitespace-nowrap pointer-events-none"
-            >
-              {t('contributor.tooltip')}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+              >
+                {t('contributor.tooltip')}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+              </div>
             </div>
           </div>
         </div>
@@ -99,6 +132,9 @@ export const AgentDirectoryPage: React.FC = () => {
 
       {/* Contributor Modal */}
       <ContributorModal />
+
+      {/* Organization Modal */}
+      <OrganizationModal />
     </div>
   )
 }

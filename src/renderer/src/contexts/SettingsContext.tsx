@@ -7,7 +7,8 @@ import {
   ToolState,
   WindowConfig,
   CameraConfig,
-  TavilySearchConfig
+  TavilySearchConfig,
+  OrganizationConfig
 } from 'src/types/agent-chat'
 import { ToolName } from 'src/types/tools'
 
@@ -257,6 +258,12 @@ export interface SettingsContextType {
   setTranslationEnabled: (enabled: boolean) => void
   translationTargetLanguage: string
   setTranslationTargetLanguage: (language: string) => void
+
+  // Organization Settings
+  organizations: OrganizationConfig[]
+  addOrganization: (org: OrganizationConfig) => void
+  updateOrganization: (org: OrganizationConfig) => void
+  removeOrganization: (orgId: string) => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -420,6 +427,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Translation Settings
   const [translationEnabled, setStateTranslationEnabled] = useState<boolean>(false)
   const [translationTargetLanguage, setStateTranslationTargetLanguage] = useState<string>('ja')
+
+  // Organization Settings
+  const [organizations, setOrganizations] = useState<OrganizationConfig[]>([])
 
   // Initialize all settings
   useEffect(() => {
@@ -690,6 +700,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const storedTranslationLanguage = window.store.get('translationTargetLanguage' as any)
     if (typeof storedTranslationLanguage === 'string') {
       setStateTranslationTargetLanguage(storedTranslationLanguage)
+    }
+
+    // Load Organization Settings
+    const storedOrganizations = window.store.get('organizations') as OrganizationConfig[]
+    if (storedOrganizations) {
+      setOrganizations(storedOrganizations)
     }
   }, [])
 
@@ -1701,6 +1717,36 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     ;(window.store as any).set('translationTargetLanguage', language)
   }, [])
 
+  // Organization management functions
+  const addOrganization = useCallback(
+    (org: OrganizationConfig) => {
+      const updatedOrganizations = [...organizations, org]
+      setOrganizations(updatedOrganizations)
+      ;(window.store as any).set('organizations', updatedOrganizations)
+    },
+    [organizations]
+  )
+
+  const updateOrganization = useCallback(
+    (org: OrganizationConfig) => {
+      const updatedOrganizations = organizations.map((existing) =>
+        existing.id === org.id ? org : existing
+      )
+      setOrganizations(updatedOrganizations)
+      ;(window.store as any).set('organizations', updatedOrganizations)
+    },
+    [organizations]
+  )
+
+  const removeOrganization = useCallback(
+    (orgId: string) => {
+      const updatedOrganizations = organizations.filter((org) => org.id !== orgId)
+      setOrganizations(updatedOrganizations)
+      ;(window.store as any).set('organizations', updatedOrganizations)
+    },
+    [organizations]
+  )
+
   const value = {
     // Advanced Settings
     sendMsgKey,
@@ -1864,7 +1910,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     translationEnabled,
     setTranslationEnabled,
     translationTargetLanguage,
-    setTranslationTargetLanguage
+    setTranslationTargetLanguage,
+
+    // Organization Settings
+    organizations,
+    addOrganization,
+    updateOrganization,
+    removeOrganization
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

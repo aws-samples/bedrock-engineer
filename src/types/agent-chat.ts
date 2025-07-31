@@ -225,6 +225,7 @@ export type CustomAgent = Agent & {
   isCustom?: boolean
   isShared?: boolean
   directoryOnly?: boolean // ディレクトリからのみ取得されたエージェント（テンプレート）
+  organizationId?: string // 組織ID（組織エージェントの場合）
   tools?: ToolName[] // エージェント固有のツール名リスト
   category?: AgentCategory // エージェントのカテゴリ
   allowedCommands?: CommandConfig[] // エージェント固有の許可コマンド
@@ -284,4 +285,16 @@ export interface EnvironmentContextSettings {
   todoListInstruction: boolean // TODO_LIST_INSTRUCTION を含めるかどうか
   projectRule: boolean // PROJECT_RULE を含めるかどうか
   visualExpressionRules: boolean // VISUAL_EXPRESSION_RULES を含めるかどうか
+}
+
+// 組織設定の型定義
+export interface OrganizationConfig {
+  id: string
+  name: string
+  description?: string
+  s3Config: {
+    bucket: string
+    prefix?: string // パス単位での分離
+    region: string
+  }
 }

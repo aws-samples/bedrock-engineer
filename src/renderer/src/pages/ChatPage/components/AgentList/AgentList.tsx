@@ -14,6 +14,7 @@ interface AgentListProps {
   onDuplicateAgent: (agent: CustomAgent) => void
   onDeleteAgent: (agentId: string) => void
   onSaveAsShared?: (agent: CustomAgent) => void
+  onShareToOrganization?: (agent: CustomAgent) => void
   onConvertToStrands?: (agentId: string) => void
 }
 
@@ -26,6 +27,7 @@ export const AgentList: React.FC<AgentListProps> = ({
   onDuplicateAgent,
   onDeleteAgent,
   onSaveAsShared,
+  onShareToOrganization,
   onConvertToStrands
 }) => {
   const { t } = useTranslation()
@@ -101,6 +103,7 @@ export const AgentList: React.FC<AgentListProps> = ({
               onDuplicate={onDuplicateAgent}
               onDelete={isEditable ? onDeleteAgent : undefined}
               onSaveAsShared={onSaveAsShared}
+              onShareToOrganization={isEditable ? onShareToOrganization : undefined}
               onConvertToStrands={onConvertToStrands}
             />
           )
