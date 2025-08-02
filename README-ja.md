@@ -190,6 +190,8 @@ npm run build:linux
 
 Model Context Protocol (MCP) クライアント統合により、Bedrock Engineerは外部のMCPサーバーに接続し、強力な外部ツールを動的にロードして使用することができるようになりました。この統合により、AIアシスタントがMCPサーバーが提供するツールにアクセスして利用できるようになり、その能力が拡張されます。
 
+MCPサーバーの設定方法の詳細については、[MCPサーバー設定ガイド](./docs/mcp-server/MCP_SERVER_CONFIGURATION-ja.md)を参照してください。
+
 ## Background Agent
 
 cron 式を使用して AI エージェントタスクを指定した間隔で自動実行します。Background Agent により、リアルタイム実行通知付きの継続的なワークフロー自動化が可能になります。
