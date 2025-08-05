@@ -272,6 +272,8 @@ export interface McpServerConfig {
   env?: Record<string, string>
   // URL形式用
   url?: string
+  // 認証などのHTTPヘッダー（URLベースの接続用）
+  headers?: Record<string, string>
 }
 
 // Tavily検索設定の型定義

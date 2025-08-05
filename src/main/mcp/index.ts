@@ -170,11 +170,12 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
             (acc, server) => {
               acc[server.name] = {
                 url: server.url,
-                enabled: true
+                enabled: true,
+                headers: server.headers || undefined
               }
               return acc
             },
-            {} as Record<string, { url: string; enabled?: boolean }>
+            {} as Record<string, { url: string; enabled?: boolean; headers?: Record<string, string> }>
           )
         }
       }
@@ -215,7 +216,8 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
             console.log(
               `[Main Process] Connecting to URL server: ${serverConfig.name} (${serverConfig.url})`
             )
-            const client = await MCPClient.fromUrl(serverConfig.url)
+            // headers が存在する場合は渡す
+            const client = await MCPClient.fromUrl(serverConfig.url, serverConfig.headers)
             console.log(`[Main Process] Successfully connected to URL server: ${serverConfig.name}`)
             return { name: serverConfig.name, client }
           } catch (e) {
@@ -389,7 +391,7 @@ export const testMcpServerConnection = async (
           }
         }
       }
-      client = await MCPClient.fromUrl(mcpServer.url)
+      client = await MCPClient.fromUrl(mcpServer.url, mcpServer.headers)
     } else {
       return {
         success: false,

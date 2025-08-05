@@ -396,7 +396,10 @@ ${clientVarName}_client = MCPClient(lambda: stdio_client(
             (server) =>
               `  - name: "${server.original.name}"\n` +
               `    command: "${server.original.command}"\n` +
-              `    args: ${JSON.stringify(server.original.args)}`
+              `    args: ${JSON.stringify(server.original.args)}` +
+              (server.original.headers
+                ? `\n    headers: ${JSON.stringify(server.original.headers)}`
+                : '')
           )
           .join('\n')
     }
