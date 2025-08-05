@@ -214,6 +214,13 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/directory"],
       "env": { "VAR": "value" }
+    },
+    "api-server": {
+      "url": "https://api.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer your-token-here",
+        "X-API-Key": "your-api-key"
+      }
     }
   }
 }`}
