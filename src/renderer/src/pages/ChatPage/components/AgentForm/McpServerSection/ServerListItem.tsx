@@ -42,31 +42,35 @@ export const ServerListItem: React.FC<ServerListItemProps> = ({
           <p className="text-xs font-mono text-gray-600 dark:text-gray-300 mt-1">
             <code className="text-gray-600 dark:text-gray-300">
               {server.connectionType === 'url' ? (
-                <>{server.url}</>
+                server.url
               ) : (
-                <>{server.command} {server.args?.join(' ') || ''}</>
+                <>
+                  {server.command} {server.args?.join(' ') || ''}
+                </>
               )}
             </code>
           </p>
-          
+
           {/* ヘッダー情報の表示（URL形式で、headersがある場合のみ） */}
-          {server.connectionType === 'url' && server.headers && Object.keys(server.headers).length > 0 && (
-            <div className="mt-1 text-xs">
-              <p className="text-gray-500 dark:text-gray-400">{t('Headers')}:</p>
-              <div className="pl-2 mt-1 border-l-2 border-gray-200 dark:border-gray-700">
-                {Object.entries(server.headers).map(([key, value]) => (
-                  <div key={key} className="font-mono">
-                    <span className="text-blue-600 dark:text-blue-400">{key}</span>: 
-                    <span className="text-gray-600 dark:text-gray-300">
-                      {key.toLowerCase() === 'authorization' 
-                        ? ` ${value.substring(0, 10)}...` 
-                        : ` ${value}`}
-                    </span>
-                  </div>
-                ))}
+          {server.connectionType === 'url' &&
+            server.headers &&
+            Object.keys(server.headers).length > 0 && (
+              <div className="mt-1 text-xs">
+                <p className="text-gray-500 dark:text-gray-400">{t('Headers')}:</p>
+                <div className="pl-2 mt-1 border-l-2 border-gray-200 dark:border-gray-700">
+                  {Object.entries(server.headers).map(([key, value]) => (
+                    <div key={key} className="font-mono">
+                      <span className="text-blue-600 dark:text-blue-400">{key}</span>:{' '}
+                      <span className="text-gray-600 dark:text-gray-300">
+                        {key.toLowerCase() === 'authorization'
+                          ? `${value.substring(0, 10)}...`
+                          : `${value}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* 接続テスト結果表示 */}
           {connectionResult && (

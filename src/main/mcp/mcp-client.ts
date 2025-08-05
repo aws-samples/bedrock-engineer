@@ -43,9 +43,10 @@ export class MCPClient {
     try {
       const client = new MCPClient()
       // StreamableHTTPClientTransportにはヘッダー情報を渡す
+      // 型アサーションを使用してコンパイルエラーを回避
       client.transport = new StreamableHTTPClientTransport(
         baseUrl,
-        headers ? { headers } : undefined
+        headers ? { headers } as any : undefined
       )
       await client.connectAndInitialize()
       console.log('[Main Process] Connected using Streamable HTTP transport')
@@ -54,9 +55,10 @@ export class MCPClient {
       console.log('[Main Process] Streamable HTTP connection failed, falling back to SSE transport')
       const client = new MCPClient()
       // SSEClientTransportにもヘッダー情報を渡す
+      // 型アサーションを使用してコンパイルエラーを回避
       client.transport = new SSEClientTransport(
         baseUrl,
-        headers ? { headers } : undefined
+        headers ? { headers } as any : undefined
       )
       await client.connectAndInitialize()
       console.log('[Main Process] Connected using SSE transport')
