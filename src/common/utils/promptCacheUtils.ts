@@ -4,64 +4,35 @@ import type {
   ToolConfiguration,
   ConverseStreamMetadataEvent
 } from '@aws-sdk/client-bedrock-runtime'
+import {
+  getModelCacheableFields,
+  getBaseModelId,
+  isModelPromptCacheSupported,
+  type CacheableField
+} from '../../main/api/bedrock/models'
 
 /**
- * キャッシュ可能なフィールドの型定義
+ * キャッシュ可能なフィールドの型定義（再エクスポート）
  */
-export type CacheableField = 'messages' | 'system' | 'tools'
-
-/**
- * モデルごとのキャッシュサポート情報
- * 各モデルがサポートするキャッシュ可能なフィールドを定義
- */
-const MODEL_CACHE_SUPPORT: Record<string, CacheableField[]> = {
-  // ベースモデル
-  'anthropic.claude-opus-4-20250514-v1:0': ['messages', 'system', 'tools'],
-  'anthropic.claude-opus-4-1-20250805-v1:0': ['messages', 'system', 'tools'],
-  'anthropic.claude-sonnet-4-20250514-v1:0': ['messages', 'system', 'tools'],
-  'anthropic.claude-3-7-sonnet-20250219-v1:0': ['messages', 'system', 'tools'],
-  'anthropic.claude-3-5-haiku-20241022-v1:0': ['messages', 'system', 'tools'],
-  'anthropic.claude-3-5-sonnet-20241022-v2:0': ['messages', 'system', 'tools'],
-  'amazon.nova-micro-v1:0': ['messages', 'system'],
-  'amazon.nova-lite-v1:0': ['messages', 'system'],
-  'amazon.nova-pro-v1:0': ['messages', 'system']
-
-  // 将来的にサポートされるモデルはここに追加
-}
+export type { CacheableField }
 
 /**
  * モデルIDからリージョンプレフィックスを削除して基本モデル名を取得する
- * 例: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0' → 'anthropic.claude-3-7-sonnet-20250219-v1:0'
- *
- * @param modelId リージョンプレフィックスを含む可能性のあるモデルID
- * @returns リージョンプレフィックスを削除した基本モデル名
  */
-export function getBaseModelId(modelId: string): string {
-  // リージョンプレフィックスのパターン: 特定のリージョンコード (例: 'us.', 'eu.', 'apac.')
-  const regionPrefixPattern = /^(us|eu|apac)\./
-  return modelId.replace(regionPrefixPattern, '')
-}
+export { getBaseModelId }
 
 /**
  * モデルがPrompt Cacheをサポートしているか判定
- *
- * @param modelId モデルID (リージョンプレフィックスを含む可能性あり)
- * @returns Prompt Cacheをサポートしている場合はtrue、そうでない場合はfalse
  */
 export function isPromptCacheSupported(modelId: string): boolean {
-  const baseModelId = getBaseModelId(modelId)
-  return !!MODEL_CACHE_SUPPORT[baseModelId]
+  return isModelPromptCacheSupported(modelId)
 }
 
 /**
  * モデルがサポートするキャッシュ可能なフィールドを取得
- *
- * @param modelId モデルID (リージョンプレフィックスを含む可能性あり)
- * @returns キャッシュ可能なフィールドの配列
  */
 export function getCacheableFields(modelId: string): CacheableField[] {
-  const baseModelId = getBaseModelId(modelId)
-  return MODEL_CACHE_SUPPORT[baseModelId] || []
+  return getModelCacheableFields(modelId)
 }
 
 /**

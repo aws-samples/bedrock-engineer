@@ -1,5 +1,20 @@
 import { BedrockSupportRegion, LLM } from '../../../types/llm'
 
+/**
+ * キャッシュ可能なフィールドの型定義
+ */
+type CacheableField = 'messages' | 'system' | 'tools'
+
+/**
+ * モデル価格情報の型定義（1000トークンあたりのドル価格）
+ */
+interface ModelPricing {
+  input: number
+  output: number
+  cacheRead: number
+  cacheWrite: number
+}
+
 // ヘルパー関数: リージョンからプレフィックスを取得
 function getRegionPrefix(region: string): string {
   if (region.startsWith('us-') || region.startsWith('ca-')) return 'us'
@@ -30,6 +45,8 @@ interface ModelDefinition {
   toolUse: boolean
   maxTokensLimit: number
   supportsThinking?: boolean
+  pricing?: ModelPricing
+  cacheableFields?: CacheableField[]
   availability: {
     base?: BedrockSupportRegion[]
     crossRegion?: BedrockSupportRegion[]
@@ -44,6 +61,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     name: 'Claude 3 Sonnet',
     toolUse: true,
     maxTokensLimit: 8192,
+    pricing: { input: 0.003, output: 0.015, cacheRead: 0.0003, cacheWrite: 0.00375 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       base: [],
       crossRegion: [
@@ -66,6 +85,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     name: 'Claude 3 Haiku',
     toolUse: true,
     maxTokensLimit: 4096,
+    pricing: { input: 0.0008, output: 0.004, cacheRead: 0.00008, cacheWrite: 0.001 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       base: [
         'us-east-1',
@@ -91,6 +112,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     name: 'Claude 3.5 Haiku',
     toolUse: true,
     maxTokensLimit: 8192,
+    pricing: { input: 0.0008, output: 0.004, cacheRead: 0.00008, cacheWrite: 0.001 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       base: ['us-west-2'],
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
@@ -102,6 +125,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     name: 'Claude 3.5 Sonnet',
     toolUse: true,
     maxTokensLimit: 8192,
+    pricing: { input: 0.003, output: 0.015, cacheRead: 0.0003, cacheWrite: 0.00375 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       base: [
         'us-east-1',
@@ -124,6 +149,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     name: 'Claude 3.5 Sonnet v2',
     toolUse: true,
     maxTokensLimit: 8192,
+    pricing: { input: 0.003, output: 0.015, cacheRead: 0.0003, cacheWrite: 0.00375 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       base: [],
       crossRegion: [
@@ -146,6 +173,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     toolUse: true,
     maxTokensLimit: 64000,
     supportsThinking: true,
+    pricing: { input: 0.003, output: 0.015, cacheRead: 0.0003, cacheWrite: 0.00375 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2', 'ap-northeast-1', 'ap-northeast-3']
     }
@@ -156,6 +185,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     name: 'Claude 3 Opus',
     toolUse: true,
     maxTokensLimit: 8192,
+    pricing: { input: 0.015, output: 0.075, cacheRead: 0.0015, cacheWrite: 0.01875 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       crossRegion: ['us-east-1', 'us-west-2']
     }
@@ -167,6 +198,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     toolUse: true,
     maxTokensLimit: 32768,
     supportsThinking: true,
+    pricing: { input: 0.015, output: 0.075, cacheRead: 0.0015, cacheWrite: 0.01875 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
     }
@@ -178,6 +211,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     toolUse: true,
     maxTokensLimit: 8192,
     supportsThinking: true,
+    pricing: { input: 0.015, output: 0.075, cacheRead: 0.0015, cacheWrite: 0.01875 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
     }
@@ -189,6 +224,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     toolUse: true,
     maxTokensLimit: 8192,
     supportsThinking: true,
+    pricing: { input: 0.003, output: 0.015, cacheRead: 0.0003, cacheWrite: 0.00375 },
+    cacheableFields: ['messages', 'system', 'tools'],
     availability: {
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2', 'ap-northeast-1', 'ap-northeast-3']
     }
@@ -211,6 +248,8 @@ const NOVA_MODELS: ModelDefinition[] = [
     name: 'Amazon Nova Pro',
     toolUse: true,
     maxTokensLimit: 5120,
+    pricing: { input: 0.0008, output: 0.0032, cacheRead: 0.0002, cacheWrite: 0 },
+    cacheableFields: ['messages', 'system'],
     availability: {
       base: [],
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2', 'ap-northeast-1', 'ap-northeast-2']
@@ -221,6 +260,8 @@ const NOVA_MODELS: ModelDefinition[] = [
     name: 'Amazon Nova Lite',
     toolUse: true,
     maxTokensLimit: 5120,
+    pricing: { input: 0.00006, output: 0.00024, cacheRead: 0.000015, cacheWrite: 0 },
+    cacheableFields: ['messages', 'system'],
     availability: {
       base: [],
       crossRegion: [
@@ -245,6 +286,8 @@ const NOVA_MODELS: ModelDefinition[] = [
     name: 'Amazon Nova Micro',
     toolUse: true,
     maxTokensLimit: 5120,
+    pricing: { input: 0.000035, output: 0.00014, cacheRead: 0.00000875, cacheWrite: 0 },
+    cacheableFields: ['messages', 'system'],
     availability: {
       base: [],
       crossRegion: [
@@ -497,3 +540,53 @@ export const getDefaultPromptRouter = (accountId: string, region: string) => {
     }
   ]
 }
+
+// Single Source of Truth関数群
+
+/**
+ * モデルIDからリージョンプレフィックスを削除して基本モデル名を取得する
+ * 例: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0' → 'anthropic.claude-3-7-sonnet-20250219-v1:0'
+ */
+export function getBaseModelId(modelId: string): string {
+  const regionPrefixPattern = /^(us|eu|apac)\./
+  return modelId.replace(regionPrefixPattern, '')
+}
+
+/**
+ * モデルIDから対応するモデル定義を取得
+ */
+function getModelDefinition(modelId: string): (ModelDefinition & { provider: string }) | undefined {
+  const baseModelId = getBaseModelId(modelId)
+
+  return ALL_MODEL_DEFINITIONS.find((def) => {
+    const fullModelId = `${def.provider}.${def.baseId}`
+    return fullModelId === baseModelId
+  })
+}
+
+/**
+ * モデルの価格情報を取得
+ */
+export function getModelPricing(modelId: string): ModelPricing | null {
+  const definition = getModelDefinition(modelId)
+  return definition?.pricing || null
+}
+
+/**
+ * モデルのキャッシュ可能フィールドを取得
+ */
+export function getModelCacheableFields(modelId: string): CacheableField[] {
+  const definition = getModelDefinition(modelId)
+  return definition?.cacheableFields || []
+}
+
+/**
+ * モデルがPrompt Cacheをサポートしているか判定
+ */
+export function isModelPromptCacheSupported(modelId: string): boolean {
+  const cacheableFields = getModelCacheableFields(modelId)
+  return cacheableFields.length > 0
+}
+
+// 型エクスポート
+export type { CacheableField, ModelPricing }
