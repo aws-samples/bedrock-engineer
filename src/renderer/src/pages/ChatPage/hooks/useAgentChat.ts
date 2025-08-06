@@ -600,7 +600,7 @@ export const useAgentChat = (
           }
           metadata.converseMetadata = json.metadata
 
-          let sessionCost: number
+          let sessionCost: number | undefined
           // モデルIDがある場合、コストを計算
           if (
             modelId &&
@@ -609,7 +609,7 @@ export const useAgentChat = (
             metadata.converseMetadata.usage.outputTokens
           ) {
             try {
-              sessionCost = calculateCost(
+              sessionCost = await calculateCost(
                 modelId,
                 metadata.converseMetadata.usage.inputTokens,
                 metadata.converseMetadata.usage.outputTokens,

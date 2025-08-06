@@ -211,6 +211,9 @@ export const api = {
     },
     getModelMaxTokens: async (modelId: string) => {
       return ipcRenderer.invoke('bedrock:getModelMaxTokens', { modelId })
+    },
+    getModelPricing: async (modelId: string) => {
+      return ipcRenderer.invoke('bedrock:getModelPricing', { modelId })
     }
   },
   contextMenu: {

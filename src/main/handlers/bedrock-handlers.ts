@@ -1,7 +1,7 @@
 import { IpcMainInvokeEvent } from 'electron'
 import { promises as fs } from 'fs'
 import { bedrock } from '../api'
-import { getModelMaxTokens } from '../api/bedrock/models'
+import { getModelMaxTokens, getModelPricing } from '../api/bedrock/models'
 import { createCategoryLogger } from '../../common/logger'
 
 const bedrockLogger = createCategoryLogger('bedrock:ipc')
@@ -255,5 +255,17 @@ export const bedrockHandlers = {
       maxTokens
     })
     return { maxTokens }
+  },
+
+  'bedrock:getModelPricing': async (_event: IpcMainInvokeEvent, params: { modelId: string }) => {
+    bedrockLogger.debug('Getting model pricing', { modelId: params.modelId })
+
+    const pricing = getModelPricing(params.modelId)
+
+    bedrockLogger.debug('Retrieved model pricing', {
+      modelId: params.modelId,
+      hasPricing: !!pricing
+    })
+    return pricing
   }
 } as const
