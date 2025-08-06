@@ -6,7 +6,6 @@ import type {
 } from '@aws-sdk/client-bedrock-runtime'
 import {
   getModelCacheableFields,
-  getBaseModelId,
   isModelPromptCacheSupported,
   type CacheableField
 } from '../../main/api/bedrock/models'
@@ -15,11 +14,6 @@ import {
  * キャッシュ可能なフィールドの型定義（再エクスポート）
  */
 export type { CacheableField }
-
-/**
- * モデルIDからリージョンプレフィックスを削除して基本モデル名を取得する
- */
-export { getBaseModelId }
 
 /**
  * メッセージにキャッシュポイントを追加

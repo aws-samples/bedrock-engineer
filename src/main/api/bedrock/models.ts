@@ -53,10 +53,11 @@ interface ModelDefinition {
   }
 }
 
-// 統合されたモデル定義（AWS公式ドキュメント準拠）
-const MODEL_DEFINITIONS: ModelDefinition[] = [
-  // Claude 3 Sonnet
+// 統合されたモデル定義（テキスト生成モデル）
+const ALL_MODEL_DEFINITIONS: (ModelDefinition & { provider: string })[] = [
+  // Anthropic Claude models
   {
+    provider: 'anthropic',
     baseId: 'claude-3-sonnet-20240229-v1:0',
     name: 'Claude 3 Sonnet',
     toolUse: true,
@@ -79,8 +80,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       ]
     }
   },
-  // Claude 3 Haiku
   {
+    provider: 'anthropic',
     baseId: 'claude-3-haiku-20240307-v1:0',
     name: 'Claude 3 Haiku',
     toolUse: true,
@@ -106,8 +107,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
     }
   },
-  // Claude 3.5 Haiku
   {
+    provider: 'anthropic',
     baseId: 'claude-3-5-haiku-20241022-v1:0',
     name: 'Claude 3.5 Haiku',
     toolUse: true,
@@ -119,8 +120,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
     }
   },
-  // Claude 3.5 Sonnet
   {
+    provider: 'anthropic',
     baseId: 'claude-3-5-sonnet-20240620-v1:0',
     name: 'Claude 3.5 Sonnet',
     toolUse: true,
@@ -143,8 +144,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       crossRegion: ['us-east-1', 'us-west-2']
     }
   },
-  // Claude 3.5 Sonnet v2
   {
+    provider: 'anthropic',
     baseId: 'claude-3-5-sonnet-20241022-v2:0',
     name: 'Claude 3.5 Sonnet v2',
     toolUse: true,
@@ -166,8 +167,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       ]
     }
   },
-  // Claude 3.7 Sonnet
   {
+    provider: 'anthropic',
     baseId: 'claude-3-7-sonnet-20250219-v1:0',
     name: 'Claude 3.7 Sonnet',
     toolUse: true,
@@ -179,8 +180,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2', 'ap-northeast-1', 'ap-northeast-3']
     }
   },
-  // Claude 3 Opus
   {
+    provider: 'anthropic',
     baseId: 'claude-3-opus-20240229-v1:0',
     name: 'Claude 3 Opus',
     toolUse: true,
@@ -191,8 +192,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       crossRegion: ['us-east-1', 'us-west-2']
     }
   },
-  // Claude Opus 4
   {
+    provider: 'anthropic',
     baseId: 'claude-opus-4-20250514-v1:0',
     name: 'Claude Opus 4',
     toolUse: true,
@@ -204,8 +205,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
     }
   },
-  // Claude Opus 4.1
   {
+    provider: 'anthropic',
     baseId: 'claude-opus-4-1-20250805-v1:0',
     name: 'Claude Opus 4.1',
     toolUse: true,
@@ -217,8 +218,8 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
     }
   },
-  // Claude Sonnet 4
   {
+    provider: 'anthropic',
     baseId: 'claude-sonnet-4-20250514-v1:0',
     name: 'Claude Sonnet 4',
     toolUse: true,
@@ -229,12 +230,11 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
     availability: {
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2', 'ap-northeast-1', 'ap-northeast-3']
     }
-  }
-]
+  },
 
-// Amazon Nova モデル定義
-const NOVA_MODELS: ModelDefinition[] = [
+  // Amazon Nova models
   {
+    provider: 'amazon',
     baseId: 'nova-premier-v1:0',
     name: 'Amazon Nova Premier',
     toolUse: true,
@@ -244,6 +244,7 @@ const NOVA_MODELS: ModelDefinition[] = [
     }
   },
   {
+    provider: 'amazon',
     baseId: 'nova-pro-v1:0',
     name: 'Amazon Nova Pro',
     toolUse: true,
@@ -256,6 +257,7 @@ const NOVA_MODELS: ModelDefinition[] = [
     }
   },
   {
+    provider: 'amazon',
     baseId: 'nova-lite-v1:0',
     name: 'Amazon Nova Lite',
     toolUse: true,
@@ -282,6 +284,7 @@ const NOVA_MODELS: ModelDefinition[] = [
     }
   },
   {
+    provider: 'amazon',
     baseId: 'nova-micro-v1:0',
     name: 'Amazon Nova Micro',
     toolUse: true,
@@ -306,12 +309,11 @@ const NOVA_MODELS: ModelDefinition[] = [
         'eu-west-3'
       ]
     }
-  }
-]
+  },
 
-// その他のモデル定義
-const OTHER_MODELS: ModelDefinition[] = [
+  // DeepSeek models
   {
+    provider: 'deepseek',
     baseId: 'r1-v1:0',
     name: 'DeepSeek R1',
     toolUse: false,
@@ -407,13 +409,6 @@ const IMAGE_GENERATION_MODELS: ModelDefinition[] = [
       base: ['us-east-1', 'us-west-2', 'eu-west-1', 'eu-west-2', 'ap-south-1']
     }
   }
-]
-
-// 全モデル定義を統合
-const ALL_MODEL_DEFINITIONS = [
-  ...MODEL_DEFINITIONS.map((def) => ({ ...def, provider: 'anthropic' })),
-  ...NOVA_MODELS.map((def) => ({ ...def, provider: 'amazon' })),
-  ...OTHER_MODELS.map((def) => ({ ...def, provider: 'deepseek' }))
 ]
 
 // モデル生成関数
