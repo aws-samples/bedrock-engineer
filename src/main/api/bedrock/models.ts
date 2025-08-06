@@ -171,6 +171,17 @@ const MODEL_DEFINITIONS: ModelDefinition[] = [
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
     }
   },
+  // Claude Opus 4.1
+  {
+    baseId: 'claude-opus-4-1-20250805-v1:0',
+    name: 'Claude Opus 4.1',
+    toolUse: true,
+    maxTokensLimit: 8192,
+    supportsThinking: true,
+    availability: {
+      crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
+    }
+  },
   // Claude Sonnet 4
   {
     baseId: 'claude-sonnet-4-20250514-v1:0',

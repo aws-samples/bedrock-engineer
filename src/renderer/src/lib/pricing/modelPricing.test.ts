@@ -51,6 +51,31 @@ test('should calculate cost for Claude Opus 4', () => {
   expect(actualCost).toBeCloseTo(expectedCost, 6)
 })
 
+test('should calculate cost for Claude Opus 4.1', () => {
+  const modelId = 'anthropic.claude-opus-4-1-20250805-v1:0'
+  const inputTokens = 1000
+  const outputTokens = 500
+  const cacheReadTokens = 200
+  const cacheWriteTokens = 100
+
+  const expectedCost =
+    (inputTokens * 0.015 +
+      outputTokens * 0.075 +
+      cacheReadTokens * 0.0015 +
+      cacheWriteTokens * 0.01875) /
+    1000
+
+  const actualCost = calculateCost(
+    modelId,
+    inputTokens,
+    outputTokens,
+    cacheReadTokens,
+    cacheWriteTokens
+  )
+
+  expect(actualCost).toBeCloseTo(expectedCost, 6)
+})
+
 test('should return 0 for unknown model', () => {
   const modelId = 'unknown-model'
   const cost = calculateCost(modelId, 1000, 500)
@@ -108,6 +133,15 @@ test('should contain Claude Sonnet 4 pricing', () => {
 
 test('should contain Claude Opus 4 pricing', () => {
   expect(modelPricing['opus-4']).toEqual({
+    input: 0.015,
+    output: 0.075,
+    cacheRead: 0.0015,
+    cacheWrite: 0.01875
+  })
+})
+
+test('should contain Claude Opus 4.1 pricing', () => {
+  expect(modelPricing['opus-4-1']).toEqual({
     input: 0.015,
     output: 0.075,
     cacheRead: 0.0015,

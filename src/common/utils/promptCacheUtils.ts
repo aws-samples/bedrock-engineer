@@ -17,6 +17,7 @@ export type CacheableField = 'messages' | 'system' | 'tools'
 const MODEL_CACHE_SUPPORT: Record<string, CacheableField[]> = {
   // ベースモデル
   'anthropic.claude-opus-4-20250514-v1:0': ['messages', 'system', 'tools'],
+  'anthropic.claude-opus-4-1-20250805-v1:0': ['messages', 'system', 'tools'],
   'anthropic.claude-sonnet-4-20250514-v1:0': ['messages', 'system', 'tools'],
   'anthropic.claude-3-7-sonnet-20250219-v1:0': ['messages', 'system', 'tools'],
   'anthropic.claude-3-5-haiku-20241022-v1:0': ['messages', 'system', 'tools'],
