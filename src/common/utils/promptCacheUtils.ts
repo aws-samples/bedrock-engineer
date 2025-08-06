@@ -22,20 +22,6 @@ export type { CacheableField }
 export { getBaseModelId }
 
 /**
- * モデルがPrompt Cacheをサポートしているか判定
- */
-export function isPromptCacheSupported(modelId: string): boolean {
-  return isModelPromptCacheSupported(modelId)
-}
-
-/**
- * モデルがサポートするキャッシュ可能なフィールドを取得
- */
-export function getCacheableFields(modelId: string): CacheableField[] {
-  return getModelCacheableFields(modelId)
-}
-
-/**
  * メッセージにキャッシュポイントを追加
  *
  * @param messages メッセージ配列
@@ -50,7 +36,10 @@ export function addCachePointsToMessages(
 ): Message[] {
   // モデルがPrompt Cacheをサポートしていない場合、またはmessagesフィールドがキャッシュ対象でない場合は
   // 元のメッセージをそのまま返す
-  if (!isPromptCacheSupported(modelId) || !getCacheableFields(modelId).includes('messages')) {
+  if (
+    !isModelPromptCacheSupported(modelId) ||
+    !getModelCacheableFields(modelId).includes('messages')
+  ) {
     return messages
   }
 
@@ -68,7 +57,7 @@ export function addCachePointsToMessages(
   ].filter(
     (index) =>
       // Amazon Nova の場合、toolResult 直後に cachePoint を置くとエラーになる
-      getCacheableFields(modelId).includes('tools') ||
+      getModelCacheableFields(modelId).includes('tools') ||
       !messages[index].content?.some((b) => b.toolResult)
   )
 
@@ -104,7 +93,10 @@ export function addCachePointToSystem<T extends ContentBlock[] | { text: string 
 ): T {
   // モデルがPrompt Cacheをサポートしていない場合、またはsystemフィールドがキャッシュ対象でない場合は
   // 元のシステムプロンプトをそのまま返す
-  if (!isPromptCacheSupported(modelId) || !getCacheableFields(modelId).includes('system')) {
+  if (
+    !isModelPromptCacheSupported(modelId) ||
+    !getModelCacheableFields(modelId).includes('system')
+  ) {
     return system
   }
 
@@ -139,7 +131,10 @@ export function addCachePointToTools(
 
   // モデルがPrompt Cacheをサポートしていない場合、またはtoolsフィールドがキャッシュ対象でない場合は
   // 元のツール設定をそのまま返す
-  if (!isPromptCacheSupported(modelId) || !getCacheableFields(modelId).includes('tools')) {
+  if (
+    !isModelPromptCacheSupported(modelId) ||
+    !getModelCacheableFields(modelId).includes('tools')
+  ) {
     return toolConfig
   }
 
@@ -186,7 +181,7 @@ export function logCacheUsage(
     cacheWriteInputTokens,
     cacheHitRatio,
     modelId,
-    isPromptCacheSupported: isPromptCacheSupported(modelId),
-    cacheableFields: getCacheableFields(modelId)
+    isPromptCacheSupported: isModelPromptCacheSupported(modelId),
+    cacheableFields: getModelCacheableFields(modelId)
   })
 }
