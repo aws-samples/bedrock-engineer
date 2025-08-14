@@ -58,7 +58,9 @@ export function parseServerConfigJson(
             name,
             description: name, // デフォルトでは名前と同じ
             connectionType: 'url',
-            url: config.url
+            url: config.url,
+            // headersが存在する場合は追加
+            ...(config.headers && { headers: config.headers })
           }
         }
 
@@ -118,7 +120,8 @@ export function generateEditJson(server?: McpServerConfig, servers?: McpServerCo
     } else if (connectionType === 'url') {
       mcpServers[srv.name] = {
         url: srv.url,
-        enabled: true
+        enabled: true,
+        ...(srv.headers && Object.keys(srv.headers).length > 0 ? { headers: srv.headers } : {})
       }
     }
   })
@@ -146,6 +149,13 @@ export function generateSampleJson(): string {
         },
         DeepWiki: {
           url: 'https://mcp.deepwiki.com/sse'
+        },
+        SecureApi: {
+          url: 'https://api.example.com/mcp',
+          headers: {
+            'Authorization': 'Bearer {{your-token}}',
+            'X-API-Key': 'your-api-key'
+          }
         }
       }
     },
