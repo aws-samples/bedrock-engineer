@@ -1,7 +1,7 @@
 import { IpcMainInvokeEvent } from 'electron'
 import { promises as fs } from 'fs'
 import { bedrock } from '../api'
-import { getModelMaxTokens } from '../api/bedrock/models'
+import { getModelMaxTokens } from '../../common/models/models'
 import { createCategoryLogger } from '../../common/logger'
 
 const bedrockLogger = createCategoryLogger('bedrock:ipc')

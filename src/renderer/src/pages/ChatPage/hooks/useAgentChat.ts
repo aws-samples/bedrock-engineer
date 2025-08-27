@@ -23,13 +23,8 @@ import { ToolName, isMcpTool } from '@/types/tools'
 import { notificationService } from '@renderer/services/NotificationService'
 import { limitContextLength } from '@renderer/lib/contextLength'
 import { IdentifiableMessage } from '@/types/chat/message'
-import {
-  addCachePointsToMessages,
-  addCachePointToSystem,
-  addCachePointToTools,
-  logCacheUsage
-} from '@common/utils/promptCacheUtils'
-import { calculateCost } from '@renderer/lib/pricing/modelPricing'
+import { PromptCacheManager } from '@common/models/promptCache'
+import { PricingCalculator } from '@common/models/pricing'
 
 // メッセージの送信時に、Trace を全て載せると InputToken が逼迫するので取り除く
 function removeTraces(messages) {
@@ -340,25 +335,31 @@ export const useAgentChat = (
     // Context長に基づいてメッセージを制限
     const limitedMessages = removeTraces(limitContextLength(currentMessages, contextLength))
 
-    // キャッシュポイントを追加（前回のキャッシュポイントを引き継ぐ）
-    props.messages = enablePromptCache
-      ? addCachePointsToMessages(limitedMessages, modelId, lastCachePoint.current)
-      : limitedMessages
+    // Prompt Cache適用（enablePromptCacheが有効な場合）
+    if (enablePromptCache) {
+      const cacheManager = new PromptCacheManager(modelId)
+      props.messages = cacheManager.addCachePointsToMessages(
+        limitedMessages,
+        lastCachePoint.current
+      )
 
-    // キャッシュポイントが更新された場合、次回の会話ためにキャッシュポイントのインデックスを更新
-    if (props.messages[props.messages.length - 1].content?.some((b) => b.cachePoint?.type)) {
-      // 次回の会話のために現在のキャッシュポイントを更新
-      // 現在のメッセージ配列の最後のインデックスを次回の最初のキャッシュポイントとして設定
-      lastCachePoint.current = props.messages.length - 1
-    }
+      // キャッシュポイントが更新された場合、次回の会話ためにキャッシュポイントのインデックスを更新
+      if (props.messages[props.messages.length - 1].content?.some((b) => b.cachePoint?.type)) {
+        // 次回の会話のために現在のキャッシュポイントを更新
+        // 現在のメッセージ配列の最後のインデックスを次回の最初のキャッシュポイントとして設定
+        lastCachePoint.current = props.messages.length - 1
+      }
 
-    // システムプロンプトとツール設定にもキャッシュポイントを追加
-    if (props.system && enablePromptCache) {
-      props.system = addCachePointToSystem(props.system, modelId)
-    }
+      // システムプロンプトとツール設定にもキャッシュポイントを追加
+      if (props.system) {
+        props.system = cacheManager.addCachePointToSystem(props.system)
+      }
 
-    if (props.toolConfig && enablePromptCache) {
-      props.toolConfig = addCachePointToTools(props.toolConfig, modelId)
+      if (props.toolConfig) {
+        props.toolConfig = cacheManager.addCachePointToTools(props.toolConfig) as any
+      }
+    } else {
+      props.messages = limitedMessages
     }
 
     const generator = streamChatCompletion(props, abortController.current.signal)
@@ -609,21 +610,18 @@ export const useAgentChat = (
             metadata.converseMetadata.usage.outputTokens
           ) {
             try {
-              sessionCost = calculateCost(
-                modelId,
+              const pricingCalculator = new PricingCalculator(modelId)
+              sessionCost = pricingCalculator.calculateTotalCost(
                 metadata.converseMetadata.usage.inputTokens,
                 metadata.converseMetadata.usage.outputTokens,
-                metadata.converseMetadata.usage.cacheReadInputTokens,
-                metadata.converseMetadata.usage.cacheWriteInputTokens
+                metadata.converseMetadata.usage.cacheReadInputTokens || 0,
+                metadata.converseMetadata.usage.cacheWriteInputTokens || 0
               )
               metadata.sessionCost = sessionCost
             } catch (error) {
               console.error('Error calculating cost:', error)
             }
           }
-
-          // Prompt Cacheの使用状況をログ出力
-          logCacheUsage(metadata.converseMetadata, modelId)
 
           // 直近のアシスタントメッセージにメタデータを関連付ける
           if (lastAssistantMessageId.current) {

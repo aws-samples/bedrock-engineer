@@ -16,7 +16,7 @@ import {
   Title
 } from 'chart.js'
 import { Modal } from 'flowbite-react'
-import { calculateCost, formatCurrency, modelPricing } from '@renderer/lib/pricing/modelPricing'
+import { PricingCalculator } from '@common/models/pricing'
 
 // Chart.jsコンポーネントを登録
 ChartJS.register(
@@ -76,6 +76,9 @@ interface Analytics {
 
 // メッセージからトークン使用量とコストを計算する関数
 const calculateAnalytics = (messages: IdentifiableMessage[], modelId: string): Analytics => {
+  // PricingCalculatorのインスタンスを作成
+  const pricingCalculator = new PricingCalculator(modelId)
+
   // 初期値を設定
   const tokenUsage: TokenUsage = {
     inputTokens: 0,
@@ -108,11 +111,15 @@ const calculateAnalytics = (messages: IdentifiableMessage[], modelId: string): A
       tokenUsage.cacheReadTokens += usage.cacheReadInputTokens || 0
       tokenUsage.cacheWriteTokens += usage.cacheWriteInputTokens || 0
 
-      // メッセージごとのコスト計算
-      const msgInputCost = calculateCost(modelId, usage.inputTokens || 0, 0, 0, 0)
-      const msgOutputCost = calculateCost(modelId, 0, usage.outputTokens || 0, 0, 0)
-      const msgCacheReadCost = calculateCost(modelId, 0, 0, usage.cacheReadInputTokens || 0, 0)
-      const msgCacheWriteCost = calculateCost(modelId, 0, 0, 0, usage.cacheWriteInputTokens || 0)
+      // メッセージごとのコスト計算（PricingCalculatorクラスを使用）
+      const msgInputCost = pricingCalculator.calculateInputCost(usage.inputTokens || 0)
+      const msgOutputCost = pricingCalculator.calculateOutputCost(usage.outputTokens || 0)
+      const msgCacheReadCost = pricingCalculator.calculateCacheReadCost(
+        usage.cacheReadInputTokens || 0
+      )
+      const msgCacheWriteCost = pricingCalculator.calculateCacheWriteCost(
+        usage.cacheWriteInputTokens || 0
+      )
       const msgTotalCost = msgInputCost + msgOutputCost + msgCacheReadCost + msgCacheWriteCost
 
       // タイムスタンプの取得（メタデータにタイムスタンプがない場合は現在時刻を使用）
@@ -149,12 +156,16 @@ const calculateAnalytics = (messages: IdentifiableMessage[], modelId: string): A
     tokenUsage.cacheReadTokens +
     tokenUsage.cacheWriteTokens
 
-  // コスト計算
+  // コスト計算（PricingCalculatorクラスを使用）
   if (modelId) {
-    costAnalysis.inputCost = calculateCost(modelId, tokenUsage.inputTokens, 0, 0, 0)
-    costAnalysis.outputCost = calculateCost(modelId, 0, tokenUsage.outputTokens, 0, 0)
-    costAnalysis.cacheReadCost = calculateCost(modelId, 0, 0, tokenUsage.cacheReadTokens, 0)
-    costAnalysis.cacheWriteCost = calculateCost(modelId, 0, 0, 0, tokenUsage.cacheWriteTokens)
+    costAnalysis.inputCost = pricingCalculator.calculateInputCost(tokenUsage.inputTokens)
+    costAnalysis.outputCost = pricingCalculator.calculateOutputCost(tokenUsage.outputTokens)
+    costAnalysis.cacheReadCost = pricingCalculator.calculateCacheReadCost(
+      tokenUsage.cacheReadTokens
+    )
+    costAnalysis.cacheWriteCost = pricingCalculator.calculateCacheWriteCost(
+      tokenUsage.cacheWriteTokens
+    )
     costAnalysis.totalCost =
       costAnalysis.inputCost +
       costAnalysis.outputCost +
@@ -163,8 +174,8 @@ const calculateAnalytics = (messages: IdentifiableMessage[], modelId: string): A
 
     // キャッシュによる削減額の計算
     if (tokenUsage.cacheReadTokens > 0) {
-      // モデルIDからモデルタイプを特定
-      const pricing = Object.entries(modelPricing).find(([key]) => modelId.includes(key))?.[1]
+      // モデルIDから価格情報を取得
+      const pricing = pricingCalculator.getPricing()
       if (pricing) {
         // キャッシュがなかった場合のコスト (通常の入力トークン価格で計算)
         const costWithoutCache = (tokenUsage.cacheReadTokens * pricing.input) / 1000
@@ -712,7 +723,7 @@ export const TokenAnalyticsModal: React.FC<TokenAnalyticsModalProps> = ({
                 <p className="text-sm text-gray-600 dark:text-gray-200">
                   {t('Total Cost')}:{' '}
                   <span className="font-medium dark:text-white">
-                    {formatCurrency(analytics.costAnalysis.totalCost)}
+                    {PricingCalculator.formatCurrency(analytics.costAnalysis.totalCost)}
                   </span>
                 </p>
               </div>
@@ -805,31 +816,33 @@ export const TokenAnalyticsModal: React.FC<TokenAnalyticsModalProps> = ({
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {t('Input Cost')}:{' '}
                     <span className="font-medium">
-                      {formatCurrency(analytics.costAnalysis.inputCost)}
+                      {PricingCalculator.formatCurrency(analytics.costAnalysis.inputCost)}
                     </span>
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {t('Output Cost')}:{' '}
                     <span className="font-medium">
-                      {formatCurrency(analytics.costAnalysis.outputCost)}
+                      {PricingCalculator.formatCurrency(analytics.costAnalysis.outputCost)}
                     </span>
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {t('Cache Read Cost')}:{' '}
                     <span className="font-medium">
-                      {formatCurrency(analytics.costAnalysis.cacheReadCost)}
+                      {PricingCalculator.formatCurrency(analytics.costAnalysis.cacheReadCost)}
                     </span>
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {t('Cache Write Cost')}:{' '}
                     <span className="font-medium">
-                      {formatCurrency(analytics.costAnalysis.cacheWriteCost)}
+                      {PricingCalculator.formatCurrency(analytics.costAnalysis.cacheWriteCost)}
                     </span>
                   </p>
                   {analytics.costAnalysis.cacheSavings > 0 && (
                     <p className="mt-3 text-sm text-green-600 dark:text-green-400 font-medium">
                       {t('Saved approximately {{amount}} by using prompt cache', {
-                        amount: formatCurrency(analytics.costAnalysis.cacheSavings)
+                        amount: PricingCalculator.formatCurrency(
+                          analytics.costAnalysis.cacheSavings
+                        )
                       })}
                     </p>
                   )}
@@ -928,10 +941,10 @@ export const TokenAnalyticsModal: React.FC<TokenAnalyticsModalProps> = ({
                       <span>{t('Average Cost per Message')}:</span>
                       <span className="font-medium dark:text-teal-200">
                         {analytics.timeSeriesData.length > 0
-                          ? formatCurrency(
+                          ? PricingCalculator.formatCurrency(
                               analytics.costAnalysis.totalCost / analytics.timeSeriesData.length
                             )
-                          : formatCurrency(0)}
+                          : PricingCalculator.formatCurrency(0)}
                       </span>
                     </p>
                   </div>
@@ -955,7 +968,9 @@ export const TokenAnalyticsModal: React.FC<TokenAnalyticsModalProps> = ({
                     {analytics.costAnalysis.cacheSavings > 0 && (
                       <p className="mt-3 text-sm font-medium py-2 px-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-800">
                         {t('Saved approximately {{amount}} by using prompt cache', {
-                          amount: formatCurrency(analytics.costAnalysis.cacheSavings)
+                          amount: PricingCalculator.formatCurrency(
+                            analytics.costAnalysis.cacheSavings
+                          )
                         })}
                       </p>
                     )}

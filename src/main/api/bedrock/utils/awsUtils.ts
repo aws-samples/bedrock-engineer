@@ -1,6 +1,6 @@
 import { STSClient, GetCallerIdentityCommand } from '@aws-sdk/client-sts'
 import type { AWSCredentials } from '../types'
-import { allModels } from '../models'
+import { allModels } from '../../../../common/models/models'
 import type { LLM } from '../../../../types/llm'
 import { fromIni } from '@aws-sdk/credential-providers'
 

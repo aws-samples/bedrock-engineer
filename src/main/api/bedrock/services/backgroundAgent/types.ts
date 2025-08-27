@@ -1,7 +1,8 @@
 import {
   ContentBlock,
   ConversationRole,
-  InferenceConfiguration
+  InferenceConfiguration,
+  Message
 } from '@aws-sdk/client-bedrock-runtime'
 
 export interface BackgroundAgentConfig {
@@ -12,7 +13,7 @@ export interface BackgroundAgentConfig {
   inferenceConfig?: InferenceConfiguration // タスク固有の推論設定
 }
 
-export interface BackgroundMessage {
+export interface BackgroundMessage extends Message {
   id: string
   role: ConversationRole
   content: ContentBlock[]

@@ -10,12 +10,7 @@ import {
   BackgroundChatResult,
   BackgroundAgentOptions
 } from './types'
-import {
-  addCachePointsToMessages,
-  addCachePointToSystem,
-  addCachePointToTools,
-  logCacheUsage
-} from '../../../../../common/utils/promptCacheUtils'
+import { PromptCacheManager } from '../../../../../common/models/promptCache'
 import { BackgroundChatSessionManager } from './BackgroundChatSessionManager'
 import { BackgroundAgentScheduler } from './BackgroundAgentScheduler'
 import { ToolInput, ToolName, ToolResult } from '../../../../../types/tools'
@@ -388,19 +383,21 @@ export class BackgroundAgentService {
       const currentCachePoint = this.cachePointMap.get(sessionId)
 
       // Prompt Cache適用（enablePromptCacheが有効な場合）
-      const processedMessages = enablePromptCache
-        ? addCachePointsToMessages(messages, config.modelId, currentCachePoint)
-        : messages
+      let processedMessages: Message[] = messages
+      let processedSystem = system
+      let processedToolConfig = toolConfig
 
-      const processedSystem =
-        enablePromptCache && system.length > 0
-          ? addCachePointToSystem(system, config.modelId)
-          : system
-
-      const processedToolConfig =
-        enablePromptCache && toolConfig
-          ? addCachePointToTools(toolConfig, config.modelId)
-          : toolConfig
+      if (enablePromptCache) {
+        const cacheManager = new PromptCacheManager(config.modelId)
+        processedMessages = cacheManager.addCachePointsToMessages(messages, currentCachePoint)
+        if (system.length > 0) {
+          processedSystem = cacheManager.addCachePointToSystem(system)
+        }
+        if (toolConfig) {
+          const processedTool = cacheManager.addCachePointToTools(toolConfig as any)
+          processedToolConfig = processedTool as typeof toolConfig
+        }
+      }
 
       logger.debug('Calling Bedrock converse API', {
         messageCount: processedMessages.length,
@@ -437,11 +434,6 @@ export class BackgroundAgentService {
       // キャッシュポイント位置の更新（enablePromptCacheが有効な場合）
       if (enablePromptCache) {
         this.updateCachePoint(sessionId, processedMessages)
-      }
-
-      // Prompt Cacheの使用状況をログ出力（usageプロパティを使用）
-      if (response.usage) {
-        logCacheUsage(response, config.modelId)
       }
 
       // レスポンスメッセージを作成

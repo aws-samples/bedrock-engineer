@@ -2,7 +2,7 @@ import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { JSONCodeBlock } from '../CodeBlocks/JSONCodeBlock'
 import { CheckCircleIcon, ServerIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline'
-import { formatCurrency } from '@renderer/lib/pricing/modelPricing'
+import { PricingCalculator } from '@common/models/pricing'
 import { IdentifiableMessage } from '@/types/chat/message'
 
 interface MetadataViewerProps {
@@ -59,7 +59,7 @@ export const MetadataViewer: React.FC<MetadataViewerProps> = ({ metadata }) => {
               <div className="flex flex-col">
                 <span className="text-gray-500 dark:text-gray-300">{t('Session Cost')}</span>
                 <span className="font-medium text-lg text-gray-900 dark:text-gray-100">
-                  {formatCurrency(metadata.sessionCost, 'USD', currencyLocale)}
+                  {PricingCalculator.formatCurrency(metadata.sessionCost, 'USD', currencyLocale)}
                 </span>
               </div>
             </div>

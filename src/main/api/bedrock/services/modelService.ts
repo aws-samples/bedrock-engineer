@@ -1,4 +1,4 @@
-import { getDefaultPromptRouter, getModelsForRegion } from '../models'
+import { getDefaultPromptRouter, getModelsForRegion } from '../../../../common/models/models'
 import { getAccountId } from '../utils/awsUtils'
 import type { ServiceContext, AWSCredentials } from '../types'
 import { BedrockSupportRegion } from '../../../../types/llm'

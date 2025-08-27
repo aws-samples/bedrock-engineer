@@ -11,7 +11,7 @@ import {
 import { createRuntimeClient } from '../client'
 import { processImageContent } from '../utils/imageUtils'
 import { getAlternateRegionOnThrottling } from '../utils/awsUtils'
-import { getThinkingSupportedModelIds } from '../models'
+import { getThinkingSupportedModelIds } from '../../../../common/models/models'
 import type { CallConverseAPIProps, ServiceContext } from '../types'
 import { createCategoryLogger } from '../../../../common/logger'
 
