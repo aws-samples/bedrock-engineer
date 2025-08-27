@@ -7,10 +7,8 @@ import { getModelConfig } from './models'
  */
 export class PromptCacheManager {
   private modelConfig: ModelConfig | undefined
-  private modelId: string
 
   constructor(modelId: string) {
-    this.modelId = modelId
     this.modelConfig = getModelConfig(modelId)
   }
 
