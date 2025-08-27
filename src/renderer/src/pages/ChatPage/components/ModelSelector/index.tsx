@@ -7,6 +7,7 @@ import NovaLogo from './nova-color.svg'
 import ClaudeLogo from './claude-color.svg'
 import DeepSeekLogo from './deepseek-color.svg'
 import MetaLogo from './meta-color.svg'
+import OpenAILogo from './openai-color.svg'
 
 type ModelSelectorProps = {
   openable: boolean
@@ -66,6 +67,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     if (modelId.includes('nova')) return <NovaLogo />
     if (modelId.includes('deepseek')) return <DeepSeekLogo />
     if (modelId.includes('meta')) return <MetaLogo />
+    if (modelId.includes('gpt-oss') || modelId.includes('openai')) return <OpenAILogo />
     return <LuBrainCircuit />
   }
 

@@ -8,7 +8,7 @@ export type CacheableField = 'messages' | 'system' | 'tools'
 /**
  * プロバイダー型定義
  */
-export type ModelProvider = 'anthropic' | 'amazon' | 'deepseek' | 'stability'
+export type ModelProvider = 'anthropic' | 'amazon' | 'deepseek' | 'stability' | 'openai'
 
 /**
  * モデルカテゴリ型定義
@@ -422,6 +422,32 @@ const MODEL_REGISTRY: ModelConfig[] = [
     maxTokensLimit: 32768,
     availability: {
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
+    }
+  },
+
+  // OpenAI GPT-OSS 120B
+  {
+    baseId: 'gpt-oss-120b-1:0',
+    name: 'GPT-OSS 120B',
+    provider: 'openai',
+    category: 'text',
+    toolUse: true,
+    maxTokensLimit: 8192,
+    availability: {
+      base: ['us-west-2']
+    }
+  },
+
+  // OpenAI GPT-OSS 20B
+  {
+    baseId: 'gpt-oss-20b-1:0',
+    name: 'GPT-OSS 20B',
+    provider: 'openai',
+    category: 'text',
+    toolUse: true,
+    maxTokensLimit: 8192,
+    availability: {
+      base: ['us-west-2']
     }
   }
 ]
