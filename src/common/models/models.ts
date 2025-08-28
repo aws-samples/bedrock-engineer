@@ -28,6 +28,7 @@ export interface ModelConfig {
   toolUse: boolean
   maxTokensLimit: number
   supportsThinking?: boolean
+  supportsStreamingToolUse?: boolean // ストリーミングでのTool Useサポート
 
   // 利用可能リージョン
   availability: {
@@ -450,6 +451,20 @@ const MODEL_REGISTRY: ModelConfig[] = [
       base: ['us-west-2']
     }
   }
+
+  // Custom model (this is example)
+  // {
+  //   baseId: 'arn:aws:bedrock:us-east-1:1234567890:imported-model/xxxx',
+  //   name: 'DeepSeek-R1-Distill-Llama-8B',
+  //   provider: 'deepseek',
+  //   category: 'text',
+  //   toolUse: true,
+  //   maxTokensLimit: 4096,
+  //   supportsStreamingToolUse: false,
+  //   availability: {
+  //     base: ['us-east-1']
+  //   }
+  // }
 ]
 
 /**
@@ -583,6 +598,13 @@ function groupRegionsByPrefix(
 }
 
 /**
+ * モデルIDがARN形式かどうかを判定する
+ */
+function isArnModelId(modelId: string): boolean {
+  return modelId.startsWith('arn:aws:bedrock:')
+}
+
+/**
  * モデルIDからリージョンプレフィックスを削除して基本モデル名を取得する
  * 例: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0' → 'anthropic.claude-3-7-sonnet-20250219-v1:0'
  */
@@ -596,6 +618,12 @@ export function getBaseModelId(modelId: string): string {
  * モデル設定から完全なモデルIDを生成する
  */
 function generateFullModelId(config: ModelConfig, regionPrefix?: string): string {
+  // ARN形式のモデルIDの場合はそのまま返す
+  if (isArnModelId(config.baseId)) {
+    return config.baseId
+  }
+
+  // 通常のモデルは従来通りの処理
   if (regionPrefix) {
     return `${regionPrefix}.${config.provider}.${config.baseId}`
   }
@@ -744,4 +772,14 @@ export const getModelConfig = (modelId: string): ModelConfig | undefined => {
   return MODEL_REGISTRY.find(
     (c) => baseModelId.includes(c.baseId) || baseModelId.includes(`${c.provider}.${c.baseId}`)
   )
+}
+
+/**
+ * モデルがストリーミング + Tool Use をサポートしているかを判定する関数
+ */
+export const supportsStreamingWithToolUse = (modelId: string): boolean => {
+  const config = getModelConfig(modelId)
+  // supportsStreamingToolUse が明示的に false の場合のみ false を返す
+  // 未定義の場合はデフォルトで true（サポート）とみなす
+  return config?.supportsStreamingToolUse !== false
 }

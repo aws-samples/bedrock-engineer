@@ -362,6 +362,12 @@ Bedrock Engineer は、詳細なコスト追跡と配分のためのAWS Bedrock�
 
 - [アプリケーション推論プロファイルガイド (日本語)](./docs/inference-profile/INFERENCE_PROFILE-ja.md)
 
+## その他のドキュメント
+
+- [カスタムモデルインポート設定ガイド](./docs/custom-model-import/README-ja.md) - Amazon Bedrock の Custom Model Import 機能で取り込んだカスタムモデルを Bedrock Engineer で使用するための設定方法
+- [MCPサーバー設定ガイド](./docs/mcp-server/MCP_SERVER_CONFIGURATION-ja.md) - Model Context Protocol (MCP) サーバーの設定方法
+- [組織共有ガイド](./docs/agent-directory-organization/README-ja.md) - Agent Directory での組織内エージェント共有の設定方法
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=aws-samples/bedrock-engineer&type=Date)](https://star-history.com/#aws-samples/bedrock-engineer&Date)
