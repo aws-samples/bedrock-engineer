@@ -339,6 +339,14 @@ For detailed setup instructions and examples, see:
 
 - [Application Inference Profile Guide (English)](./docs/inference-profile/INFERENCE_PROFILE.md)
 
+## Documentation
+
+Detailed documentation is available for advanced features and configuration methods of Bedrock Engineer:
+
+- [Custom Model Import Configuration Guide](./docs/custom-model-import/README.md) - How to configure custom models imported using Amazon Bedrock's Custom Model Import feature for use with Bedrock Engineer
+- [MCP Server Configuration Guide](./docs/mcp-server/MCP_SERVER_CONFIGURATION.md) - How to configure Model Context Protocol (MCP) servers
+- [Organization Sharing Guide](./docs/agent-directory-organization/README.md) - How to set up agent sharing within organizations in Agent Directory
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=aws-samples/bedrock-engineer&type=Date)](https://star-history.com/#aws-samples/bedrock-engineer&Date)
