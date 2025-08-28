@@ -680,7 +680,8 @@ export const useAgentChat = (
         return
       }
       console.error({ streamChatRequestError: error })
-      toast.error(t('request error'))
+      // エラーメッセージをそのままトーストに表示
+      toast.error(error.message || t('request error'))
       const messageId = generateMessageId()
       const errorMessage: IdentifiableMessage = {
         role: 'assistant' as const,

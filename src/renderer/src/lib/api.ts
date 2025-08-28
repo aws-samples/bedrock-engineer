@@ -6,6 +6,7 @@ import {
   Message,
   ToolConfiguration
 } from '@aws-sdk/client-bedrock-runtime'
+import { supportsStreamingWithToolUse } from '@common/models/models'
 
 export type StreamChatCompletionProps = {
   modelId: string
@@ -20,6 +21,62 @@ export async function* streamChatCompletion(
   props: StreamChatCompletionProps,
   abortSignal?: AbortSignal
 ): AsyncGenerator<ConverseStreamOutput, void, unknown> {
+  const hasToolUse = props.toolConfig && props.toolConfig.tools && props.toolConfig.tools.length > 0
+
+  // モデルがストリーミング + Tool Use をサポートしていない場合
+  if (hasToolUse && !supportsStreamingWithToolUse(props.modelId)) {
+    // 非ストリーミングAPIを使用し、結果をストリーミング形式に変換
+    const result = await converse(props, abortSignal)
+
+    // 非ストリーミング結果をストリーミング形式に変換
+    yield { messageStart: { role: result.output.message.role } }
+
+    for (const content of result.output.message.content || []) {
+      if (content.text) {
+        // テキストコンテンツを一度に出力
+        yield {
+          contentBlockStart: {
+            start: undefined,
+            contentBlockIndex: 0
+          }
+        }
+        yield {
+          contentBlockDelta: {
+            delta: { text: content.text },
+            contentBlockIndex: 0
+          }
+        }
+        yield {
+          contentBlockStop: {
+            contentBlockIndex: 0
+          }
+        }
+      } else if (content.toolUse) {
+        // Tool Useコンテンツを出力
+        yield {
+          contentBlockStart: {
+            start: { toolUse: content.toolUse },
+            contentBlockIndex: 0
+          }
+        }
+        yield {
+          contentBlockStop: {
+            contentBlockIndex: 0
+          }
+        }
+      }
+    }
+
+    yield { messageStop: { stopReason: result.stopReason } }
+
+    if (result.usage) {
+      yield { metadata: { usage: result.usage, metrics: { latencyMs: 0 } } }
+    }
+
+    return
+  }
+
+  // 通常のストリーミング処理
   const res = await fetch(`${API_ENDPOINT}/converse/stream`, {
     method: 'POST',
     body: JSON.stringify(props),
