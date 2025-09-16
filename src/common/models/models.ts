@@ -235,7 +235,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
     provider: 'anthropic',
     category: 'text',
     toolUse: true,
-    maxTokensLimit: 32768,
+    maxTokensLimit: 32000,
     supportsThinking: true,
     availability: {
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
@@ -259,7 +259,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
     provider: 'anthropic',
     category: 'text',
     toolUse: true,
-    maxTokensLimit: 8192,
+    maxTokensLimit: 32000,
     supportsThinking: true,
     availability: {
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2']
@@ -283,7 +283,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
     provider: 'anthropic',
     category: 'text',
     toolUse: true,
-    maxTokensLimit: 8192,
+    maxTokensLimit: 64000,
     supportsThinking: true,
     availability: {
       crossRegion: ['us-east-1', 'us-east-2', 'us-west-2', 'ap-northeast-1', 'ap-northeast-3']

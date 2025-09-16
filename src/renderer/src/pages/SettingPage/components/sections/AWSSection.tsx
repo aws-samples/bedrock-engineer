@@ -352,7 +352,7 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
             placeholder={t('Max tokens')}
             value={inferenceParams.maxTokens}
             min={1}
-            max={4096}
+            max={currentLLM?.maxTokensLimit || 8192}
             onChange={(e) => {
               onUpdateInferenceParams({ maxTokens: parseInt(e.target.value, 10) })
             }}
