@@ -16,6 +16,7 @@ import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useLightProcessingModel } from '@renderer/lib/modelSelection'
 import { useAgentTools } from './useAgentTools'
+import { getThinkingSupportedModelIds } from '@common/models/models'
 
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ChatMessage } from '@/types/chat/history'
@@ -60,6 +61,19 @@ function removeTraces(messages) {
           }
           return item
         })
+      }
+    }
+    return message
+  })
+}
+
+// reasoningContentを含むブロックを除外する関数
+function removeReasoningContent(messages: Message[]): Message[] {
+  return messages.map((message) => {
+    if (message.content && Array.isArray(message.content)) {
+      return {
+        ...message,
+        content: message.content.filter((block) => !('reasoningContent' in block))
       }
     }
     return message
@@ -332,8 +346,17 @@ export const useAgentChat = (
     // 新しい AbortController を作成
     abortController.current = new AbortController()
 
+    // モデルがthinkingをサポートしているか確認
+    const thinkingSupportedModelIds = getThinkingSupportedModelIds()
+    const supportsThinking = thinkingSupportedModelIds.some((id) => modelId.includes(id))
+
     // Context長に基づいてメッセージを制限
-    const limitedMessages = removeTraces(limitContextLength(currentMessages, contextLength))
+    let limitedMessages = removeTraces(limitContextLength(currentMessages, contextLength))
+
+    // モデルがthinkingをサポートしていない場合、reasoningContentを除外
+    if (!supportsThinking) {
+      limitedMessages = removeReasoningContent(limitedMessages)
+    }
 
     // Prompt Cache適用（enablePromptCacheが有効な場合）
     if (enablePromptCache) {
@@ -497,7 +520,7 @@ export const useAgentChat = (
           }
 
           const reasoningContent = json.contentBlockDelta.delta?.reasoningContent
-          if (reasoningContent) {
+          if (reasoningContent && supportsThinking) {
             setReasoning(true)
             if (reasoningContent?.text || reasoningContent?.signature) {
               reasoningContentText = reasoningContentText + (reasoningContent?.text || '')

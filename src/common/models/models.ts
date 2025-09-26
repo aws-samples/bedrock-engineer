@@ -434,6 +434,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 8192,
+    supportsThinking: false,
     availability: {
       base: ['us-west-2']
     }
@@ -447,6 +448,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 8192,
+    supportsThinking: false,
     availability: {
       base: ['us-west-2']
     }
