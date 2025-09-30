@@ -23,11 +23,11 @@ Bedrock Engineer はネイティブアプリです。アプリをダウンロー
 
 MacOS:
 
-[<img src="https://img.shields.io/badge/Download_FOR_MAC-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.19.0.pkg)
+[<img src="https://img.shields.io/badge/Download_FOR_MAC-Latest%20Release-blue?style=for-the-badge&logo=apple" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.19.1.pkg)
 
 Windows:
 
-[<img src="https://img.shields.io/badge/Download_FOR_WINDOWS-Latest%20Release-blue?style=for-the-badge" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.19.0-setup.exe)
+[<img src="https://img.shields.io/badge/Download_FOR_WINDOWS-Latest%20Release-blue?style=for-the-badge" alt="Download Latest Release" height="40">](https://github.com/aws-samples/bedrock-engineer/releases/latest/download/bedrock-engineer-1.19.1-setup.exe)
 
 MacOS に最適化されていますが、Windows, Linux OS でもビルドして使用できます。不具合がある場合、issue に起票ください。
 
@@ -52,7 +52,7 @@ PKGファイルを開く際に、以下のセキュリティ警告が表示さ�
 1. 「完了」をクリックして警告ダイアログを閉じます
 2. システム環境設定 → プライバシーとセキュリティを開きます
 3. セキュリティセクションまでスクロールします
-4. 「お使いのMacを保護するために "bedrock-engineer-1.19.0.pkg" がブロックされました」を見つけます
+4. 「お使いのMacを保護するために "bedrock-engineer-1.19.1.pkg" がブロックされました」を見つけます
 5. 「このまま開く」ボタンをクリックします
 
 このセキュリティ警告は、アプリケーションがMac App Store経由で配布されていないために表示されます。
