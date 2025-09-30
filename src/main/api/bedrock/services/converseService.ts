@@ -74,6 +74,7 @@ export class ConverseService {
   /**
    * APIリクエスト用のパラメータを準備
    * メッセージの処理とコマンドパラメータの作成を行う
+   * TODO: model.ts に処理を集約する
    */
   private async prepareCommandParameters(props: CallConverseAPIProps): Promise<{
     commandParams: ConverseCommandInput | ConverseStreamCommandInput
@@ -90,8 +91,10 @@ export class ConverseService {
     // メッセージを正規化
     const sanitizedMessages = this.normalizeMessages(processedMessages)
 
-    // 推論パラメータを取得（リクエストで明示的に指定された場合はグローバル設定を書きする）
-    const inferenceConfig = props?.inferenceConfig ?? this.context.store.get('inferenceParams')
+    // 推論パラメータを取得（リクエストで明示的に指定された場合はグローバル設定を上書きする）
+    // ディープコピーを作成して、グローバル設定への影響を防ぐ
+    const baseInferenceConfig = props?.inferenceConfig ?? this.context.store.get('inferenceParams')
+    const inferenceConfig = { ...baseInferenceConfig }
 
     const thinkingMode = this.context.store.get('thinkingMode')
     const interleaveThinking = this.context.store.get('interleaveThinking')
@@ -101,6 +104,14 @@ export class ConverseService {
 
     // Thinking対応モデルのIDリストを取得
     const thinkingSupportedModelIds = getThinkingSupportedModelIds()
+
+    // Claude系モデル（anthropic）の場合、temperatureとtop_pの両方が設定されていたらtop_pを削除
+    // これはClaude Sonnet 4.5などの新しいモデルでtemperatureとtop_pを同時に指定できない制約に対応
+    if (modelId.includes('anthropic') || modelId.includes('claude')) {
+      if (inferenceConfig.temperature !== undefined && inferenceConfig.topP !== undefined) {
+        delete inferenceConfig.topP
+      }
+    }
 
     // thinkingモードが有効かつmodelIdがThinking対応モデルの場合のみ設定
     if (
@@ -118,7 +129,7 @@ export class ConverseService {
       if (interleaveThinking) {
         additionalModelRequestFields.anthropic_beta = ['interleaved-thinking-2025-05-14']
       }
-      inferenceConfig.topP = undefined // reasoning は topP は不要
+      delete inferenceConfig.topP // reasoning は topP は不要
       inferenceConfig.temperature = 1 // reasoning は temperature を 1 必須
 
       // Thinking Mode有効時の特別なログ出力
