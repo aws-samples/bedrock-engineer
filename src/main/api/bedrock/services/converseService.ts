@@ -91,29 +91,20 @@ export class ConverseService {
     // メッセージを正規化
     const sanitizedMessages = this.normalizeMessages(processedMessages)
 
-    // 推論パラメータを取得（リクエストで明示的に指定された場合はグローバル設定を上書きする）
-    // ディープコピーを作成して、グローバル設定への影響を防ぐ
+    // Get inference parameters (request-specific params override global settings)
+    // Create deep copy to prevent affecting global settings
     const baseInferenceConfig = props?.inferenceConfig ?? this.context.store.get('inferenceParams')
     const inferenceConfig = { ...baseInferenceConfig }
 
     const thinkingMode = this.context.store.get('thinkingMode')
     const interleaveThinking = this.context.store.get('interleaveThinking')
 
-    // models.tsでsupportsThinking=trueと定義されたモデルでThinking Modeが有効な場合、additionalModelRequestFieldsを追加
+    // additionalModelRequestFields for model-specific API requirements
     let additionalModelRequestFields: Record<string, any> | undefined = undefined
 
-    // Thinking対応モデルのIDリストを取得
+    // Thinking Mode handling (runtime override)
+    // Note: Model defaults are handled in models.ts, but Thinking Mode is a dynamic runtime mode
     const thinkingSupportedModelIds = getThinkingSupportedModelIds()
-
-    // Claude系モデル（anthropic）の場合、temperatureとtop_pの両方が設定されていたらtop_pを削除
-    // これはClaude Sonnet 4.5などの新しいモデルでtemperatureとtop_pを同時に指定できない制約に対応
-    if (modelId.includes('anthropic') || modelId.includes('claude')) {
-      if (inferenceConfig.temperature !== undefined && inferenceConfig.topP !== undefined) {
-        delete inferenceConfig.topP
-      }
-    }
-
-    // thinkingモードが有効かつmodelIdがThinking対応モデルの場合のみ設定
     if (
       thinkingSupportedModelIds.some((id) => modelId.includes(id)) &&
       thinkingMode?.type === 'enabled'
@@ -125,14 +116,15 @@ export class ConverseService {
         }
       }
 
-      // インターリーブ思考が有効な場合のみanthropic_betaを追加
+      // Add anthropic_beta for interleaved thinking if enabled
       if (interleaveThinking) {
         additionalModelRequestFields.anthropic_beta = ['interleaved-thinking-2025-05-14']
       }
-      delete inferenceConfig.topP // reasoning は topP は不要
-      inferenceConfig.temperature = 1 // reasoning は temperature を 1 必須
 
-      // Thinking Mode有効時の特別なログ出力
+      // Thinking Mode requires specific parameters
+      delete inferenceConfig.topP // topP not used in reasoning mode
+      inferenceConfig.temperature = 1 // temperature must be 1 for reasoning
+
       converseLogger.debug('Enabling Thinking Mode', {
         modelId,
         thinkingType: thinkingMode.type,
@@ -142,16 +134,17 @@ export class ConverseService {
       })
     }
 
+    // Amazon Nova specific API requirements
+    // Note: Model defaults (temperature, topP) are handled in models.ts
+    // This only sets the additionalModelRequestFields required by the Nova API
     if (modelId.includes('nova')) {
       // https://docs.aws.amazon.com/nova/latest/userguide/tool-use-definition.html
-      // For tool calling, the inference parameters should be set as inf_params = {"topP": 1, "temperature": 1} and additionalModelRequestFields= {"inferenceConfig": {"topK":1}}. This is because we encourage greedy decoding parameters for Amazon Nova tool calling.
+      // topK must be set in additionalModelRequestFields for Nova tool calling
       additionalModelRequestFields = {
         inferenceConfig: { topK: 1 }
       }
-      inferenceConfig.topP = 1
-      inferenceConfig.temperature = 1
 
-      // If the number of parallel executions is 3 or more, it may not be stable, so process it in stages.
+      // Prevent parallel tool execution for stability
       system[0].text =
         system[0].text + '\n Do not run ToolUse in parallel, but proceed step by step.'
     }

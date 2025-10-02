@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FcKey, FcElectronics, FcMindMap } from 'react-icons/fc'
 import { IoMdClose } from 'react-icons/io'
@@ -10,6 +10,7 @@ import { ThinkingModeSettings } from '../ThinkingModeSettings'
 import { AWS_REGIONS } from '@/types/aws-regions'
 import { LLM } from '@/types/llm'
 import { NovaSonicStatus } from '../NovaSonicStatus'
+import { getLockedParameters } from '@/common/models/models'
 
 interface AWSSectionProps {
   // AWS Basic Settings
@@ -89,6 +90,11 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
 }) => {
   const { t } = useTranslation()
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false)
+
+  // Get locked parameters for the current model
+  const lockedParams = useMemo(() => {
+    return currentLLM?.modelId ? getLockedParameters(currentLLM.modelId) : []
+  }, [currentLLM?.modelId])
 
   const regionGroups = [
     {
@@ -358,31 +364,47 @@ export const AWSSection: React.FC<AWSSectionProps> = ({
             }}
           />
 
-          <SettingInput
-            label={t('Temperature')}
-            type="number"
-            placeholder={t('Temperature')}
-            value={inferenceParams.temperature}
-            min={0}
-            max={1.0}
-            step={0.1}
-            onChange={(e) => {
-              onUpdateInferenceParams({ temperature: parseFloat(e.target.value) })
-            }}
-          />
+          <div>
+            <SettingInput
+              label={t('Temperature')}
+              type="number"
+              placeholder={t('Temperature')}
+              value={inferenceParams.temperature}
+              min={0}
+              max={1.0}
+              step={0.1}
+              disabled={lockedParams.includes('temperature')}
+              onChange={(e) => {
+                onUpdateInferenceParams({ temperature: parseFloat(e.target.value) })
+              }}
+            />
+            {lockedParams.includes('temperature') && (
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                This parameter is fixed for the selected model
+              </p>
+            )}
+          </div>
 
-          <SettingInput
-            label={t('topP')}
-            type="number"
-            placeholder={t('topP')}
-            value={inferenceParams.topP}
-            min={0}
-            max={1}
-            step={0.1}
-            onChange={(e) => {
-              onUpdateInferenceParams({ topP: parseFloat(e.target.value) })
-            }}
-          />
+          <div>
+            <SettingInput
+              label={t('topP')}
+              type="number"
+              placeholder={t('topP')}
+              value={inferenceParams.topP}
+              min={0}
+              max={1}
+              step={0.1}
+              disabled={lockedParams.includes('topP')}
+              onChange={(e) => {
+                onUpdateInferenceParams({ topP: parseFloat(e.target.value) })
+              }}
+            />
+            {lockedParams.includes('topP') && (
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                {t('This parameter is fixed for the selected model')}
+              </p>
+            )}
+          </div>
 
           <ThinkingModeSettings />
         </div>

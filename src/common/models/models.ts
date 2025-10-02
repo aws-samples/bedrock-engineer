@@ -76,12 +76,37 @@ export interface ModelConfig {
 
   // Features
   toolUse: boolean
-  maxTokensLimit: number
   supportsThinking?: boolean
   supportsStreamingToolUse?: boolean // Support for Tool Use with streaming
 
   // Inference profiles (new design)
   inferenceProfiles: InferenceProfile[]
+
+  // === Inference parameter constraints ===
+
+  /**
+   * Maximum token limit supported by the model
+   * Used for UI slider max value and validation
+   */
+  maxTokensLimit: number
+
+  /**
+   * Default inference parameters
+   * Automatically applied to store.inferenceParams when model is switched
+   * Required for text models, not applicable for image models
+   */
+  defaultInferenceConfig?: {
+    temperature: number // Default temperature
+    topP?: number // Default Top-P (optional, some models cannot use with temperature)
+    topK?: number // Default Top-K (for Nova models, etc.)
+    maxTokens: number // Default token count (must be <= maxTokensLimit)
+  }
+
+  /**
+   * Parameters that should be locked (non-editable) in the UI
+   * Example: Claude Sonnet 4.5 locks temperature at 1.0
+   */
+  lockedParameters?: ('temperature' | 'topP' | 'topK')[]
 
   // Pricing (dollar price per 1000 tokens)
   pricing?: {
@@ -102,96 +127,6 @@ export interface ModelConfig {
  * Unified model registry
  */
 const MODEL_REGISTRY: ModelConfig[] = [
-  // Claude 3 Sonnet
-  {
-    baseId: 'claude-3-sonnet-20240229-v1:0',
-    name: 'Claude 3 Sonnet',
-    provider: 'anthropic',
-    category: 'text',
-    toolUse: true,
-    maxTokensLimit: 8192,
-    inferenceProfiles: [
-      {
-        type: 'regional-us',
-        prefix: 'us',
-        regions: ['us-east-1', 'us-west-2'],
-        displaySuffix: '(US)'
-      },
-      {
-        type: 'regional-eu',
-        prefix: 'eu',
-        regions: ['eu-central-1', 'eu-west-1', 'eu-west-3'],
-        displaySuffix: '(EU)'
-      },
-      {
-        type: 'regional-apac',
-        prefix: 'apac',
-        regions: [
-          'ap-northeast-1',
-          'ap-northeast-2',
-          'ap-south-1',
-          'ap-southeast-1',
-          'ap-southeast-2'
-        ],
-        displaySuffix: '(APAC)'
-      }
-    ]
-  },
-
-  // Claude 3 Haiku
-  {
-    baseId: 'claude-3-haiku-20240307-v1:0',
-    name: 'Claude 3 Haiku',
-    provider: 'anthropic',
-    category: 'text',
-    toolUse: true,
-    maxTokensLimit: 4096,
-    inferenceProfiles: [
-      {
-        type: 'base',
-        regions: [
-          'us-east-1',
-          // 'us-east-2', // On-demand not supported - use US CRIS profile instead
-          'us-west-2',
-          'ca-central-1',
-          'ap-northeast-1',
-          'ap-northeast-2',
-          'ap-south-1',
-          'ap-southeast-1',
-          'ap-southeast-2',
-          'eu-central-1',
-          // 'eu-west-1', // On-demand not supported - use EU CRIS profile instead
-          'eu-west-2',
-          'eu-west-3'
-        ]
-      },
-      {
-        type: 'regional-us',
-        prefix: 'us',
-        regions: ['us-east-1', 'us-east-2', 'us-west-2'],
-        displaySuffix: '(US)'
-      },
-      {
-        type: 'regional-eu',
-        prefix: 'eu',
-        regions: ['eu-central-1', 'eu-west-1', 'eu-west-3'],
-        displaySuffix: '(EU)'
-      },
-      {
-        type: 'regional-apac',
-        prefix: 'apac',
-        regions: [
-          'ap-northeast-1',
-          'ap-northeast-2',
-          'ap-south-1',
-          'ap-southeast-1',
-          'ap-southeast-2'
-        ],
-        displaySuffix: '(APAC)'
-      }
-    ]
-  },
-
   // Claude 3.5 Haiku
   {
     baseId: 'claude-3-5-haiku-20241022-v1:0',
@@ -200,6 +135,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 8192,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'base',
@@ -232,6 +172,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 8192,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'base',
@@ -285,6 +230,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 8192,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -306,11 +256,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
         ],
         displaySuffix: '(APAC)'
       }
-    ],
-    cache: {
-      supported: true,
-      cacheableFields: ['messages', 'system', 'tools']
-    }
+    ]
   },
 
   // Claude 3.7 Sonnet
@@ -322,6 +268,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     toolUse: true,
     maxTokensLimit: 64000,
     supportsThinking: true,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -370,6 +321,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 8192,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -389,6 +345,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     toolUse: true,
     maxTokensLimit: 32000,
     supportsThinking: true,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -418,6 +379,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     toolUse: true,
     maxTokensLimit: 32000,
     supportsThinking: true,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -447,6 +413,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     toolUse: true,
     maxTokensLimit: 64000,
     supportsThinking: true,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'global',
@@ -511,6 +482,12 @@ const MODEL_REGISTRY: ModelConfig[] = [
     toolUse: true,
     maxTokensLimit: 64000,
     supportsThinking: true,
+    defaultInferenceConfig: {
+      temperature: 1.0,
+      maxTokens: 8192
+      // Note: topP is not set - Claude models cannot use temperature and topP simultaneously
+    },
+    lockedParameters: ['temperature'], // Temperature must be 1.0 for this model
     inferenceProfiles: [
       {
         type: 'jp',
@@ -566,6 +543,13 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 32000,
+    defaultInferenceConfig: {
+      temperature: 1.0,
+      topP: 1.0,
+      topK: 1,
+      maxTokens: 4096
+    },
+    lockedParameters: ['temperature', 'topP'], // Required for tool calling
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -584,6 +568,13 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 5120,
+    defaultInferenceConfig: {
+      temperature: 1.0,
+      topP: 1.0,
+      topK: 1,
+      maxTokens: 4096
+    },
+    lockedParameters: ['temperature', 'topP'], // Required for tool calling
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -630,6 +621,13 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 5120,
+    defaultInferenceConfig: {
+      temperature: 1.0,
+      topP: 1.0,
+      topK: 1,
+      maxTokens: 4096
+    },
+    lockedParameters: ['temperature', 'topP'], // Required for tool calling
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -676,6 +674,13 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: true,
     maxTokensLimit: 5120,
+    defaultInferenceConfig: {
+      temperature: 1.0,
+      topP: 1.0,
+      topK: 1,
+      maxTokens: 4096
+    },
+    lockedParameters: ['temperature', 'topP'], // Required for tool calling
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -722,6 +727,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     category: 'text',
     toolUse: false,
     maxTokensLimit: 32768,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -741,6 +751,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     toolUse: true,
     maxTokensLimit: 8192,
     supportsThinking: false,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'base',
@@ -758,6 +773,11 @@ const MODEL_REGISTRY: ModelConfig[] = [
     toolUse: true,
     maxTokensLimit: 8192,
     supportsThinking: false,
+    defaultInferenceConfig: {
+      temperature: 0.5,
+      topP: 0.9,
+      maxTokens: 4096
+    },
     inferenceProfiles: [
       {
         type: 'base',
@@ -1095,4 +1115,17 @@ export const supportsStreamingWithToolUse = (modelId: string): boolean => {
   // Return false only if supportsStreamingToolUse is explicitly false
   // If undefined, assume true (supported) by default
   return config?.supportsStreamingToolUse !== false
+}
+
+// =========================
+// Inference parameter configuration functions
+// =========================
+
+/**
+ * Get list of locked (non-editable) parameters for a model
+ * Used by UI to disable editing of specific parameters
+ */
+export const getLockedParameters = (modelId: string): string[] => {
+  const config = getModelConfig(modelId)
+  return config?.lockedParameters || []
 }

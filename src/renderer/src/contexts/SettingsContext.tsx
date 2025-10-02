@@ -22,6 +22,7 @@ import {
   ThinkingMode,
   ApplicationInferenceProfile
 } from '@/types/llm'
+import { getModelConfig } from '../../../common/models/models'
 import { useModelManagement } from '@renderer/hooks/useModelManagement'
 import type { AwsCredentialIdentity } from '@smithy/types'
 import { BedrockAgent } from '@/types/agent'
@@ -899,6 +900,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateLLM = (selectedModel: LLM) => {
     setCurrentLLM(selectedModel)
     window.store.set('llm', selectedModel)
+
+    // Apply model-specific default inference parameters
+    const config = getModelConfig(selectedModel.modelId)
+    if (config?.defaultInferenceConfig) {
+      const defaultParams = config.defaultInferenceConfig
+      setInferenceParams(defaultParams)
+      window.store.set('inferenceParams', defaultParams)
+    }
 
     // Claude Sonnet 4とClaude Opus 4以外が選択された場合、インターリーブ思考をOFFにする
     const isClaude4Model =
