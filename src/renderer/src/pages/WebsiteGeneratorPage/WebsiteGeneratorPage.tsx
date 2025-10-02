@@ -39,7 +39,16 @@ import { ToolState } from '@/types/agent-chat'
 import { LoaderWithReasoning } from './components/LoaderWithReasoning'
 import { ContinueDevelopmentButton } from './components/ContinueDevelopmentButton'
 import { generateContinueDevelopmentPrompt } from './utils/promptGenerator'
+import { preserveScrollPosition } from './extensions/preserveScrollPosition'
 import { useNavigate } from 'react-router'
+
+// Layout constants
+const LAYOUT_CONSTANTS = {
+  SANDPACK_HEIGHT: 'calc(100vh - 16rem)',
+  CONTENT_HEIGHT: 'calc(100vh-11rem)',
+  LAYOUT_HEIGHT_PERCENTAGE: '85%',
+  CODE_EDITOR_MAX_WIDTH: '50vw'
+} as const
 
 export default function WebsiteGeneratorPage() {
   const [template, setTemplate] = useState<SupportedTemplate['id']>('react-ts')
@@ -53,7 +62,7 @@ export default function WebsiteGeneratorPage() {
         theme={isDark ? 'dark' : 'light'}
         files={templates[template].files}
         style={{
-          height: 'calc(100vh - 16rem)'
+          height: LAYOUT_CONSTANTS.SANDPACK_HEIGHT
         }}
         options={{
           externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
@@ -203,27 +212,34 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     if (!loading && messages.length > 0 && lastText) {
       getRecommendChanges(lastText)
     }
-  }, [loading, messages])
+  }, [loading, messages.length, lastText])
 
   const { refresh } = useSandpackNavigation()
 
   const handleRefresh = useCallback(async () => {
-    refresh()
+    try {
+      refresh()
 
-    const c = templates[template].files[templates[template].mainFile]?.code
-    updateCode(c)
-    setUserInput('')
-    setStyleType({
-      label: 'Tailwind.css',
-      value: 'tailwind'
-    })
-    refleshRecommendChanges()
-    initChat()
-    runSandpack()
-  }, [template, updateCode, initChat, runSandpack])
+      const c = templates[template].files[templates[template].mainFile]?.code
+      updateCode(c)
+      setUserInput('')
+      setStyleType({
+        label: 'Tailwind.css',
+        value: 'tailwind'
+      })
+      refleshRecommendChanges()
+      initChat()
+      runSandpack()
+    } catch (error) {
+      console.error('Error during refresh:', error)
+      // リフレッシュに失敗しても、基本的な状態はリセットする
+      setUserInput('')
+      setShowContinueDevelopmentButton(false)
+    }
+  }, [template, updateCode, initChat, runSandpack, refresh, refleshRecommendChanges])
 
   useEffect(() => {
-    if (messages?.length > 0) {
+    if (messages?.length > 0 && lastText) {
       updateCode(lastText)
       if (!loading) {
         runSandpack()
@@ -231,7 +247,8 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
         setShowContinueDevelopmentButton(true)
       }
     }
-  }, [loading, lastText])
+    // updateCodeとrunSandpackは安定した参照を持たないため、依存配列から除外
+  }, [loading, lastText, messages?.length])
 
   const [isComposing, setIsComposing] = useState(false)
 
@@ -261,21 +278,24 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     }
   }, [sandpack.files, template, styleType, userInput, navigate])
 
-  const filterdMessages = messages.filter((m) => {
-    if (m?.content === undefined) {
-      return false
-    }
+  // filterdMessagesをuseMemoでメモ化してパフォーマンス改善
+  const filterdMessages = useMemo(() => {
+    return messages.filter((m) => {
+      if (m?.content === undefined) {
+        return false
+      }
 
-    const hasToolBlock = m?.content.some((c) => {
-      return 'toolUse' in c || 'toolResult' in c
+      const hasToolBlock = m?.content.some((c) => {
+        return 'toolUse' in c || 'toolResult' in c
+      })
+
+      if (hasToolBlock) {
+        return false
+      }
+
+      return true
     })
-
-    if (hasToolBlock) {
-      return false
-    }
-
-    return true
-  })
+  }, [messages])
 
   // getLoader関数をuseCallbackでメモ化して不要な再レンダリングを防止
   const getLoader = useCallback(
@@ -294,6 +314,16 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
     },
     [latestReasoningText]
   )
+
+  // CodeMirror拡張機能を安定化（再レンダリングを防ぐ）
+  const editorExtensions = useMemo(() => {
+    return [autocompletion(), preserveScrollPosition()]
+  }, [])
+
+  // extensionsKeymapも安定化
+  const editorExtensionsKeymap = useMemo(() => {
+    return [completionKeymap as any]
+  }, [])
 
   return (
     <div className={'flex flex-col p-3 h-[calc(100vh-11rem)] overflow-y-auto'}>
@@ -395,7 +425,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
             ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
             : 'rgb(243 244 246 / var(--tw-bg-opacity))',
           border: 'none',
-          height: '85%',
+          height: LAYOUT_CONSTANTS.LAYOUT_HEIGHT_PERCENTAGE,
           zIndex: '0'
         }}
       >
@@ -405,15 +435,15 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
               height: '100%',
               borderRadius: '0px 8px 8px 0px',
               overflowX: 'scroll',
-              maxWidth: '50vw',
+              maxWidth: LAYOUT_CONSTANTS.CODE_EDITOR_MAX_WIDTH,
               gridColumn: '2 / 4'
             }}
             showInlineErrors={true}
             showTabs={true}
             showLineNumbers
             showRunButton={true}
-            extensions={[autocompletion()]}
-            extensionsKeymap={[completionKeymap as any]}
+            extensions={editorExtensions}
+            extensionsKeymap={editorExtensionsKeymap}
           />
         )}
 
