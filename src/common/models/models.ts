@@ -121,6 +121,28 @@ export interface ModelConfig {
     supported: boolean
     cacheableFields: CacheableField[]
   }
+
+  // === Model-specific API behavior ===
+
+  /**
+   * Additional model-specific request fields for the Bedrock API
+   * These fields are added to the API request for this specific model
+   */
+  additionalModelRequestFields?: {
+    inferenceConfig?: {
+      topK?: number
+    }
+    // Other model-specific fields can be added here as needed
+  }
+
+  /**
+   * Inference parameter adjustments when Thinking Mode is enabled
+   * These override the default inference config when using Thinking Mode
+   */
+  thinkingModeInferenceOverrides?: {
+    requiresTemperature?: number // Required temperature value (e.g., 1.0)
+    removeTopP?: boolean // Whether to remove topP parameter
+  }
 }
 
 /**
@@ -273,6 +295,10 @@ const MODEL_REGISTRY: ModelConfig[] = [
       topP: 0.9,
       maxTokens: 4096
     },
+    thinkingModeInferenceOverrides: {
+      requiresTemperature: 1.0,
+      removeTopP: true
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -350,6 +376,10 @@ const MODEL_REGISTRY: ModelConfig[] = [
       topP: 0.9,
       maxTokens: 4096
     },
+    thinkingModeInferenceOverrides: {
+      requiresTemperature: 1.0,
+      removeTopP: true
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -384,6 +414,10 @@ const MODEL_REGISTRY: ModelConfig[] = [
       topP: 0.9,
       maxTokens: 4096
     },
+    thinkingModeInferenceOverrides: {
+      requiresTemperature: 1.0,
+      removeTopP: true
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -417,6 +451,10 @@ const MODEL_REGISTRY: ModelConfig[] = [
       temperature: 0.5,
       topP: 0.9,
       maxTokens: 4096
+    },
+    thinkingModeInferenceOverrides: {
+      requiresTemperature: 1.0,
+      removeTopP: true
     },
     inferenceProfiles: [
       {
@@ -488,6 +526,10 @@ const MODEL_REGISTRY: ModelConfig[] = [
       // Note: topP is not set - Claude models cannot use temperature and topP simultaneously
     },
     lockedParameters: ['temperature'], // Temperature must be 1.0 for this model
+    thinkingModeInferenceOverrides: {
+      requiresTemperature: 1.0,
+      removeTopP: true
+    },
     inferenceProfiles: [
       {
         type: 'jp',
@@ -550,6 +592,9 @@ const MODEL_REGISTRY: ModelConfig[] = [
       maxTokens: 4096
     },
     lockedParameters: ['temperature', 'topP'], // Required for tool calling
+    additionalModelRequestFields: {
+      inferenceConfig: { topK: 1 }
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -575,6 +620,9 @@ const MODEL_REGISTRY: ModelConfig[] = [
       maxTokens: 4096
     },
     lockedParameters: ['temperature', 'topP'], // Required for tool calling
+    additionalModelRequestFields: {
+      inferenceConfig: { topK: 1 }
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -628,6 +676,9 @@ const MODEL_REGISTRY: ModelConfig[] = [
       maxTokens: 4096
     },
     lockedParameters: ['temperature', 'topP'], // Required for tool calling
+    additionalModelRequestFields: {
+      inferenceConfig: { topK: 1 }
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -681,6 +732,9 @@ const MODEL_REGISTRY: ModelConfig[] = [
       maxTokens: 4096
     },
     lockedParameters: ['temperature', 'topP'], // Required for tool calling
+    additionalModelRequestFields: {
+      inferenceConfig: { topK: 1 }
+    },
     inferenceProfiles: [
       {
         type: 'regional-us',
@@ -1128,4 +1182,81 @@ export const supportsStreamingWithToolUse = (modelId: string): boolean => {
 export const getLockedParameters = (modelId: string): string[] => {
   const config = getModelConfig(modelId)
   return config?.lockedParameters || []
+}
+
+// =========================
+// Model-specific API behavior functions
+// =========================
+
+/**
+ * Parameters for preparing model-specific configurations
+ */
+export interface PrepareModelSpecificParametersInput {
+  modelId: string
+  inferenceConfig: any
+  systemPrompts: any[]
+  thinkingMode?: any
+  interleaveThinking?: boolean
+}
+
+/**
+ * Result of preparing model-specific configurations
+ */
+export interface PrepareModelSpecificParametersResult {
+  inferenceConfig: any
+  systemPrompts: any[]
+  additionalModelRequestFields?: Record<string, any>
+}
+
+/**
+ * Prepare model-specific parameters for API requests
+ * This function centralizes all model-specific behavior logic
+ */
+export function prepareModelSpecificParameters(
+  input: PrepareModelSpecificParametersInput
+): PrepareModelSpecificParametersResult {
+  const config = getModelConfig(input.modelId)
+
+  // Create result with deep copy of inferenceConfig to avoid modifying input
+  const result: PrepareModelSpecificParametersResult = {
+    inferenceConfig: { ...input.inferenceConfig },
+    systemPrompts: input.systemPrompts // No modification needed, so no copy
+  }
+
+  // Early return if no config found
+  if (!config) return result
+
+  // Apply model-specific additionalModelRequestFields
+  if (config.additionalModelRequestFields) {
+    result.additionalModelRequestFields = { ...config.additionalModelRequestFields }
+  }
+
+  // Check if Thinking Mode should be applied
+  const shouldApplyThinking = config.supportsThinking && input.thinkingMode?.type === 'enabled'
+  if (!shouldApplyThinking) return result
+
+  // Apply Thinking Mode configuration
+  if (!result.additionalModelRequestFields) {
+    result.additionalModelRequestFields = {}
+  }
+
+  result.additionalModelRequestFields.thinking = {
+    type: input.thinkingMode.type,
+    budget_tokens: input.thinkingMode.budget_tokens
+  }
+
+  if (input.interleaveThinking) {
+    result.additionalModelRequestFields.anthropic_beta = ['interleaved-thinking-2025-05-14']
+  }
+
+  // Apply thinking mode inference overrides
+  const overrides = config.thinkingModeInferenceOverrides
+  if (overrides?.removeTopP) {
+    delete result.inferenceConfig.topP
+  }
+  if (overrides?.requiresTemperature !== undefined) {
+    result.inferenceConfig.temperature = overrides.requiresTemperature
+  }
+
+  return result
 }

@@ -11,7 +11,7 @@ import {
 import { createRuntimeClient } from '../client'
 import { processImageContent } from '../utils/imageUtils'
 import { getAlternateRegionOnThrottling } from '../utils/awsUtils'
-import { getThinkingSupportedModelIds } from '../../../../common/models/models'
+import { prepareModelSpecificParameters } from '../../../../common/models/models'
 import type { CallConverseAPIProps, ServiceContext } from '../types'
 import { createCategoryLogger } from '../../../../common/logger'
 
@@ -74,19 +74,16 @@ export class ConverseService {
   /**
    * APIリクエスト用のパラメータを準備
    * メッセージの処理とコマンドパラメータの作成を行う
-   * TODO: model.ts に処理を集約する
+   * モデル固有の処理はmodels.tsに集約済み
    */
   private async prepareCommandParameters(props: CallConverseAPIProps): Promise<{
     commandParams: ConverseCommandInput | ConverseStreamCommandInput
     processedMessages?: Message[]
   }> {
-    const { modelId, messages, system, toolConfig, guardrailConfig } = props
+    const { modelId, messages, system, toolConfig } = props
 
     // 画像データを含むメッセージを処理
     const processedMessages = this.processMessages(messages)
-
-    // デバッグ用：空のテキストフィールドのチェック
-    this.logEmptyTextFields(processedMessages)
 
     // メッセージを正規化
     const sanitizedMessages = this.normalizeMessages(processedMessages)
@@ -94,90 +91,35 @@ export class ConverseService {
     // Get inference parameters (request-specific params override global settings)
     // Create deep copy to prevent affecting global settings
     const baseInferenceConfig = props?.inferenceConfig ?? this.context.store.get('inferenceParams')
-    const inferenceConfig = { ...baseInferenceConfig }
-
     const thinkingMode = this.context.store.get('thinkingMode')
     const interleaveThinking = this.context.store.get('interleaveThinking')
 
-    // additionalModelRequestFields for model-specific API requirements
-    let additionalModelRequestFields: Record<string, any> | undefined = undefined
+    // Apply model-specific configurations using centralized logic
+    const modelSpecificParams = prepareModelSpecificParameters({
+      modelId,
+      inferenceConfig: baseInferenceConfig,
+      systemPrompts: system,
+      thinkingMode,
+      interleaveThinking
+    })
 
-    // Thinking Mode handling (runtime override)
-    // Note: Model defaults are handled in models.ts, but Thinking Mode is a dynamic runtime mode
-    const thinkingSupportedModelIds = getThinkingSupportedModelIds()
-    if (
-      thinkingSupportedModelIds.some((id) => modelId.includes(id)) &&
-      thinkingMode?.type === 'enabled'
-    ) {
-      additionalModelRequestFields = {
-        thinking: {
-          type: thinkingMode.type,
-          budget_tokens: thinkingMode.budget_tokens
-        }
-      }
-
-      // Add anthropic_beta for interleaved thinking if enabled
-      if (interleaveThinking) {
-        additionalModelRequestFields.anthropic_beta = ['interleaved-thinking-2025-05-14']
-      }
-
-      // Thinking Mode requires specific parameters
-      delete inferenceConfig.topP // topP not used in reasoning mode
-      inferenceConfig.temperature = 1 // temperature must be 1 for reasoning
-
-      converseLogger.debug('Enabling Thinking Mode', {
-        modelId,
-        thinkingType: thinkingMode.type,
-        budgetTokens: thinkingMode.budget_tokens,
-        messageCount: messages.length,
-        assistantMessages: messages.filter((m) => m.role === 'assistant').length
-      })
-    }
-
-    // Amazon Nova specific API requirements
-    // Note: Model defaults (temperature, topP) are handled in models.ts
-    // This only sets the additionalModelRequestFields required by the Nova API
-    if (modelId.includes('nova')) {
-      // https://docs.aws.amazon.com/nova/latest/userguide/tool-use-definition.html
-      // topK must be set in additionalModelRequestFields for Nova tool calling
-      additionalModelRequestFields = {
-        inferenceConfig: { topK: 1 }
-      }
-
-      // Prevent parallel tool execution for stability
-      system[0].text =
-        system[0].text + '\n Do not run ToolUse in parallel, but proceed step by step.'
-    }
     // コマンドパラメータを作成
     const commandParams: ConverseCommandInput | ConverseStreamCommandInput = {
       modelId,
       messages: sanitizedMessages,
-      system,
+      system: modelSpecificParams.systemPrompts,
       toolConfig,
-      inferenceConfig,
-      additionalModelRequestFields
+      inferenceConfig: modelSpecificParams.inferenceConfig,
+      additionalModelRequestFields: modelSpecificParams.additionalModelRequestFields
     }
 
-    // ガードレール設定が提供されている場合、または設定から有効になっている場合に追加
-    if (guardrailConfig) {
-      commandParams.guardrailConfig = guardrailConfig
-      converseLogger.debug('Using provided guardrail', {
-        guardrailId: guardrailConfig.guardrailIdentifier,
-        guardrailVersion: guardrailConfig.guardrailVersion
-      })
-    } else {
-      // 設定からガードレール設定を取得
-      const storedGuardrailSettings = this.context.store.get('guardrailSettings')
-      if (storedGuardrailSettings?.enabled && storedGuardrailSettings.guardrailIdentifier) {
-        commandParams.guardrailConfig = {
-          guardrailIdentifier: storedGuardrailSettings.guardrailIdentifier,
-          guardrailVersion: storedGuardrailSettings.guardrailVersion,
-          trace: storedGuardrailSettings.trace
-        }
-        converseLogger.debug('Using guardrail from settings', {
-          guardrailId: storedGuardrailSettings.guardrailIdentifier,
-          guardrailVersion: storedGuardrailSettings.guardrailVersion
-        })
+    // 設定からガードレール設定を取得（propsのguardrailConfigは使用しない）
+    const guardrailSettings = this.context.store.get('guardrailSettings')
+    if (guardrailSettings?.enabled && guardrailSettings.guardrailIdentifier) {
+      commandParams.guardrailConfig = {
+        guardrailIdentifier: guardrailSettings.guardrailIdentifier,
+        guardrailVersion: guardrailSettings.guardrailVersion,
+        trace: guardrailSettings.trace
       }
     }
 
@@ -192,28 +134,6 @@ export class ConverseService {
       ...msg,
       content: Array.isArray(msg.content) ? processImageContent(msg.content) : msg.content
     }))
-  }
-
-  /**
-   * 空のテキストフィールドを持つメッセージをログに出力
-   */
-  private logEmptyTextFields(messages: Message[]): void {
-    const emptyTextFieldMsgs = messages.filter(
-      (msg) =>
-        Array.isArray(msg.content) &&
-        msg.content.some(
-          (block) =>
-            Object.prototype.hasOwnProperty.call(block, 'text') &&
-            (!block.text || !block.text.trim())
-        )
-    )
-
-    if (emptyTextFieldMsgs.length > 0) {
-      converseLogger.debug('Found empty text fields in content blocks before sanitization', {
-        emptyTextFieldMsgs: JSON.stringify(emptyTextFieldMsgs),
-        count: emptyTextFieldMsgs.length
-      })
-    }
   }
 
   /**
