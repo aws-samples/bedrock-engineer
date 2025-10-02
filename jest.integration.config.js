@@ -15,5 +15,7 @@ module.exports = {
     ]
   },
   testMatch: ['**/*.integration.test.ts'],
-  setupFiles: ['<rootDir>/jest.integration.setup.js']
+  setupFiles: ['<rootDir>/jest.integration.setup.js'],
+  // Run tests in parallel across multiple workers for faster execution
+  maxWorkers: '50%' // Use 50% of available CPU cores
 }

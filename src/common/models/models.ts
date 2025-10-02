@@ -1,72 +1,72 @@
 import type { BedrockSupportRegion, LLM } from '../../types/llm'
 
 /**
- * キャッシュ可能なフィールドの型定義
+ * Type definition for cacheable fields
  */
 export type CacheableField = 'messages' | 'system' | 'tools'
 
 /**
- * プロバイダー型定義
+ * Type definition for model providers
  */
 export type ModelProvider = 'anthropic' | 'amazon' | 'deepseek' | 'stability' | 'openai'
 
 /**
- * モデルカテゴリ型定義
+ * Type definition for model categories
  */
 export type ModelCategory = 'text' | 'image'
 
 /**
- * 推論プロファイルの型定義
+ * Type definition for inference profiles
  */
 export type InferenceProfileType =
-  | 'base' // 単一リージョン、プレフィックスなし
-  | 'global' // global. - 全商用リージョン
-  | 'regional-us' // us. - US地域
-  | 'regional-eu' // eu. - EU地域
-  | 'regional-apac' // apac. - APAC地域
-  | 'jp' // jp. - 日本国内限定
+  | 'base' // Single region, no prefix
+  | 'global' // global. - All commercial regions
+  | 'regional-us' // us. - US region
+  | 'regional-eu' // eu. - EU region
+  | 'regional-apac' // apac. - APAC region
+  | 'jp' // jp. - Japan domestic only
 
 /**
- * 推論プロファイル定義
- * Amazon Bedrockの推論プロファイルを表現する構造体
+ * Inference profile definition
+ * Structure representing Amazon Bedrock inference profiles
  */
 export interface InferenceProfile {
   /**
-   * 推論プロファイルのタイプ
-   * - base: 単一リージョンでの直接実行（プレフィックスなし）
-   * - global: 全商用AWSリージョンへのグローバルルーティング
-   * - regional-us/eu/apac: 特定地域内でのクロスリージョン推論
-   * - jp: 日本国内（東京・大阪）限定のクロスリージョン推論
+   * Type of inference profile
+   * - base: Direct execution in a single region (no prefix)
+   * - global: Global routing to all commercial AWS regions
+   * - regional-us/eu/apac: Cross-region inference within specific geography
+   * - jp: Cross-region inference limited to Japan (Tokyo/Osaka)
    */
   type: InferenceProfileType
 
   /**
-   * モデルIDに付与されるプレフィックス
-   * - 'global': グローバル推論プロファイル
-   * - 'us': US地域クロスリージョン推論
-   * - 'eu': EU地域クロスリージョン推論
-   * - 'apac': APAC地域クロスリージョン推論
-   * - 'jp': 日本国内限定推論
-   * - undefined: ベースモデル（プレフィックスなし）
+   * Prefix added to model ID
+   * - 'global': Global inference profile
+   * - 'us': US region cross-region inference
+   * - 'eu': EU region cross-region inference
+   * - 'apac': APAC region cross-region inference
+   * - 'jp': Japan domestic inference
+   * - undefined: Base model (no prefix)
    */
   prefix?: string
 
   /**
-   * このプロファイルでリクエストを処理可能なAWSリージョンのリスト
-   * クロスリージョン推論では、これらのリージョン間で自動的に負荷分散される
+   * List of AWS regions where this profile can process requests
+   * For cross-region inference, load is automatically balanced across these regions
    */
   regions: BedrockSupportRegion[]
 
   /**
-   * UIでの表示名に追加されるサフィックス
-   * 例: "(Global)", "(JP)", "(US)", "(EU)", "(APAC)"
-   * ベースモデルの場合は undefined
+   * Suffix added to display name in UI
+   * Examples: "(Global)", "(JP)", "(US)", "(EU)", "(APAC)"
+   * undefined for base models
    */
   displaySuffix?: string
 }
 
 /**
- * 統合されたモデル設定インターフェース
+ * Unified model configuration interface
  */
 export interface ModelConfig {
   baseId: string
@@ -74,16 +74,16 @@ export interface ModelConfig {
   provider: ModelProvider
   category: ModelCategory
 
-  // 機能
+  // Features
   toolUse: boolean
   maxTokensLimit: number
   supportsThinking?: boolean
-  supportsStreamingToolUse?: boolean // ストリーミングでのTool Useサポート
+  supportsStreamingToolUse?: boolean // Support for Tool Use with streaming
 
-  // 推論プロファイル（新設計）
+  // Inference profiles (new design)
   inferenceProfiles: InferenceProfile[]
 
-  // 価格設定（1000トークンあたりのドル価格）
+  // Pricing (dollar price per 1000 tokens)
   pricing?: {
     input: number
     output: number
@@ -91,7 +91,7 @@ export interface ModelConfig {
     cacheWrite: number
   }
 
-  // キャッシュ設定
+  // Cache configuration
   cache?: {
     supported: boolean
     cacheableFields: CacheableField[]
@@ -99,7 +99,7 @@ export interface ModelConfig {
 }
 
 /**
- * 統合されたモデルレジストリ
+ * Unified model registry
  */
 const MODEL_REGISTRY: ModelConfig[] = [
   // Claude 3 Sonnet
@@ -120,13 +120,19 @@ const MODEL_REGISTRY: ModelConfig[] = [
       {
         type: 'regional-eu',
         prefix: 'eu',
-        regions: ['eu-central-1', 'eu-west-1', 'eu-west-2', 'eu-west-3'],
+        regions: ['eu-central-1', 'eu-west-1', 'eu-west-3'],
         displaySuffix: '(EU)'
       },
       {
         type: 'regional-apac',
         prefix: 'apac',
-        regions: ['ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2', 'sa-east-1'],
+        regions: [
+          'ap-northeast-1',
+          'ap-northeast-2',
+          'ap-south-1',
+          'ap-southeast-1',
+          'ap-southeast-2'
+        ],
         displaySuffix: '(APAC)'
       }
     ]
@@ -145,7 +151,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
         type: 'base',
         regions: [
           'us-east-1',
-          'us-east-2',
+          // 'us-east-2', // On-demand not supported - use US CRIS profile instead
           'us-west-2',
           'ca-central-1',
           'ap-northeast-1',
@@ -154,7 +160,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
           'ap-southeast-1',
           'ap-southeast-2',
           'eu-central-1',
-          'eu-west-1',
+          // 'eu-west-1', // On-demand not supported - use EU CRIS profile instead
           'eu-west-2',
           'eu-west-3'
         ]
@@ -164,6 +170,24 @@ const MODEL_REGISTRY: ModelConfig[] = [
         prefix: 'us',
         regions: ['us-east-1', 'us-east-2', 'us-west-2'],
         displaySuffix: '(US)'
+      },
+      {
+        type: 'regional-eu',
+        prefix: 'eu',
+        regions: ['eu-central-1', 'eu-west-1', 'eu-west-3'],
+        displaySuffix: '(EU)'
+      },
+      {
+        type: 'regional-apac',
+        prefix: 'apac',
+        regions: [
+          'ap-northeast-1',
+          'ap-northeast-2',
+          'ap-south-1',
+          'ap-southeast-1',
+          'ap-southeast-2'
+        ],
+        displaySuffix: '(APAC)'
       }
     ]
   },
@@ -213,14 +237,10 @@ const MODEL_REGISTRY: ModelConfig[] = [
         type: 'base',
         regions: [
           'us-east-1',
-          'us-east-2',
           'us-west-2',
           'ap-northeast-1',
-          'ap-south-1',
           'ap-southeast-1',
-          'ap-southeast-2',
           'eu-central-1',
-          'eu-west-1',
           'eu-west-3'
         ]
       },
@@ -229,6 +249,24 @@ const MODEL_REGISTRY: ModelConfig[] = [
         prefix: 'us',
         regions: ['us-east-1', 'us-west-2'],
         displaySuffix: '(US)'
+      },
+      {
+        type: 'regional-eu',
+        prefix: 'eu',
+        regions: ['eu-central-1', 'eu-west-1', 'eu-west-3'],
+        displaySuffix: '(EU)'
+      },
+      {
+        type: 'regional-apac',
+        prefix: 'apac',
+        regions: [
+          'ap-northeast-1',
+          'ap-northeast-2',
+          'ap-south-1',
+          'ap-southeast-1',
+          'ap-southeast-2'
+        ],
+        displaySuffix: '(APAC)'
       }
     ],
     pricing: {
@@ -262,6 +300,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
           'ap-northeast-2',
           'ap-northeast-3',
           'ap-south-1',
+          'ap-south-2',
           'ap-southeast-1',
           'ap-southeast-2'
         ],
@@ -291,9 +330,23 @@ const MODEL_REGISTRY: ModelConfig[] = [
         displaySuffix: '(US)'
       },
       {
+        type: 'regional-eu',
+        prefix: 'eu',
+        regions: ['eu-central-1', 'eu-north-1', 'eu-west-1', 'eu-west-3'],
+        displaySuffix: '(EU)'
+      },
+      {
         type: 'regional-apac',
         prefix: 'apac',
-        regions: ['ap-northeast-1', 'ap-northeast-3'],
+        regions: [
+          'ap-northeast-1',
+          'ap-northeast-2',
+          'ap-northeast-3',
+          'ap-south-1',
+          'ap-south-2',
+          'ap-southeast-1',
+          'ap-southeast-2'
+        ],
         displaySuffix: '(APAC)'
       }
     ],
@@ -410,8 +463,31 @@ const MODEL_REGISTRY: ModelConfig[] = [
       {
         type: 'regional-apac',
         prefix: 'apac',
-        regions: ['ap-northeast-1', 'ap-northeast-3'],
+        regions: [
+          'ap-northeast-1',
+          'ap-northeast-2',
+          'ap-northeast-3',
+          'ap-south-1',
+          'ap-south-2',
+          'ap-southeast-1',
+          'ap-southeast-2',
+          'ap-southeast-3',
+          'ap-southeast-4'
+        ],
         displaySuffix: '(APAC)'
+      },
+      {
+        type: 'regional-eu',
+        prefix: 'eu',
+        regions: [
+          'eu-central-1',
+          'eu-north-1',
+          'eu-south-1',
+          'eu-south-2',
+          'eu-west-1',
+          'eu-west-3'
+        ],
+        displaySuffix: '(EU)'
       }
     ],
     pricing: {
@@ -516,9 +592,21 @@ const MODEL_REGISTRY: ModelConfig[] = [
         displaySuffix: '(US)'
       },
       {
+        type: 'regional-eu',
+        prefix: 'eu',
+        regions: ['eu-central-1', 'eu-north-1', 'eu-south-1', 'eu-west-1', 'eu-west-3'],
+        displaySuffix: '(EU)'
+      },
+      {
         type: 'regional-apac',
         prefix: 'apac',
-        regions: ['ap-northeast-1', 'ap-northeast-2'],
+        regions: [
+          'ap-northeast-1',
+          'ap-northeast-2',
+          'ap-south-1',
+          'ap-southeast-1',
+          'ap-southeast-2'
+        ],
         displaySuffix: '(APAC)'
       }
     ],
@@ -697,7 +785,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
 ]
 
 /**
- * 画像生成モデルレジストリ
+ * Image generation model registry
  */
 const IMAGE_GENERATION_MODELS: ModelConfig[] = [
   // Stability AI models
@@ -831,42 +919,42 @@ const IMAGE_GENERATION_MODELS: ModelConfig[] = [
 ]
 
 /**
- * モデルIDがARN形式かどうかを判定する
+ * Check if model ID is in ARN format
  */
 function isArnModelId(modelId: string): boolean {
   return modelId.startsWith('arn:aws:bedrock:')
 }
 
 /**
- * モデルIDからリージョンプレフィックスを削除して基本モデル名を取得する
- * 例: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0' → 'anthropic.claude-3-7-sonnet-20250219-v1:0'
+ * Remove region prefix from model ID to get base model name
+ * Example: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0' → 'anthropic.claude-3-7-sonnet-20250219-v1:0'
  */
 export function getBaseModelId(modelId: string): string {
-  // リージョンプレフィックスのパターン: 特定のリージョンコード (例: 'us.', 'eu.', 'apac.', 'jp.', 'global.')
+  // Region prefix pattern: specific region codes (e.g., 'us.', 'eu.', 'apac.', 'jp.', 'global.')
   const regionPrefixPattern = /^(us|eu|apac|jp|global)\./
   return modelId.replace(regionPrefixPattern, '')
 }
 
 /**
- * モデル設定から完全なモデルIDを生成する
+ * Generate full model ID from model configuration
  */
 function generateFullModelId(config: ModelConfig, profile: InferenceProfile): string {
-  // ARN形式のモデルIDの場合はそのまま返す
+  // Return as-is if model ID is in ARN format
   if (isArnModelId(config.baseId)) {
     return config.baseId
   }
 
-  // プレフィックスがある場合（cross-region inference profileの場合）
+  // Add prefix if it exists (for cross-region inference profile)
   if (profile.prefix) {
     return `${profile.prefix}.${config.provider}.${config.baseId}`
   }
 
-  // baseタイプの場合はプレフィックスなし
+  // No prefix for base type
   return `${config.provider}.${config.baseId}`
 }
 
 /**
- * モデル設定からLLMオブジェクトを生成する
+ * Create LLM object from model configuration
  */
 function createLLMFromConfig(config: ModelConfig, profile: InferenceProfile): LLM {
   const modelId = generateFullModelId(config, profile)
@@ -883,12 +971,12 @@ function createLLMFromConfig(config: ModelConfig, profile: InferenceProfile): LL
 }
 
 /**
- * モデル設定からすべてのLLMオブジェクトを生成する
+ * Generate all LLM objects from model configurations
  */
 function generateModelsFromConfigs(): LLM[] {
   const models: LLM[] = []
 
-  // テキストモデルのみを処理
+  // Process only text models
   const textModels = MODEL_REGISTRY.filter((config) => config.category === 'text')
 
   textModels.forEach((config) => {
@@ -900,11 +988,11 @@ function generateModelsFromConfigs(): LLM[] {
   return models
 }
 
-// 生成されたモデル一覧
+// Generated model list
 export const allModels = generateModelsFromConfigs()
 
 /**
- * リージョン別のモデル取得
+ * Get models by region
  */
 export const getModelsForRegion = (region: BedrockSupportRegion): LLM[] => {
   const models = allModels.filter((model) => model.regions?.includes(region))
@@ -912,20 +1000,20 @@ export const getModelsForRegion = (region: BedrockSupportRegion): LLM[] => {
 }
 
 /**
- * Thinking対応モデルのIDリストを取得する関数
+ * Get list of model IDs that support Thinking
  */
 export const getThinkingSupportedModelIds = (): string[] => {
   return allModels.filter((model) => model.supportsThinking === true).map((model) => model.modelId)
 }
 
 /**
- * 画像生成モデルのリージョン別取得
+ * Get image generation models by region
  */
 export const getImageGenerationModelsForRegion = (region: BedrockSupportRegion) => {
   const models: Array<{ id: string; name: string }> = []
 
   IMAGE_GENERATION_MODELS.forEach((config) => {
-    // inferenceProfiles から該当リージョンを含むものを探す
+    // Find inference profiles that include the specified region
     const hasRegion = config.inferenceProfiles.some((profile) => profile.regions.includes(region))
 
     if (hasRegion) {
@@ -937,7 +1025,7 @@ export const getImageGenerationModelsForRegion = (region: BedrockSupportRegion) 
   })
 
   return models.sort((a, b) => {
-    // プロバイダー順: Amazon → Stability
+    // Provider order: Amazon → Stability
     const providerOrderA = a.id.startsWith('amazon') ? 0 : 1
     const providerOrderB = b.id.startsWith('amazon') ? 0 : 1
 
@@ -945,24 +1033,24 @@ export const getImageGenerationModelsForRegion = (region: BedrockSupportRegion) 
       return providerOrderA - providerOrderB
     }
 
-    // 同じプロバイダー内では名前順
+    // Within same provider, sort by name
     return a.name.localeCompare(b.name)
   })
 }
 
 /**
- * モデルユーティリティ関数
+ * Model utility functions
  */
 export const getModelMaxTokens = (modelId: string): number => {
-  // 完全一致を最初に試す
+  // Try exact match first
   let model = allModels.find((m) => m.modelId === modelId)
 
-  // 完全一致しない場合は部分一致を試す
+  // Try partial match if exact match not found
   if (!model) {
     model = allModels.find((m) => m.modelId.includes(modelId) || modelId.includes(m.modelId))
   }
 
-  return model?.maxTokensLimit || 8192 // デフォルト値
+  return model?.maxTokensLimit || 8192 // Default value
 }
 
 /**
@@ -986,11 +1074,11 @@ export const getDefaultPromptRouter = (accountId: string, region: string) => {
 }
 
 // =========================
-// 価格設定関連の関数
+// Pricing-related functions
 // =========================
 
 /**
- * モデル設定を取得する関数
+ * Get model configuration
  */
 export const getModelConfig = (modelId: string): ModelConfig | undefined => {
   const baseModelId = getBaseModelId(modelId)
@@ -1000,11 +1088,11 @@ export const getModelConfig = (modelId: string): ModelConfig | undefined => {
 }
 
 /**
- * モデルがストリーミング + Tool Use をサポートしているかを判定する関数
+ * Check if model supports streaming with Tool Use
  */
 export const supportsStreamingWithToolUse = (modelId: string): boolean => {
   const config = getModelConfig(modelId)
-  // supportsStreamingToolUse が明示的に false の場合のみ false を返す
-  // 未定義の場合はデフォルトで true（サポート）とみなす
+  // Return false only if supportsStreamingToolUse is explicitly false
+  // If undefined, assume true (supported) by default
   return config?.supportsStreamingToolUse !== false
 }
