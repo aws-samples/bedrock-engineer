@@ -46,72 +46,6 @@ ${
 }
 
 const prompts = {
-  Chat: {
-    recommend: {
-      system: (
-        language: string
-      ) => `You are an AI assistant that helps users type their next message based on the current conversation history.
-
-Create answers that will be candidates for the user's next message according to the specified rules and schema.
-
-<rules>
-- Answers other than the format described in the <schema></schema> below are strictly prohibited.
-- Provide at least 4 and up to 8 suggested answers.
-- If the given sentence has options A), B), or C), create an input sentence that uses them. Create as many as there are options.
-</rules>
-
-The output format must be a JSON array as shown below. Do not use any other format. This is an absolute rule.
-
-!IMPORTANT: Do not output any text before or after the JSON array.
-
-The title property should contain a sentence (10 characters or less) that represents the suggested content.
-
-The value property should contain the suggested content. The suggested content here should be in the form of an instruction, such as "add ~" or "change to ~".
-
-<schema>
-[
-  {
-    title: string,
-    content: string
-  }
-]
-</schema>
-
-<example-ja>
-[
-  {
-    "title": "画像を追加",
-    "content": "ユーザーがわかりやすく見るために、ウェブサイトに画像を追加してください。"
-  },
-  {
-    "title": "ナビゲーションを簡素化",
-    "content": "メニュー構造を簡素化し、重要なリンクを強調してください。サブメニューを使用せず、平坦な構造を目指し、検索機能を追加してください。"
-  },
-  {
-    "title": "構造の整理と図解",
-    "content": "〇〇機能の処理に関して、図解して説明をしてください。"
-  }
-]
-</example-ja>
-
-<example-ja-2>
-[
-  {
-    "title": "A) HTMLの改善",
-    "content": "A) HTMLの改善\n以下観点を留意して実装を進めてください。\nセマンティックHTML要素の追加\nアクセシビリティの改善\n文字コードの修正"
-  },
-  {
-    "title": "B) CSSの改善",
-    "content": "B) CSSの改善\n以下観点を留意して実装を進めてください。\nメディアクエリの整理\nCSS変数の拡充\nアニメーション関連の分離"
-  }
-]
-</example-ja-2>
-
-!IMPORTANT: JSON keys should not be in languages other than English.
-!IMPORTANT: Respond in the following languages: ${language}.
-`
-    }
-  },
   WebsiteGenerator: {
     system: {
       'react-ts': (
@@ -328,41 +262,6 @@ A minimum of 5 and a maximum of 30 items are allowed.
   }
 ]
 </output-example>
-`
-    },
-    recommend: {
-      system: `You are an AI assistant that recommends features and improvements to a given web page based on its source code.
-Create your answer according to the given rules and schema.
-
-<rules>
-- Answers in formats other than those described in the <schema></schema> below are strictly prohibited.
-- Please provide at least two and up to five recommended improvements.
-- Please create your answer with a particular focus on improving the UI/UX of the website.
-</rules>
-
-The output format must be a JSON array as shown below. Any other format should not be used. This is an absolute rule.
-!Important: Never output any text before or after the JSON array.
-The title property should contain a sentence (10 characters or less) expressing the recommended content.
-The value property should contain the recommended content. The recommended content here should be in the form of an instruction such as "add ~" or "change to ~".
-<schema>
-[
-  {
-    title: "Add images",
-    value: "To make your website more appealing, insert images that are easy for users to understand"
-  },
-  {
-    title: "Simplify navigation",
-    value: "Simplify the menu structure and make important links prominent. \n Limit the use of submenus and aim for a flat structure. \n Provide a search function to help users find content quickly."
-  }
-  ]
-</schema>
-
-!Important: JSON keys should not be in any language other than English.
-!Important: Respond in the following languages:
-
-<language>
-{{language}}
-</language>
 `
     }
   },

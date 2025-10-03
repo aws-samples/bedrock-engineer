@@ -192,3 +192,59 @@ export async function listAgentTags(): Promise<string[]> {
   })
   return res.json()
 }
+
+/**
+ * Get structured output from LLM using JSON schema
+ * @param params - Request parameters including model, prompts, and output schema
+ * @returns Structured output conforming to the provided schema
+ */
+export async function getStructuredOutput<T>(params: {
+  modelId: string
+  systemPrompt: string
+  userMessage: string
+  outputSchema: any
+  toolOptions?: {
+    name?: string
+    description?: string
+  }
+  inferenceConfig?: InferenceConfiguration
+}): Promise<T> {
+  const res = await fetch(`${API_ENDPOINT}/structured-output`, {
+    method: 'POST',
+    body: JSON.stringify(params),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) {
+    throw new Error(`Structured output request failed: ${res.statusText}`)
+  }
+
+  return res.json()
+}
+
+/**
+ * Get website improvement recommendations
+ * @param params - Website code, language, and model ID
+ * @returns Recommendations for website improvements
+ */
+export async function getWebsiteRecommendations(params: {
+  websiteCode: string
+  language: string
+  modelId: string
+}): Promise<{ recommendations: Array<{ title: string; value: string }> }> {
+  const res = await fetch(`${API_ENDPOINT}/website-recommendations`, {
+    method: 'POST',
+    body: JSON.stringify(params),
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) {
+    throw new Error(`Website recommendations request failed: ${res.statusText}`)
+  }
+
+  return res.json()
+}

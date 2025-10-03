@@ -11,6 +11,7 @@ import {
 } from './services/translateService'
 import { VideoService } from './services/movieService'
 import { InferenceProfileService } from './services/inferenceProfileService'
+import { StructuredOutputService } from './services/structuredOutputService'
 import type { ServiceContext } from './types'
 import type { GenerateImageRequest, GeneratedImage } from './types/image'
 import type { GenerateMovieRequest, GeneratedMovie } from './types/movie'
@@ -29,6 +30,7 @@ export class BedrockService {
   private translateService: TranslateService
   private videoService: VideoService
   private inferenceProfileService: InferenceProfileService
+  private structuredOutputService: StructuredOutputService
 
   constructor(context: ServiceContext) {
     this.converseService = new ConverseService(context)
@@ -41,6 +43,7 @@ export class BedrockService {
     this.translateService = new TranslateService(context.store.get('aws'))
     this.videoService = new VideoService(context)
     this.inferenceProfileService = new InferenceProfileService(context)
+    this.structuredOutputService = new StructuredOutputService(context)
   }
 
   async listModels() {
@@ -139,6 +142,12 @@ export class BedrockService {
 
   convertInferenceProfileToLLM(profile: ApplicationInferenceProfile) {
     return this.inferenceProfileService.convertProfileToLLM(profile)
+  }
+
+  async getStructuredOutput<T>(
+    props: Parameters<StructuredOutputService['getStructuredOutput']>[0]
+  ): Promise<T> {
+    return this.structuredOutputService.getStructuredOutput<T>(props)
   }
 }
 

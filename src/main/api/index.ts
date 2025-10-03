@@ -10,6 +10,7 @@ import { Server } from 'socket.io'
 import http from 'http'
 import { SonicToolExecutor } from './sonic/tool-executor'
 import { checkNovaSonicRegionSupport, testBedrockConnectivity } from './sonic/regionCheck'
+import { WebsiteRecommendationFactory } from './bedrock/services/factories/websiteRecommendationFactory'
 
 // Create category logger for API
 const apiLogger = createCategoryLogger('api:express')
@@ -192,6 +193,59 @@ api.get(
         errorName: error.name,
         message: error.message,
         stack: error.stack
+      })
+      return res.status(500).send(error)
+    }
+  })
+)
+
+// Structured output endpoint (generic)
+api.post(
+  '/structured-output',
+  wrap(async (req: Request, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    try {
+      const result = await bedrock.getStructuredOutput(req.body)
+      return res.json(result)
+    } catch (error: any) {
+      bedrockLogger.error('StructuredOutput error', {
+        errorName: error.name,
+        message: error.message,
+        stack: error.stack,
+        modelId: req.body.modelId
+      })
+      return res.status(500).send(error)
+    }
+  })
+)
+
+// Website recommendations endpoint (specialized)
+api.post(
+  '/website-recommendations',
+  wrap(async (req: Request, res) => {
+    res.setHeader('Content-Type', 'application/json')
+    try {
+      const { websiteCode, language, modelId } = req.body
+
+      // Create request using factory
+      const request = WebsiteRecommendationFactory.createRequest({
+        websiteCode,
+        language
+      })
+
+      // Get structured output
+      const result = await bedrock.getStructuredOutput({
+        modelId,
+        ...request
+      })
+
+      return res.json(result)
+    } catch (error: any) {
+      bedrockLogger.error('WebsiteRecommendations error', {
+        errorName: error.name,
+        message: error.message,
+        stack: error.stack,
+        modelId: req.body.modelId
       })
       return res.status(500).send(error)
     }
