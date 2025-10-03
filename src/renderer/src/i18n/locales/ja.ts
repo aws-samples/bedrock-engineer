@@ -341,7 +341,178 @@ Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions,
 base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
 }
 }
-}`
+}`,
+  // ECサイト系の追加プロンプト
+  fashionEcSiteTitle: 'ファッションECサイト',
+  fashionEcSiteValue:
+    'トレンドファッションアイテムを販売するECサイトを作成してください。カテゴリ別フィルター、サイズ選択、カラーバリエーション表示機能を含めてください。',
+  bookStoreTitle: '書籍・古本ECサイト',
+  bookStoreValue:
+    '書籍と古本を販売するオンライン書店を作成してください。検索機能、著者別・ジャンル別フィルター、レビュー機能を実装してください。',
+  handmadeMarketTitle: 'ハンドメイド作品マーケット',
+  handmadeMarketValue:
+    'ハンドメイド作品を販売するマーケットプレイスを作成してください。作家プロフィール、作品ギャラリー、お気に入り機能を含めてください。',
+  foodEcSiteTitle: '食品・グルメ通販',
+  foodEcSiteValue:
+    '産地直送の食品やグルメ商品を販売する通販サイトを作成してください。冷蔵・常温などの配送区分表示、賞味期限情報を含めてください。',
+  furnitureEcSiteTitle: 'インテリア家具EC',
+  furnitureEcSiteValue:
+    'インテリア家具を販売するECサイトを作成してください。3D表示ビュー、部屋のスタイル別カテゴリ、サイズ計算ツールを実装してください。',
+  cosmeticEcSiteTitle: 'コスメ・美容EC',
+  cosmeticEcSiteValue:
+    'コスメティック製品を販売するECサイトを作成してください。肌質診断、成分表示、使い方動画リンク機能を含めてください。',
+  petShopTitle: 'ペット用品ECサイト',
+  petShopValue:
+    'ペット用品を販売するECサイトを作成してください。ペットの種類別カテゴリ、年齢別おすすめ商品、定期購入機能を実装してください。',
+  digitalGoodsTitle: 'デジタル商品販売',
+  digitalGoodsValue:
+    'デジタル商品（テンプレート、素材、ソフトウェア）を販売するサイトを作成してください。即時ダウンロード機能、プレビュー表示を含めてください。',
+  // コーポレート・ビジネス系
+  itCorporateTitle: 'IT企業コーポレート',
+  itCorporateValue:
+    'IT企業のコーポレートサイトを作成してください。サービス紹介、導入事例、技術ブログセクションを含めてください。',
+  startupLpTitle: 'スタートアップLP',
+  startupLpValue:
+    'スタートアップのランディングページを作成してください。プロダクト紹介、チーム紹介、投資家向け情報を含めてください。',
+  recruitingSiteTitle: '採用特設サイト',
+  recruitingSiteValue:
+    '企業の採用特設サイトを作成してください。募集職種、社員インタビュー、エントリーフォームを実装してください。',
+  irPageTitle: 'IR情報ページ',
+  irPageValue:
+    '投資家向けIR情報ページを作成してください。決算情報、株価チャート、IRカレンダーを含めてください。',
+  serviceLpTitle: 'サービス紹介LP',
+  serviceLpValue:
+    'SaaSサービスの紹介ランディングページを作成してください。機能説明、料金プラン、導入フローを含めてください。',
+  contactFormTitle: 'お問い合わせフォーム',
+  contactFormValue:
+    'ビジネス向けお問い合わせフォームを作成してください。入力バリデーション、確認画面、送信完了画面を実装してください。',
+  pricingPageTitle: '料金プランページ',
+  pricingPageValue:
+    'SaaSの料金プランページを作成してください。プラン比較表、FAQ、無料トライアルボタンを含めてください。',
+  companyBlogTitle: '企業ブログ',
+  companyBlogValue:
+    '企業ブログサイトを作成してください。記事一覧、カテゴリ別表示、タグ検索、関連記事表示を実装してください。',
+  pressReleaseTitle: 'プレスリリース',
+  pressReleaseValue:
+    'プレスリリースページを作成してください。リリース一覧、年月別アーカイブ、PDF閲覧機能を含めてください。',
+  partnerPageTitle: 'パートナー企業紹介',
+  partnerPageValue:
+    'パートナー企業紹介ページを作成してください。企業ロゴ一覧、提携内容、協業事例を実装してください。',
+  // メディア・コンテンツ系
+  newsSiteTitle: 'ニュースサイト',
+  newsSiteValue:
+    'ニュースサイトを作成してください。トップニュース、カテゴリ別記事、リアルタイム更新表示を実装してください。',
+  recipeSiteTitle: 'レシピサイト',
+  recipeSiteValue:
+    'レシピ投稿・検索サイトを作成してください。材料検索、調理時間フィルター、お気に入り保存機能を含めてください。',
+  travelGuideTitle: '旅行ガイドサイト',
+  travelGuideValue:
+    '旅行ガイドサイトを作成してください。観光地情報、マップ表示、旅行記投稿機能を実装してください。',
+  movieReviewTitle: '映画レビューサイト',
+  movieReviewValue:
+    '映画レビューサイトを作成してください。評価システム、ユーザーレビュー、上映スケジュール表示を含めてください。',
+  musicStreamingTitle: '音楽ストリーミングUI',
+  musicStreamingValue:
+    '音楽ストリーミングサービスのUIを作成してください。プレイリスト、再生コントロール、アーティスト検索を実装してください。',
+  podcastPlatformTitle: 'ポッドキャストプラットフォーム',
+  podcastPlatformValue:
+    'ポッドキャスト配信プラットフォームを作成してください。エピソード一覧、音声プレーヤー、購読機能を含めてください。',
+  onlineMagazineTitle: 'オンライン雑誌',
+  onlineMagazineValue:
+    'オンライン雑誌サイトを作成してください。記事のマガジンレイアウト、特集ページ、バックナンバー閲覧を実装してください。',
+  photoGalleryTitle: '写真ギャラリー',
+  photoGalleryValue:
+    '写真ギャラリーサイトを作成してください。グリッド表示、ライトボックス、タグ別フィルターを含めてください。',
+  videoSharingTitle: '動画共有プラットフォーム',
+  videoSharingValue:
+    '動画共有プラットフォームを作成してください。動画プレーヤー、コメント機能、関連動画表示を実装してください。',
+  qaCommunityTitle: 'Q&Aコミュニティ',
+  qaCommunityValue:
+    '質問投稿・回答コミュニティサイトを作成してください。質問投稿、ベストアンサー選択、タグ分類を含めてください。',
+  // アプリケーション系
+  calendarAppTitle: 'カレンダー・スケジュール',
+  calendarAppValue:
+    'カレンダー・スケジュール管理アプリを作成してください。月表示・週表示、予定追加、リマインダー機能を実装してください。',
+  noteAppTitle: 'メモ・ノートアプリ',
+  noteAppValue:
+    'メモ・ノートアプリを作成してください。マークダウン対応、タグ管理、全文検索機能を含めてください。',
+  projectManagementTitle: 'プロジェクト管理ツール',
+  projectManagementValue:
+    'プロジェクト管理ツールを作成してください。タスクボード、ガントチャート、進捗管理を実装してください。',
+  chatAppTitle: 'チャットアプリ',
+  chatAppValue:
+    'リアルタイムチャットアプリを作成してください。メッセージ送受信、ファイル添付、既読表示を含めてください。',
+  emailClientTitle: 'メールクライアント',
+  emailClientValue:
+    'メールクライアントアプリを作成してください。受信トレイ、フォルダ分類、検索機能を実装してください。',
+  timeTrackerTitle: '時間追跡ツール',
+  timeTrackerValue:
+    '時間追跡・タイムトラッキングツールを作成してください。タイマー機能、プロジェクト別集計、レポート表示を含めてください。',
+  budgetAppTitle: '予算管理アプリ',
+  budgetAppValue:
+    '家計簿・予算管理アプリを作成してください。収支記録、カテゴリ別集計、グラフ表示を実装してください。',
+  fileManagerTitle: 'ファイル管理システム',
+  fileManagerValue:
+    'ファイル管理システムを作成してください。フォルダツリー、ファイルプレビュー、検索機能を含めてください。',
+  crmDashboardTitle: 'CRM管理画面',
+  crmDashboardValue:
+    '顧客関係管理（CRM）の管理画面を作成してください。顧客リスト、案件管理、活動履歴を実装してください。',
+  // データ可視化・ダッシュボード系
+  salesDashboardTitle: '売上ダッシュボード',
+  salesDashboardValue:
+    '売上データのダッシュボードを作成してください。日次・月次売上グラフ、商品別売上、目標達成率を表示してください。',
+  analyticsDashboardTitle: 'アナリティクスダッシュボード',
+  analyticsDashboardValue:
+    'Webアナリティクスダッシュボードを作成してください。訪問者数、ページビュー、コンバージョン率を可視化してください。',
+  monitoringDashboardTitle: 'リアルタイム監視画面',
+  monitoringDashboardValue:
+    'システム監視ダッシュボードを作成してください。サーバー状態、アラート表示、リアルタイム更新を実装してください。',
+  socialMediaAnalyticsTitle: 'SNS分析ダッシュボード',
+  socialMediaAnalyticsValue:
+    'ソーシャルメディア分析ダッシュボードを作成してください。エンゲージメント率、フォロワー推移、投稿パフォーマンスを表示してください。',
+  inventoryDashboardTitle: '在庫管理ダッシュボード',
+  inventoryDashboardValue:
+    '在庫管理ダッシュボードを作成してください。在庫レベル、入出庫履歴、発注アラートを可視化してください。',
+  kpiDashboardTitle: 'KPI可視化ダッシュボード',
+  kpiDashboardValue:
+    'ビジネスKPIダッシュボードを作成してください。複数のKPI指標、トレンドグラフ、目標比較を表示してください。',
+  userBehaviorTitle: 'ユーザー行動分析',
+  userBehaviorValue:
+    'ユーザー行動分析ダッシュボードを作成してください。ユーザーフロー、ヒートマップ、離脱ポイント分析を可視化してください。',
+  financialReportTitle: '財務レポート画面',
+  financialReportValue:
+    '財務レポート画面を作成してください。損益計算書、貸借対照表、キャッシュフロー表示を実装してください。',
+  serverMonitoringTitle: 'サーバー監視ダッシュボード',
+  serverMonitoringValue:
+    'サーバー監視ダッシュボードを作成してください。CPU・メモリ使用率、ネットワークトラフィック、ログ表示を含めてください。',
+  // 専門分野系
+  learningPlatformTitle: 'オンライン学習プラットフォーム',
+  learningPlatformValue:
+    'オンライン学習プラットフォームを作成してください。コース一覧、進捗管理、修了証発行機能を実装してください。',
+  medicalBookingTitle: '医療予約システム',
+  medicalBookingValue:
+    '医療機関の予約システムを作成してください。診療科目選択、日時予約、予約確認メール送信を含めてください。',
+  realEstateTitle: '不動産検索サイト',
+  realEstateValue:
+    '不動産物件検索サイトを作成してください。地図検索、条件フィルター、物件詳細表示を実装してください。',
+  restaurantBookingTitle: 'レストラン予約システム',
+  restaurantBookingValue:
+    'レストラン予約システムを作成してください。空席確認、人数・時間選択、予約管理機能を含めてください。',
+  eventPlatformTitle: 'イベント管理プラットフォーム',
+  eventPlatformValue:
+    'イベント管理プラットフォームを作成してください。イベント作成、チケット販売、参加者管理を実装してください。',
+  freelanceMatchingTitle: 'フリーランスマッチング',
+  freelanceMatchingValue:
+    'フリーランスマッチングサイトを作成してください。スキル検索、案件掲載、メッセージ機能を含めてください。',
+  votingSystemTitle: 'オンライン投票システム',
+  votingSystemValue:
+    'オンライン投票システムを作成してください。投票作成、選択肢表示、リアルタイム集計を実装してください。',
+  crowdfundingTitle: 'クラウドファンディング',
+  crowdfundingValue:
+    'クラウドファンディングプラットフォームを作成してください。プロジェクト掲載、支援額選択、進捗表示を含めてください。',
+  portfolioSiteTitle: 'ポートフォリオサイト',
+  portfolioSiteValue:
+    'クリエイター向けポートフォリオサイトを作成してください。作品ギャラリー、スキル表示、お問い合わせフォームを実装してください。'
 }
 
 // New translations for MCP Server Settings tabs

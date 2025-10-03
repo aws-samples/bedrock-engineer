@@ -332,7 +332,178 @@ Xamarin.Essentials.Platform.OnRequestPermissionsResult(requestCode, permissions,
 base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
 }
 }
-}`
+}`,
+  // E-commerce Sites
+  fashionEcSiteTitle: 'Fashion E-commerce',
+  fashionEcSiteValue:
+    'Create an e-commerce site selling trendy fashion items. Include category filters, size selection, and color variation display features.',
+  bookStoreTitle: 'Books & Used Books Store',
+  bookStoreValue:
+    'Create an online bookstore selling books and used books. Implement search functionality, author/genre filters, and review features.',
+  handmadeMarketTitle: 'Handmade Marketplace',
+  handmadeMarketValue:
+    'Create a marketplace for selling handmade crafts. Include artist profiles, work galleries, and favorite features.',
+  foodEcSiteTitle: 'Food & Gourmet Shop',
+  foodEcSiteValue:
+    'Create an online store for farm-fresh food and gourmet products. Include shipping category display (refrigerated/room temperature) and expiration date information.',
+  furnitureEcSiteTitle: 'Interior Furniture Store',
+  furnitureEcSiteValue:
+    'Create an e-commerce site for interior furniture. Implement 3D view display, room style categories, and size calculator tool.',
+  cosmeticEcSiteTitle: 'Cosmetics & Beauty Shop',
+  cosmeticEcSiteValue:
+    'Create an e-commerce site for cosmetic products. Include skin type diagnosis, ingredient display, and video tutorial links.',
+  petShopTitle: 'Pet Supply Store',
+  petShopValue:
+    'Create an e-commerce site for pet supplies. Implement categories by pet type, age-based recommendations, and subscription features.',
+  digitalGoodsTitle: 'Digital Goods Store',
+  digitalGoodsValue:
+    'Create a site for selling digital goods (templates, assets, software). Include instant download and preview display features.',
+  // Corporate & Business
+  itCorporateTitle: 'IT Corporate Site',
+  itCorporateValue:
+    'Create a corporate site for an IT company. Include service introduction, case studies, and tech blog section.',
+  startupLpTitle: 'Startup Landing Page',
+  startupLpValue:
+    'Create a landing page for a startup. Include product introduction, team introduction, and investor information.',
+  recruitingSiteTitle: 'Recruitment Site',
+  recruitingSiteValue:
+    'Create a company recruitment site. Implement job openings, employee interviews, and entry form.',
+  irPageTitle: 'IR Information Page',
+  irPageValue:
+    'Create an IR information page for investors. Include financial results, stock charts, and IR calendar.',
+  serviceLpTitle: 'Service Introduction LP',
+  serviceLpValue:
+    'Create an introduction landing page for a SaaS service. Include feature explanation, pricing plans, and implementation flow.',
+  contactFormTitle: 'Contact Form',
+  contactFormValue:
+    'Create a business contact form. Implement input validation, confirmation screen, and completion screen.',
+  pricingPageTitle: 'Pricing Page',
+  pricingPageValue:
+    'Create a pricing page for SaaS. Include plan comparison table, FAQ, and free trial button.',
+  companyBlogTitle: 'Company Blog',
+  companyBlogValue:
+    'Create a company blog site. Implement article list, category display, tag search, and related articles.',
+  pressReleaseTitle: 'Press Release',
+  pressReleaseValue:
+    'Create a press release page. Include release list, archive by year/month, and PDF viewing functionality.',
+  partnerPageTitle: 'Partner Companies',
+  partnerPageValue:
+    'Create a partner companies introduction page. Implement company logo list, partnership details, and collaboration cases.',
+  // Media & Content
+  newsSiteTitle: 'News Site',
+  newsSiteValue:
+    'Create a news site. Implement top news, category articles, and real-time update display.',
+  recipeSiteTitle: 'Recipe Site',
+  recipeSiteValue:
+    'Create a recipe posting and search site. Include ingredient search, cooking time filter, and favorite save feature.',
+  travelGuideTitle: 'Travel Guide',
+  travelGuideValue:
+    'Create a travel guide site. Implement tourist information, map display, and travel blog posting feature.',
+  movieReviewTitle: 'Movie Review Site',
+  movieReviewValue:
+    'Create a movie review site. Include rating system, user reviews, and screening schedule display.',
+  musicStreamingTitle: 'Music Streaming UI',
+  musicStreamingValue:
+    'Create a UI for music streaming service. Implement playlists, playback controls, and artist search.',
+  podcastPlatformTitle: 'Podcast Platform',
+  podcastPlatformValue:
+    'Create a podcast distribution platform. Include episode list, audio player, and subscription feature.',
+  onlineMagazineTitle: 'Online Magazine',
+  onlineMagazineValue:
+    'Create an online magazine site. Implement magazine layout for articles, feature pages, and back issue viewing.',
+  photoGalleryTitle: 'Photo Gallery',
+  photoGalleryValue:
+    'Create a photo gallery site. Include grid display, lightbox, and tag-based filters.',
+  videoSharingTitle: 'Video Sharing Platform',
+  videoSharingValue:
+    'Create a video sharing platform. Implement video player, comment function, and related video display.',
+  qaCommunityTitle: 'Q&A Community',
+  qaCommunityValue:
+    'Create a question posting and answer community site. Include question posting, best answer selection, and tag classification.',
+  // Applications
+  calendarAppTitle: 'Calendar & Schedule',
+  calendarAppValue:
+    'Create a calendar and schedule management app. Implement month/week views, event addition, and reminder functionality.',
+  noteAppTitle: 'Note App',
+  noteAppValue:
+    'Create a note-taking app. Include markdown support, tag management, and full-text search functionality.',
+  projectManagementTitle: 'Project Management Tool',
+  projectManagementValue:
+    'Create a project management tool. Implement task board, Gantt chart, and progress management.',
+  chatAppTitle: 'Chat App',
+  chatAppValue:
+    'Create a real-time chat app. Include message sending/receiving, file attachments, and read receipts.',
+  emailClientTitle: 'Email Client',
+  emailClientValue:
+    'Create an email client app. Implement inbox, folder organization, and search functionality.',
+  timeTrackerTitle: 'Time Tracker',
+  timeTrackerValue:
+    'Create a time tracking tool. Include timer function, project-wise aggregation, and report display.',
+  budgetAppTitle: 'Budget Management App',
+  budgetAppValue:
+    'Create a household budget management app. Implement income/expense recording, category aggregation, and graph display.',
+  fileManagerTitle: 'File Management System',
+  fileManagerValue:
+    'Create a file management system. Include folder tree, file preview, and search functionality.',
+  crmDashboardTitle: 'CRM Dashboard',
+  crmDashboardValue:
+    'Create a customer relationship management (CRM) dashboard. Implement customer list, deal management, and activity history.',
+  // Data Visualization & Dashboards
+  salesDashboardTitle: 'Sales Dashboard',
+  salesDashboardValue:
+    'Create a sales data dashboard. Display daily/monthly sales graphs, product-wise sales, and goal achievement rate.',
+  analyticsDashboardTitle: 'Analytics Dashboard',
+  analyticsDashboardValue:
+    'Create a web analytics dashboard. Visualize visitors, page views, and conversion rates.',
+  monitoringDashboardTitle: 'Real-time Monitoring',
+  monitoringDashboardValue:
+    'Create a system monitoring dashboard. Implement server status, alert display, and real-time updates.',
+  socialMediaAnalyticsTitle: 'Social Media Analytics',
+  socialMediaAnalyticsValue:
+    'Create a social media analysis dashboard. Display engagement rate, follower trends, and post performance.',
+  inventoryDashboardTitle: 'Inventory Dashboard',
+  inventoryDashboardValue:
+    'Create an inventory management dashboard. Visualize inventory levels, in/out history, and order alerts.',
+  kpiDashboardTitle: 'KPI Dashboard',
+  kpiDashboardValue:
+    'Create a business KPI dashboard. Display multiple KPI indicators, trend graphs, and target comparisons.',
+  userBehaviorTitle: 'User Behavior Analysis',
+  userBehaviorValue:
+    'Create a user behavior analysis dashboard. Visualize user flow, heatmaps, and drop-off point analysis.',
+  financialReportTitle: 'Financial Report',
+  financialReportValue:
+    'Create a financial report screen. Implement income statement, balance sheet, and cash flow display.',
+  serverMonitoringTitle: 'Server Monitoring',
+  serverMonitoringValue:
+    'Create a server monitoring dashboard. Include CPU/memory usage, network traffic, and log display.',
+  // Specialized Fields
+  learningPlatformTitle: 'Online Learning Platform',
+  learningPlatformValue:
+    'Create an online learning platform. Implement course list, progress management, and certificate issuance features.',
+  medicalBookingTitle: 'Medical Booking System',
+  medicalBookingValue:
+    'Create a medical facility booking system. Include department selection, date/time booking, and confirmation email sending.',
+  realEstateTitle: 'Real Estate Search',
+  realEstateValue:
+    'Create a real estate property search site. Implement map search, condition filters, and property detail display.',
+  restaurantBookingTitle: 'Restaurant Booking',
+  restaurantBookingValue:
+    'Create a restaurant reservation system. Include availability check, party size/time selection, and reservation management.',
+  eventPlatformTitle: 'Event Platform',
+  eventPlatformValue:
+    'Create an event management platform. Implement event creation, ticket sales, and attendee management.',
+  freelanceMatchingTitle: 'Freelance Matching',
+  freelanceMatchingValue:
+    'Create a freelance matching site. Include skill search, project posting, and messaging functionality.',
+  votingSystemTitle: 'Online Voting System',
+  votingSystemValue:
+    'Create an online voting system. Implement vote creation, option display, and real-time aggregation.',
+  crowdfundingTitle: 'Crowdfunding',
+  crowdfundingValue:
+    'Create a crowdfunding platform. Include project posting, support amount selection, and progress display.',
+  portfolioSiteTitle: 'Portfolio Site',
+  portfolioSiteValue:
+    'Create a creator portfolio site. Implement work gallery, skills display, and contact form.'
 }
 
 // New translations for MCP Server Settings tabs
