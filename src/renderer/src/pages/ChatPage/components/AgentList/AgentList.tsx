@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { FiSearch, FiGrid, FiList } from 'react-icons/fi'
 import { useTranslation } from 'react-i18next'
 import { CustomAgent } from '@/types/agent-chat'
-import { AgentCard } from './AgentCard'
+import { AgentCard } from './components'
 import { useAgentFilter } from './useAgentFilter'
-
-type ViewMode = 'grid' | 'compact'
+import { useViewMode } from './hooks'
+import { AgentCardActions } from './types/agent-card'
 
 interface AgentListProps {
   agents: CustomAgent[]
@@ -35,20 +35,7 @@ export const AgentList: React.FC<AgentListProps> = ({
   const { t } = useTranslation()
   const { searchQuery, setSearchQuery, selectedTags, availableTags, filteredAgents, toggleTag } =
     useAgentFilter(agents)
-
-  // View mode state with localStorage persistence
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    const saved = localStorage.getItem('agentListViewMode')
-    return (saved === 'compact' ? 'compact' : 'grid') as ViewMode
-  })
-
-  useEffect(() => {
-    localStorage.setItem('agentListViewMode', viewMode)
-  }, [viewMode])
-
-  const toggleViewMode = () => {
-    setViewMode((prev) => (prev === 'grid' ? 'compact' : 'grid'))
-  }
+  const { viewMode, toggleViewMode } = useViewMode()
 
   return (
     <div className="p-4 bg-white dark:bg-gray-900">
@@ -121,25 +108,27 @@ export const AgentList: React.FC<AgentListProps> = ({
         }`}
       >
         {filteredAgents.map((agent) => {
-          const isCustomAgent = agent.isCustom ?? true
           const isSelected = agent.id === selectedAgentId
-          // Shared agents can't be edited or deleted
+          const isCustomAgent = agent.isCustom ?? true
           const isEditable = isCustomAgent && !agent.isShared
+
+          const actions: AgentCardActions = {
+            onEdit: isEditable ? onEditAgent : undefined,
+            onDuplicate: onDuplicateAgent,
+            onDelete: isEditable ? onDeleteAgent : undefined,
+            onSaveAsShared: onSaveAsShared,
+            onShareToOrganization: isEditable ? onShareToOrganization : undefined,
+            onConvertToStrands: onConvertToStrands
+          }
 
           return (
             <AgentCard
               key={agent.id}
               agent={agent as CustomAgent}
-              isCustomAgent={isCustomAgent}
               isSelected={isSelected}
               isCompact={viewMode === 'compact'}
               onSelect={onSelectAgent}
-              onEdit={isEditable ? onEditAgent : undefined}
-              onDuplicate={onDuplicateAgent}
-              onDelete={isEditable ? onDeleteAgent : undefined}
-              onSaveAsShared={onSaveAsShared}
-              onShareToOrganization={isEditable ? onShareToOrganization : undefined}
-              onConvertToStrands={onConvertToStrands}
+              actions={actions}
             />
           )
         })}
