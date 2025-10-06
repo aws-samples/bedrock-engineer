@@ -1,9 +1,11 @@
-import React from 'react'
-import { FiSearch } from 'react-icons/fi'
+import React, { useState, useEffect } from 'react'
+import { FiSearch, FiGrid, FiList } from 'react-icons/fi'
 import { useTranslation } from 'react-i18next'
 import { CustomAgent } from '@/types/agent-chat'
 import { AgentCard } from './AgentCard'
 import { useAgentFilter } from './useAgentFilter'
+
+type ViewMode = 'grid' | 'compact'
 
 interface AgentListProps {
   agents: CustomAgent[]
@@ -34,6 +36,20 @@ export const AgentList: React.FC<AgentListProps> = ({
   const { searchQuery, setSearchQuery, selectedTags, availableTags, filteredAgents, toggleTag } =
     useAgentFilter(agents)
 
+  // View mode state with localStorage persistence
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem('agentListViewMode')
+    return (saved === 'compact' ? 'compact' : 'grid') as ViewMode
+  })
+
+  useEffect(() => {
+    localStorage.setItem('agentListViewMode', viewMode)
+  }, [viewMode])
+
+  const toggleViewMode = () => {
+    setViewMode((prev) => (prev === 'grid' ? 'compact' : 'grid'))
+  }
+
   return (
     <div className="p-4 bg-white dark:bg-gray-900">
       <div className="flex items-center justify-between gap-4">
@@ -52,15 +68,27 @@ export const AgentList: React.FC<AgentListProps> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <button
-          onClick={onAddNewAgent}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700
-            border border-transparent rounded-lg shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-            dark:focus:ring-offset-gray-900 whitespace-nowrap flex gap-2 items-center"
-        >
-          {t('addNewAgent')}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={toggleViewMode}
+            className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200
+              border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+              dark:focus:ring-offset-gray-900"
+            title={viewMode === 'grid' ? t('compactView') : t('gridView')}
+          >
+            {viewMode === 'grid' ? <FiList className="w-5 h-5" /> : <FiGrid className="w-5 h-5" />}
+          </button>
+          <button
+            onClick={onAddNewAgent}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 dark:bg-blue-700
+              border border-transparent rounded-lg shadow-sm hover:bg-blue-700 dark:hover:bg-blue-600
+              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+              dark:focus:ring-offset-gray-900 whitespace-nowrap flex gap-2 items-center"
+          >
+            {t('addNewAgent')}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2 mt-4 mb-6">
@@ -85,7 +113,13 @@ export const AgentList: React.FC<AgentListProps> = ({
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      <div
+        className={`grid gap-4 ${
+          viewMode === 'grid'
+            ? 'lg:grid-cols-2 xl:grid-cols-3'
+            : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10'
+        }`}
+      >
         {filteredAgents.map((agent) => {
           const isCustomAgent = agent.isCustom ?? true
           const isSelected = agent.id === selectedAgentId
@@ -98,6 +132,7 @@ export const AgentList: React.FC<AgentListProps> = ({
               agent={agent as CustomAgent}
               isCustomAgent={isCustomAgent}
               isSelected={isSelected}
+              isCompact={viewMode === 'compact'}
               onSelect={onSelectAgent}
               onEdit={isEditable ? onEditAgent : undefined}
               onDuplicate={onDuplicateAgent}
