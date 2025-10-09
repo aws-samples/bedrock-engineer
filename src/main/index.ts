@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, Menu, MenuItem } from 'electron'
+import { app, shell, BrowserWindow, Menu, MenuItem, dialog } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../build/icon.ico?asset'
@@ -121,6 +121,16 @@ async function setupSessionProxy(window: BrowserWindow): Promise<void> {
   }
 }
 
+function showAboutDialog() {
+  dialog.showMessageBox({
+    type: 'info',
+    title: `About ${app.name}`,
+    message: app.name,
+    detail: `Version: ${app.getVersion()}\n\nElectron: ${process.versions.electron}\nChrome: ${process.versions.chrome}\nNode.js: ${process.versions.node}`,
+    buttons: ['OK']
+  })
+}
+
 function createMenu(window: BrowserWindow) {
   const isMac = process.platform === 'darwin'
   const template = [
@@ -130,7 +140,10 @@ function createMenu(window: BrowserWindow) {
           {
             label: app.name,
             submenu: [
-              { role: 'about' },
+              {
+                label: `About ${app.name}`,
+                click: showAboutDialog
+              },
               { type: 'separator' },
               { role: 'services' },
               { type: 'separator' },
@@ -221,6 +234,11 @@ function createMenu(window: BrowserWindow) {
     {
       role: 'help',
       submenu: [
+        {
+          label: `About ${app.name}`,
+          click: showAboutDialog
+        },
+        { type: 'separator' },
         {
           label: 'GitHub Repository',
           click: async () => {
