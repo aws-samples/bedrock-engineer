@@ -17,7 +17,8 @@ export const mcpServerConfigSchema = z.object({
       // URL形式のサーバー設定
       z.object({
         url: z.string(),
-        enabled: z.boolean().optional()
+        enabled: z.boolean().optional(),
+        headers: z.record(z.string(), z.string()).optional()
       })
     ])
   )
