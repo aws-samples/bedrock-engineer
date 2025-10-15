@@ -1,117 +1,117 @@
-# リリース手順ガイド
+# Release Guide
 
-このドキュメントでは、Bedrock Engineerのリリース方法について説明します。このリリースフローではリリース用ブランチとPRによる承認プロセスを使用します。
+This document describes how to release Bedrock Engineer. This release flow uses a release branch and an approval process via Pull Request.
 
-## リリース手順
+## Release Procedure
 
-### 1. **バージョンアップ**:
+### 1. **Version Update**:
 
-- `package.json`ファイルのバージョン番号を更新します
+- Update the version number in the `package.json` file
 
   ```json
   {
     "name": "bedrock-engineer",
-    "version": "vX.Y.Z", // ここを更新
+    "version": "vX.Y.Z", // Update this
     ...
   }
   ```
 
-- `npm i` コマンドを実行して、package-lock.json も更新します。
+- Run the `npm i` command to update package-lock.json as well.
 
 ```bash
 npm i
 ```
 
-- README.md, README-ja.md の該当箇所のバージョンを更新します。
+- Update the version references in README.md and README-ja.md.
 
-### 2. **リリースブランチの作成**:
+### 2. **Create Release Branch**:
 
 ```bash
-# 最新のmainブランチから開始
+# Start from the latest main branch
 git checkout main
 git pull
 
-# リリースブランチを作成
+# Create release branch
 git checkout -b release/vX.Y.Z
 
-# バージョン更新をコミット
+# Commit version update
 git add .
-git commit -m "chore: バージョンをX.Y.Zに更新"
+git commit -m "chore: update version to X.Y.Z"
 
-# リリースブランチをプッシュ
+# Push release branch
 git push origin release/vX.Y.Z
 ```
 
-### 3. **ビルドとドラフトリリース作成の監視**:
+### 3. **Monitor Build and Draft Release Creation**:
 
-- リリースブランチのプッシュにより、GitHub Actionsの`Build Draft Release`ワークフローが自動的に起動します
-- GitHub Actionsの進行状況を[Actionsタブ](https://github.com/aws-samples/bedrock-engineer/actions)で確認します
-- ワークフローが正常に完了すると、以下の処理が自動的に行われます:
-  1. Mac版とWindows版のビルドが実行される
-  2. ビルド成果物が添付されたドラフトリリースが作成される
+- Pushing the release branch will automatically trigger the `Build Draft Release` workflow in GitHub Actions
+- Check the progress in the [Actions tab](https://github.com/aws-samples/bedrock-engineer/actions)
+- When the workflow completes successfully, the following will happen automatically:
+  1. Mac and Windows builds are executed
+  2. A draft release is created with the build artifacts attached
 
-### 4. **リリース確認とPR作成**:
+### 4. **Verify Release and Create PR**:
 
-- ドラフトリリースにアクセスし、ビルド成果物（.dmg、.pkg、.exe）と内容を確認します
-- リリースノートを確認します
-- 問題がなければ、手動でPRを作成します：
+- Access the draft release and verify the build artifacts (.dmg, .pkg, .exe) and contents
+- Review the release notes
+- If everything looks good, manually create a PR:
 
   ```bash
-  # リリースブランチから作成
+  # Create from release branch
   gh pr create \
-    --title "リリース vX.Y.Z" \
-    --body "## リリース vX.Y.Z の準備ができました
+    --title "Release vX.Y.Z" \
+    --body "## Release vX.Y.Z is ready
 
-    このPRがマージされるとリリース vX.Y.Z が公開されます。
+    This PR will publish release vX.Y.Z when merged.
 
-    ### ドラフトリリース
-    [リリースページで確認](URLをここに貼り付け)
+    ### Draft Release
+    [View on release page](paste URL here)
 
-    ビルド成果物の動作確認済み:
-    - [ ] Mac版
-    - [ ] Windows版
+    Build artifacts verified:
+    - [ ] Mac version
+    - [ ] Windows version
     " \
     --base main \
     --head release/X.Y.Z
   ```
 
-### 5. **リリース公開**:
+### 5. **Publish Release**:
 
-- PRがマージされると、自動的に`Publish Release`ワークフローが実行され、ドラフトリリースが公開されます
-- [Releasesページ](https://github.com/aws-samples/bedrock-engineer/releases)で公開されたリリースを確認できます
+- When the PR is merged, the `Publish Release` workflow will automatically execute and publish the draft release
+- You can verify the published release on the [Releases page](https://github.com/aws-samples/bedrock-engineer/releases)
 
-## トラブルシューティング
+## Troubleshooting
 
-### ビルドに失敗した場合:
+### If Build Fails:
 
-1. GitHub Actionsのログを確認して問題を特定します
-2. リリースブランチを修正し、再度プッシュします
-3. 問題が解決しない場合は、リリースブランチを削除して最初からやり直すこともできます
+1. Check the GitHub Actions logs to identify the issue
+2. Fix the release branch and push again
+3. If the problem persists, you can delete the release branch and start over
 
-### リリースドラフトに問題があり、PRをマージしたくない場合:
+### If There's an Issue with the Draft Release and You Don't Want to Merge the PR:
 
-1. PRをクローズします（マージせずに）
-2. 必要に応じてドラフトリリースを削除:
+1. Close the PR (without merging)
+2. Delete the draft release if necessary:
 
 ```bash
 gh release delete vX.Y.Z
 ```
 
-3. 問題を修正し、リリースブランチを更新してプッシュします
+3. Fix the issue, update the release branch, and push
 
-### マージ後のリリース公開に失敗した場合:
+### If Release Publication Fails After Merge:
 
-1. GitHub Actionsのログを確認して問題を特定します
-2. 必要に応じて手動でリリースを公開:
+1. Check the GitHub Actions logs to identify the issue
+2. Manually publish the release if necessary:
 
 ```bash
 gh release edit vX.Y.Z --draft=false
 ```
 
-## バージョニング規則
+## Versioning Rules
 
-[セマンティックバージョニング](https://semver.org/lang/ja/)に従います：
+Follow [Semantic Versioning](https://semver.org/):
 
-- **メジャーバージョン (X)**: 互換性のない変更
-- **マイナーバージョン (Y)**: 後方互換性のある機能追加
-- **パッチバージョン (Z)**: 後方互換性のあるバグ修正
+- **Major version (X)**: Incompatible changes
+- **Minor version (Y)**: Backward compatible feature additions
+- **Patch version (Z)**: Backward compatible bug fixes
