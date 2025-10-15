@@ -224,6 +224,86 @@ const MODEL_REGISTRY: ModelConfig[] = [
     }
   },
 
+  // Claude Haiku 4.5
+  {
+    baseId: 'claude-haiku-4-5-20251001-v1:0',
+    name: 'Claude Haiku 4.5',
+    provider: 'anthropic',
+    category: 'text',
+    toolUse: true,
+    maxTokensLimit: 64000,
+    supportsThinking: true,
+    inferenceProfiles: [
+      {
+        type: 'global',
+        prefix: 'global',
+        regions: [
+          'us-east-1',
+          'us-east-2',
+          'us-west-1',
+          'us-west-2',
+          'eu-central-1',
+          'eu-central-2',
+          'eu-north-1',
+          'eu-south-1',
+          'eu-south-2',
+          'eu-west-1',
+          'eu-west-2',
+          'eu-west-3',
+          'ap-northeast-1',
+          'ap-northeast-2',
+          'ap-northeast-3',
+          'ap-south-1',
+          'ap-south-2',
+          'ap-southeast-1',
+          'ap-southeast-2',
+          'ap-southeast-3',
+          'ap-southeast-4',
+          'ca-central-1',
+          'sa-east-1'
+        ],
+        displaySuffix: '(Global)'
+      },
+      {
+        type: 'regional-us',
+        prefix: 'us',
+        regions: ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2'],
+        displaySuffix: '(US)'
+      },
+      {
+        type: 'regional-eu',
+        prefix: 'eu',
+        regions: [
+          'eu-central-1',
+          'eu-central-2',
+          'eu-north-1',
+          'eu-south-1',
+          'eu-south-2',
+          'eu-west-1',
+          'eu-west-2',
+          'eu-west-3'
+        ],
+        displaySuffix: '(EU)'
+      },
+      {
+        type: 'jp',
+        prefix: 'jp',
+        regions: ['ap-northeast-1', 'ap-northeast-3'],
+        displaySuffix: '(JP)'
+      }
+    ],
+    pricing: {
+      input: 0.001,
+      output: 0.005,
+      cacheRead: 0.0001,
+      cacheWrite: 0.00125
+    },
+    cache: {
+      supported: true,
+      cacheableFields: ['messages', 'system', 'tools']
+    }
+  },
+
   // Claude 3.5 Sonnet
   {
     baseId: 'claude-3-5-sonnet-20240620-v1:0',
