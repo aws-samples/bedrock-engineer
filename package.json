@@ -62,7 +62,7 @@
     "i18next": "23.15.0",
     "lodash": "^4.17.21",
     "lottie-react": "2.4.0",
-    "mammoth": "^1.9.1",
+    "mammoth": "^1.11.0",
     "mermaid": "11.10.0",
     "node-cache": "5.1.2",
     "node-cron": "^4.2.0",
