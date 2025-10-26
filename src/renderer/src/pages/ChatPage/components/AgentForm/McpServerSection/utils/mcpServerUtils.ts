@@ -153,7 +153,7 @@ export function generateSampleJson(): string {
         SecureApi: {
           url: 'https://api.example.com/mcp',
           headers: {
-            'Authorization': 'Bearer {{your-token}}',
+            Authorization: 'Bearer {{your-token}}',
             'X-API-Key': 'your-api-key'
           }
         }

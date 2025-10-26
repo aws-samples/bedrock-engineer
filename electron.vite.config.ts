@@ -35,6 +35,11 @@ export default defineConfig({
       postcss: {
         plugins: [tailwindcss() as any]
       }
+    },
+    build: {
+      rollupOptions: {
+        external: ['refractor']
+      }
     }
   }
 })
