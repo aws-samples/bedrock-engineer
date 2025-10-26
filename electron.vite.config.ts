@@ -19,6 +19,13 @@ export default defineConfig({
         '@common': resolve('src/common')
       }
     },
+    optimizeDeps: {
+      include: [
+        'react-syntax-highlighter',
+        'react-syntax-highlighter/dist/esm/styles/prism',
+        'refractor'
+      ]
+    },
     plugins: [
       react(),
       svgr({
@@ -37,8 +44,8 @@ export default defineConfig({
       }
     },
     build: {
-      rollupOptions: {
-        external: [/^refractor($|\/)/]
+      commonjsOptions: {
+        include: [/react-syntax-highlighter/, /refractor/, /node_modules/]
       }
     }
   }
