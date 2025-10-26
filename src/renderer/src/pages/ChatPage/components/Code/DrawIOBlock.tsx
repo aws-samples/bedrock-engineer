@@ -9,7 +9,7 @@ import {
   VscCloudDownload
 } from 'react-icons/vsc'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism'
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { DrawIoEmbed, DrawIoEmbedRef } from 'react-drawio'
 import { ResizableContainer } from './ResizableContainer'
 

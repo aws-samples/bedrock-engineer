@@ -38,7 +38,7 @@ export default defineConfig({
     },
     build: {
       rollupOptions: {
-        external: ['refractor']
+        external: [/^refractor($|\/)/]
       }
     }
   }
