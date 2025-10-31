@@ -5,6 +5,7 @@ import fs from 'fs'
 import path from 'path'
 import { CustomAgent } from '../types/agent-chat'
 import yaml from 'js-yaml'
+import { validateAgent } from '../common/utils/agent-validator'
 // 直接storeをインポート
 import { store } from './store'
 
@@ -39,7 +40,16 @@ async function readSharedAgents(): Promise<{ agents: CustomAgent[]; error?: Erro
         try {
           const filePath = path.join(sharedAgentsDir, file)
           const content = await promisify(fs.readFile)(filePath, 'utf8')
-          const agent = yaml.load(content) as CustomAgent
+          const parsed = yaml.load(content)
+
+          // Validate the agent data
+          const validation = validateAgent(parsed)
+          if (!validation.success) {
+            console.error(`Invalid agent file ${file}:`, validation.errors)
+            return null
+          }
+
+          const agent = validation.agent!
 
           // Flag this agent as shared
           agent.isShared = true
@@ -102,7 +112,16 @@ async function readDirectoryAgents(): Promise<{ agents: CustomAgent[]; error?: E
         try {
           const filePath = path.join(agentsDir, file)
           const content = await promisify(fs.readFile)(filePath, 'utf8')
-          const agent = yaml.load(content) as CustomAgent
+          const parsed = yaml.load(content)
+
+          // Validate the agent data
+          const validation = validateAgent(parsed)
+          if (!validation.success) {
+            console.error(`Invalid directory agent file ${file}:`, validation.errors)
+            return null
+          }
+
+          const agent = validation.agent!
 
           // Flag this agent as a directory agent
           agent.directoryOnly = true

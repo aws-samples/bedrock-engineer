@@ -8,6 +8,7 @@ import { createCategoryLogger } from '../../common/logger'
 import { store } from '../../preload/store'
 import { StrandsAgentsConverter } from '../services/strandsAgentsConverter'
 import { createS3Client } from '../api/bedrock/client'
+import { validateAgent } from '../../common/utils/agent-validator'
 
 const agentsLogger = createCategoryLogger('agents:ipc')
 
@@ -47,14 +48,26 @@ async function loadSharedAgents(): Promise<{ agents: CustomAgent[]; error: strin
         const content = await fs.promises.readFile(filePath, 'utf-8')
 
         // Parse the file content based on its extension
-        let agent: CustomAgent
+        let parsed: unknown
         if (file.endsWith('.json')) {
-          agent = JSON.parse(content) as CustomAgent
+          parsed = JSON.parse(content)
         } else if (file.endsWith('.yml') || file.endsWith('.yaml')) {
-          agent = yaml.load(content) as CustomAgent
+          parsed = yaml.load(content)
         } else {
           throw new Error(`Unsupported file format: ${file}`)
         }
+
+        // Validate the agent data
+        const validation = validateAgent(parsed)
+        if (!validation.success) {
+          agentsLogger.error(`Invalid agent file`, {
+            file,
+            errors: validation.errors
+          })
+          return null
+        }
+
+        const agent = validation.agent!
 
         // Make sure each loaded agent has a unique ID to prevent React key conflicts
         // If the ID doesn't already start with 'shared-', prefix it
@@ -105,6 +118,16 @@ export const agentHandlers = {
     options?: { format?: 'json' | 'yaml' }
   ) => {
     try {
+      // Validate agent data before saving
+      const validation = validateAgent(agent)
+      if (!validation.success) {
+        agentsLogger.error('Invalid agent data for save', { errors: validation.errors })
+        return {
+          success: false,
+          error: `Invalid agent data: ${validation.errors?.join(', ')}`
+        }
+      }
+
       const projectPath = store.get('projectPath') as string
       if (!projectPath) {
         return { success: false, error: 'No project path selected' }
@@ -243,12 +266,24 @@ export const agentHandlers = {
           }
 
           // ファイル形式に応じて解析
-          let agent: CustomAgent
+          let parsed: unknown
           if (file.Key.endsWith('.json')) {
-            agent = JSON.parse(content) as CustomAgent
+            parsed = JSON.parse(content)
           } else {
-            agent = yaml.load(content) as CustomAgent
+            parsed = yaml.load(content)
           }
+
+          // Validate the agent data
+          const validation = validateAgent(parsed)
+          if (!validation.success) {
+            agentsLogger.error('Invalid organization agent file', {
+              key: file.Key,
+              errors: validation.errors
+            })
+            return null
+          }
+
+          const agent = validation.agent!
 
           // 組織エージェントとしてマーク
           const orgId = `org-${organizationConfig.id}-${file.Key.replace(/\.(json|ya?ml)$/, '').toLowerCase()}-${Math.random().toString(36).substring(2, 9)}`
@@ -292,6 +327,18 @@ export const agentHandlers = {
     options?: { format?: 'json' | 'yaml' }
   ) => {
     try {
+      // Validate agent data before saving
+      const validation = validateAgent(agent)
+      if (!validation.success) {
+        agentsLogger.error('Invalid agent data for organization save', {
+          errors: validation.errors
+        })
+        return {
+          success: false,
+          error: `Invalid agent data: ${validation.errors?.join(', ')}`
+        }
+      }
+
       agentsLogger.info('Saving agent to organization S3', {
         agentName: agent.name,
         bucket: organizationConfig.s3Config.bucket,
