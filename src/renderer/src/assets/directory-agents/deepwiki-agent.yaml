@@ -200,7 +200,6 @@ isCustom: true
 icon: search
 iconColor: '#c7237b'
 tools:
-  - executeCommand
   - think
 category: all
 additionalInstruction: ''
