@@ -565,16 +565,6 @@ scenarios:
       I have market research data in several Excel files including competitor analysis, pricing data, and market size
       estimates. Consolidate the information, perform comparative analysis, create summary tables and visualizations,
       and prepare a market intelligence presentation for strategic planning.
-  - title: Project Status Report Automation
-    content: >-
-      Generate a project status report by analyzing task completion data from Excel, calculating project progress
-      percentages, identifying delays and risks, creating Gantt-style charts, and producing a professional PowerPoint
-      presentation for stakeholder updates.
-  - title: Employee Performance Analytics
-    content: >-
-      Analyze employee performance data from HR Excel files, calculate performance scores and rankings, identify trends
-      in productivity metrics, create distribution charts and comparison tables, and prepare a confidential HR presentation
-      for management review with recommendations.
 tags:
   - office
   - excel
@@ -582,7 +572,7 @@ tags:
   - analytics
   - reporting
 isCustom: true
-icon: search
+icon: book
 iconColor: '#4a90e2'
 tools:
   - createFolder
@@ -628,4 +618,4 @@ allowedCommands: []
 bedrockAgents: []
 flows: []
 isShared: true
-author: geeawa
+author: daisuke-awaji
