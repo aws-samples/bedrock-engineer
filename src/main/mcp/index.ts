@@ -175,7 +175,10 @@ export const initMcpFromAgentConfig = async (mcpServers: McpServerConfig[] = [])
               }
               return acc
             },
-            {} as Record<string, { url: string; enabled?: boolean; headers?: Record<string, string> }>
+            {} as Record<
+              string,
+              { url: string; enabled?: boolean; headers?: Record<string, string> }
+            >
           )
         }
       }

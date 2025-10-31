@@ -149,13 +149,6 @@ export function generateSampleJson(): string {
         },
         DeepWiki: {
           url: 'https://mcp.deepwiki.com/sse'
-        },
-        SecureApi: {
-          url: 'https://api.example.com/mcp',
-          headers: {
-            'Authorization': 'Bearer {{your-token}}',
-            'X-API-Key': 'your-api-key'
-          }
         }
       }
     },
