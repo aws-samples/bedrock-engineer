@@ -4,7 +4,6 @@ import { CustomAgent } from '@/types/agent-chat'
 import { BsCheck2Circle } from 'react-icons/bs'
 import { RiCloseLine } from 'react-icons/ri'
 import { TbRobot } from 'react-icons/tb'
-import { HiClipboardCopy } from 'react-icons/hi'
 import { getIconByValue } from '@renderer/components/icons/AgentIcons'
 
 interface AgentDetailModalProps {
@@ -21,7 +20,6 @@ export const AgentDetailModal: React.FC<AgentDetailModalProps> = ({
   const { t } = useTranslation()
   const [isAdding, setIsAdding] = useState(false)
   const [addSuccess, setAddSuccess] = useState<boolean | null>(null)
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
   const handleAddToMyAgents = async () => {
     if (onAddToMyAgents) {
@@ -168,12 +166,7 @@ export const AgentDetailModal: React.FC<AgentDetailModalProps> = ({
           {/* MCP Servers */}
           {agent.mcpServers && agent.mcpServers.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2 dark:text-white flex items-center">
-                <span className="mr-2">{t('mcpServersLabel')}</span>
-                <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">
-                  {agent.mcpServers.length}
-                </span>
-              </h3>
+              <h3 className="text-lg font-medium mb-2 dark:text-white">{t('mcpServersLabel')}</h3>
               <div className="space-y-3">
                 {agent.mcpServers.map((server, index) => (
                   <div
@@ -187,15 +180,32 @@ export const AgentDetailModal: React.FC<AgentDetailModalProps> = ({
                       </p>
                     )}
                     <div className="text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded font-mono">
-                      <div>
-                        <span className="text-blue-600 dark:text-blue-400">Command:</span>{' '}
-                        {server.command}
-                      </div>
-                      {server.args && server.args.length > 0 && (
-                        <div>
-                          <span className="text-blue-600 dark:text-blue-400">Args:</span>{' '}
-                          {server.args.join(' ')}
-                        </div>
+                      {server.connectionType === 'url' || server.url ? (
+                        <>
+                          <div>
+                            <span className="text-blue-600 dark:text-blue-400">URL:</span>{' '}
+                            {server.url}
+                          </div>
+                          {server.headers && Object.keys(server.headers).length > 0 && (
+                            <div>
+                              <span className="text-blue-600 dark:text-blue-400">Headers:</span>{' '}
+                              {Object.keys(server.headers).join(', ')}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <span className="text-blue-600 dark:text-blue-400">Command:</span>{' '}
+                            {server.command}
+                          </div>
+                          {server.args && server.args.length > 0 && (
+                            <div>
+                              <span className="text-blue-600 dark:text-blue-400">Args:</span>{' '}
+                              {server.args.join(' ')}
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -207,12 +217,7 @@ export const AgentDetailModal: React.FC<AgentDetailModalProps> = ({
           {/* Tools */}
           {agent.tools && agent.tools.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2 dark:text-white flex items-center">
-                <span className="mr-2">{t('toolsLabel')}</span>
-                <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
-                  {agent.tools.length}
-                </span>
-              </h3>
+              <h3 className="text-lg font-medium mb-2 dark:text-white">{t('toolsLabel')}</h3>
               <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="flex flex-wrap gap-2">
                   {agent.tools.map((tool) => (
@@ -232,57 +237,19 @@ export const AgentDetailModal: React.FC<AgentDetailModalProps> = ({
           {/* Scenarios */}
           {agent.scenarios && agent.scenarios.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-lg font-medium mb-2 dark:text-white flex items-center">
-                <span className="mr-2">{t('scenariosLabel')}</span>
-                <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full dark:bg-purple-900 dark:text-purple-300">
-                  {agent.scenarios.length}
-                </span>
-              </h3>
+              <h3 className="text-lg font-medium mb-2 dark:text-white">{t('scenariosLabel')}</h3>
               <div className="space-y-3">
-                {agent.scenarios.map((scenario, index) => {
-                  const handleCopyScenario = () => {
-                    navigator.clipboard.writeText(scenario.content || '')
-                    setCopiedIndex(index)
-                    setTimeout(() => {
-                      setCopiedIndex(null)
-                    }, 2000) // Reset after 2 seconds
-                  }
-
-                  return (
-                    <div
-                      key={index}
-                      className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium text-sm dark:text-white">{scenario.title}</h4>
-                        <button
-                          onClick={handleCopyScenario}
-                          className={`text-xs flex items-center gap-1 ${
-                            copiedIndex === index
-                              ? 'text-green-600 dark:text-green-400'
-                              : 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300'
-                          }`}
-                          title={t('copyToClipboard')}
-                        >
-                          {copiedIndex === index ? (
-                            <>
-                              <BsCheck2Circle size={14} />
-                              {t('copied')}
-                            </>
-                          ) : (
-                            <>
-                              <HiClipboardCopy size={14} />
-                              {t('copy')}
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-                        {scenario.content}
-                      </div>
+                {agent.scenarios.map((scenario, index) => (
+                  <div
+                    key={index}
+                    className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <h4 className="font-medium text-sm dark:text-white mb-2">{scenario.title}</h4>
+                    <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                      {scenario.content}
                     </div>
-                  )
-                })}
+                  </div>
+                ))}
               </div>
             </div>
           )}
