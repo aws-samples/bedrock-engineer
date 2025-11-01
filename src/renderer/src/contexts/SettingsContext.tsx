@@ -20,7 +20,8 @@ import {
   LLM,
   BEDROCK_SUPPORTED_REGIONS,
   ThinkingMode,
-  ApplicationInferenceProfile
+  ApplicationInferenceProfile,
+  BedrockSupportRegion
 } from '@/types/llm'
 import { useModelManagement } from '@renderer/hooks/useModelManagement'
 import type { AwsCredentialIdentity } from '@smithy/types'
@@ -30,6 +31,8 @@ import { getToolsForCategory } from '../constants/defaultToolSets'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
 import { CodeInterpreterContainerConfig } from 'src/preload/tools/handlers/interpreter/types'
 import { SystemPromptBuilder } from '@/common/agents/toolRuleGenerator'
+import { getImageGenerationModelsForRegion } from '@/common/models/models'
+import { toastService } from '@renderer/services/ToastService'
 
 const DEFAULT_INFERENCE_PARAMS: InferenceParameters = {
   maxTokens: 4096,
@@ -293,13 +296,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // recognizeImage Tool Settings
   const [recognizeImageModel, setStateRecognizeImageModel] = useState<string>(
-    'anthropic.claude-3-5-sonnet-20241022-v2:0'
+    'global.anthropic.claude-haiku-4-5-20251001-v1:0'
   )
 
   // generateImage Tool Settings
-  const [generateImageModel, setStateGenerateImageModel] = useState<string>(
-    'amazon.titan-image-generator-v2:0'
-  )
+  const [generateImageModel, setStateGenerateImageModel] =
+    useState<string>('amazon.nova-canvas-v1:0')
 
   // generateVideo Tool Settings
   const [generateVideoS3Uri, setStateGenerateVideoS3Uri] = useState<string>('')
@@ -996,6 +998,64 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       ...bedrockSettings,
       availableFailoverRegions: [...BEDROCK_SUPPORTED_REGIONS]
     })
+
+    // ツールモデルの自動切り替え（recognizeImage, generateImage）
+    const regionAsBedrockRegion = region as BedrockSupportRegion
+
+    // recognizeImageModelの検証と自動切り替え
+    if (recognizeImageModel && availableModels.length > 0) {
+      const isRecognizeModelAvailable = availableModels.some(
+        (model) =>
+          model.modelId === recognizeImageModel &&
+          model.regions &&
+          model.regions.includes(regionAsBedrockRegion)
+      )
+
+      if (!isRecognizeModelAvailable) {
+        // 代替モデルを検索（同じモデルファミリーを優先）
+        const regionModels = availableModels.filter(
+          (model) => model.regions && model.regions.includes(regionAsBedrockRegion)
+        )
+
+        if (regionModels.length > 0) {
+          const currentModel = availableModels.find((m) => m.modelId === recognizeImageModel)
+          const alternativeModel = currentModel
+            ? regionModels.find(
+                (model) =>
+                  model.modelName.includes(currentModel.modelName.split(' ')[0]) &&
+                  model.toolUse === currentModel.toolUse
+              ) || regionModels[0]
+            : regionModels[0]
+
+          setStateRecognizeImageModel(alternativeModel.modelId)
+          window.store.set('recognizeImageTool', { modelId: alternativeModel.modelId })
+          toastService.info(
+            `RecognizeImageTool Model switched: ${recognizeImageModel} → ${alternativeModel.modelId}`
+          )
+        }
+      }
+    }
+
+    // generateImageModelの検証と自動切り替え
+    if (generateImageModel) {
+      const availableImageModels = getImageGenerationModelsForRegion(regionAsBedrockRegion)
+      const isGenerateModelAvailable = availableImageModels.some(
+        (model) => model.id === generateImageModel
+      )
+
+      if (!isGenerateModelAvailable && availableImageModels.length > 0) {
+        // 代替モデルを検索（Amazonプロバイダーを優先）
+        const alternativeModel =
+          availableImageModels.find((model) => model.id.startsWith('amazon')) ||
+          availableImageModels[0]
+
+        setStateGenerateImageModel(alternativeModel.id)
+        window.store.set('generateImageTool', { modelId: alternativeModel.id })
+        toastService.info(
+          `GenerateImageTool Model switched: ${generateImageModel} → ${alternativeModel.id}`
+        )
+      }
+    }
 
     // リージョン変更時にカスタムエージェントのツール設定を更新
     // 特にgenerateImageツールのリージョン対応を確認
