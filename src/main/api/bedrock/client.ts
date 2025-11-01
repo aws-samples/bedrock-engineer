@@ -15,7 +15,7 @@ export function createS3Client(awsCredentials: AWSCredentials) {
   if (useProfile) {
     return new S3Client({
       region,
-      profile,
+      credentials: fromIni({ profile }),
       ...httpOptions
     })
   }
@@ -34,7 +34,7 @@ export function createRuntimeClient(awsCredentials: AWSCredentials) {
   if (useProfile) {
     return new BedrockRuntimeClient({
       region,
-      profile,
+      credentials: fromIni({ profile }),
       ...httpOptions
     })
   }
@@ -53,7 +53,7 @@ export function createBedrockClient(awsCredentials: AWSCredentials) {
   if (useProfile) {
     return new BedrockClient({
       region,
-      profile,
+      credentials: fromIni({ profile }),
       ...httpOptions
     })
   }
@@ -72,7 +72,7 @@ export function createAgentRuntimeClient(awsCredentials: AWSCredentials) {
   if (useProfile) {
     return new BedrockAgentRuntimeClient({
       region,
-      profile,
+      credentials: fromIni({ profile }),
       ...httpOptions
     })
   }
@@ -107,7 +107,7 @@ export function createTranslateClient(awsCredentials: AWSCredentials) {
   if (useProfile) {
     return new TranslateClient({
       region,
-      profile,
+      credentials: fromIni({ profile }),
       ...httpOptions
     })
   }
