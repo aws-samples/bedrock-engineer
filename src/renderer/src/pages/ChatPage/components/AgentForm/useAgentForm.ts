@@ -38,7 +38,6 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
     category: initialAgent?.category || 'all',
     additionalInstruction: initialAgent?.additionalInstruction || '',
     environmentContextSettings: {
-      todoListInstruction: initialAgent?.environmentContextSettings?.todoListInstruction ?? true,
       projectRule: initialAgent?.environmentContextSettings?.projectRule ?? true,
       visualExpressionRules: initialAgent?.environmentContextSettings?.visualExpressionRules ?? true
     }

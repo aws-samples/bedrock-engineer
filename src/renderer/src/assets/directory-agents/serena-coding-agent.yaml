@@ -287,7 +287,6 @@ tools:
   - todoUpdate
 category: all
 environmentContextSettings:
-  todoListInstruction: false
   projectRule: false
   visualExpressionRules: false
 mcpServers:

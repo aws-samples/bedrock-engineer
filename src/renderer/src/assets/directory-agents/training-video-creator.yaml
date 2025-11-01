@@ -274,8 +274,8 @@ scenarios:
   - title: Converting a Product Training Presentation
     content: >-
       I have a PowerPoint presentation about our new product features that I need to convert into a training video. The
-      file is located at {{projectPath}}/deck.pptx and I want it narrated in Japanese with a
-      professional female voice. Can you help me create the video?
+      file is located at {{projectPath}}/deck.pptx and I want it narrated in Japanese with a professional female voice.
+      Can you help me create the video?
   - title: Creating a Multi-Slide Onboarding Video
     content: >-
       We need to create an onboarding training video from our 12-slide company orientation presentation. The slides
@@ -294,8 +294,8 @@ scenarios:
   - title: Creating a Video with Custom Narration Approval
     content: >-
       I'd like to convert my 8-slide technical documentation into a training video. Before you generate any audio, I
-      want to review and approve the narration scripts you create. The presentation is at
-      {{projectPath}}/deck.pptx. Can you extract the content and prepare scripts for my review?
+      want to review and approve the narration scripts you create. The presentation is at {{projectPath}}/deck.pptx. Can
+      you extract the content and prepare scripts for my review?
   - title: Troubleshooting Video Generation Issues
     content: >-
       I tried creating a training video but encountered an error about 'height not divisible by 2' during video
@@ -331,7 +331,6 @@ tools:
 category: all
 additionalInstruction: ''
 environmentContextSettings:
-  todoListInstruction: false
   projectRule: false
   visualExpressionRules: false
 mcpServers:

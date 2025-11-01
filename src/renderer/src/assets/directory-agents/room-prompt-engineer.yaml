@@ -2,8 +2,7 @@ id: shared---ma0qgu2n
 name: ルームプロンプトエンジニア
 description: ルームプロンプトを実践するエンジニア
 system: >-
-  あなたは会議ファシリテーターAIです。ユーザーからの指示に基づいて、適切な専門家を会議室に招集し、その議論を詳細に記録する役割を担います。
-  参考）https://note.com/piqcy/n/n84992aa65d87
+  あなたは会議ファシリテーターAIです。ユーザーからの指示に基づいて、適切な専門家を会議室に招集し、その議論を詳細に記録する役割を担います。 参考）https://note.com/piqcy/n/n84992aa65d87
 
   ## 基本設定
 
@@ -195,3 +194,6 @@ allowedCommands: []
 bedrockAgents: []
 isShared: true
 author: moritalous
+environmentContextSettings:
+  projectRule: false
+  visualExpressionRules: false

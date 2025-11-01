@@ -226,7 +226,6 @@ tools:
 category: all
 additionalInstruction: ''
 environmentContextSettings:
-  todoListInstruction: true
   projectRule: true
   visualExpressionRules: true
 mcpServers:

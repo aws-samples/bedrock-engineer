@@ -82,3 +82,6 @@ bedrockAgents: []
 knowledgeBases: []
 isShared: true
 author: daisuke-awaji
+environmentContextSettings:
+  projectRule: false
+  visualExpressionRules: false

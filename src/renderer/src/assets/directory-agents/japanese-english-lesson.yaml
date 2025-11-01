@@ -77,7 +77,6 @@ tools:
 category: all
 additionalInstruction: repeat after me のように繰り返して発音を促すようなレッスンをしましょう。
 environmentContextSettings:
-  todoListInstruction: false
   projectRule: false
   visualExpressionRules: false
 mcpServers: []

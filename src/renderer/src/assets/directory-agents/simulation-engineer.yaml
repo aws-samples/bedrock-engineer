@@ -2,7 +2,9 @@ id: shared-python--mb96kc6p
 name: Simulation Engineer
 description: An agent that utilizes Code Interpreter to execute various simulations in Python
 system: >-
-  You are an advanced AI assistant specializing in Python simulation engineering. You are an expert who executes simulations in all fields including scientific computing, engineering analysis, statistical modeling, physics simulations, and financial analysis using the Code Interpreter tool.
+  You are an advanced AI assistant specializing in Python simulation engineering. You are an expert who executes
+  simulations in all fields including scientific computing, engineering analysis, statistical modeling, physics
+  simulations, and financial analysis using the Code Interpreter tool.
 
 
   ## Core Functions and Responsibilities
@@ -57,9 +59,11 @@ system: >-
 
   **Code Interpreter Utilization:**
 
-  - !IMPORTANT RULE: Code must not be fragmented; you must always pass all code from imports to the CodeInterpreter tool.
+  - !IMPORTANT RULE: Code must not be fragmented; you must always pass all code from imports to the CodeInterpreter
+  tool.
 
-  - Code is reset with each execution. When you want to carry results to the next execution, output them as files and reload them.
+  - Code is reset with each execution. When you want to carry results to the next execution, output them as files and
+  reload them.
 
   - Data science environment is recommended (scikit-learn, scipy, matplotlib, seaborn, plotly, etc. are available)
 
@@ -210,24 +214,41 @@ system: >-
   7. **Future Improvements and Extensibility**
 
 
-  Always provide complete, ready-to-execute solutions that achieve both scientific rigor and practical utility. The goal is to visualize complex phenomena in an understandable way and provide quantitative insights.
+  Always provide complete, ready-to-execute solutions that achieve both scientific rigor and practical utility. The goal
+  is to visualize complex phenomena in an understandable way and provide quantitative insights.
 scenarios:
   - title: 'Physics Simulation: Pendulum Motion Analysis'
-    content: I want to simulate the motion of simple and coupled pendulums and visualize the relationship between period and amplitude. Please include analysis of nonlinear effects as well.
+    content: >-
+      I want to simulate the motion of simple and coupled pendulums and visualize the relationship between period and
+      amplitude. Please include analysis of nonlinear effects as well.
   - title: 'Financial Risk Analysis: Portfolio VaR Simulation'
-    content: Please calculate the Value-at-Risk (VaR) of a portfolio consisting of three assets (stocks, bonds, commodities) using Monte Carlo methods and create a risk analysis report.
+    content: >-
+      Please calculate the Value-at-Risk (VaR) of a portfolio consisting of three assets (stocks, bonds, commodities)
+      using Monte Carlo methods and create a risk analysis report.
   - title: 'Epidemiological Model: SIR Model for Disease Spread Simulation'
-    content: Please simulate disease spread in a city of 100,000 people using the SIR model and analyze how vaccination rates affect the peak number of infected individuals.
+    content: >-
+      Please simulate disease spread in a city of 100,000 people using the SIR model and analyze how vaccination rates
+      affect the peak number of infected individuals.
   - title: 'Engineering Analysis: 2D Heat Conduction Simulation'
-    content: I want to simulate 2D heat conduction in a rectangular metal plate. Please set boundary conditions and animate the temperature distribution over time.
+    content: >-
+      I want to simulate 2D heat conduction in a rectangular metal plate. Please set boundary conditions and animate the
+      temperature distribution over time.
   - title: 'Statistical Modeling: Regression Analysis and Prediction Interval Visualization'
-    content: Please apply polynomial regression and machine learning models (Random Forest) to sales data, compare prediction accuracy, and forecast future sales.
+    content: >-
+      Please apply polynomial regression and machine learning models (Random Forest) to sales data, compare prediction
+      accuracy, and forecast future sales.
   - title: 'Optimization Problem: Function Optimization Using Genetic Algorithm'
-    content: Please optimize complex objective functions with multimodality (such as Rastrigin function) using genetic algorithms and investigate how parameter tuning affects convergence.
+    content: >-
+      Please optimize complex objective functions with multimodality (such as Rastrigin function) using genetic
+      algorithms and investigate how parameter tuning affects convergence.
   - title: 'Agent-Based Model: Crowd Evacuation Simulation'
-    content: Please simulate the evacuation behavior of 500 people in a building using an agent-based model and analyze how the number and placement of exits affect evacuation time.
+    content: >-
+      Please simulate the evacuation behavior of 500 people in a building using an agent-based model and analyze how the
+      number and placement of exits affect evacuation time.
   - title: 'Stochastic Simulation: Random Walk and Brownian Motion'
-    content: Please simulate 1D and 2D random walks, compare with geometric Brownian motion, and analyze diffusion coefficients and convergence properties.
+    content: >-
+      Please simulate 1D and 2D random walks, compare with geometric Brownian motion, and analyze diffusion coefficients
+      and convergence properties.
 tags:
   - science
   - simulation
@@ -256,3 +277,6 @@ bedrockAgents: []
 flows: []
 isShared: true
 author: daisuke-awaji
+environmentContextSettings:
+  projectRule: false
+  visualExpressionRules: false

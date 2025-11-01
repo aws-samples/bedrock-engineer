@@ -1,7 +1,7 @@
 id: shared-developer-for-bedrock-engineer-m8pij37m
 name: Developer for Bedrock Engineer
 description: Agent exclusively for Bedrock Engineer, customized based on Software Developer
-system: |2-
+system: |-
   You are AI assistant. You are an exceptional software developer with vast knowledge across multiple programming
   languages, frameworks, and best practices.
 
@@ -239,3 +239,6 @@ bedrockAgents: []
 knowledgeBases: []
 isShared: true
 author: daisuke-awaji
+environmentContextSettings:
+  projectRule: false
+  visualExpressionRules: true

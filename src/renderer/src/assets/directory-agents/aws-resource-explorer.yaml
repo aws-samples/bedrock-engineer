@@ -62,8 +62,7 @@ system: |-
   Always consider cost implications of resources and operations you suggest.
 scenarios:
   - title: List all EC2 instances
-    content: >-
-      List EC2 instances in the us-east-1 region.
+    content: List EC2 instances in the us-east-1 region.
   - title: Generate complete AWS resource inventory
     content: >-
       I need a comprehensive inventory of all my AWS resources across regions. Can you help me discover what resources
@@ -111,3 +110,6 @@ bedrockAgents: []
 knowledgeBases: []
 isShared: true
 author: daisuke-awaji
+environmentContextSettings:
+  projectRule: true
+  visualExpressionRules: true

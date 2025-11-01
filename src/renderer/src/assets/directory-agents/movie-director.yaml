@@ -150,7 +150,6 @@ additionalInstruction: |-
   aws polly コマンドを使用した文章読み上げファイル（mp3）の作成ができます
   ffmpeg を使用した動画の結合や、音声ファイルとの統合などを最後に行ってください。
 environmentContextSettings:
-  todoListInstruction: false
   projectRule: false
   visualExpressionRules: false
 mcpServers: []

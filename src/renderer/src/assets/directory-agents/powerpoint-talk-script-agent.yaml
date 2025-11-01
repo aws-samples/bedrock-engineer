@@ -68,7 +68,6 @@ tools:
 category: all
 additionalInstruction: Office-PowerPoint-MCP-Server を使用します。
 environmentContextSettings:
-  todoListInstruction: false
   projectRule: false
   visualExpressionRules: false
 mcpServers:

@@ -484,7 +484,6 @@ tools:
 category: all
 additionalInstruction: ''
 environmentContextSettings:
-  todoListInstruction: false
   projectRule: false
   visualExpressionRules: true
 mcpServers: []

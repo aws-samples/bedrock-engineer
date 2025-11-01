@@ -284,7 +284,6 @@ export interface TavilySearchConfig {
 
 // 環境コンテキスト設定の型定義
 export interface EnvironmentContextSettings {
-  todoListInstruction: boolean // TODO_LIST_INSTRUCTION を含めるかどうか
   projectRule: boolean // PROJECT_RULE を含めるかどうか
   visualExpressionRules: boolean // VISUAL_EXPRESSION_RULES を含めるかどうか
 }

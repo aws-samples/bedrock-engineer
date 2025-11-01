@@ -163,8 +163,9 @@ system: >-
 scenarios:
   - title: Repository Architecture Analysis
     content: >-
-      I need a comprehensive technical analysis of the repository at https://github.com/aws-samples/bedrock-engineer. Please provide
-      insights into the system architecture, technology stack, and key implementation patterns used in this project.
+      I need a comprehensive technical analysis of the repository at https://github.com/aws-samples/bedrock-engineer.
+      Please provide insights into the system architecture, technology stack, and key implementation patterns used in
+      this project.
   - title: Project Documentation Assessment
     content: >-
       Can you evaluate the documentation quality and completeness of https://github.com/facebook/react? I'm particularly
@@ -204,7 +205,6 @@ tools:
 category: all
 additionalInstruction: ''
 environmentContextSettings:
-  todoListInstruction: false
   projectRule: false
   visualExpressionRules: true
 mcpServers:
