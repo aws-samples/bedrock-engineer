@@ -1,10 +1,9 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { McpServerConfig } from '@/types/agent-chat'
 import { parseServerConfigJson, generateSampleJson } from './utils/mcpServerUtils'
 import { preventModalClose } from './utils/eventUtils'
 import toast from 'react-hot-toast'
-import { MonacoJSONEditor } from '@renderer/components/common/MonacoJSONEditor'
 
 interface McpServerFormProps {
   mcpServers: McpServerConfig[]
@@ -35,8 +34,6 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
   testServerConnection
 }) => {
   const { t } = useTranslation()
-  // エディタモード（simple: textarea, rich: Monaco Editor）
-  const [editorMode, setEditorMode] = useState<'simple' | 'rich'>('simple')
 
   // 追加ボタンクリック時に入力されたJSONを解析して追加
   const handleAddServer = async () => {
@@ -149,43 +146,12 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
       </h4>
 
       <div className="mt-2">
-        <div className="flex items-center justify-between">
-          <label
-            htmlFor="jsonInput"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
-            {t('Server Configuration (JSON)')}
-          </label>
-          <div className="ml-2">
-            <button
-              type="button"
-              onClick={() => setEditorMode(editorMode === 'simple' ? 'rich' : 'simple')}
-              className="inline-flex items-center justify-center flex gap-1"
-              title={
-                editorMode === 'simple' ? t('Switch to rich editor') : t('Switch to simple editor')
-              }
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className={`w-5 h-5 ${
-                  editorMode === 'rich'
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 dark:text-gray-400'
-                } hover:text-blue-500`}
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.25 2A2.25 2.25 0 002 4.25v11.5A2.25 2.25 0 004.25 18h11.5A2.25 2.25 0 0018 15.75V4.25A2.25 2.25 0 0015.75 2H4.25zm4.03 6.28a.75.75 0 00-1.06-1.06L4.97 9.47a.75.75 0 000 1.06l2.25 2.25a.75.75 0 001.06-1.06L6.56 10l1.72-1.72zm4.5-1.06a.75.75 0 10-1.06 1.06L13.44 10l-1.72 1.72a.75.75 0 101.06 1.06l2.25-2.25a.75.75 0 000-1.06l-2.25-2.25z"
-                  clipRule="evenodd"
-                />
-              </svg>
-
-              <p className="text-gray-700">{editorMode} editor</p>
-            </button>
-          </div>
-        </div>
+        <label
+          htmlFor="jsonInput"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t('Server Configuration (JSON)')}
+        </label>
 
         <button
           type="button"
@@ -198,17 +164,16 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
         >
           {t('Set example mcp server')}
         </button>
-        {editorMode === 'simple' ? (
-          <textarea
-            id="jsonInput"
-            value={jsonInput}
-            onChange={(e) => {
-              setJsonInput(e.target.value)
-              if (jsonError) setJsonError(null)
-            }}
-            onClick={preventModalClose}
-            className="mt-1 block w-full h-64 px-3 py-2 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
-            placeholder={`{
+        <textarea
+          id="jsonInput"
+          value={jsonInput}
+          onChange={(e) => {
+            setJsonInput(e.target.value)
+            if (jsonError) setJsonError(null)
+          }}
+          onClick={preventModalClose}
+          className="mt-1 block w-full h-64 px-3 py-2 bg-white dark:bg-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+          placeholder={`{
   "mcpServers": {
     "my-mcp-server": {
       "command": "npx",
@@ -224,23 +189,7 @@ export const McpServerForm: React.FC<McpServerFormProps> = ({
     }
   }
 }`}
-          />
-        ) : (
-          <MonacoJSONEditor
-            value={jsonInput}
-            onChange={(value) => {
-              setJsonInput(value)
-              if (jsonError) setJsonError(null)
-            }}
-            onValidate={
-              // リアルタイムバリデーションが必要な場合はここで設定
-              // 今回は送信時にのみエラーチェックするので、何もしない
-              () => {}
-            }
-            height="300px"
-            className="mt-1 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm"
-          />
-        )}
+        />
         {jsonError && <p className="text-xs text-red-500 mt-1 whitespace-pre-line">{jsonError}</p>}
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {t(
