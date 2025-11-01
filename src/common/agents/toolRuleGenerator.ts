@@ -20,21 +20,6 @@ export class SystemPromptBuilder {
   }
 
   /**
-   * Generate TODO list instruction section
-   */
-  private static generateTodoListInstruction(): string {
-    return `
-**<todo list handling rule>**
-
-If you expect the work will take a long time, create the following file to create a work plan and TODO list, and refer to and update it as you work. Be sure to write in detail so that you can start the same work again if the AI agent's session is interrupted.
-
-{{projectPath}}/.bedrock-engineer/{{TASK_NAME}}_TODO.md
-
-**</todo list handling rule>**
-`
-  }
-
-  /**
    * Generate project rule section
    */
   private static generateProjectRule(): string {
@@ -106,7 +91,6 @@ Finally once it seems like you've reached a good plan, ask the user to switch yo
    */
   static async generateEnvironmentContext(
     contextSettings?: {
-      todoListInstruction?: boolean
       projectRule?: boolean
       visualExpressionRules?: boolean
       actPlanModeRules?: boolean
@@ -115,7 +99,6 @@ Finally once it seems like you've reached a good plan, ask the user to switch yo
   ): Promise<string> {
     // Default settings (all enabled)
     const defaultSettings = {
-      todoListInstruction: true,
       projectRule: true,
       visualExpressionRules: true,
       actPlanModeRules: true
@@ -136,10 +119,6 @@ Finally once it seems like you've reached a good plan, ask the user to switch yo
 
     if (settings.visualExpressionRules) {
       context += this.generateVisualExpressionRules()
-    }
-
-    if (settings.todoListInstruction) {
-      context += this.generateTodoListInstruction()
     }
 
     return context

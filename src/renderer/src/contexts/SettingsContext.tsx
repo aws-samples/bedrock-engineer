@@ -264,6 +264,10 @@ export interface SettingsContextType {
   addOrganization: (org: OrganizationConfig) => void
   updateOrganization: (org: OrganizationConfig) => void
   removeOrganization: (orgId: string) => void
+
+  // Agent List View Mode Settings
+  agentListViewMode: 'card' | 'table'
+  setAgentListViewMode: (mode: 'card' | 'table') => void
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
@@ -430,6 +434,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // Organization Settings
   const [organizations, setOrganizations] = useState<OrganizationConfig[]>([])
+
+  // Agent List View Mode Settings
+  const [agentListViewMode, setStateAgentListViewMode] = useState<'card' | 'table'>('card')
 
   // Initialize all settings
   useEffect(() => {
@@ -706,6 +713,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const storedOrganizations = window.store.get('organizations') as OrganizationConfig[]
     if (storedOrganizations) {
       setOrganizations(storedOrganizations)
+    }
+
+    // Load Agent List View Mode Settings
+    const storedViewMode = window.store.get('agentListViewMode') as 'card' | 'table'
+    if (storedViewMode === 'card' || storedViewMode === 'table') {
+      setStateAgentListViewMode(storedViewMode)
     }
   }, [])
 
@@ -1747,6 +1760,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [organizations]
   )
 
+  // Agent List View Mode Settings function
+  const setAgentListViewMode = useCallback((mode: 'card' | 'table') => {
+    setStateAgentListViewMode(mode)
+    ;(window.store as any).set('agentListViewMode', mode)
+  }, [])
+
   const value = {
     // Advanced Settings
     sendMsgKey,
@@ -1916,7 +1935,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     organizations,
     addOrganization,
     updateOrganization,
-    removeOrganization
+    removeOrganization,
+
+    // Agent List View Mode Settings
+    agentListViewMode,
+    setAgentListViewMode
   }
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>

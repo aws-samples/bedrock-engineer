@@ -176,6 +176,9 @@ type StoreScheme = {
 
   /** 組織設定の一覧 */
   organizations?: OrganizationConfig[]
+
+  /** エージェントリストの表示モード（カードまたはテーブル） */
+  agentListViewMode?: 'card' | 'table'
 }
 
 const electronStore = new Store<StoreScheme>()

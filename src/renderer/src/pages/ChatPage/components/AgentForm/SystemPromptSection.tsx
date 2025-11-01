@@ -296,12 +296,10 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
               checked={Boolean(environmentContextSettings?.projectRule)}
               onChange={(checked) => {
                 if (onEnvironmentContextSettingsChange) {
-                  const newSettings = {
-                    todoListInstruction: environmentContextSettings?.todoListInstruction ?? true,
+                  onEnvironmentContextSettingsChange({
                     projectRule: checked,
                     visualExpressionRules: environmentContextSettings?.visualExpressionRules ?? true
-                  }
-                  onEnvironmentContextSettingsChange(newSettings)
+                  })
                 }
               }}
               label=""
@@ -324,33 +322,8 @@ export const SystemPromptSection: React.FC<SystemPromptSectionProps> = ({
               onChange={(checked) => {
                 if (onEnvironmentContextSettingsChange) {
                   onEnvironmentContextSettingsChange({
-                    todoListInstruction: environmentContextSettings?.todoListInstruction ?? true,
                     projectRule: environmentContextSettings?.projectRule ?? true,
                     visualExpressionRules: checked
-                  })
-                }
-              }}
-              label=""
-            />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-sm text-gray-700 dark:text-gray-200">
-                {t('TODO List Instruction')}
-              </span>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {t('Includes instructions to create TODO lists for long-running tasks')}
-              </p>
-            </div>
-            <ToggleSwitch
-              checked={Boolean(environmentContextSettings?.todoListInstruction)}
-              onChange={(checked) => {
-                if (onEnvironmentContextSettingsChange) {
-                  onEnvironmentContextSettingsChange({
-                    todoListInstruction: checked,
-                    projectRule: environmentContextSettings?.projectRule ?? true,
-                    visualExpressionRules: environmentContextSettings?.visualExpressionRules ?? true
                   })
                 }
               }}

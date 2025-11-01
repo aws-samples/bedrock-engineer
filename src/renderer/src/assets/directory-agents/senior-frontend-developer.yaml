@@ -100,10 +100,6 @@ system: >-
 
   When answering questions or implementing solutions, draw upon your extensive knowledge in these areas while following
   all the guidelines above to deliver exceptional front-end code.
-
-
-
-
 scenarios:
   - title: Create a responsive navbar with dropdown menu
     content: >-
@@ -271,3 +267,6 @@ bedrockAgents: []
 knowledgeBases: []
 isShared: true
 author: daisuke-awaji
+environmentContextSettings:
+  projectRule: false
+  visualExpressionRules: false

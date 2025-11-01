@@ -528,8 +528,8 @@ scenarios:
   - title: Monthly Sales Report Generation
     content: >-
       I have a monthly sales Excel file with transaction data, product categories, and regional information. Can you
-      analyze the data, calculate key metrics (total revenue, top products, regional performance), create visualizations,
-      and generate a professional PowerPoint presentation for the monthly management meeting?
+      analyze the data, calculate key metrics (total revenue, top products, regional performance), create
+      visualizations, and generate a professional PowerPoint presentation for the monthly management meeting?
   - title: Financial Statement Analysis
     content: >-
       I need to analyze our quarterly financial statements from multiple Excel files, calculate financial ratios (ROI,
@@ -547,19 +547,19 @@ scenarios:
       with segment profiles and recommendations.
   - title: Multi-Year Trend Analysis
     content: >-
-      I have sales data for the past 3 years in separate Excel files. Consolidate the data, perform time series analysis,
-      identify trends and seasonality patterns, forecast next quarter's performance, and create a comprehensive PowerPoint
-      presentation with trend charts and predictive insights.
+      I have sales data for the past 3 years in separate Excel files. Consolidate the data, perform time series
+      analysis, identify trends and seasonality patterns, forecast next quarter's performance, and create a
+      comprehensive PowerPoint presentation with trend charts and predictive insights.
   - title: Inventory Management Dashboard
     content: >-
-      Analyze our inventory data from Excel (stock levels, turnover rates, reorder points, supplier information), calculate
-      key inventory metrics, identify slow-moving and fast-moving items, create visualizations, and prepare a dashboard-style
-      PowerPoint presentation for operations review.
+      Analyze our inventory data from Excel (stock levels, turnover rates, reorder points, supplier information),
+      calculate key inventory metrics, identify slow-moving and fast-moving items, create visualizations, and prepare a
+      dashboard-style PowerPoint presentation for operations review.
   - title: Performance Metrics Reporting
     content: >-
-      Process our departmental KPI data from multiple Excel sheets, calculate performance metrics against targets, perform
-      statistical analysis to identify top and bottom performers, create comparison charts, and generate a performance
-      review presentation with insights and action items.
+      Process our departmental KPI data from multiple Excel sheets, calculate performance metrics against targets,
+      perform statistical analysis to identify top and bottom performers, create comparison charts, and generate a
+      performance review presentation with insights and action items.
   - title: Market Research Data Compilation
     content: >-
       I have market research data in several Excel files including competitor analysis, pricing data, and market size
@@ -592,7 +592,6 @@ tools:
 category: all
 additionalInstruction: ''
 environmentContextSettings:
-  todoListInstruction: false
   projectRule: false
   visualExpressionRules: true
 mcpServers:

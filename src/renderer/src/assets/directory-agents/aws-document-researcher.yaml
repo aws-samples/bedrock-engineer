@@ -153,3 +153,6 @@ bedrockAgents: []
 flows: []
 isShared: true
 author: daisuke-awaji
+environmentContextSettings:
+  projectRule: false
+  visualExpressionRules: true

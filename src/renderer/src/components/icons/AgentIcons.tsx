@@ -92,9 +92,82 @@ import {
   TbCalendarStats,
   TbDog,
   TbCat,
-  TbClothesRack
+  TbClothesRack,
+  TbLambda,
+  TbBucket,
+  TbContainer,
+  TbDatabaseCog,
+  TbCloudComputing,
+  TbWall,
+  TbKey,
+  TbCertificate,
+  TbFingerprint,
+  TbScan,
+  TbDashboard,
+  TbAlertTriangle,
+  TbReport,
+  TbReportAnalytics,
+  TbFileText,
+  TbBulbFilled,
+  TbWindmill,
+  TbTemperature,
+  TbVolume,
+  TbVacuumCleaner,
+  TbBell,
+  TbLockAccess,
+  TbSeeding,
+  TbApple,
+  TbBed,
+  TbZzz,
+  TbDental,
+  TbEye,
+  TbMassage,
+  TbAtom,
+  TbFlask,
+  TbAtom2,
+  TbDna,
+  TbDeviceLaptop,
+  TbBuildingCommunity,
+  TbLuggage,
+  TbId,
+  TbTicket,
+  TbBeach,
+  TbMountain,
+  TbCup,
+  TbGlass,
+  TbPizza,
+  TbFish,
+  TbIceCream,
+  TbBottle,
+  TbBarcode,
+  TbQrcode,
+  TbPackage,
+  TbTag,
+  TbDiscount,
+  TbCreditCardPay,
+  TbStar,
+  TbHeart,
+  TbMoodSmile,
+  TbMoodSad,
+  TbMoodAngry,
+  TbQuestionMark,
+  TbInfoCircle,
+  TbAlertCircle,
+  TbGitBranch,
+  TbAutomaticGearbox
 } from 'react-icons/tb'
-import { FaCode, FaDocker, FaGithub, FaKeyboard, FaMicrochip, FaTerminal } from 'react-icons/fa'
+import {
+  FaCode,
+  FaDocker,
+  FaGithub,
+  FaKeyboard,
+  FaMicrochip,
+  FaTerminal,
+  FaPython,
+  FaJava,
+  FaReact,
+  FaNodeJs
+} from 'react-icons/fa'
 import {
   MdDesignServices,
   MdArchitecture,
@@ -122,7 +195,27 @@ import {
   BsAlarm,
   BsClipboardPulse
 } from 'react-icons/bs'
-import { SiKubernetes, SiTerraform, SiGrafana, SiPrometheus } from 'react-icons/si'
+import {
+  SiKubernetes,
+  SiTerraform,
+  SiGrafana,
+  SiPrometheus,
+  SiRust,
+  SiGo,
+  SiPhp,
+  SiSwift,
+  SiVuedotjs,
+  SiAngular,
+  SiNpm,
+  SiWebpack,
+  SiMicrosoftazure,
+  SiGooglecloud,
+  SiDigitalocean,
+  SiJenkins,
+  SiGitlab,
+  SiCircleci,
+  SiAnsible
+} from 'react-icons/si'
 import {
   GiCookingPot,
   GiNoodles,
@@ -189,6 +282,15 @@ export const AGENT_ICONS: AgentIconOption[] = [
     label: 'Calendar Stats',
     category: 'general'
   },
+  // Emotions & Common Concepts
+  { value: 'star', icon: <TbStar />, label: 'Star', category: 'general' },
+  { value: 'heart', icon: <TbHeart />, label: 'Heart', category: 'general' },
+  { value: 'smile', icon: <TbMoodSmile />, label: 'Smile', category: 'general' },
+  { value: 'sad', icon: <TbMoodSad />, label: 'Sad', category: 'general' },
+  { value: 'angry', icon: <TbMoodAngry />, label: 'Angry', category: 'general' },
+  { value: 'question', icon: <TbQuestionMark />, label: 'Question', category: 'general' },
+  { value: 'info', icon: <TbInfoCircle />, label: 'Info', category: 'general' },
+  { value: 'warning', icon: <TbAlertCircle />, label: 'Warning', category: 'general' },
 
   // Development
   { value: 'code', icon: <FaCode />, label: 'Code', category: 'development' },
@@ -210,6 +312,20 @@ export const AGENT_ICONS: AgentIconOption[] = [
   { value: 'web', icon: <TbWorld />, label: 'Website', category: 'development' },
   { value: 'settings', icon: <TbSettings />, label: 'Configuration', category: 'development' },
   { value: 'tool', icon: <TbTool />, label: 'Tools', category: 'development' },
+  // Programming Languages
+  { value: 'python', icon: <FaPython />, label: 'Python', category: 'development' },
+  { value: 'java', icon: <FaJava />, label: 'Java', category: 'development' },
+  { value: 'rust', icon: <SiRust />, label: 'Rust', category: 'development' },
+  { value: 'go', icon: <SiGo />, label: 'Go', category: 'development' },
+  { value: 'php', icon: <SiPhp />, label: 'PHP', category: 'development' },
+  { value: 'swift', icon: <SiSwift />, label: 'Swift', category: 'development' },
+  // Frameworks & Tools
+  { value: 'react', icon: <FaReact />, label: 'React', category: 'development' },
+  { value: 'vue', icon: <SiVuedotjs />, label: 'Vue', category: 'development' },
+  { value: 'angular', icon: <SiAngular />, label: 'Angular', category: 'development' },
+  { value: 'nodejs', icon: <FaNodeJs />, label: 'Node.js', category: 'development' },
+  { value: 'npm', icon: <SiNpm />, label: 'npm', category: 'development' },
+  { value: 'webpack', icon: <SiWebpack />, label: 'Webpack', category: 'development' },
 
   // Cloud & Infrastructure
   { value: 'aws', icon: <TbBrandAws />, label: 'AWS', category: 'cloud' },
@@ -218,6 +334,21 @@ export const AGENT_ICONS: AgentIconOption[] = [
   { value: 'network', icon: <TbNetwork />, label: 'Network', category: 'cloud' },
   { value: 'laptop', icon: <BsLaptopFill />, label: 'Infrastructure', category: 'cloud' },
   { value: 'microchip', icon: <FaMicrochip />, label: 'Hardware', category: 'cloud' },
+  // Cloud Providers
+  { value: 'azure', icon: <SiMicrosoftazure />, label: 'Azure', category: 'cloud' },
+  { value: 'google-cloud', icon: <SiGooglecloud />, label: 'Google Cloud', category: 'cloud' },
+  { value: 'digitalocean', icon: <SiDigitalocean />, label: 'DigitalOcean', category: 'cloud' },
+  // Cloud Services
+  { value: 'lambda', icon: <TbLambda />, label: 'Lambda', category: 'cloud' },
+  { value: 'bucket', icon: <TbBucket />, label: 'S3 Bucket', category: 'cloud' },
+  { value: 'container', icon: <TbContainer />, label: 'Container', category: 'cloud' },
+  { value: 'database-cloud', icon: <TbDatabaseCog />, label: 'Database Cloud', category: 'cloud' },
+  {
+    value: 'cloud-computing',
+    icon: <TbCloudComputing />,
+    label: 'Cloud Computing',
+    category: 'cloud'
+  },
 
   // DevOps
   { value: 'docker', icon: <FaDocker />, label: 'Docker', category: 'devops' },
@@ -226,18 +357,35 @@ export const AGENT_ICONS: AgentIconOption[] = [
   { value: 'git', icon: <BsGit />, label: 'Git', category: 'devops' },
   { value: 'github', icon: <FaGithub />, label: 'GitHub', category: 'devops' },
   { value: 'kanban', icon: <BsKanban />, label: 'Kanban', category: 'devops' },
+  // CI/CD & Automation
+  { value: 'jenkins', icon: <SiJenkins />, label: 'Jenkins', category: 'devops' },
+  { value: 'gitlab', icon: <SiGitlab />, label: 'GitLab', category: 'devops' },
+  { value: 'circleci', icon: <SiCircleci />, label: 'CircleCI', category: 'devops' },
+  { value: 'ansible', icon: <SiAnsible />, label: 'Ansible', category: 'devops' },
+  { value: 'pipeline', icon: <TbGitBranch />, label: 'Pipeline', category: 'devops' },
+  { value: 'automation', icon: <TbAutomaticGearbox />, label: 'Automation', category: 'devops' },
 
   // Security
   { value: 'security', icon: <MdSecurity />, label: 'Security', category: 'security' },
   { value: 'lock', icon: <TbLock />, label: 'Authentication', category: 'security' },
   { value: 'shield', icon: <TbShield />, label: 'Protection', category: 'security' },
   { value: 'bank', icon: <TbBuildingBank />, label: 'Compliance', category: 'security' },
+  { value: 'firewall', icon: <TbWall />, label: 'Firewall', category: 'security' },
+  { value: 'key', icon: <TbKey />, label: 'Key', category: 'security' },
+  { value: 'certificate', icon: <TbCertificate />, label: 'Certificate', category: 'security' },
+  { value: 'fingerprint', icon: <TbFingerprint />, label: 'Fingerprint', category: 'security' },
+  { value: 'scan', icon: <TbScan />, label: 'Scan', category: 'security' },
 
   // Monitoring & Analytics
   { value: 'search', icon: <TbSearch />, label: 'Search', category: 'monitoring' },
   { value: 'chart', icon: <TbChartBar />, label: 'Analytics', category: 'monitoring' },
   { value: 'grafana', icon: <SiGrafana />, label: 'Grafana', category: 'monitoring' },
   { value: 'prometheus', icon: <SiPrometheus />, label: 'Prometheus', category: 'monitoring' },
+  { value: 'dashboard', icon: <TbDashboard />, label: 'Dashboard', category: 'monitoring' },
+  { value: 'alert', icon: <TbAlertTriangle />, label: 'Alert', category: 'monitoring' },
+  { value: 'report', icon: <TbReport />, label: 'Report', category: 'monitoring' },
+  { value: 'analytics', icon: <TbReportAnalytics />, label: 'Analytics', category: 'monitoring' },
+  { value: 'logs', icon: <TbFileText />, label: 'Logs', category: 'monitoring' },
 
   // Lifestyle & Home
   { value: 'home', icon: <TbHome />, label: 'Home', category: 'lifestyle' },
@@ -281,6 +429,15 @@ export const AGENT_ICONS: AgentIconOption[] = [
   { value: 'cat', icon: <TbCat />, label: 'Cat', category: 'lifestyle' },
   { value: 'pets', icon: <MdPets />, label: 'Pets', category: 'lifestyle' },
   { value: 'clothes', icon: <TbClothesRack />, label: 'Clothing', category: 'lifestyle' },
+  // Smart Home & Daily Activities
+  { value: 'light-bulb', icon: <TbBulbFilled />, label: 'Light Bulb', category: 'lifestyle' },
+  { value: 'fan', icon: <TbWindmill />, label: 'Fan', category: 'lifestyle' },
+  { value: 'thermostat', icon: <TbTemperature />, label: 'Thermostat', category: 'lifestyle' },
+  { value: 'speaker', icon: <TbVolume />, label: 'Speaker', category: 'lifestyle' },
+  { value: 'vacuum', icon: <TbVacuumCleaner />, label: 'Vacuum', category: 'lifestyle' },
+  { value: 'doorbell', icon: <TbBell />, label: 'Doorbell', category: 'lifestyle' },
+  { value: 'lock-smart', icon: <TbLockAccess />, label: 'Smart Lock', category: 'lifestyle' },
+  { value: 'garden', icon: <TbSeeding />, label: 'Garden', category: 'lifestyle' },
 
   // Health & Medical
   { value: 'heartbeat', icon: <TbHeartbeat />, label: 'Heart Rate', category: 'health' },
@@ -312,6 +469,13 @@ export const AGENT_ICONS: AgentIconOption[] = [
     label: 'Mental Health',
     category: 'health'
   },
+  // Health & Wellness
+  { value: 'nutrition', icon: <TbApple />, label: 'Nutrition', category: 'health' },
+  { value: 'sleep', icon: <TbBed />, label: 'Sleep', category: 'health' },
+  { value: 'meditation', icon: <TbZzz />, label: 'Meditation', category: 'health' },
+  { value: 'dental', icon: <TbDental />, label: 'Dental', category: 'health' },
+  { value: 'eye', icon: <TbEye />, label: 'Eye', category: 'health' },
+  { value: 'therapy', icon: <TbMassage />, label: 'Therapy', category: 'health' },
 
   // Education & Learning
   { value: 'school', icon: <TbSchool />, label: 'School', category: 'education' },
@@ -328,6 +492,23 @@ export const AGENT_ICONS: AgentIconOption[] = [
   { value: 'open-book', icon: <GiOpenBook />, label: 'Study', category: 'education' },
   { value: 'teacher', icon: <GiTeacher />, label: 'Teaching', category: 'education' },
   { value: 'graduate', icon: <GiGraduateCap />, label: 'Graduation', category: 'education' },
+  // STEM Subjects
+  { value: 'science', icon: <TbAtom />, label: 'Science', category: 'education' },
+  { value: 'chemistry', icon: <TbFlask />, label: 'Chemistry', category: 'education' },
+  { value: 'physics', icon: <TbAtom2 />, label: 'Physics', category: 'education' },
+  { value: 'biology', icon: <TbDna />, label: 'Biology', category: 'education' },
+  {
+    value: 'online-learning',
+    icon: <TbDeviceLaptop />,
+    label: 'Online Learning',
+    category: 'education'
+  },
+  {
+    value: 'certificate-education',
+    icon: <TbCertificate />,
+    label: 'Certificate',
+    category: 'education'
+  },
 
   // Travel & Hobbies
   { value: 'plane', icon: <TbPlane />, label: 'Air Travel', category: 'travel' },
@@ -348,6 +529,13 @@ export const AGENT_ICONS: AgentIconOption[] = [
   { value: 'tv-old', icon: <TbDeviceTvOld />, label: 'Entertainment', category: 'travel' },
   { value: 'guitar', icon: <TbGuitarPick />, label: 'Music', category: 'travel' },
   { value: 'tennis', icon: <GiTennisRacket />, label: 'Sports', category: 'travel' },
+  // Travel & Accommodation
+  { value: 'hotel', icon: <TbBuildingCommunity />, label: 'Hotel', category: 'travel' },
+  { value: 'luggage', icon: <TbLuggage />, label: 'Luggage', category: 'travel' },
+  { value: 'passport', icon: <TbId />, label: 'Passport', category: 'travel' },
+  { value: 'ticket', icon: <TbTicket />, label: 'Ticket', category: 'travel' },
+  { value: 'beach', icon: <TbBeach />, label: 'Beach', category: 'travel' },
+  { value: 'mountain-view', icon: <TbMountain />, label: 'Mountain View', category: 'travel' },
 
   // Food & Cooking
   { value: 'cooker', icon: <TbCooker />, label: 'Cooking', category: 'food' },
@@ -366,6 +554,13 @@ export const AGENT_ICONS: AgentIconOption[] = [
   { value: 'egg', icon: <TbEgg />, label: 'Breakfast', category: 'food' },
   { value: 'noodles', icon: <GiNoodles />, label: 'Noodles', category: 'food' },
   { value: 'cupcake', icon: <GiCupcake />, label: 'Dessert', category: 'food' },
+  // Beverages & Cuisine
+  { value: 'tea', icon: <TbCup />, label: 'Tea', category: 'food' },
+  { value: 'juice', icon: <TbGlass />, label: 'Juice', category: 'food' },
+  { value: 'pizza', icon: <TbPizza />, label: 'Pizza', category: 'food' },
+  { value: 'sushi', icon: <TbFish />, label: 'Sushi', category: 'food' },
+  { value: 'ice-cream', icon: <TbIceCream />, label: 'Ice Cream', category: 'food' },
+  { value: 'wine', icon: <TbBottle />, label: 'Wine', category: 'food' },
 
   // Shopping & Finance
   { value: 'credit-card', icon: <TbCreditCard />, label: 'Credit Card', category: 'shopping' },
@@ -397,7 +592,19 @@ export const AGENT_ICONS: AgentIconOption[] = [
   { value: 'gift', icon: <TbGift />, label: 'Gift', category: 'shopping' },
   { value: 'truck', icon: <TbTruckDelivery />, label: 'Delivery', category: 'shopping' },
   { value: 'store', icon: <TbBuildingStore />, label: 'Store', category: 'shopping' },
-  { value: 'shop', icon: <BiStore />, label: 'Shop', category: 'shopping' }
+  { value: 'shop', icon: <BiStore />, label: 'Shop', category: 'shopping' },
+  // E-commerce & Payments
+  { value: 'barcode', icon: <TbBarcode />, label: 'Barcode', category: 'shopping' },
+  { value: 'qr-code', icon: <TbQrcode />, label: 'QR Code', category: 'shopping' },
+  { value: 'package', icon: <TbPackage />, label: 'Package', category: 'shopping' },
+  { value: 'tag', icon: <TbTag />, label: 'Tag', category: 'shopping' },
+  { value: 'discount', icon: <TbDiscount />, label: 'Discount', category: 'shopping' },
+  {
+    value: 'online-payment',
+    icon: <TbCreditCardPay />,
+    label: 'Online Payment',
+    category: 'shopping'
+  }
 ]
 
 export const getIconByValue = (value: AgentIcon, color?: string): React.ReactNode => {

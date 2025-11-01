@@ -8,6 +8,7 @@ import { createCategoryLogger } from '../../common/logger'
 import { store } from '../../preload/store'
 import { StrandsAgentsConverter } from '../services/strandsAgentsConverter'
 import { createS3Client } from '../api/bedrock/client'
+import { validateCustomAgent } from '../../common/validation/agent-validator'
 
 const agentsLogger = createCategoryLogger('agents:ipc')
 
@@ -71,7 +72,13 @@ async function loadSharedAgents(): Promise<{ agents: CustomAgent[]; error: strin
         // ここではmcpToolsを削除することでファイルからの読み込み時にも整合性を保つ
         delete agent.mcpTools
 
-        return agent
+        // Validate agent with warning-only mode
+        const validationResult = validateCustomAgent(agent, {
+          source: 'shared-agents',
+          filePath: file
+        })
+
+        return validationResult.data
       } catch (err) {
         agentsLogger.error(`Error reading agent file`, {
           file,
@@ -261,7 +268,13 @@ export const agentHandlers = {
           // mcpToolsは自動的に生成されるため削除
           delete agent.mcpTools
 
-          return agent
+          // Validate agent with warning-only mode
+          const validationResult = validateCustomAgent(agent, {
+            source: 'organization-agents',
+            filePath: file.Key
+          })
+
+          return validationResult.data
         } catch (err) {
           agentsLogger.error('Error reading organization agent file', {
             key: file.Key,

@@ -227,6 +227,9 @@ export function usePromptGeneration(
   const onSystemPromptGeneratedRef = useRef(onSystemPromptGenerated)
   const onScenariosGeneratedRef = useRef(onScenariosGenerated)
 
+  // 前回抽出したシナリオ数を記憶（ストリーム表示用）
+  const lastExtractedCountRef = useRef(0)
+
   // Update callback function references
   useEffect(() => {
     onSystemPromptGeneratedRef.current = onSystemPromptGenerated
@@ -346,8 +349,11 @@ export function usePromptGeneration(
           try {
             // Attempt to parse text as JSON
             const scenarios = extractCompleteObjects(textContent.text)
-            if (Array.isArray(scenarios)) {
-              onScenariosGeneratedRef.current(scenarios)
+            if (Array.isArray(scenarios) && scenarios.length > 0) {
+              if (scenarios.length > lastExtractedCountRef.current) {
+                onScenariosGeneratedRef.current(scenarios)
+                lastExtractedCountRef.current = scenarios.length
+              }
             }
           } catch (e) {
             console.error('Failed to parse scenarios:', e)
@@ -356,6 +362,13 @@ export function usePromptGeneration(
       }
     }
   }, [scenarioMessages])
+
+  // クリーンアップ: 新しい生成開始時にカウントをリセット
+  useEffect(() => {
+    if (isGeneratingScenarios) {
+      lastExtractedCountRef.current = 0
+    }
+  }, [isGeneratingScenarios])
 
   return {
     generateSystemPrompt,

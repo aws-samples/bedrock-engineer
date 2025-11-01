@@ -1,5 +1,11 @@
 export const agent = {
   en: {
+    name: 'Name',
+    description: 'Description',
+    viewMode: 'View Mode',
+    cardView: 'Card View',
+    tableView: 'Table View',
+    actions: 'Actions',
     additionalInstruction: 'Additional Instruction',
     additionalInstructionInfo:
       'Optional instructions to guide the system prompt generation. These will be included when auto-generating the system prompt.',
@@ -60,6 +66,8 @@ export const agent = {
     scenarioTitlePlaceholder: 'e.g., Python Basic Lesson',
     scenarioContent: 'Scenario content',
     scenarioContentPlaceholder: 'e.g., Explain the basic syntax of Python',
+    addScenario: 'Add Scenario',
+    deleteScenario: 'Delete Scenario',
     addNewAgent: 'Add New Agent',
     preview: 'Preview',
     hidePreview: 'Hide Preview',
@@ -119,6 +127,12 @@ export const agent = {
     generateVoiceChatPromptTooltip: 'Generate system prompt optimized for voice chat'
   },
   ja: {
+    name: '名前',
+    description: '説明',
+    viewMode: '表示モード',
+    cardView: 'カード表示',
+    tableView: 'テーブル表示',
+    actions: 'アクション',
     additionalInstruction: 'システムプロンプト生成のための追加の指示を入力する',
     additionalInstructionInfo:
       'システムプロンプト生成をガイドするための指示を入力してください。システムプロンプト自動生成時に考慮されます。MCPサーバーやツールの設定状態も考慮した最適なプロンプトを提案します。MCPサーバーを利用する際には先に MCP サーバーの登録をした後で再度システムプロンプトの自動生成を実行してください。',
@@ -174,6 +188,8 @@ export const agent = {
     scenarioTitlePlaceholder: '例: Python基礎レッスン',
     scenarioContent: 'シナリオの内容',
     scenarioContentPlaceholder: '例: Pythonの基本文法について説明してください',
+    addScenario: 'シナリオを追加する',
+    deleteScenario: 'シナリオを削除',
     addNewAgent: '新規エージェント追加',
     preview: 'プレビュー',
     hidePreview: 'プレビューを隠す',

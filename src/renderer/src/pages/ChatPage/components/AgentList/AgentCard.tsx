@@ -1,10 +1,9 @@
 import React from 'react'
 import { CustomAgent } from '@/types/agent-chat'
-import { FiMoreVertical } from 'react-icons/fi'
 import { TbRobot } from 'react-icons/tb'
-import { Dropdown } from 'flowbite-react'
 import { useTranslation } from 'react-i18next'
 import { AGENT_ICONS } from '@renderer/components/icons/AgentIcons'
+import { AgentActionsDropdown } from './AgentActionsDropdown'
 
 interface AgentCardProps {
   agent: CustomAgent
@@ -92,54 +91,17 @@ export const AgentCard: React.FC<AgentCardProps> = ({
         <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 break-words">
           {t(agent.description) || t('noDescription')}
         </p>
-        {!agent.isShared && (
-          <div className="absolute right-0 top-0" onClick={(e) => e.stopPropagation()}>
-            <Dropdown
-              label=""
-              dismissOnClick={true}
-              renderTrigger={() => (
-                <button
-                  className="p-1.5 text-gray-600 hover:text-gray-900 dark:text-gray-400
-                    dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <FiMoreVertical className="w-4 h-4" />
-                </button>
-              )}
-            >
-              {isCustomAgent && !agent.isShared && (
-                <Dropdown.Item onClick={() => onEdit?.(agent)} className="w-48">
-                  {t('edit')}
-                </Dropdown.Item>
-              )}
-              <Dropdown.Item onClick={() => onDuplicate?.(agent)} className="w-48">
-                {t('duplicate')}
-              </Dropdown.Item>
-              {onConvertToStrands && (
-                <Dropdown.Item onClick={() => onConvertToStrands(agent.id!)} className="w-48">
-                  {t('convertToStrands')}
-                </Dropdown.Item>
-              )}
-              {!agent.isShared && onSaveAsShared && (
-                <Dropdown.Item onClick={() => onSaveAsShared(agent)} className="w-48">
-                  {t('saveAsShared')}
-                </Dropdown.Item>
-              )}
-              {isCustomAgent && !agent.isShared && onShareToOrganization && (
-                <Dropdown.Item onClick={() => onShareToOrganization(agent)} className="w-48">
-                  {t('shareToOrganization')}
-                </Dropdown.Item>
-              )}
-              {isCustomAgent && !agent.isShared && (
-                <Dropdown.Item
-                  onClick={() => onDelete?.(agent.id!)}
-                  className="text-red-600 dark:text-red-400 w-48"
-                >
-                  {t('delete')}
-                </Dropdown.Item>
-              )}
-            </Dropdown>
-          </div>
-        )}
+        <div className="absolute right-0 top-0">
+          <AgentActionsDropdown
+            agent={agent}
+            onEdit={onEdit}
+            onDuplicate={onDuplicate}
+            onDelete={onDelete}
+            onSaveAsShared={onSaveAsShared}
+            onShareToOrganization={onShareToOrganization}
+            onConvertToStrands={onConvertToStrands}
+          />
+        </div>
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { FiTrash, FiPlus, FiZap } from 'react-icons/fi'
+import { FiX, FiZap, FiPlus } from 'react-icons/fi'
 import { ScenariosSectionProps } from './types'
 
 export const ScenariosSection: React.FC<ScenariosSectionProps> = ({
@@ -13,17 +13,19 @@ export const ScenariosSection: React.FC<ScenariosSectionProps> = ({
   onAutoGenerate
 }) => {
   const { t } = useTranslation()
-  const [newScenario, setNewScenario] = useState({ title: '', content: '' })
 
   const addScenario = () => {
-    if (newScenario.title && newScenario.content) {
-      onChange([...scenarios, newScenario])
-      setNewScenario({ title: '', content: '' })
-    }
+    onChange([...scenarios, { title: '', content: '' }])
   }
 
   const removeScenario = (index: number) => {
     onChange(scenarios.filter((_, i) => i !== index))
+  }
+
+  const updateScenario = (index: number, field: 'title' | 'content', value: string) => {
+    const updated = [...scenarios]
+    updated[index] = { ...updated[index], [field]: value }
+    onChange(updated)
   }
 
   return (
@@ -51,59 +53,65 @@ export const ScenariosSection: React.FC<ScenariosSectionProps> = ({
         </p>
       </div>
 
-      <div className="space-y-2">
-        {scenarios.map((scenario, index) => (
-          <div key={index} className="flex items-center space-x-2">
-            <textarea
-              value={scenario.title}
-              readOnly
-              className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
-                text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            />
-            <textarea
-              value={scenario.content}
-              readOnly
-              className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
-                text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-            />
-            <button
-              type="button"
-              onClick={() => removeScenario(index)}
-              title={t('deleteScenario')}
-              className="p-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-            >
-              <FiTrash />
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {isGenerating ? (
+      {isGenerating && scenarios.length === 0 ? (
         <Loading />
       ) : (
-        <div className="flex space-x-2 justify-between">
-          <textarea
-            value={newScenario.title}
-            onChange={(e) => setNewScenario({ ...newScenario, title: e.target.value })}
-            placeholder={t('scenarioTitlePlaceholder')}
-            className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
-            text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-[4rem]"
-          />
-          <textarea
-            value={newScenario.content}
-            onChange={(e) => setNewScenario({ ...newScenario, content: e.target.value })}
-            placeholder={t('scenarioContentPlaceholder')}
-            className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
-            text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm h-[4rem]"
-          />
-          <button
-            type="button"
-            onClick={addScenario}
-            className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-          >
-            <FiPlus />
-          </button>
-        </div>
+        <>
+          {scenarios.length > 0 && (
+            <div className="space-y-2">
+              {scenarios.map((scenario, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <textarea
+                    value={scenario.title}
+                    onChange={(e) => updateScenario(index, 'title', e.target.value)}
+                    placeholder={t('scenarioTitlePlaceholder')}
+                    className="flex-2 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
+                      text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    disabled={isGenerating}
+                  />
+                  <textarea
+                    value={scenario.content}
+                    onChange={(e) => updateScenario(index, 'content', e.target.value)}
+                    placeholder={t('scenarioContentPlaceholder')}
+                    className="flex-1 rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800
+                      text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    disabled={isGenerating}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeScenario(index)}
+                    title={t('deleteScenario')}
+                    disabled={isGenerating}
+                    className="flex items-center justify-center rounded-md border border-gray-300 dark:border-gray-600
+                      bg-gray-50 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600
+                      text-gray-700 dark:text-gray-200 transition-colors duration-200 px-3 h-[60px]
+                      disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FiX className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {isGenerating && scenarios.length > 0 && (
+            <div className="mt-2 flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="animate-pulse h-2 w-2 bg-blue-500 rounded-full"></div>
+              <span>{t('generating')}</span>
+            </div>
+          )}
+          {!isGenerating && (
+            <button
+              type="button"
+              onClick={addScenario}
+              className="w-full mt-2 py-2 px-4 bg-gray-50 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600
+                text-gray-700 dark:text-gray-200 rounded-md transition-colors duration-200
+                flex items-center justify-center space-x-2 border border-gray-300 dark:border-gray-600"
+            >
+              <FiPlus className="w-4 h-4" />
+              <span>{t('addScenario')}</span>
+            </button>
+          )}
+        </>
       )}
     </div>
   )
