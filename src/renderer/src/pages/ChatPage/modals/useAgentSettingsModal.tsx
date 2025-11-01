@@ -92,7 +92,10 @@ const AgentSettingsModal = React.memo(
         ...agent,
         id: crypto.randomUUID(),
         name: `${agent.name} (${t('copy')})`,
-        isCustom: true // 明示的にtrueに設定して削除・編集可能にする
+        isCustom: true, // 明示的にtrueに設定して削除・編集可能にする
+        // 共有プロパティを削除（複製されたエージェントは通常のカスタムエージェントとして扱う）
+        isShared: undefined,
+        organizationId: undefined
       }
       saveCustomAgents([...customAgents, newAgent])
     }
