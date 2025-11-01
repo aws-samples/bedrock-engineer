@@ -33,7 +33,9 @@ interface ModelManagementActions {
 interface UseModelManagementProps {
   bedrockSettings?: BedrockSettings
   currentLLM?: LLM
+  lightProcessingModel?: LLM | null
   onModelUpdate?: (model: LLM) => void
+  onLightProcessingModelUpdate?: (model: LLM | null) => void
 }
 
 /**
@@ -48,7 +50,9 @@ interface UseModelManagementProps {
 export const useModelManagement = ({
   bedrockSettings,
   currentLLM,
-  onModelUpdate
+  lightProcessingModel,
+  onModelUpdate,
+  onLightProcessingModelUpdate
 }: UseModelManagementProps): ModelManagementState & ModelManagementActions => {
   // State management
   const [availableModels, setAvailableModels] = useState<LLM[]>([])
@@ -243,6 +247,37 @@ export const useModelManagement = ({
   )
 
   /**
+   * Validates the light processing model against available models and switches if necessary
+   *
+   * @param newModels - List of newly fetched available models
+   */
+  const validateAndSwitchLightProcessingModel = useCallback(
+    (newModels: LLM[]): void => {
+      if (!lightProcessingModel || !onLightProcessingModelUpdate) return
+
+      // Check if light processing model is available in the new model list
+      const isLightModelAvailable = newModels.some(
+        (model) => model.modelId === lightProcessingModel.modelId
+      )
+
+      if (!isLightModelAvailable) {
+        // Find the best alternative model
+        const alternativeModel = findBestAlternative(lightProcessingModel, newModels)
+        if (alternativeModel) {
+          console.info(
+            `Light processing model automatically switched from ${lightProcessingModel.modelName} to ${alternativeModel.modelName} due to region change`
+          )
+          onLightProcessingModelUpdate(alternativeModel)
+        } else {
+          console.warn('No suitable alternative found for light processing model, setting to null')
+          onLightProcessingModelUpdate(null)
+        }
+      }
+    },
+    [lightProcessingModel, onLightProcessingModelUpdate, findBestAlternative]
+  )
+
+  /**
    * Fetches and updates the list of available models
    *
    * This function performs the following operations:
@@ -289,6 +324,7 @@ export const useModelManagement = ({
         // Validate current model and switch if necessary (only when not in initial load)
         if (isInitializedRef.current) {
           validateAndSwitchModel(finalModels)
+          validateAndSwitchLightProcessingModel(finalModels)
         }
       } catch (error) {
         const modelError =
@@ -307,7 +343,8 @@ export const useModelManagement = ({
       bedrockSettings,
       handleInferenceProfilesEnabled,
       handleInferenceProfilesDisabled,
-      validateAndSwitchModel
+      validateAndSwitchModel,
+      validateAndSwitchLightProcessingModel
     ]
   )
 

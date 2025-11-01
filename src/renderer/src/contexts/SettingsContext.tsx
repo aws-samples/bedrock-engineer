@@ -353,7 +353,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   } = useModelManagement({
     bedrockSettings,
     currentLLM,
-    onModelUpdate: setCurrentLLM
+    lightProcessingModel,
+    onModelUpdate: setCurrentLLM,
+    onLightProcessingModelUpdate: setLightProcessingModel
   })
 
   // Guardrail Settings
