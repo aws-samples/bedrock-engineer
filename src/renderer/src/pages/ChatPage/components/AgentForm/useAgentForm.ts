@@ -347,8 +347,12 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
         formData.tools
       )
 
+      // 保存前に空のシナリオを除外
+      const filteredScenarios = formData.scenarios.filter(
+        (scenario) => scenario.title.trim() !== '' || scenario.content.trim() !== ''
+      )
+
       if (formData.tools && formData.tools.length === 0) {
-        console.warn('警告: ツールが設定されていません')
         // ここで対処: ツールが設定されていない場合はデフォルトツール設定を適用
         const defaultTools = getDefaultToolsForCategory('all')
         const defaultToolNames = defaultTools
@@ -359,18 +363,18 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
         // formDataを更新
         const updatedFormData = {
           ...formData,
-          tools: defaultToolNames
+          tools: defaultToolNames,
+          scenarios: filteredScenarios
         }
 
-        console.log('デフォルトツールを適用:', updatedFormData.tools)
-
         if (onSave) {
-          console.log('修正したフォームデータで保存')
           onSave(updatedFormData)
         }
       } else if (onSave) {
-        console.log('Calling onSave callback')
-        onSave(formData)
+        onSave({
+          ...formData,
+          scenarios: filteredScenarios
+        })
       } else {
         console.warn('onSave callback is not provided')
       }
