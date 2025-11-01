@@ -118,8 +118,6 @@ Rules:
 - Please specify how these tools should be used.
 - No explanation or \`\`\` needed, just print the system prompt.
 - Please output in the language entered for the Agent Name and Description.
-- Be sure to include the following instructions:
-  - Visual explanation: Mermaid.js format, Markdown format for Image, Katex for Math
 </Rules>
 
 Available Tools:
