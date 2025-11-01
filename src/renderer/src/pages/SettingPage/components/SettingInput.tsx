@@ -24,6 +24,7 @@ export const SettingInput: React.FC<SettingInputProps> = ({
       <div className="relative">
         <input
           {...inputProps}
+          value={inputProps.value ?? ''}
           type={!showPassword ? inputProps.type : 'text'}
           className={`
             bg-white dark:bg-gray-800
