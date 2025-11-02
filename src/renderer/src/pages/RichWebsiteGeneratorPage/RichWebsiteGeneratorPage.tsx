@@ -363,6 +363,8 @@ export default App;
                 onViewChange={setActiveTab}
                 isChatPanelVisible={isChatPanelVisible}
                 onToggleChatPanel={() => setIsChatPanelVisible(!isChatPanelVisible)}
+                files={sandpack.files}
+                loading={loading}
               />
             </div>
 

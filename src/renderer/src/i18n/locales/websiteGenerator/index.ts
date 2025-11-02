@@ -16,7 +16,9 @@ export const websiteGenerator = {
     websiteTemplate: 'Template',
     styleType: 'Style',
     websiteDescription: 'Description',
-    uploadingCode: 'Uploading code to agent chat...'
+    uploadingCode: 'Uploading code to agent chat...',
+    downloadAllFiles: 'Download All Files',
+    downloading: 'Downloading...'
   },
   ja: {
     // Website generator related translations
@@ -35,6 +37,8 @@ export const websiteGenerator = {
     websiteTemplate: 'テンプレート',
     styleType: 'スタイル',
     websiteDescription: '説明',
-    uploadingCode: 'コードをエージェントチャットにアップロード中...'
+    uploadingCode: 'コードをエージェントチャットにアップロード中...',
+    downloadAllFiles: 'すべてのファイルをダウンロード',
+    downloading: 'ダウンロード中...'
   }
 }
