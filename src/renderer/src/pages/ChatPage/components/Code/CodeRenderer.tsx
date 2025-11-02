@@ -52,10 +52,24 @@ export const CodeRenderer: React.FC<CodeRendererProps> = ({ text = '', className
         />
       ),
       img: ({ src, alt, ...props }: ImgProps) => {
-        if (src?.startsWith('/')) {
-          return <LocalImage src={src} alt={alt || ''} {...props} />
+        // Check if it's a remote URL (has a valid protocol)
+        const isRemoteUrl = (() => {
+          if (!src) return false
+          try {
+            const url = new URL(src)
+            return ['http:', 'https:', 'data:', 'blob:'].includes(url.protocol)
+          } catch {
+            // If URL parsing fails, it's likely a local path
+            return false
+          }
+        })()
+
+        if (isRemoteUrl) {
+          return <img src={src} alt={alt} {...props} />
         }
-        return <img src={src} alt={alt} {...props} />
+
+        // Treat everything else as local path
+        return <LocalImage src={src || ''} alt={alt || ''} {...props} />
       },
       code: ({ inline, className, children, ...props }: CodeProps) => {
         const match = /language-(\w+)/.exec(className || '')
