@@ -29,12 +29,7 @@ export function WelcomeScreen({
   const { t } = useTranslation()
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="flex flex-col items-center justify-center h-full px-8 gap-8"
-    >
+    <div className="flex flex-col items-center justify-center h-full gap-8">
       {/* Welcome Message */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -83,6 +78,6 @@ export function WelcomeScreen({
           hidePlanActToggle={true}
         />
       </motion.div>
-    </motion.div>
+    </div>
   )
 }
