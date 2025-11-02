@@ -80,6 +80,7 @@ export function WelcomeScreen({
           isComposing={isComposing}
           setIsComposing={setIsComposing}
           sendMsgKey={sendMsgKey}
+          hidePlanActToggle={true}
         />
       </motion.div>
     </motion.div>

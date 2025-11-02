@@ -4,7 +4,8 @@ import {
   SandpackCodeEditor,
   SandpackLayout,
   SandpackFileExplorer,
-  useActiveCode
+  useActiveCode,
+  useSandpack
 } from '@codesandbox/sandpack-react'
 import { useAgentChat } from '../ChatPage/hooks/useAgentChat'
 import {
@@ -63,6 +64,8 @@ export default function RichWebsiteGeneratorPage() {
 
 function RichWebsiteGeneratorPageContents() {
   const { sandpackOperations, lastUpdate } = useRichWebsiteGenerator()
+  const { sandpack } = useSandpack()
+  const { runSandpack } = sandpack
   const { currentLLM: llm, sendMsgKey } = useSetting()
   const [userInput, setUserInput] = useState('')
   const { code } = useActiveCode()
@@ -73,13 +76,14 @@ function RichWebsiteGeneratorPageContents() {
   // RecommendChanges hook
   const { recommendChanges, recommendLoading } = useRecommendChanges()
 
-  // lastUpdate が変更されたら、デバッグ用にログ出力
-  // これにより、ファイル更新のたびに React の再レンダリングがトリガーされる
+  // lastUpdate が変更されたら、Sandpackを再実行
   useEffect(() => {
     if (lastUpdate > 0) {
       console.log('Sandpack files updated at:', new Date(lastUpdate).toISOString())
+      // ファイル更新時にSandpackを再実行
+      runSandpack()
     }
-  }, [lastUpdate])
+  }, [lastUpdate, runSandpack])
 
   // システムプロンプトの生成
   const systemPrompt = useMemo(() => {
@@ -266,16 +270,16 @@ export default App;
   useEffect(() => {
     // loadingがtrueからfalseに変わった瞬間のみ実行（会話完了時）
     if (prevLoadingRef.current && !loading && messages.length > 0 && hasStartedGeneration) {
-      // Previewタブに切り替え
-      if (activeTab === 'preview') {
-        setPreviewKey((prev) => prev + 1)
-      } else {
-        setActiveTab('preview')
-      }
+      // Sandpackを再実行
+      runSandpack()
+      // 常にPreviewタブに切り替え
+      setActiveTab('preview')
+      // Previewを強制的に再マウント
+      setPreviewKey((prev) => prev + 1)
     }
     // 現在のloading状態を保存
     prevLoadingRef.current = loading
-  }, [loading, messages.length, hasStartedGeneration, activeTab])
+  }, [loading, messages.length, hasStartedGeneration, runSandpack])
 
   return (
     <AnimatePresence mode="wait">
