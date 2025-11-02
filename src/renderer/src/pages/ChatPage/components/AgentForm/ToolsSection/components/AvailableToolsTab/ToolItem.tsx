@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ToggleSwitch } from 'flowbite-react'
 import { FiServer } from 'react-icons/fi'
 import { getOriginalMcpToolName, ToolName } from '@/types/tools'
-import { toolIcons } from '../../../../Tool/ToolIcons'
+import { toolIcons } from '@renderer/components/icons/ToolIcons'
 import { ToolItemProps } from '../../types'
 import { preventEventPropagation } from '../../utils/eventUtils'
 
