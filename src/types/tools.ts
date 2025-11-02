@@ -1,5 +1,13 @@
 import { AspectRatio, ImageGeneratorModel } from '../main/api/bedrock'
 
+// Sandpack ツール名の定義
+export type SandpackToolName =
+  | 'sandpackCreateFile'
+  | 'sandpackUpdateFile'
+  | 'sandpackDeleteFile'
+  | 'sandpackListFiles'
+  | 'sandpackReadFile'
+
 // 組み込みツール名の明確な定義
 export type BuiltInToolName =
   | 'createFolder'
@@ -28,6 +36,7 @@ export type BuiltInToolName =
   | 'todo'
   | 'todoInit'
   | 'todoUpdate'
+  | SandpackToolName
 
 // MCPツール名の型安全な定義（元のツール名をそのまま使用）
 export type McpToolName = string
@@ -62,7 +71,12 @@ const BUILT_IN_TOOLS: readonly BuiltInToolName[] = [
   'cameraCapture',
   'todo',
   'todoInit',
-  'todoUpdate'
+  'todoUpdate',
+  'sandpackCreateFile',
+  'sandpackUpdateFile',
+  'sandpackDeleteFile',
+  'sandpackListFiles',
+  'sandpackReadFile'
 ] as const
 
 // 組み込みツール名であるかを判定する型ガード
@@ -397,6 +411,33 @@ export type TodoUpdateInput = {
   updates: TodoItemUpdate[]
 }
 
+// Sandpack ツールの入力型定義
+export type SandpackCreateFileInput = {
+  type: 'sandpackCreateFile'
+  path: string
+  content: string
+}
+
+export type SandpackUpdateFileInput = {
+  type: 'sandpackUpdateFile'
+  path: string
+  content: string
+}
+
+export type SandpackDeleteFileInput = {
+  type: 'sandpackDeleteFile'
+  path: string
+}
+
+export type SandpackListFilesInput = {
+  type: 'sandpackListFiles'
+}
+
+export type SandpackReadFileInput = {
+  type: 'sandpackReadFile'
+  path: string
+}
+
 // MCPツールの入力型
 export type McpToolInput = {
   type: string // MCPツール名
@@ -433,6 +474,11 @@ export type ToolInput =
   | TodoInput
   | TodoInitInput
   | TodoUpdateInput
+  | SandpackCreateFileInput
+  | SandpackUpdateFileInput
+  | SandpackDeleteFileInput
+  | SandpackListFilesInput
+  | SandpackReadFileInput
   | McpToolInput // MCPツール入力を追加
 
 // ツール名から入力型を取得するユーティリティ型
@@ -462,5 +508,10 @@ export type ToolInputTypeMap = {
   todo: TodoInput
   todoInit: TodoInitInput
   todoUpdate: TodoUpdateInput
+  sandpackCreateFile: SandpackCreateFileInput
+  sandpackUpdateFile: SandpackUpdateFileInput
+  sandpackDeleteFile: SandpackDeleteFileInput
+  sandpackListFiles: SandpackListFilesInput
+  sandpackReadFile: SandpackReadFileInput
   [key: string]: any // MCPツールに対応するためのインデックスシグネチャ
 }

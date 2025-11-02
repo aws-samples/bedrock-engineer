@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage/HomePage'
 import SettingPage from './pages/SettingPage/SettingPage'
 import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
 import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorPage'
+import RichWebsiteGeneratorPage from './pages/RichWebsiteGeneratorPage/RichWebsiteGeneratorPage'
 import ChatPage from './pages/ChatPage/ChatPage'
 import DiagramGeneratorPage from './pages/DiagramGeneratorPage/DiagramGeneratorPage'
 import { AgentDirectoryPage } from './pages/AgentDirectoryPage/AgentDirectoryPage'
@@ -57,6 +58,13 @@ export const routes = [
     icon: FiFeather,
     position: 'top',
     element: <WebsiteGeneratorPage />
+  },
+  {
+    name: 'Rich Website Generator',
+    href: '/rich-generative-ui',
+    icon: FiFeather,
+    position: 'top',
+    element: <RichWebsiteGeneratorPage />
   },
   {
     name: 'Step Functions Generator',

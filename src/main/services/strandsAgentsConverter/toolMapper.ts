@@ -156,6 +156,38 @@ export const TOOL_MAPPING: Record<BuiltInToolName, StrandsTool> = {
     importPath: '',
     supported: false,
     reason: 'TODO tools are excluded from conversion. Can be replaced with Workflow tools'
+  },
+
+  // Sandpack tools (Renderer process only - not supported in Strands)
+  sandpackCreateFile: {
+    strandsName: '',
+    importPath: '',
+    supported: false,
+    reason: 'Sandpack tools are UI-specific and not available in Strands Agents'
+  },
+  sandpackUpdateFile: {
+    strandsName: '',
+    importPath: '',
+    supported: false,
+    reason: 'Sandpack tools are UI-specific and not available in Strands Agents'
+  },
+  sandpackDeleteFile: {
+    strandsName: '',
+    importPath: '',
+    supported: false,
+    reason: 'Sandpack tools are UI-specific and not available in Strands Agents'
+  },
+  sandpackListFiles: {
+    strandsName: '',
+    importPath: '',
+    supported: false,
+    reason: 'Sandpack tools are UI-specific and not available in Strands Agents'
+  },
+  sandpackReadFile: {
+    strandsName: '',
+    importPath: '',
+    supported: false,
+    reason: 'Sandpack tools are UI-specific and not available in Strands Agents'
   }
 }
 

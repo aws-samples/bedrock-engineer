@@ -20,7 +20,7 @@ import { getThinkingSupportedModelIds } from '@common/models/models'
 
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ChatMessage } from '@/types/chat/history'
-import { ToolName, isMcpTool } from '@/types/tools'
+import { ToolName, ToolInput, ToolResult, isMcpTool } from '@/types/tools'
 import { notificationService } from '@renderer/services/NotificationService'
 import { limitContextLength } from '@renderer/lib/contextLength'
 import { IdentifiableMessage } from '@/types/chat/message'
@@ -88,9 +88,10 @@ export const useAgentChat = (
   options?: {
     enableHistory?: boolean
     tools?: ToolState[] // 明示的なツールリストを受け取るオプション
+    customToolExecutor?: (toolInput: ToolInput) => Promise<string | ToolResult> // カスタムツール実行関数
   }
 ) => {
-  const { enableHistory = true, tools: explicitTools } = options || {} // デフォルトで履歴保存は有効
+  const { enableHistory = true, tools: explicitTools, customToolExecutor } = options || {} // デフォルトで履歴保存は有効
 
   const [messages, setMessages] = useState<IdentifiableMessage[]>([])
   const [loading, setLoading] = useState(false)
@@ -764,9 +765,17 @@ export const useAgentChat = (
       setExecutingTools((prev) => new Set([...prev, toolInput.type]))
 
       try {
-        const toolResult = await window.api.bedrock.executeTool(toolInput, {
-          sessionId: currentSessionId
-        })
+        let toolResult
+
+        // カスタムツールエグゼキューターが提供されており、かつ Sandpack ツールの場合
+        if (customToolExecutor && toolInput.type.startsWith('sandpack')) {
+          toolResult = await customToolExecutor(toolInput)
+        } else {
+          // 既存の処理: 通常のツール実行
+          toolResult = await window.api.bedrock.executeTool(toolInput, {
+            sessionId: currentSessionId
+          })
+        }
 
         // 実行中ツールセットから削除
         setExecutingTools((prev) => {
