@@ -48,8 +48,9 @@ scenarios:
   - title: 説明用のビジュアル
     content: 小学生向けの太陽系の惑星についての教育用イラストを作成していただけますか？
 tags:
-  - nova
-  - image
+  - bedrock
+  - image-generation
+  - mcp
 isCustom: true
 icon: palette
 iconColor: '#f91528'

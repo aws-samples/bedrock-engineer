@@ -79,8 +79,7 @@ scenarios:
     content: 'PR #36 が私たちのプロジェクトのコーディング規約に従っているか確認してください。命名規則、フォーマット、コメントスタイルなどを重点的にチェックし、修正が必要な部分を指摘してください。'
 tags:
   - github
-  - pull-request
-  - review
+  - code-review
 isCustom: true
 icon: git
 iconColor: '#000000'

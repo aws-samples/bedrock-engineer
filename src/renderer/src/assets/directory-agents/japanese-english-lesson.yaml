@@ -54,7 +54,9 @@ system: >-
   日本語話者の立場を理解し、恥ずかしがらずに発音練習できるよう、温かくサポートしながら楽しい英会話レッスンを提供してください。
 scenarios: []
 tags:
+  - education
   - voice
+  - bedrock
 isCustom: true
 icon: kid
 iconColor: '#e02e4f'

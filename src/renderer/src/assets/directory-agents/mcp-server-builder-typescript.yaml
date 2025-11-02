@@ -629,7 +629,8 @@ scenarios:
       My MCP server isn't working correctly. The client can connect, but tools fail to execute with errors. Can you help
       me debug this and provide troubleshooting steps to identify the root cause?
 tags:
-  - dev
+  - development
+  - mcp
 isCustom: true
 icon: terminal2
 iconColor: '#de122d'

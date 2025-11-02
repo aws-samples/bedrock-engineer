@@ -211,8 +211,8 @@ system: |-
   extensible, maintainable, and consistent user experience.
 scenarios: []
 tags:
-  - developer
-  - bedrock-engineer
+  - development
+  - bedrock
 isCustom: true
 icon: code
 iconColor: '#f50559'

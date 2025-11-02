@@ -532,7 +532,8 @@ scenarios:
       I need to check if my website looks and functions the same across different browsers. Can you help me test it on
       Chrome, Firefox, and Safari?
 tags:
-  - browser-use
+  - automation
+  - web
 isCustom: true
 icon: world
 iconColor: '#e444e4'

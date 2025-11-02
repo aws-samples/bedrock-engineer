@@ -251,7 +251,9 @@ scenarios:
       We've noticed some unusual network traffic patterns in our VPC. Can you analyze the CloudWatch metrics and logs to
       help identify potential security issues or anomalous behavior?
 tags:
-  - cloudwatch
+  - aws
+  - monitoring
+  - mcp
 isCustom: true
 icon: search
 iconColor: '#df3a42'

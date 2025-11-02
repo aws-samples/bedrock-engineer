@@ -148,7 +148,9 @@ scenarios:
     content: >-
       Can you create a 2D simulation of fluid flow around an obstacle using the Navier-Stokes equations? I'd like to
       visualize the velocity field, pressure distribution, and vorticity for different Reynolds numbers.
-tags: []
+tags:
+  - education
+  - science
 isCustom: true
 icon: school
 iconColor: '#6c41e1'

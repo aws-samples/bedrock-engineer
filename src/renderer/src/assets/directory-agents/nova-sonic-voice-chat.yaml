@@ -24,6 +24,7 @@ scenarios:
   - title: Comfort and Support
     content: I'm having one of those days where everything feels overwhelming. Just need someone to talk to.
 tags:
+  - bedrock
   - voice
 isCustom: true
 icon: parent

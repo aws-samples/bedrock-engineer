@@ -213,6 +213,7 @@ scenarios:
       I'm considering opening a coffee shop and have three potential locations in mind. Can you help me analyze the
       geographic advantages of each location at these addresses?
 tags:
+  - navigation
   - location
 isCustom: true
 icon: car

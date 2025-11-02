@@ -355,7 +355,9 @@ scenarios:
       for professional, trustworthy financial industry design. Always cite data sources, prioritize chart visibility.
       Present complex data in infographic format for clarity.
 tags:
-  - pptx
+  - office
+  - presentation
+  - mcp
 isCustom: true
 icon: tv
 iconColor: '#ff2ec7'

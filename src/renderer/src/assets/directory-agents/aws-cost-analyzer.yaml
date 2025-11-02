@@ -232,8 +232,9 @@ scenarios:
       and recommend the optimal S3 storage class configuration to minimize costs?
 tags:
   - aws
-  - cost
+  - cost-optimization
   - analysis
+  - mcp
 isCustom: true
 icon: coin
 iconColor: '#c7a70a'

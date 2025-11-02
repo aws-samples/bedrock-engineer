@@ -277,7 +277,8 @@ scenarios:
       I need to set up a complete CI/CD pipeline for my application with automated testing, code quality checks,
       containerization, and deployment to cloud infrastructure. Can you help me create the entire DevOps workflow?
 tags:
-  - dev
+  - development
+  - cdk
 isCustom: true
 icon: code
 iconColor: '#e48c44'

@@ -461,7 +461,8 @@ scenarios:
       feedback. Can you analyze the survey results, identify key insights, and create visualizations to present to
       management?
 tags:
-  - analytics
+  - analysis
+  - data-science
 isCustom: true
 icon: school
 iconColor: '#6c41e1'
