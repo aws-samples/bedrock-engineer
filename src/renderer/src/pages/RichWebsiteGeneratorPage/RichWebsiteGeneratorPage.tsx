@@ -18,6 +18,8 @@ import useSetting from '@renderer/hooks/useSetting'
 import { TextArea, AttachedImage } from '../ChatPage/components/InputForm/TextArea'
 import { templates } from '../WebsiteGeneratorPage/templates'
 import { Preview } from '../WebsiteGeneratorPage/components/Preview'
+import { MessageList } from '../ChatPage/components/MessageList'
+import { FiCode, FiEye } from 'react-icons/fi'
 
 // Layout constants
 const LAYOUT_CONSTANTS = {
@@ -203,7 +205,7 @@ export default App;
   }, [])
 
   // useAgentChat の呼び出し
-  const { loading, executingTools, handleSubmit } = useAgentChat(
+  const { messages, loading, reasoning, executingTools, handleSubmit } = useAgentChat(
     llm?.modelId,
     systemPrompt,
     'richWebsiteGeneratorAgent',
@@ -221,60 +223,33 @@ export default App;
   }
 
   const [isComposing, setIsComposing] = useState(false)
+  const [activeTab, setActiveTab] = useState<'code' | 'preview'>('preview')
 
   return (
-    <div className="flex flex-col p-3 h-[calc(100vh-11rem)] overflow-y-auto">
-      {/* Header */}
-      <div className="flex pb-2 justify-between">
-        <span className="font-bold flex flex-col gap-2 w-full">
-          <div className="flex justify-between">
-            <h1 className="content-center dark:text-white text-lg">Rich Website Generator</h1>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {loading && 'Generating...'}
-              {executingTools.size > 0 && ` (${Array.from(executingTools).join(', ')})`}
-            </div>
+    <div className="flex h-[calc(100vh)] gap-3 p-3 overflow-hidden">
+      {/* Left Side - Chat Area */}
+      <div className="flex flex-col flex-1 min-w-0">
+        {/* Header */}
+        <div className="flex pb-2 justify-between items-center">
+          <h1 className="font-bold dark:text-white text-lg">Rich Website Generator</h1>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            {loading && 'Generating...'}
+            {executingTools.size > 0 && ` (${Array.from(executingTools).join(', ')})`}
           </div>
-        </span>
-      </div>
+        </div>
 
-      {/* Sandpack Layout */}
-      <SandpackLayout
-        style={{
-          display: 'flex',
-          gap: '1rem',
-          backgroundColor: isDark
-            ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
-            : 'rgb(243 244 246 / var(--tw-bg-opacity))',
-          border: 'none',
-          height: LAYOUT_CONSTANTS.LAYOUT_HEIGHT_PERCENTAGE,
-          zIndex: '0'
-        }}
-      >
-        <SandpackFileExplorer
-          style={{
-            height: '100%',
-            minWidth: LAYOUT_CONSTANTS.FILE_EXPLORER_WIDTH,
-            maxWidth: LAYOUT_CONSTANTS.FILE_EXPLORER_WIDTH
-          }}
-        />
+        {/* Message List Area - Scrollable */}
+        <div className="flex-1 overflow-y-auto mb-3 min-h-0">
+          <MessageList
+            messages={messages}
+            loading={loading}
+            reasoning={reasoning}
+            deleteMessage={undefined}
+          />
+        </div>
 
-        <SandpackCodeEditor
-          style={{
-            height: '100%',
-            flex: 1
-          }}
-          showInlineErrors={true}
-          showTabs={true}
-          showLineNumbers
-          showRunButton={true}
-        />
-
-        <Preview isDark={isDark} code={code} />
-      </SandpackLayout>
-
-      {/* Bottom Input Field Block */}
-      <div className="flex gap-2 fixed left-[5rem] right-5 bottom-3 z-10">
-        <div className="relative w-full">
+        {/* Input Area - Fixed at bottom */}
+        <div className="flex-shrink-0">
           <TextArea
             value={userInput}
             onChange={setUserInput}
@@ -284,6 +259,72 @@ export default App;
             setIsComposing={setIsComposing}
             sendMsgKey={sendMsgKey}
           />
+        </div>
+      </div>
+
+      {/* Right Side - Code/Preview Area */}
+      <div className="flex flex-col flex-1 min-w-0 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
+        {/* Tab Header */}
+        <div className="flex items-center gap-1 p-2 border-b dark:border-gray-700">
+          <button
+            onClick={() => setActiveTab('preview')}
+            className={`p-2 rounded-md transition-colors ${
+              activeTab === 'preview'
+                ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+            }`}
+            title="Preview"
+          >
+            <FiEye size={20} />
+          </button>
+          <button
+            onClick={() => setActiveTab('code')}
+            className={`p-2 rounded-md transition-colors ${
+              activeTab === 'code'
+                ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+            }`}
+            title="Code"
+          >
+            <FiCode size={20} />
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        <div className="flex-1 overflow-hidden">
+          {activeTab === 'code' ? (
+            <SandpackLayout
+              style={{
+                height: '100%',
+                backgroundColor: isDark
+                  ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
+                  : 'rgb(243 244 246 / var(--tw-bg-opacity))',
+                border: 'none'
+              }}
+            >
+              <SandpackFileExplorer
+                style={{
+                  height: '100%',
+                  minWidth: LAYOUT_CONSTANTS.FILE_EXPLORER_WIDTH,
+                  maxWidth: LAYOUT_CONSTANTS.FILE_EXPLORER_WIDTH
+                }}
+              />
+              <SandpackCodeEditor
+                style={{
+                  height: '100%',
+                  flex: 1
+                }}
+                showInlineErrors={true}
+                showTabs={true}
+                showLineNumbers
+                showRunButton={true}
+              />
+            </SandpackLayout>
+          ) : (
+            <div className="h-full">
+              <Preview isDark={isDark} code={code} />
+            </div>
+          )}
         </div>
       </div>
     </div>
