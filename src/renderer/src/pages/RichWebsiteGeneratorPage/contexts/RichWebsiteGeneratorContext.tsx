@@ -1,4 +1,5 @@
-import { createContext, useContext, ReactNode } from 'react'
+import { createContext, useContext, ReactNode, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useSandpack } from '@codesandbox/sandpack-react'
 import { ToolResult } from '@/types/tools'
 
@@ -12,18 +13,32 @@ interface SandpackOperations {
 
 interface RichWebsiteGeneratorContextType {
   sandpackOperations: SandpackOperations
+  lastUpdate: number
 }
 
 const RichWebsiteGeneratorContext = createContext<RichWebsiteGeneratorContextType | null>(null)
 
 export function RichWebsiteGeneratorProvider({ children }: { children: ReactNode }) {
   const { sandpack } = useSandpack()
+  const [lastUpdate, setLastUpdate] = useState<number>(0)
 
   const sandpackOperations: SandpackOperations = {
     createFile: async (path: string, content: string) => {
       try {
+        console.log('[sandpackCreateFile] Creating file:', path)
+
         // Sandpack の updateFile を使用（新規作成も可能）
         sandpack.updateFile(path, content)
+
+        // 作成したファイルをアクティブにして UI を更新
+        sandpack.setActiveFile(path)
+
+        // flushSync で同期的に状態を更新し、即座に DOM に反映
+        flushSync(() => {
+          setLastUpdate(Date.now())
+        })
+
+        console.log('[sandpackCreateFile] File created successfully:', path)
 
         return {
           name: 'sandpackCreateFile',
@@ -48,7 +63,19 @@ export function RichWebsiteGeneratorProvider({ children }: { children: ReactNode
 
     updateFile: async (path: string, content: string) => {
       try {
+        console.log('[sandpackUpdateFile] Updating file:', path)
+
         sandpack.updateFile(path, content)
+
+        // 更新したファイルをアクティブにして UI を更新
+        sandpack.setActiveFile(path)
+
+        // flushSync で同期的に状態を更新し、即座に DOM に反映
+        flushSync(() => {
+          setLastUpdate(Date.now())
+        })
+
+        console.log('[sandpackUpdateFile] File updated successfully:', path)
 
         return {
           name: 'sandpackUpdateFile',
@@ -155,7 +182,7 @@ export function RichWebsiteGeneratorProvider({ children }: { children: ReactNode
   }
 
   return (
-    <RichWebsiteGeneratorContext.Provider value={{ sandpackOperations }}>
+    <RichWebsiteGeneratorContext.Provider value={{ sandpackOperations, lastUpdate }}>
       {children}
     </RichWebsiteGeneratorContext.Provider>
   )

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import {
   SandpackProvider,
   SandpackCodeEditor,
@@ -58,11 +58,19 @@ export default function RichWebsiteGeneratorPage() {
 }
 
 function RichWebsiteGeneratorPageContents() {
-  const { sandpackOperations } = useRichWebsiteGenerator()
+  const { sandpackOperations, lastUpdate } = useRichWebsiteGenerator()
   const { currentLLM: llm, sendMsgKey } = useSetting()
   const [userInput, setUserInput] = useState('')
   const { code } = useActiveCode()
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+
+  // lastUpdate が変更されたら、デバッグ用にログ出力
+  // これにより、ファイル更新のたびに React の再レンダリングがトリガーされる
+  useEffect(() => {
+    if (lastUpdate > 0) {
+      console.log('Sandpack files updated at:', new Date(lastUpdate).toISOString())
+    }
+  }, [lastUpdate])
 
   // システムプロンプトの生成
   const systemPrompt = useMemo(() => {
@@ -108,12 +116,66 @@ CRITICAL: react-icons Library Usage Rules
 - WRONG examples (these will cause errors):
   - ❌ import { ShoppingCart, Menu } from 'react-icons/fa'
 
-Remember: You're working with Sandpack's virtual file system, not the local file system.`
+Remember: You're working with Sandpack's virtual file system, not the local file system.
+
+
+Good Pattern:
+import React, { useState } from 'react';
+import Header from './src/components/Header';
+import Sidebar from './src/components/Sidebar';
+import ProductGrid from './src/components/ProductGrid';
+import Cart from './src/components/Cart';
+import { CartProvider } from './src/context/CartContext';
+import './styles.css';
+
+function App() {
+  const [showCart, setShowCart] = useState(false);
+
+  return (
+    <CartProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Header onCartClick={() => setShowCart(!showCart)} />
+
+        <div className="flex max-w-screen-2xl mx-auto">
+          <Sidebar />
+
+          <main className="flex-1 p-4">
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                鉢植え植物コレクション
+              </h1>
+              <p className="text-gray-600">
+                あなたの空間を彩る、厳選された鉢植え植物
+              </p>
+            </div>
+
+            <ProductGrid />
+          </main>
+        </div>
+
+        {showCart && (
+          <Cart onClose={() => setShowCart(false)} />
+        )}
+      </div>
+    </CartProvider>
+  );
+}
+
+export default App;
+
+`
   }, [])
 
   // カスタムツールエグゼキューターの定義
   const customToolExecutor = useCallback(
     async (toolInput: ToolInput) => {
+      console.log(
+        '[customToolExecutor] Executing tool:',
+        toolInput.type,
+        'for path:',
+        (toolInput as any).path
+      )
+
       switch (toolInput.type) {
         case 'sandpackCreateFile':
           return await sandpackOperations.createFile(toolInput.path, toolInput.content)
