@@ -5,7 +5,7 @@ import { ToolResult } from '@/types/tools'
 
 interface SandpackOperations {
   createFile: (path: string, content: string) => Promise<ToolResult>
-  updateFile: (path: string, content: string) => Promise<ToolResult>
+  updateFile: (path: string, originalText: string, updatedText: string) => Promise<ToolResult>
   deleteFile: (path: string) => Promise<ToolResult>
   listFiles: () => Promise<ToolResult>
   readFile: (path: string) => Promise<ToolResult>
@@ -61,11 +61,35 @@ export function RichWebsiteGeneratorProvider({ children }: { children: ReactNode
       }
     },
 
-    updateFile: async (path: string, content: string) => {
+    updateFile: async (path: string, originalText: string, updatedText: string) => {
       try {
         console.log('[sandpackUpdateFile] Updating file:', path)
 
-        sandpack.updateFile(path, content)
+        // 1. 現在のファイル内容を取得
+        const file = sandpack.files[path]
+        if (!file) {
+          throw new Error(`File not found: ${path}`)
+        }
+
+        const fileContent = file.code
+
+        // 2. originalTextが存在するか確認
+        if (!fileContent.includes(originalText)) {
+          return {
+            name: 'sandpackUpdateFile',
+            success: false,
+            result: {
+              success: false,
+              error: `Original text not found in file: ${path}. Please ensure the text matches exactly, including whitespace and line breaks.`
+            }
+          }
+        }
+
+        // 3. テキストを置換（最初のマッチのみ）
+        const newContent = fileContent.replace(originalText, updatedText)
+
+        // 4. Sandpackファイルを更新
+        sandpack.updateFile(path, newContent)
 
         // 更新したファイルをアクティブにして UI を更新
         sandpack.setActiveFile(path)
@@ -83,6 +107,8 @@ export function RichWebsiteGeneratorProvider({ children }: { children: ReactNode
           result: {
             success: true,
             path,
+            originalTextLength: originalText.length,
+            updatedTextLength: updatedText.length,
             message: `Successfully updated file: ${path}`
           }
         }

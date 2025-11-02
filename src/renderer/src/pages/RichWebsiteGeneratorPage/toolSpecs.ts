@@ -29,21 +29,27 @@ export const SANDPACK_TOOL_SPECS: Tool[] = [
     toolSpec: {
       name: 'sandpackUpdateFile',
       description:
-        'Update an existing file in the Sandpack project. Use this to modify file contents.',
+        'Update an existing file in the Sandpack project by replacing specific text. This tool replaces the specified original text with updated text at the exact location. Use this when you need to make precise modifications to existing file content. The tool ensures that only the specified text is replaced, keeping the rest of the file intact. Important: originalText must match the text in the file exactly, including whitespace and line breaks.',
       inputSchema: {
         json: {
           type: 'object',
           properties: {
             path: {
               type: 'string',
-              description: 'File path to update'
+              description: 'File path to update (e.g., /src/App.tsx)'
             },
-            content: {
+            originalText: {
               type: 'string',
-              description: 'New complete file content'
+              description:
+                'The exact original text to be replaced. Must match exactly including whitespace and line breaks. If not found, the operation will fail.'
+            },
+            updatedText: {
+              type: 'string',
+              description:
+                'The new text that will replace the original text. Can be of different length. Whitespace and line breaks will be preserved exactly as provided.'
             }
           },
-          required: ['path', 'content']
+          required: ['path', 'originalText', 'updatedText']
         }
       }
     }

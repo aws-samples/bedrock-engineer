@@ -178,7 +178,11 @@ export default App;
         case 'sandpackCreateFile':
           return await sandpackOperations.createFile(toolInput.path, toolInput.content)
         case 'sandpackUpdateFile':
-          return await sandpackOperations.updateFile(toolInput.path, toolInput.content)
+          return await sandpackOperations.updateFile(
+            toolInput.path,
+            toolInput.originalText,
+            toolInput.updatedText
+          )
         case 'sandpackDeleteFile':
           return await sandpackOperations.deleteFile(toolInput.path)
         case 'sandpackListFiles':
@@ -220,6 +224,7 @@ export default App;
 
   const [isComposing, setIsComposing] = useState(false)
   const [activeTab, setActiveTab] = useState<'code' | 'preview'>('preview')
+  const [isChatPanelVisible, setIsChatPanelVisible] = useState(true)
 
   // Preview に切り替えた際に Sandpack を自動的に再実行
   useEffect(() => {
@@ -232,45 +237,58 @@ export default App;
   return (
     <div className="flex h-[calc(100vh)] gap-3 p-3 overflow-hidden">
       {/* Left Side - Chat Area */}
-      <div className="flex flex-col flex-1 min-w-0">
-        {/* Header */}
-        <div className="flex pb-2 justify-between items-center">
-          <h1 className="font-bold dark:text-white text-lg">Rich Website Generator</h1>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {loading && 'Generating...'}
-            {executingTools.size > 0 && ` (${Array.from(executingTools).join(', ')})`}
-          </div>
-        </div>
+      <div
+        className={`flex flex-col min-w-0 transition-all duration-300 ease-in-out overflow-hidden ${
+          isChatPanelVisible ? 'w-1/2 opacity-100' : 'w-0 opacity-0'
+        }`}
+      >
+        {isChatPanelVisible && (
+          <>
+            {/* Header */}
+            <div className="flex pb-2 justify-between items-center">
+              <h1 className="font-bold dark:text-white text-lg">Rich Website Generator</h1>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {loading && 'Generating...'}
+                {executingTools.size > 0 && ` (${Array.from(executingTools).join(', ')})`}
+              </div>
+            </div>
 
-        {/* Message List Area - Scrollable */}
-        <div className="flex-1 overflow-y-auto mb-3 min-h-0">
-          <MessageList
-            messages={messages}
-            loading={loading}
-            reasoning={reasoning}
-            deleteMessage={undefined}
-          />
-        </div>
+            {/* Message List Area - Scrollable */}
+            <div className="flex-1 overflow-y-auto mb-3 min-h-0">
+              <MessageList
+                messages={messages}
+                loading={loading}
+                reasoning={reasoning}
+                deleteMessage={undefined}
+              />
+            </div>
 
-        {/* Input Area - Fixed at bottom */}
-        <div className="flex-shrink-0">
-          <TextArea
-            value={userInput}
-            onChange={setUserInput}
-            disabled={loading}
-            onSubmit={onSubmit}
-            isComposing={isComposing}
-            setIsComposing={setIsComposing}
-            sendMsgKey={sendMsgKey}
-          />
-        </div>
+            {/* Input Area - Fixed at bottom */}
+            <div className="flex-shrink-0">
+              <TextArea
+                value={userInput}
+                onChange={setUserInput}
+                disabled={loading}
+                onSubmit={onSubmit}
+                isComposing={isComposing}
+                setIsComposing={setIsComposing}
+                sendMsgKey={sendMsgKey}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Right Side - Code/Preview Area */}
-      <div className="flex flex-col flex-1 min-w-0 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
+      <div className="flex flex-col flex-1 min-w-0 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out">
         {/* Tab Header */}
         <div className="flex items-center p-2 border-b dark:border-gray-700">
-          <ViewToggle activeView={activeTab} onViewChange={setActiveTab} />
+          <ViewToggle
+            activeView={activeTab}
+            onViewChange={setActiveTab}
+            isChatPanelVisible={isChatPanelVisible}
+            onToggleChatPanel={() => setIsChatPanelVisible(!isChatPanelVisible)}
+          />
         </div>
 
         {/* Tab Content */}

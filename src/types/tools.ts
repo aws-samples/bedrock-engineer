@@ -421,7 +421,8 @@ export type SandpackCreateFileInput = {
 export type SandpackUpdateFileInput = {
   type: 'sandpackUpdateFile'
   path: string
-  content: string
+  originalText: string
+  updatedText: string
 }
 
 export type SandpackDeleteFileInput = {
