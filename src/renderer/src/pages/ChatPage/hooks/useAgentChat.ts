@@ -95,7 +95,7 @@ export const useAgentChat = (
   const [messages, setMessages] = useState<IdentifiableMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [reasoning, setReasoning] = useState(false)
-  const [executingTool, setExecutingTool] = useState<ToolName | null>(null)
+  const [executingTools, setExecutingTools] = useState<Set<ToolName>>(new Set())
   const [latestReasoningText, setLatestReasoningText] = useState<string>('')
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
   const lastAssistantMessageId = useRef<string | null>(null)
@@ -247,7 +247,7 @@ export const useAgentChat = (
     }
 
     setLoading(false)
-    setExecutingTool(null)
+    setExecutingTools(new Set())
   }, [messages, currentSessionId, t])
 
   // ChatHistoryContext から操作関数を取得
@@ -747,123 +747,160 @@ export const useAgentChat = (
       return
     }
 
-    const toolResults: ContentBlock[] = []
-    for (const contentBlock of contentBlocks) {
-      if (Object.keys(contentBlock).includes('toolUse')) {
-        const toolUse = contentBlock.toolUse
-        if (toolUse?.name) {
-          try {
-            const toolInput = {
-              type: toolUse.name,
-              ...(toolUse.input as any)
+    // ツールブロックのみを抽出
+    const toolUseBlocks = contentBlocks.filter(
+      (block) => Object.keys(block).includes('toolUse') && block.toolUse?.name
+    )
+
+    // 全てのツール実行をPromiseとして準備
+    const toolExecutionPromises = toolUseBlocks.map(async (contentBlock) => {
+      const toolUse = contentBlock.toolUse!
+      const toolInput = {
+        type: toolUse.name!,
+        ...(toolUse.input as any)
+      }
+
+      // 実行中ツールセットに追加
+      setExecutingTools((prev) => new Set([...prev, toolInput.type]))
+
+      try {
+        const toolResult = await window.api.bedrock.executeTool(toolInput, {
+          sessionId: currentSessionId
+        })
+
+        // 実行中ツールセットから削除
+        setExecutingTools((prev) => {
+          const next = new Set(prev)
+          next.delete(toolInput.type)
+          return next
+        })
+
+        // ツール実行結果用のContentBlockを作成
+        let resultContentBlock: ContentBlock
+        if (Object.prototype.hasOwnProperty.call(toolResult, 'name')) {
+          resultContentBlock = {
+            toolResult: {
+              toolUseId: toolUse.toolUseId,
+              content: [{ json: toolResult as any }],
+              status: 'success'
             }
-            setExecutingTool(toolInput.type)
-
-            const toolResult = await window.api.bedrock.executeTool(toolInput, {
-              sessionId: currentSessionId
-            })
-            setExecutingTool(null)
-
-            // ツール実行結果用のContentBlockを作成
-            let resultContentBlock: ContentBlock
-            if (Object.prototype.hasOwnProperty.call(toolResult, 'name')) {
-              resultContentBlock = {
-                toolResult: {
-                  toolUseId: toolUse.toolUseId,
-                  content: [{ json: toolResult as any }],
-                  status: 'success'
-                }
-              }
-            } else {
-              resultContentBlock = {
-                toolResult: {
-                  toolUseId: toolUse.toolUseId,
-                  content: [{ text: toolResult as any }],
-                  status: 'success'
-                }
-              }
+          }
+        } else {
+          resultContentBlock = {
+            toolResult: {
+              toolUseId: toolUse.toolUseId,
+              content: [{ text: toolResult as any }],
+              status: 'success'
             }
-
-            // GuardrailがActive状態であればチェック実行
-            if (
-              guardrailSettings.enabled &&
-              guardrailSettings.guardrailIdentifier &&
-              guardrailSettings.guardrailVersion
-            ) {
-              try {
-                console.log('Applying guardrail to tool result')
-                // ツール結果をガードレールで検証
-                const toolResultText =
-                  typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult)
-
-                console.log({ toolResultText })
-                // ツール結果をGuardrailで評価
-                const guardrailResult = await window.api.bedrock.applyGuardrail({
-                  guardrailIdentifier: guardrailSettings.guardrailIdentifier,
-                  guardrailVersion: guardrailSettings.guardrailVersion,
-                  source: 'OUTPUT', // ツールからの出力をチェック
-                  content: [
-                    {
-                      text: {
-                        text: toolResultText
-                      }
-                    }
-                  ]
-                })
-                console.log({ guardrailResult })
-
-                // ガードレールが介入した場合は代わりにエラーメッセージを使用
-                if (guardrailResult.action === 'GUARDRAIL_INTERVENED') {
-                  console.warn('Guardrail intervened for tool result', guardrailResult)
-                  let errorMessage = t('guardrail.toolResult.blocked')
-
-                  // もしガードレールが出力を提供していれば、それを使用
-                  if (guardrailResult.outputs && guardrailResult.outputs.length > 0) {
-                    const output = guardrailResult.outputs[0]
-                    if (output.text) {
-                      errorMessage = output.text
-                    }
-                  }
-
-                  // エラーステータスのツール結果を作成
-                  resultContentBlock = {
-                    toolResult: {
-                      toolUseId: toolUse.toolUseId,
-                      content: [{ text: errorMessage }],
-                      status: 'error'
-                    }
-                  }
-
-                  toast(t('guardrail.intervention'), {
-                    icon: '⚠️',
-                    style: {
-                      backgroundColor: '#FEF3C7', // Light yellow background
-                      color: '#92400E', // Amber text color
-                      border: '1px solid #F59E0B' // Amber border
-                    }
-                  })
-                }
-              } catch (guardrailError) {
-                console.error('Error applying guardrail to tool result:', guardrailError)
-                // ガードレールエラー時は元のツール結果を使用し続ける
-              }
-            }
-
-            // 最終的なツール結果をコレクションに追加
-            toolResults.push(resultContentBlock)
-          } catch (e: any) {
-            console.error(e)
-            toolResults.push({
-              toolResult: {
-                toolUseId: toolUse.toolUseId,
-                content: [{ text: e.toString() }],
-                status: 'error'
-              }
-            })
           }
         }
+
+        // GuardrailがActive状態であればチェック実行
+        if (
+          guardrailSettings.enabled &&
+          guardrailSettings.guardrailIdentifier &&
+          guardrailSettings.guardrailVersion
+        ) {
+          try {
+            console.log('Applying guardrail to tool result')
+            // ツール結果をガードレールで検証
+            const toolResultText =
+              typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult)
+
+            console.log({ toolResultText })
+            // ツール結果をGuardrailで評価
+            const guardrailResult = await window.api.bedrock.applyGuardrail({
+              guardrailIdentifier: guardrailSettings.guardrailIdentifier,
+              guardrailVersion: guardrailSettings.guardrailVersion,
+              source: 'OUTPUT', // ツールからの出力をチェック
+              content: [
+                {
+                  text: {
+                    text: toolResultText
+                  }
+                }
+              ]
+            })
+            console.log({ guardrailResult })
+
+            // ガードレールが介入した場合は代わりにエラーメッセージを使用
+            if (guardrailResult.action === 'GUARDRAIL_INTERVENED') {
+              console.warn('Guardrail intervened for tool result', guardrailResult)
+              let errorMessage = t('guardrail.toolResult.blocked')
+
+              // もしガードレールが出力を提供していれば、それを使用
+              if (guardrailResult.outputs && guardrailResult.outputs.length > 0) {
+                const output = guardrailResult.outputs[0]
+                if (output.text) {
+                  errorMessage = output.text
+                }
+              }
+
+              // エラーステータスのツール結果を作成
+              resultContentBlock = {
+                toolResult: {
+                  toolUseId: toolUse.toolUseId,
+                  content: [{ text: errorMessage }],
+                  status: 'error'
+                }
+              }
+
+              toast(t('guardrail.intervention'), {
+                icon: '⚠️',
+                style: {
+                  backgroundColor: '#FEF3C7', // Light yellow background
+                  color: '#92400E', // Amber text color
+                  border: '1px solid #F59E0B' // Amber border
+                }
+              })
+            }
+          } catch (guardrailError) {
+            console.error('Error applying guardrail to tool result:', guardrailError)
+            // ガードレールエラー時は元のツール結果を使用し続ける
+          }
+        }
+
+        return resultContentBlock
+      } catch (e: any) {
+        console.error(`Error executing tool ${toolInput.type}:`, e)
+
+        // 実行中ツールセットから削除
+        setExecutingTools((prev) => {
+          const next = new Set(prev)
+          next.delete(toolInput.type)
+          return next
+        })
+
+        // エラー結果を返す
+        return {
+          toolResult: {
+            toolUseId: toolUse.toolUseId,
+            content: [{ text: e.toString() }],
+            status: 'error'
+          }
+        } as ContentBlock
       }
-    }
+    })
+
+    // 全てのツール実行を並列実行し、全ての結果を待つ
+    const settledResults = await Promise.allSettled(toolExecutionPromises)
+
+    // 結果を処理
+    const toolResults: ContentBlock[] = settledResults.map((result, index) => {
+      if (result.status === 'fulfilled') {
+        return result.value
+      } else {
+        // Promise自体が reject された場合（ここには来ないはずだが念のため）
+        const toolUse = toolUseBlocks[index].toolUse!
+        return {
+          toolResult: {
+            toolUseId: toolUse.toolUseId,
+            content: [{ text: `Promise rejection: ${result.reason}` }],
+            status: 'error'
+          }
+        } as ContentBlock
+      }
+    })
 
     const toolResultMessage: IdentifiableMessage = {
       role: 'user',
@@ -1034,7 +1071,7 @@ export const useAgentChat = (
       toast.error(error.message || 'An error occurred')
     } finally {
       setLoading(false)
-      setExecutingTool(null)
+      setExecutingTools(new Set())
     }
     return result
   }
@@ -1130,7 +1167,7 @@ export const useAgentChat = (
     messages,
     loading,
     reasoning,
-    executingTool,
+    executingTools,
     latestReasoningText, // 最新のreasoningTextを外部に公開
     handleSubmit,
     setMessages,
