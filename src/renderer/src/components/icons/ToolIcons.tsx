@@ -57,7 +57,12 @@ const standardToolIcons = {
   cameraCapture: <FaVideo className="text-blue-500 size-6" />,
   todo: <FaListCheck className="text-blue-600 size-6" />,
   todoInit: <FaListCheck className="text-blue-600 size-6" />,
-  todoUpdate: <FaListCheck className="text-blue-600 size-6" />
+  todoUpdate: <FaListCheck className="text-blue-600 size-6" />,
+  sandpackCreateFile: <FaFileSignature className="text-green-500 size-6" />,
+  sandpackUpdateFile: <MdDifference className="text-cyan-500 size-6" />,
+  sandpackDeleteFile: <TbTrash className="text-red-500 size-6" />,
+  sandpackListFiles: <FaList className="text-purple-500 size-6" />,
+  sandpackReadFile: <FaFileAlt className="text-yellow-500 size-6" />
 }
 
 // MCPツール用のアイコン（すべてのMCPツールで共通）

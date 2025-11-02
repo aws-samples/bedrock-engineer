@@ -18,6 +18,98 @@ interface RichWebsiteGeneratorContextType {
 
 const RichWebsiteGeneratorContext = createContext<RichWebsiteGeneratorContextType | null>(null)
 
+// ファイルツリー構造の型定義
+interface FileTreeNode {
+  name: string
+  path: string
+  type: 'file' | 'directory'
+  size?: number
+  children?: FileTreeNode[]
+}
+
+// ファイルパスからツリー構造を構築
+function buildFileTreeFromPaths(files: Record<string, any>): FileTreeNode {
+  const root: FileTreeNode = {
+    name: '/',
+    path: '/',
+    type: 'directory',
+    children: []
+  }
+
+  Object.entries(files).forEach(([filePath, fileData]) => {
+    // パスを正規化（先頭のスラッシュを除去）
+    const normalizedPath = filePath.startsWith('/') ? filePath.slice(1) : filePath
+    const parts = normalizedPath.split('/').filter((p) => p.length > 0)
+
+    let currentNode = root
+    let currentPath = ''
+
+    parts.forEach((part, index) => {
+      currentPath += '/' + part
+      const isFile = index === parts.length - 1
+
+      if (!currentNode.children) {
+        currentNode.children = []
+      }
+
+      let childNode = currentNode.children.find((child) => child.name === part)
+
+      if (!childNode) {
+        childNode = {
+          name: part,
+          path: currentPath,
+          type: isFile ? 'file' : 'directory',
+          size: isFile ? fileData?.code?.length || 0 : undefined,
+          children: isFile ? undefined : []
+        }
+        currentNode.children.push(childNode)
+      }
+
+      currentNode = childNode
+    })
+  })
+
+  return root
+}
+
+// ツリー構造を視覚的な文字列に変換
+function renderFileTree(node: FileTreeNode, prefix: string = '', isLast: boolean = true): string {
+  let result = ''
+
+  if (node.name !== '/') {
+    const currentPrefix = prefix + (isLast ? '└── ' : '├── ')
+    const icon = node.type === 'directory' ? '📁' : '📄'
+    const sizeInfo = node.type === 'file' && node.size ? ` (${formatFileSize(node.size)})` : ''
+    result += `${currentPrefix}${icon} ${node.name}${sizeInfo}\n`
+  }
+
+  if (node.children && node.children.length > 0) {
+    // ディレクトリを先に、次にファイルをソート
+    const sortedChildren = [...node.children].sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type === 'directory' ? -1 : 1
+      }
+      return a.name.localeCompare(b.name)
+    })
+
+    const nextPrefix = node.name === '/' ? '' : prefix + (isLast ? '    ' : '│   ')
+
+    sortedChildren.forEach((child, index) => {
+      const isLastChild = index === sortedChildren.length - 1
+      result += renderFileTree(child, nextPrefix, isLastChild)
+    })
+  }
+
+  return result
+}
+
+// ファイルサイズをフォーマット
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export function RichWebsiteGeneratorProvider({ children }: { children: ReactNode }) {
   const { sandpack } = useSandpack()
   const [lastUpdate, setLastUpdate] = useState<number>(0)
@@ -151,18 +243,28 @@ export function RichWebsiteGeneratorProvider({ children }: { children: ReactNode
 
     listFiles: async () => {
       try {
-        const fileList = Object.keys(sandpack.files).map((path) => ({
-          path,
-          size: sandpack.files[path]?.code?.length || 0
-        }))
+        // ファイルツリー構造を構築
+        const tree = buildFileTreeFromPaths(sandpack.files)
+
+        // ツリーを視覚的な文字列に変換
+        const treeString = renderFileTree(tree)
+
+        // ファイル数とディレクトリ数を計算
+        const fileCount = Object.keys(sandpack.files).length
+        const totalSize = Object.values(sandpack.files).reduce(
+          (sum, file) => sum + (file?.code?.length || 0),
+          0
+        )
 
         return {
           name: 'sandpackListFiles',
           success: true,
           result: {
             success: true,
-            files: fileList,
-            count: fileList.length
+            tree: treeString.trim() || '(empty project)',
+            fileCount,
+            totalSize: formatFileSize(totalSize),
+            message: `Project contains ${fileCount} file(s), total size: ${formatFileSize(totalSize)}`
           }
         }
       } catch (error: any) {

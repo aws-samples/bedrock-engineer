@@ -23,6 +23,7 @@ type TextAreaProps = {
   setIsComposing: (value: boolean) => void
   sendMsgKey?: 'Enter' | 'Cmd+Enter'
   onHeightChange?: (height: number) => void
+  hidePlanActToggle?: boolean
 }
 
 export const TextArea: React.FC<TextAreaProps> = ({
@@ -33,7 +34,8 @@ export const TextArea: React.FC<TextAreaProps> = ({
   isComposing,
   setIsComposing,
   sendMsgKey = 'Enter',
-  onHeightChange
+  onHeightChange,
+  hidePlanActToggle = false
 }) => {
   const { t } = useTranslation()
   const { planMode, setPlanMode } = useSettings()
@@ -431,9 +433,11 @@ export const TextArea: React.FC<TextAreaProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <div>
-              <PlanActToggle />
-            </div>
+            {!hidePlanActToggle && (
+              <div>
+                <PlanActToggle />
+              </div>
+            )}
             <button
               onClick={handleSubmit}
               disabled={disabled}

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import {
   SandpackProvider,
   SandpackCodeEditor,
@@ -20,6 +20,13 @@ import { templates } from '../WebsiteGeneratorPage/templates'
 import { Preview } from '../WebsiteGeneratorPage/components/Preview'
 import { MessageList } from '../ChatPage/components/MessageList'
 import { ViewToggle } from './components/ViewToggle'
+import { WelcomeScreen } from './components/WelcomeScreen'
+import { useRecommendChanges } from '../WebsiteGeneratorPage/hooks/useRecommendChanges'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Loader } from '@renderer/components/Loader'
+import { LoaderWithReasoning } from '../WebsiteGeneratorPage/components/LoaderWithReasoning'
+import { RagLoader } from '../WebsiteGeneratorPage/components/RagLoader'
+import { WebLoader } from '../../components/WebLoader'
 
 // Layout constants
 const LAYOUT_CONSTANTS = {
@@ -61,6 +68,10 @@ function RichWebsiteGeneratorPageContents() {
   const { code } = useActiveCode()
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
   const [previewKey, setPreviewKey] = useState(0)
+  const [hasStartedGeneration, setHasStartedGeneration] = useState(false)
+
+  // RecommendChanges hook
+  const { recommendChanges, recommendLoading } = useRecommendChanges()
 
   // lastUpdate が変更されたら、デバッグ用にログ出力
   // これにより、ファイル更新のたびに React の再レンダリングがトリガーされる
@@ -205,19 +216,36 @@ export default App;
   }, [])
 
   // useAgentChat の呼び出し
-  const { messages, loading, reasoning, executingTools, handleSubmit } = useAgentChat(
-    llm?.modelId,
-    systemPrompt,
-    'richWebsiteGeneratorAgent',
-    undefined,
-    {
+  const { messages, loading, reasoning, executingTools, handleSubmit, latestReasoningText } =
+    useAgentChat(llm?.modelId, systemPrompt, 'richWebsiteGeneratorAgent', undefined, {
       enableHistory: false,
       tools: sandpackTools,
       customToolExecutor
-    }
+    })
+
+  // 前回のloading状態を保持するref
+  const prevLoadingRef = useRef(loading)
+
+  // getLoader関数
+  const getLoader = useCallback(
+    (tool: string | null) => {
+      let loader
+
+      if (tool === 'tavilySearch') {
+        loader = <WebLoader />
+      } else if (tool === 'retrieve') {
+        loader = <RagLoader />
+      } else {
+        loader = <Loader />
+      }
+
+      return <LoaderWithReasoning reasoningText={latestReasoningText}>{loader}</LoaderWithReasoning>
+    },
+    [latestReasoningText]
   )
 
   const onSubmit = (input: string, images: AttachedImage[]) => {
+    setHasStartedGeneration(true)
     handleSubmit(input, images)
     setUserInput('')
   }
@@ -234,100 +262,149 @@ export default App;
     }
   }, [activeTab])
 
+  // 会話完了時に自動的にPreviewタブに切り替え
+  useEffect(() => {
+    // loadingがtrueからfalseに変わった瞬間のみ実行（会話完了時）
+    if (prevLoadingRef.current && !loading && messages.length > 0 && hasStartedGeneration) {
+      // Previewタブに切り替え
+      if (activeTab === 'preview') {
+        setPreviewKey((prev) => prev + 1)
+      } else {
+        setActiveTab('preview')
+      }
+    }
+    // 現在のloading状態を保存
+    prevLoadingRef.current = loading
+  }, [loading, messages.length, hasStartedGeneration, activeTab])
+
   return (
-    <div className="flex h-[calc(100vh)] gap-3 p-3 overflow-hidden">
-      {/* Left Side - Chat Area */}
-      <div
-        className={`flex flex-col min-w-0 transition-all duration-300 ease-in-out overflow-hidden ${
-          isChatPanelVisible ? 'w-1/2 opacity-100' : 'w-0 opacity-0'
-        }`}
-      >
-        {isChatPanelVisible && (
-          <>
-            {/* Header */}
-            <div className="flex pb-2 justify-between items-center">
-              <h1 className="font-bold dark:text-white text-lg">Rich Website Generator</h1>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                {loading && 'Generating...'}
-                {executingTools.size > 0 && ` (${Array.from(executingTools).join(', ')})`}
-              </div>
-            </div>
-
-            {/* Message List Area - Scrollable */}
-            <div className="flex-1 overflow-y-auto mb-3 min-h-0">
-              <MessageList
-                messages={messages}
-                loading={loading}
-                reasoning={reasoning}
-                deleteMessage={undefined}
-              />
-            </div>
-
-            {/* Input Area - Fixed at bottom */}
-            <div className="flex-shrink-0">
-              <TextArea
-                value={userInput}
-                onChange={setUserInput}
-                disabled={loading}
-                onSubmit={onSubmit}
-                isComposing={isComposing}
-                setIsComposing={setIsComposing}
-                sendMsgKey={sendMsgKey}
-              />
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* Right Side - Code/Preview Area */}
-      <div className="flex flex-col flex-1 min-w-0 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out">
-        {/* Tab Header */}
-        <div className="flex items-center p-2 border-b dark:border-gray-700">
-          <ViewToggle
-            activeView={activeTab}
-            onViewChange={setActiveTab}
-            isChatPanelVisible={isChatPanelVisible}
-            onToggleChatPanel={() => setIsChatPanelVisible(!isChatPanelVisible)}
+    <AnimatePresence mode="wait">
+      {!hasStartedGeneration ? (
+        <motion.div
+          key="welcome"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="h-[calc(100vh)] p-3"
+        >
+          <WelcomeScreen
+            userInput={userInput}
+            setUserInput={setUserInput}
+            onSubmit={onSubmit}
+            disabled={loading}
+            isComposing={isComposing}
+            setIsComposing={setIsComposing}
+            sendMsgKey={sendMsgKey}
+            recommendChanges={recommendChanges}
+            recommendLoading={recommendLoading}
           />
-        </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="main"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex h-[calc(100vh)] gap-3 p-3 overflow-hidden"
+        >
+          {/* Left Side - Chat Area */}
+          <div
+            className={`flex flex-col min-w-0 transition-all duration-300 ease-in-out overflow-hidden ${
+              isChatPanelVisible ? 'w-1/2 opacity-100' : 'w-0 opacity-0'
+            }`}
+          >
+            {isChatPanelVisible && (
+              <>
+                {/* Header */}
+                <div className="flex pb-2 justify-between items-center">
+                  <h1 className="font-bold dark:text-white text-lg">Rich Website Generator</h1>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    {loading && 'Generating...'}
+                    {executingTools.size > 0 && ` (${Array.from(executingTools).join(', ')})`}
+                  </div>
+                </div>
 
-        {/* Tab Content */}
-        <div className="flex-1 overflow-hidden">
-          {activeTab === 'code' ? (
-            <SandpackLayout
-              style={{
-                height: '100%',
-                backgroundColor: isDark
-                  ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
-                  : 'rgb(243 244 246 / var(--tw-bg-opacity))',
-                border: 'none'
-              }}
-            >
-              <SandpackFileExplorer
-                style={{
-                  height: '100%',
-                  minWidth: LAYOUT_CONSTANTS.FILE_EXPLORER_WIDTH,
-                  maxWidth: LAYOUT_CONSTANTS.FILE_EXPLORER_WIDTH
-                }}
+                {/* Message List Area - Scrollable */}
+                <div className="flex-1 overflow-y-auto mb-3 min-h-0">
+                  <MessageList
+                    messages={messages}
+                    loading={loading}
+                    reasoning={reasoning}
+                    deleteMessage={undefined}
+                  />
+                </div>
+
+                {/* Input Area - Fixed at bottom */}
+                <div className="flex-shrink-0">
+                  <TextArea
+                    value={userInput}
+                    onChange={setUserInput}
+                    disabled={loading}
+                    onSubmit={onSubmit}
+                    isComposing={isComposing}
+                    setIsComposing={setIsComposing}
+                    sendMsgKey={sendMsgKey}
+                    hidePlanActToggle={true}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Right Side - Code/Preview Area */}
+          <div className="flex flex-col flex-1 min-w-0 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 transition-all duration-300 ease-in-out">
+            {/* Tab Header */}
+            <div className="flex items-center p-2 border-b dark:border-gray-700">
+              <ViewToggle
+                activeView={activeTab}
+                onViewChange={setActiveTab}
+                isChatPanelVisible={isChatPanelVisible}
+                onToggleChatPanel={() => setIsChatPanelVisible(!isChatPanelVisible)}
               />
-              <SandpackCodeEditor
-                style={{
-                  height: '100%',
-                  flex: 1
-                }}
-                showInlineErrors={true}
-                showTabs={true}
-                showLineNumbers
-                showRunButton={true}
-              />
-            </SandpackLayout>
-          ) : (
-            <div className="h-full" key={previewKey}>
-              <Preview isDark={isDark} code={code} />
             </div>
-          )}
-        </div>
-      </div>
-    </div>
+
+            {/* Tab Content */}
+            <div className="flex-1 overflow-hidden">
+              {activeTab === 'code' ? (
+                <SandpackLayout
+                  style={{
+                    height: '100%',
+                    backgroundColor: isDark
+                      ? 'rgb(17 24 39 / var(--tw-bg-opacity))'
+                      : 'rgb(243 244 246 / var(--tw-bg-opacity))',
+                    border: 'none'
+                  }}
+                >
+                  <SandpackFileExplorer
+                    style={{
+                      height: '100%',
+                      minWidth: LAYOUT_CONSTANTS.FILE_EXPLORER_WIDTH,
+                      maxWidth: LAYOUT_CONSTANTS.FILE_EXPLORER_WIDTH
+                    }}
+                  />
+                  <SandpackCodeEditor
+                    style={{
+                      height: '100%',
+                      flex: 1
+                    }}
+                    showInlineErrors={true}
+                    showTabs={true}
+                    showLineNumbers
+                    showRunButton={true}
+                  />
+                </SandpackLayout>
+              ) : loading ? (
+                <div className="flex w-full h-full justify-center items-center">
+                  {getLoader(executingTools.size > 0 ? Array.from(executingTools)[0] : null)}
+                </div>
+              ) : (
+                <div className="h-full" key={previewKey}>
+                  <Preview isDark={isDark} code={code} />
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }

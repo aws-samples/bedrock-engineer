@@ -624,6 +624,7 @@ export default function DiagramGeneratorPage() {
             isComposing={isComposing}
             setIsComposing={setIsComposing}
             sendMsgKey={sendMsgKey}
+            hidePlanActToggle={true}
           />
         </div>
       </div>

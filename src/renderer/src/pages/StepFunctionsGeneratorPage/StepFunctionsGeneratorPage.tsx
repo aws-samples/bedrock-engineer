@@ -254,6 +254,7 @@ function StepFunctionsGeneratorPage() {
             isComposing={isComposing}
             setIsComposing={setIsComposing}
             sendMsgKey={sendMsgKey}
+            hidePlanActToggle={true}
           />
         </div>
       </div>

@@ -76,7 +76,7 @@ export const SANDPACK_TOOL_SPECS: Tool[] = [
     toolSpec: {
       name: 'sandpackListFiles',
       description:
-        'List all files in the current Sandpack project. Use this to understand the project structure before making changes.',
+        'List all files in the current Sandpack project in a hierarchical tree structure. The output shows the directory structure with folders and files organized visually, including file sizes. Use this to understand the project structure before making changes.',
       inputSchema: {
         json: {
           type: 'object',
