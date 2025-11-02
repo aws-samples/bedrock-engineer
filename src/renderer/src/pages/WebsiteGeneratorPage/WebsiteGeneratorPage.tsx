@@ -183,7 +183,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
   const {
     messages,
     loading,
-    executingTool,
+    executingTools,
     latestReasoningText,
     handleSubmit,
     clearChat: initChat
@@ -451,7 +451,7 @@ function WebsiteGeneratorPageContents(props: WebsiteGeneratorPageContentsProps) 
           <div
             className={`flex ${showCode ? 'w-[50%]' : 'w-[100%]'} h-[100%] justify-center items-center content-center align-center`}
           >
-            {getLoader(executingTool)}
+            {getLoader(executingTools.size > 0 ? Array.from(executingTools)[0] : null)}
           </div>
         ) : (
           <Preview isDark={isDark} code={code} />
