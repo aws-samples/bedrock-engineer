@@ -91,6 +91,8 @@ export const agentToolsSettings = {
     'Remove knowledge base': 'Remove knowledge base',
     Cancel: 'Cancel',
     Save: 'Save',
+    'Please enter a valid domain (e.g., example.com)':
+      'Please enter a valid domain (e.g., example.com)',
     'Configure which system commands the agent is allowed to execute.':
       'Configure which system commands the agent is allowed to execute.',
     'Security Warning': 'Security Warning',
@@ -370,6 +372,8 @@ export const agentToolsSettings = {
     'Remove knowledge base': 'ナレッジベースを削除',
     Cancel: 'キャンセル',
     Save: '保存',
+    'Please enter a valid domain (e.g., example.com)':
+      '有効なドメインを入力してください（例：example.com）',
     'Configure which system commands the agent is allowed to execute.':
       'このエージェントが実行を許可されたシステムコマンドを設定します。',
     'Security Warning': 'セキュリティ警告',

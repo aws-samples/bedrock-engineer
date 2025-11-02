@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FaEye, FaEyeSlash, FaPlus, FaTrash } from 'react-icons/fa'
+import { FaEye, FaEyeSlash, FaPlus, FaTimes } from 'react-icons/fa'
 import { TavilySearchConfig } from 'src/types/agent-chat'
 
 interface TavilySearchSettingFormProps {
@@ -27,33 +27,20 @@ export const TavilySearchSettingForm = ({
   const [localExcludeDomains, setLocalExcludeDomains] = useState<string[]>(excludeDomains)
   const [newIncludeDomain, setNewIncludeDomain] = useState('')
   const [newExcludeDomain, setNewExcludeDomain] = useState('')
-
-  const presets = {
-    technical: {
-      label: t('Technical Sites', 'Technical Sites'),
-      domains: ['github.com', 'stackoverflow.com', 'docs.aws.amazon.com', 'developer.mozilla.org']
-    },
-    news: {
-      label: t('News Sites', 'News Sites'),
-      domains: ['reuters.com', 'bbc.com', 'cnn.com', 'apnews.com']
-    },
-    academic: {
-      label: t('Academic Sites', 'Academic Sites'),
-      domains: ['scholar.google.com', 'arxiv.org', 'pubmed.ncbi.nlm.nih.gov', 'jstor.org']
-    },
-    excludeSocial: {
-      label: t('Exclude Social Media', 'Exclude Social Media'),
-      domains: ['facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com']
-    }
-  }
+  const [includeDomainError, setIncludeDomainError] = useState(false)
+  const [excludeDomainError, setExcludeDomainError] = useState(false)
 
   const handleSaveApiKey = () => {
     setTavilySearchApiKey(apiKey)
   }
 
   const validateDomain = (domain: string): boolean => {
+    // Supports:
+    // - Standard domains: example.com
+    // - Wildcards: *.com, *.example.com
+    // - Paths: linkedin.com/in, example.com/path/to/page
     const domainRegex =
-      /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.([a-zA-Z]{2,}|[a-zA-Z0-9-]*[a-zA-Z0-9])$/
+      /^(\*\.)?[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9-]+)*(\.[a-zA-Z]{2,})(\/[^\s]*)?$/
     return domainRegex.test(domain.trim())
   }
 
@@ -99,24 +86,6 @@ export const TavilySearchSettingForm = ({
       includeDomains: localIncludeDomains,
       excludeDomains: updated
     })
-  }
-
-  const applyPreset = (preset: 'technical' | 'news' | 'academic' | 'excludeSocial') => {
-    if (preset === 'excludeSocial') {
-      const updated = [...new Set([...localExcludeDomains, ...presets[preset].domains])]
-      setLocalExcludeDomains(updated)
-      onUpdateTavilyConfig({
-        includeDomains: localIncludeDomains,
-        excludeDomains: updated
-      })
-    } else {
-      const updated = [...new Set([...localIncludeDomains, ...presets[preset].domains])]
-      setLocalIncludeDomains(updated)
-      onUpdateTavilyConfig({
-        includeDomains: updated,
-        excludeDomains: localExcludeDomains
-      })
-    }
   }
 
   const clearAllIncludeDomains = () => {
@@ -165,7 +134,7 @@ export const TavilySearchSettingForm = ({
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200"
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 cursor-pointer"
                 onClick={() => setShowApiKey(!showApiKey)}
                 aria-label={showApiKey ? t('Hide API Key') : t('Show API Key')}
                 title={showApiKey ? t('Hide API Key') : t('Show API Key')}
@@ -175,7 +144,7 @@ export const TavilySearchSettingForm = ({
             </div>
             <button
               onClick={handleSaveApiKey}
-              className="min-w-[80px] px-4 py-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="min-w-[80px] px-4 py-2 text-sm text-white bg-blue-500 rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer"
             >
               {t('Save')}
             </button>
@@ -200,24 +169,6 @@ export const TavilySearchSettingForm = ({
           {t('Domain Settings', 'Domain Settings')}
         </h4>
 
-        {/* プリセットボタン */}
-        <div className="mb-4">
-          <label className="block text-xs text-gray-600 dark:text-gray-300 mb-2">
-            {t('Quick Presets', 'Quick Presets')}
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(presets).map(([key, preset]) => (
-              <button
-                key={key}
-                onClick={() => applyPreset(key as keyof typeof presets)}
-                className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded text-gray-700 dark:text-gray-300"
-              >
-                {preset.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Include Domains */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
@@ -227,7 +178,7 @@ export const TavilySearchSettingForm = ({
             {localIncludeDomains.length > 0 && (
               <button
                 onClick={clearAllIncludeDomains}
-                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline"
+                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline cursor-pointer"
               >
                 {t('Clear All', 'Clear All')}
               </button>
@@ -237,22 +188,39 @@ export const TavilySearchSettingForm = ({
             <input
               type="text"
               value={newIncludeDomain}
-              onChange={(e) => setNewIncludeDomain(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value
+                setNewIncludeDomain(value)
+                if (value && !validateDomain(value)) {
+                  setIncludeDomainError(true)
+                } else {
+                  setIncludeDomainError(false)
+                }
+              }}
               placeholder="example.com"
               className="flex-1 px-3 py-2 text-sm border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !includeDomainError) {
                   addIncludeDomain()
                 }
               }}
             />
             <button
               onClick={addIncludeDomain}
-              className="px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+              disabled={includeDomainError || !newIncludeDomain}
+              className="px-3 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer"
             >
               <FaPlus className="w-3 h-3" />
             </button>
           </div>
+          {includeDomainError && (
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+              {t(
+                'Please enter a valid domain (e.g., example.com)',
+                'Please enter a valid domain (e.g., example.com)'
+              )}
+            </p>
+          )}
           <div className="flex flex-wrap gap-1">
             {localIncludeDomains.map((domain) => (
               <span
@@ -262,9 +230,9 @@ export const TavilySearchSettingForm = ({
                 {domain}
                 <button
                   onClick={() => removeIncludeDomain(domain)}
-                  className="hover:text-blue-600 dark:hover:text-blue-400"
+                  className="hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
                 >
-                  <FaTrash className="w-2 h-2" />
+                  <FaTimes className="w-3 h-3" />
                 </button>
               </span>
             ))}
@@ -280,7 +248,7 @@ export const TavilySearchSettingForm = ({
             {localExcludeDomains.length > 0 && (
               <button
                 onClick={clearAllExcludeDomains}
-                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline"
+                className="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:underline cursor-pointer"
               >
                 {t('Clear All', 'Clear All')}
               </button>
@@ -290,22 +258,39 @@ export const TavilySearchSettingForm = ({
             <input
               type="text"
               value={newExcludeDomain}
-              onChange={(e) => setNewExcludeDomain(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value
+                setNewExcludeDomain(value)
+                if (value && !validateDomain(value)) {
+                  setExcludeDomainError(true)
+                } else {
+                  setExcludeDomainError(false)
+                }
+              }}
               placeholder="example.com"
               className="flex-1 px-3 py-2 text-sm border rounded dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200"
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !excludeDomainError) {
                   addExcludeDomain()
                 }
               }}
             />
             <button
               onClick={addExcludeDomain}
-              className="px-3 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
+              disabled={excludeDomainError || !newExcludeDomain}
+              className="px-3 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-400 disabled:cursor-not-allowed cursor-pointer"
             >
               <FaPlus className="w-3 h-3" />
             </button>
           </div>
+          {excludeDomainError && (
+            <p className="text-xs text-red-500 dark:text-red-400 mt-1">
+              {t(
+                'Please enter a valid domain (e.g., example.com)',
+                'Please enter a valid domain (e.g., example.com)'
+              )}
+            </p>
+          )}
           <div className="flex flex-wrap gap-1">
             {localExcludeDomains.map((domain) => (
               <span
@@ -315,9 +300,9 @@ export const TavilySearchSettingForm = ({
                 {domain}
                 <button
                   onClick={() => removeExcludeDomain(domain)}
-                  className="hover:text-gray-500 dark:hover:text-gray-400"
+                  className="hover:text-gray-500 dark:hover:text-gray-400 cursor-pointer"
                 >
-                  <FaTrash className="w-2 h-2" />
+                  <FaTimes className="w-3 h-3" />
                 </button>
               </span>
             ))}
