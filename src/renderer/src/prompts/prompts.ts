@@ -91,6 +91,25 @@ ${
 
 - ONLY IF the user asks for a dashboard, graph or chart, the recharts library is available to be imported, e.g. \`import { LineChart, XAxis, ... } from "recharts"\` & \`<LineChart ...><XAxis dataKey="name"> ...\`. Please only use this when needed.
 - NO OTHER LIBRARIES (e.g. zod, hookform) ARE INSTALLED OR ABLE TO BE IMPORTED.
+
+**CRITICAL: react-icons Library Usage Rules**
+- When using react-icons, ALWAYS use the correct import format with icon name prefixes
+- Each icon set has its own prefix (Fa, Fi, Md, Tb, Hi, Bs, etc.)
+- Correct examples:
+  - \`import { FaShoppingCart, FaBars, FaSearch, FaUser, FaHeart } from 'react-icons/fa'\`
+  - \`import { FiSettings, FiHome, FiMenu } from 'react-icons/fi'\`
+  - \`import { MdDashboard, MdSettings } from 'react-icons/md'\`
+- WRONG examples (these will cause runtime errors):
+  - ❌ \`import { ShoppingCart, Menu, Search } from 'react-icons/fa'\`
+  - ❌ \`import { Settings, Home } from 'react-icons/fi'\`
+- Common icon name mappings:
+  - Menu/Hamburger → FaBars (from 'react-icons/fa')
+  - Shopping Cart → FaShoppingCart (from 'react-icons/fa')
+  - Search → FaSearch (from 'react-icons/fa')
+  - User → FaUser (from 'react-icons/fa')
+  - Heart → FaHeart (from 'react-icons/fa')
+  - Settings → FiSettings (from 'react-icons/fi')
+- Always check the icon name includes the prefix matching its import path
 - Any text other than the source code is strictly prohibited. Greetings, chatting, explanations of rules, etc. are strictly prohibited.
 - The generated application will be displayed to the full screen, but this may be changed if specified.
 - If necessary, source code that fetches and displays the API will also be generated.
