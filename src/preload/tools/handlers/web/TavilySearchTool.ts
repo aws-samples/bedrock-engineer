@@ -2,12 +2,55 @@
  * TavilySearch tool implementation
  */
 
+import { z } from 'zod'
 import { Tool } from '@aws-sdk/client-bedrock-runtime'
-import { BaseTool } from '../../base/BaseTool'
+import { BaseTool, zodToJsonSchemaBody } from '../../base/BaseTool'
 import { ValidationResult } from '../../base/types'
 import { ExecutionError, NetworkError } from '../../base/errors'
 import { ToolResult } from '../../../../types/tools'
 import { ipc } from '../../../ipc-client'
+
+/**
+ * Zod schema for TavilySearch option
+ */
+const tavilySearchOptionSchema = z.object({
+  include_raw_content: z
+    .boolean()
+    .optional()
+    .describe('Whether to include raw content in the search results. DEFAULT is false'),
+  max_results: z
+    .number()
+    .min(1)
+    .max(20)
+    .optional()
+    .describe('Maximum number of search results to return (1-20). DEFAULT is 10'),
+  start_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+    .optional()
+    .describe(
+      'Return results after this date based on publish date or last updated date (YYYY-MM-DD format, e.g., "2025-02-09")'
+    ),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+    .optional()
+    .describe(
+      'Return results before this date based on publish date or last updated date (YYYY-MM-DD format, e.g., "2025-12-29")'
+    )
+})
+
+/**
+ * Zod schema for TavilySearch input
+ */
+const tavilySearchInputSchema = z.object({
+  query: z
+    .string()
+    .min(1, 'Query cannot be empty')
+    .max(400, 'Query must be 400 characters or less')
+    .describe('The search query (max 400 characters)'),
+  option: tavilySearchOptionSchema.optional()
+})
 
 /**
  * Input type for TavilySearchTool
@@ -16,7 +59,10 @@ interface TavilySearchInput {
   type: 'tavilySearch'
   query: string
   option?: {
-    include_raw_content: boolean
+    include_raw_content?: boolean
+    max_results?: number
+    start_date?: string
+    end_date?: string
   }
 }
 
@@ -64,55 +110,28 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
     name: TavilySearchTool.toolName,
     description: TavilySearchTool.toolDescription,
     inputSchema: {
-      json: {
-        type: 'object',
-        properties: {
-          query: {
-            type: 'string',
-            description: 'The search query'
-          },
-          option: {
-            type: 'object',
-            description: 'Optional configurations for the search',
-            properties: {
-              include_raw_content: {
-                type: 'boolean',
-                description:
-                  'Whether to include raw content in the search results. DEFAULT is false'
-              }
-            }
-          }
-        },
-        required: ['query']
-      }
+      json: zodToJsonSchemaBody(tavilySearchInputSchema)
     }
   } as const
 
   /**
-   * Validate input
+   * Validate input using Zod schema
    */
   protected validateInput(input: TavilySearchInput): ValidationResult {
-    const errors: string[] = []
-
-    if (!input.query) {
-      errors.push('Query is required')
-    }
-
-    if (typeof input.query !== 'string') {
-      errors.push('Query must be a string')
-    }
-
-    if (input.query && input.query.trim().length === 0) {
-      errors.push('Query cannot be empty')
-    }
-
-    if (input.option && typeof input.option.include_raw_content !== 'boolean') {
-      errors.push('include_raw_content must be a boolean')
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
+    try {
+      tavilySearchInputSchema.parse(input)
+      return { isValid: true, errors: [] }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return {
+          isValid: false,
+          errors: error.errors.map((e) => `${e.path.join('.')}: ${e.message}`)
+        }
+      }
+      return {
+        isValid: false,
+        errors: ['Invalid input format']
+      }
     }
   }
 
@@ -168,7 +187,9 @@ export class TavilySearchTool extends BaseTool<TavilySearchInput, TavilySearchRe
           include_answer: true,
           include_images: true,
           include_raw_content: option?.include_raw_content ?? false,
-          max_results: 5,
+          max_results: option?.max_results ?? 10,
+          ...(option?.start_date && { start_date: option.start_date }),
+          ...(option?.end_date && { end_date: option.end_date }),
           include_domains: domainConfig.includeDomains,
           exclude_domains: domainConfig.excludeDomains
         })
