@@ -241,7 +241,8 @@ scenarios:
   - title: Simple Website
     content: Create simple website like amazon.com using HTML, CSS, JavaScript
 tags:
-  - developer
+  - development
+  - web
   - frontend
 isCustom: true
 icon: pencil

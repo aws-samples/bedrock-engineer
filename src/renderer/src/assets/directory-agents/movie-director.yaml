@@ -123,8 +123,8 @@ scenarios:
       Help me create an animated story about a magical forest adventure. I need multiple connected scenes with character
       dialogue and background music integration.
 tags:
-  - nova
-  - video
+  - bedrock
+  - video-generation
 isCustom: true
 icon: movie
 iconColor: '#d7048a'

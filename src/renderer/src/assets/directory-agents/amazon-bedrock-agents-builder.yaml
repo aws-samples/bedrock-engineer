@@ -1054,10 +1054,10 @@ scenarios:
   - title: エージェントのモニタリングとログ分析
     content: Bedrock Agentのパフォーマンスと使用状況をモニタリングしたいです。CloudWatchとの統合方法や、エージェントの応答品質を分析するためのログ設定をCDKで実装する方法を教えてください。
 tags:
-  - bedrock
-  - agent
-  - cdk
   - aws
+  - bedrock
+  - cdk
+  - agent-builder
 isCustom: true
 icon: aws
 iconColor: '#4dd556'

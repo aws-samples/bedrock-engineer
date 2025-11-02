@@ -465,6 +465,7 @@ scenarios:
       and create appropriate indexes?
 tags:
   - database
+  - development
 isCustom: true
 icon: database
 iconColor: '#6133d7'

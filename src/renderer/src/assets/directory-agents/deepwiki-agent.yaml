@@ -196,7 +196,9 @@ scenarios:
     content: >-
       Please analyze the coding standards and quality practices implemented in https://github.com/airbnb/javascript. I
       want to understand their style guide, linting rules, and code review processes that I can adapt for my team.
-tags: []
+tags:
+  - research
+  - mcp
 isCustom: true
 icon: search
 iconColor: '#c7237b'

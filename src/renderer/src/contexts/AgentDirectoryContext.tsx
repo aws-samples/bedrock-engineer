@@ -89,28 +89,45 @@ export const AgentDirectoryProvider: React.FC<{ children: React.ReactNode }> = (
     [organizationAgents, organizations]
   )
 
-  // すべてのタグをエージェントから抽出（組織エージェントも含む）
+  // 検索クエリでフィルタリングされたエージェントからタグを抽出
   const allTags = useMemo(() => {
-    const tagSet = new Set<string>()
+    let sourceAgents: CustomAgent[] = []
 
-    // ディレクトリエージェントからタグを抽出
-    directoryAgents.forEach((agent) => {
+    // 組織選択に応じたエージェントを取得
+    switch (selectedOrganization) {
+      case 'all':
+        sourceAgents = [...directoryAgents, ...Object.values(organizationAgents).flat()]
+        break
+      case 'contributors':
+        sourceAgents = directoryAgents
+        break
+      default:
+        sourceAgents = organizationAgents[selectedOrganization] || []
+        break
+    }
+
+    // 検索クエリでフィルタリング
+    const searchFiltered = sourceAgents.filter((agent) => {
+      if (searchQuery === '') return true
+
+      return (
+        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        agent.tags?.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        false
+      )
+    })
+
+    // フィルタリングされたエージェントからタグを抽出
+    const tagSet = new Set<string>()
+    searchFiltered.forEach((agent) => {
       if (agent.tags) {
         agent.tags.forEach((tag) => tagSet.add(tag))
       }
     })
 
-    // 組織エージェントからもタグを抽出
-    Object.values(organizationAgents).forEach((agents) => {
-      agents.forEach((agent) => {
-        if (agent.tags) {
-          agent.tags.forEach((tag) => tagSet.add(tag))
-        }
-      })
-    })
-
     return Array.from(tagSet).sort()
-  }, [directoryAgents, organizationAgents])
+  }, [directoryAgents, organizationAgents, selectedOrganization, searchQuery])
 
   // タグの選択・解除を処理
   const handleTagToggle = useCallback((tag: string) => {

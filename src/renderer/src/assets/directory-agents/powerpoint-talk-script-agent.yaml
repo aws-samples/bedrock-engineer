@@ -50,7 +50,8 @@ scenarios:
   - title: 技術的内容の分かりやすい説明スクリプト
     content: 技術的な内容のプレゼンテーション資料があるのですが、聴衆は非エンジニアです。専門用語や複雑な概念を、技術的でない人にも分かりやすく説明するトークスクリプトを作成してもらえますか?具体例や比喩表現も入れてください。
 tags:
-  - pptx
+  - office
+  - presentation
 isCustom: true
 icon: tv
 iconColor: '#ffa82e'

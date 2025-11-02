@@ -173,7 +173,9 @@ scenarios:
       thorough review. Can you analyze the file, check the formulas and cell references, and provide a detailed report
       on any issues or inconsistencies you find?
 tags:
-  - excel
+  - office
+  - spreadsheet
+  - mcp
 isCustom: true
 icon: pencil
 iconColor: '#119740'

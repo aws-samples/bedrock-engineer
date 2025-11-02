@@ -86,8 +86,9 @@ scenarios:
       My Lambda function 'data-processor' is failing with permission errors when trying to access an S3 bucket. Can you
       help me troubleshoot this issue by examining the function's IAM role and permissions configuration?
 tags:
-  - developer
   - aws
+  - development
+  - resource-management
 isCustom: true
 icon: terminal
 iconColor: '#ee09f6'

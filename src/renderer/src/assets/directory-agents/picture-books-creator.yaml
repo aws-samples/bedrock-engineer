@@ -61,8 +61,8 @@ scenarios:
     content: >-
       「きもちのおはなし」という題名で、様々な感情（うれしい、かなしい、おこる）を学べる紙芝居を作成してください。主人公が異なる感情を経験するストーリーで、3歳児が感情を理解し表現できるようになる内容にしてください。絵のポイントとなる表情の描き方についてもアドバイスをください。
 tags:
-  - child
-  - image
+  - content-creation
+  - image-generation
 isCustom: true
 icon: kid
 iconColor: '#851b0f'

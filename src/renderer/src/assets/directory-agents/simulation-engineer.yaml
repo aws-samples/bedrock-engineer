@@ -250,6 +250,7 @@ scenarios:
       Please simulate 1D and 2D random walks, compare with geometric Brownian motion, and analyze diffusion coefficients
       and convergence properties.
 tags:
+  - education
   - science
   - simulation
 isCustom: true

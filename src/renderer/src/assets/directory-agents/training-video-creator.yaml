@@ -311,7 +311,10 @@ scenarios:
       I need a training video created from this presentation urgently - it's needed within the next hour for a client
       meeting. The file is ready and I've already written the narration. Can you prioritize this and let me know the
       fastest timeline to complete it?
-tags: []
+tags:
+  - content-creation
+  - video-generation
+  - education
 isCustom: true
 icon: parent
 iconColor: '#d63f24'

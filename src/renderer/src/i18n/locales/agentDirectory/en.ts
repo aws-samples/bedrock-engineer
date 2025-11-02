@@ -6,6 +6,7 @@ export const en = {
   // Agent Card
   addAgent: 'Add Agent',
   viewDetails: 'View Details',
+  clearAll: 'Clear All',
 
   // Detail Modal
   authorLabel: 'Author',
@@ -22,6 +23,7 @@ export const en = {
   // Loading States
   loadingAgents: 'Loading agents...',
   noAgentsFound: 'No agents found',
+  tryDifferentSearch: 'Try adjusting your search terms or filters to find what you need',
   retryButton: 'Retry',
 
   // Organization Modal

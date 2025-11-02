@@ -256,10 +256,9 @@ scenarios:
       I want to use the Nova Sonic Voice Chat feature. What are the requirements, how do I set it up, and what voices
       are available? Also, can the voice agent use tools?
 tags:
-  - support
   - documentation
-  - bedrock-engineer
-  - help
+  - support
+  - mcp
 isCustom: true
 icon: robot
 iconColor: '#00a8e1'

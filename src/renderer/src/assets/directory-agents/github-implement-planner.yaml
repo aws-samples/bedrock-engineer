@@ -146,7 +146,7 @@ scenarios:
       common performance challenges faced by both frameworks as well as the problems unique to each.
 tags:
   - github
-  - research
+  - development
   - analytics
 isCustom: true
 icon: github

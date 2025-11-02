@@ -274,7 +274,7 @@ export default function ChatPage() {
                 {messages.length === 0 ? (
                   <div className="flex flex-col pt-12 h-full w-full justify-center items-center content-center align-center gap-1">
                     <div className="flex flex-row gap-3 items-center mb-2">
-                      <div className="h-6 w-6">
+                      <div className="h-5 w-5">
                         <AILogo />
                       </div>
                       <h1 className="text-lg font-bold dark:text-white">Agent Chat</h1>

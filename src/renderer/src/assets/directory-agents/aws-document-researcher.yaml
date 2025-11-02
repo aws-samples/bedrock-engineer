@@ -124,7 +124,7 @@ scenarios:
 tags:
   - aws
   - documentation
-  - support
+  - mcp
 isCustom: true
 icon: aws
 iconColor: '#3174d8'

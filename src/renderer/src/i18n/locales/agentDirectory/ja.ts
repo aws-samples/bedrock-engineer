@@ -7,6 +7,7 @@ export const ja = {
   // Agent Card
   addAgent: '追加する',
   viewDetails: '詳細を見る',
+  clearAll: 'すべてクリア',
 
   // Detail Modal
   authorLabel: '作成者',
@@ -23,6 +24,7 @@ export const ja = {
   // Loading States
   loadingAgents: 'エージェントを読み込み中...',
   noAgentsFound: 'エージェントが見つかりませんでした',
+  tryDifferentSearch: '検索条件やフィルターを調整してお試しください',
   retryButton: '再試行',
 
   // Organization Modal
