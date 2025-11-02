@@ -19,12 +19,10 @@ import { TextArea, AttachedImage } from '../ChatPage/components/InputForm/TextAr
 import { templates } from '../WebsiteGeneratorPage/templates'
 import { Preview } from '../WebsiteGeneratorPage/components/Preview'
 import { MessageList } from '../ChatPage/components/MessageList'
-import { FiCode, FiEye } from 'react-icons/fi'
+import { ViewToggle } from './components/ViewToggle'
 
 // Layout constants
 const LAYOUT_CONSTANTS = {
-  SANDPACK_HEIGHT: 'calc(100vh - 16rem)',
-  LAYOUT_HEIGHT_PERCENTAGE: '85%',
   FILE_EXPLORER_WIDTH: '250px'
 } as const
 
@@ -37,9 +35,6 @@ export default function RichWebsiteGeneratorPage() {
       template={template}
       theme={isDark ? 'dark' : 'light'}
       files={templates[template].files}
-      style={{
-        height: LAYOUT_CONSTANTS.SANDPACK_HEIGHT
-      }}
       options={{
         externalResources: ['https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css'],
         initMode: 'user-visible',
@@ -65,6 +60,7 @@ function RichWebsiteGeneratorPageContents() {
   const [userInput, setUserInput] = useState('')
   const { code } = useActiveCode()
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const [previewKey, setPreviewKey] = useState(0)
 
   // lastUpdate が変更されたら、デバッグ用にログ出力
   // これにより、ファイル更新のたびに React の再レンダリングがトリガーされる
@@ -225,6 +221,14 @@ export default App;
   const [isComposing, setIsComposing] = useState(false)
   const [activeTab, setActiveTab] = useState<'code' | 'preview'>('preview')
 
+  // Preview に切り替えた際に Sandpack を自動的に再実行
+  useEffect(() => {
+    if (activeTab === 'preview') {
+      // プレビューに切り替えたときにPreviewコンポーネントを強制的に再マウント
+      setPreviewKey((prev) => prev + 1)
+    }
+  }, [activeTab])
+
   return (
     <div className="flex h-[calc(100vh)] gap-3 p-3 overflow-hidden">
       {/* Left Side - Chat Area */}
@@ -265,29 +269,8 @@ export default App;
       {/* Right Side - Code/Preview Area */}
       <div className="flex flex-col flex-1 min-w-0 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
         {/* Tab Header */}
-        <div className="flex items-center gap-1 p-2 border-b dark:border-gray-700">
-          <button
-            onClick={() => setActiveTab('preview')}
-            className={`p-2 rounded-md transition-colors ${
-              activeTab === 'preview'
-                ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-            }`}
-            title="Preview"
-          >
-            <FiEye size={20} />
-          </button>
-          <button
-            onClick={() => setActiveTab('code')}
-            className={`p-2 rounded-md transition-colors ${
-              activeTab === 'code'
-                ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
-            }`}
-            title="Code"
-          >
-            <FiCode size={20} />
-          </button>
+        <div className="flex items-center p-2 border-b dark:border-gray-700">
+          <ViewToggle activeView={activeTab} onViewChange={setActiveTab} />
         </div>
 
         {/* Tab Content */}
@@ -321,7 +304,7 @@ export default App;
               />
             </SandpackLayout>
           ) : (
-            <div className="h-full">
+            <div className="h-full" key={previewKey}>
               <Preview isDark={isDark} code={code} />
             </div>
           )}
