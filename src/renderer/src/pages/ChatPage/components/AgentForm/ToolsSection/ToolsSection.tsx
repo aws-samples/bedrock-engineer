@@ -86,7 +86,7 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({
 
   return (
     <div
-      className="space-y-4"
+      className="flex flex-col h-full"
       onClick={preventEventPropagation}
       onMouseUp={(e) => {
         // ブラウザによってはmouseupイベントもハンドリングする必要がある
@@ -104,8 +104,8 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({
         />
       )}
 
-      {/* タブナビゲーション */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
+      {/* タブナビゲーション - 固定 */}
+      <div className="flex-shrink-0 border-b border-gray-200 dark:border-gray-700">
         <ul className="flex flex-wrap -mb-px">
           <li className="mr-2">
             <button
@@ -145,40 +145,44 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({
         </ul>
       </div>
 
-      {/* Available Tools タブ */}
-      {activeTab === 'available-tools' && (
-        <AvailableToolsTab
-          categorizedTools={categorizedTools()}
-          mcpServers={mcpServers}
-          onToggleTool={handleToggleTool}
-          onShowToolInfo={(toolName: string) => setToolInfoToShow(toolName)}
-          isLoadingMcpTools={isLoadingMcpTools}
-        />
-      )}
+      {/* タブコンテンツ - スクロール可能 */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Available Tools タブ */}
+        {activeTab === 'available-tools' && (
+          <AvailableToolsTab
+            categorizedTools={categorizedTools()}
+            mcpServers={mcpServers}
+            onToggleTool={handleToggleTool}
+            onShowToolInfo={(toolName: string) => setToolInfoToShow(toolName)}
+            isLoadingMcpTools={isLoadingMcpTools}
+          />
+        )}
 
-      {/* Tool Detail Settings タブ */}
-      {activeTab === 'tool-detail-settings' && (
-        <ToolDetailsTab
-          enabledTools={enabledTools}
-          expandedTools={expandedTools}
-          toggleToolExpand={toggleToolExpand}
-          toolsWithConfigurations={toolsWithConfigurations}
-          knowledgeBases={knowledgeBases}
-          onKnowledgeBasesChange={
-            onKnowledgeBasesChange || (() => console.warn('onKnowledgeBasesChange not provided'))
-          }
-          allowedCommands={allowedCommands}
-          onAllowedCommandsChange={
-            onAllowedCommandsChange || (() => console.warn('onAllowedCommandsChange not provided'))
-          }
-          bedrockAgents={bedrockAgents}
-          onBedrockAgentsChange={
-            onBedrockAgentsChange || (() => console.warn('onBedrockAgentsChange not provided'))
-          }
-          flows={flows}
-          onFlowsChange={onFlowsChange || (() => console.warn('onFlowsChange not provided'))}
-        />
-      )}
+        {/* Tool Detail Settings タブ */}
+        {activeTab === 'tool-detail-settings' && (
+          <ToolDetailsTab
+            enabledTools={enabledTools}
+            expandedTools={expandedTools}
+            toggleToolExpand={toggleToolExpand}
+            toolsWithConfigurations={toolsWithConfigurations}
+            knowledgeBases={knowledgeBases}
+            onKnowledgeBasesChange={
+              onKnowledgeBasesChange || (() => console.warn('onKnowledgeBasesChange not provided'))
+            }
+            allowedCommands={allowedCommands}
+            onAllowedCommandsChange={
+              onAllowedCommandsChange ||
+              (() => console.warn('onAllowedCommandsChange not provided'))
+            }
+            bedrockAgents={bedrockAgents}
+            onBedrockAgentsChange={
+              onBedrockAgentsChange || (() => console.warn('onBedrockAgentsChange not provided'))
+            }
+            flows={flows}
+            onFlowsChange={onFlowsChange || (() => console.warn('onFlowsChange not provided'))}
+          />
+        )}
+      </div>
     </div>
   )
 }

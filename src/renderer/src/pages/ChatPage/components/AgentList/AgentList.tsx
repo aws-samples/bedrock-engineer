@@ -5,6 +5,8 @@ import { CustomAgent } from '@/types/agent-chat'
 import { AgentCard } from './AgentCard'
 import { AgentTableView } from './AgentTableView'
 import { AgentViewToggle } from './AgentViewToggle'
+import { EmptyState } from './EmptyState'
+import { TagFilter } from './TagFilter'
 import { useAgentFilter } from './useAgentFilter'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 
@@ -85,29 +87,11 @@ export const AgentList: React.FC<AgentListProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-6">
-        {availableTags.map((tag) => (
-          <button
-            key={tag}
-            onClick={() => toggleTag(tag)}
-            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
-              ${
-                selectedTags.includes(tag)
-                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                  : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-          >
-            {tag}
-            {selectedTags.includes(tag) && (
-              <span className="ml-2 text-xs" aria-hidden="true">
-                ×
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+      <TagFilter tags={availableTags} selectedTags={selectedTags} onSelectTag={toggleTag} />
 
-      {viewMode === 'card' ? (
+      {filteredAgents.length === 0 ? (
+        <EmptyState />
+      ) : viewMode === 'card' ? (
         <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
           {filteredAgents.map((agent) => {
             const isCustomAgent = agent.isCustom ?? true

@@ -49,15 +49,14 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
   const isGenerating = isGeneratingSystem || isGeneratingVoiceChat || isGeneratingScenarios
 
   return (
-    <div>
+    <div className="h-full">
       <form
         onSubmit={formEventUtils.createSubmitHandler(handleSubmit)}
         className="flex flex-col h-full"
-        style={{ height: '100%', maxHeight: '100%', display: 'flex' }}
         onClick={formEventUtils.preventPropagation}
       >
         {/* スクロール可能なメインコンテンツエリア */}
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* 左側のサイドバーナビゲーション - 画面幅に応じて幅を変更 */}
           <div className="lg:w-64 w-16 border-r border-gray-200 dark:border-gray-700/50 flex-shrink-0 overflow-y-auto transition-all duration-300">
             <AgentFormSidebar
