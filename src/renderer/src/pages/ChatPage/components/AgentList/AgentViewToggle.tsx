@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { Tooltip } from 'flowbite-react'
 import { HiViewGrid, HiViewList } from 'react-icons/hi'
 
 interface AgentViewToggleProps {
@@ -26,9 +27,9 @@ export const AgentViewToggle: React.FC<AgentViewToggleProps> = ({
     >
       {/* Animation background */}
       <motion.div
-        className="absolute top-0.5 h-5 w-8 bg-white/60 dark:bg-gray-600/60 rounded shadow-sm"
+        className="absolute top-0.5 h-8 w-10 bg-white/60 dark:bg-gray-600/60 rounded shadow-sm"
         animate={{
-          x: viewMode === 'table' ? 32 : 0
+          x: viewMode === 'table' ? 40 : 0
         }}
         transition={{
           type: 'spring',
@@ -39,40 +40,42 @@ export const AgentViewToggle: React.FC<AgentViewToggleProps> = ({
       />
 
       {/* Card View button (Grid icon) */}
-      <button
-        onClick={() => onToggle('card')}
-        className={`
-          relative z-10 flex items-center justify-center
-          w-8 h-5 rounded
-          transition-colors duration-200
-          ${
-            viewMode === 'card'
-              ? 'text-gray-700 dark:text-gray-200'
-              : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
-          }
-        `}
-        title="Card View"
-      >
-        <HiViewGrid size={14} />
-      </button>
+      <Tooltip content="Card" placement="bottom" animation="duration-500">
+        <button
+          onClick={() => onToggle('card')}
+          className={`
+            relative z-10 flex items-center justify-center
+            w-10 h-8 rounded
+            transition-colors duration-200
+            ${
+              viewMode === 'card'
+                ? 'text-gray-700 dark:text-gray-200'
+                : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
+            }
+          `}
+        >
+          <HiViewGrid size={18} />
+        </button>
+      </Tooltip>
 
       {/* Table View button (List icon) */}
-      <button
-        onClick={() => onToggle('table')}
-        className={`
-          relative z-10 flex items-center justify-center
-          w-8 h-5 rounded
-          transition-colors duration-200
-          ${
-            viewMode === 'table'
-              ? 'text-gray-700 dark:text-gray-200'
-              : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
-          }
-        `}
-        title="Table View"
-      >
-        <HiViewList size={14} />
-      </button>
+      <Tooltip content="Table" placement="bottom" animation="duration-500">
+        <button
+          onClick={() => onToggle('table')}
+          className={`
+            relative z-10 flex items-center justify-center
+            w-10 h-5 rounded
+            transition-colors duration-200
+            ${
+              viewMode === 'table'
+                ? 'text-gray-700 dark:text-gray-200'
+                : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'
+            }
+          `}
+        >
+          <HiViewList size={18} />
+        </button>
+      </Tooltip>
     </div>
   )
 }

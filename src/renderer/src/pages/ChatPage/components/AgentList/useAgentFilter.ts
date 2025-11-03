@@ -11,12 +11,39 @@ export const useAgentFilter = (agents: CustomAgent[]) => {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc')
 
   const availableTags = useMemo(() => {
+    const searchLower = searchQuery.toLowerCase()
+
+    // Filter agents by search query (excluding selected tags filter)
+    const searchFiltered = agents.filter((agent) => {
+      // Don't display special agents used on other pages
+      const excludedAgentIds = [
+        'reactGeneratorAgent',
+        'vueGeneratorAgent',
+        'svelteGeneratorAgent',
+        // 'diagramGeneratorAgent',
+        'softwareArchitectureAgent',
+        'businessProcessAgent'
+      ]
+      if (excludedAgentIds.includes(agent.id)) return false
+
+      // If no search query, include all agents
+      if (searchQuery === '') return true
+
+      // Search in name, description, and tags (matching AgentDirectory implementation)
+      const nameMatch = agent.name.toLowerCase().includes(searchLower)
+      const descMatch = agent.description?.toLowerCase().includes(searchLower) || false
+      const tagMatch = agent.tags?.some((tag) => tag.toLowerCase().includes(searchLower)) || false
+
+      return nameMatch || descMatch || tagMatch
+    })
+
+    // Extract tags from filtered agents
     const tagSet = new Set<string>()
-    agents.forEach((agent) => {
+    searchFiltered.forEach((agent) => {
       agent.tags?.forEach((tag) => tagSet.add(tag))
     })
     return Array.from(tagSet).sort()
-  }, [agents])
+  }, [agents, searchQuery])
 
   const filteredAgents = useMemo(() => {
     const searchLower = searchQuery.toLowerCase()
@@ -36,24 +63,18 @@ export const useAgentFilter = (agents: CustomAgent[]) => {
         return !excludedAgentIds.includes(agent.id)
       })
       .filter((agent) => {
-        // Enhanced search: name, description, system prompt, scenarios
+        // Search in name, description, and tags (matching AgentDirectory implementation)
         const nameMatch = agent.name.toLowerCase().includes(searchLower)
         const descMatch = agent.description?.toLowerCase().includes(searchLower) || false
-        const systemMatch = agent.system?.toLowerCase().includes(searchLower) || false
-        const scenarioMatch =
-          agent.scenarios?.some(
-            (scenario) =>
-              scenario.title.toLowerCase().includes(searchLower) ||
-              scenario.content.toLowerCase().includes(searchLower)
-          ) || false
+        const tagMatch = agent.tags?.some((tag) => tag.toLowerCase().includes(searchLower)) || false
 
-        const textMatch = nameMatch || descMatch || systemMatch || scenarioMatch
+        const textMatch = nameMatch || descMatch || tagMatch
 
-        // Tag filter
-        const tagMatch =
+        // Selected tags filter
+        const selectedTagsMatch =
           selectedTags.length === 0 || selectedTags.every((tag) => agent.tags?.includes(tag))
 
-        return textMatch && tagMatch
+        return textMatch && selectedTagsMatch
       })
 
     // Sort agents
