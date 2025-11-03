@@ -198,21 +198,6 @@ export const TextArea: React.FC<TextAreaProps> = ({
   )
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Cmd+Shift+A でPlan/Actモードを切り替え（テキストエリア内でも有効にする）
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
-      e.preventDefault()
-      setPlanMode(!planMode)
-
-      // モード切り替え通知
-      const newMode = !planMode ? 'Plan' : 'Act'
-      toast.success(t(`Switched to ${newMode} mode`), {
-        duration: 2000,
-        position: 'bottom-center',
-        icon: '🔄'
-      })
-      return
-    }
-
     // メッセージ送信のキー入力処理
     if (isComposing) {
       return

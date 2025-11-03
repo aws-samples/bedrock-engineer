@@ -7,9 +7,7 @@ export const planActMode = {
     'Plan mode - Read-only tools enabled (Ctrl+Shift+A)':
       'Plan mode - Read-only tools enabled (Ctrl+Shift+A)',
     'Act mode - All tools enabled (⌘+Shift+A)': 'Act mode - All tools enabled (⌘+Shift+A)',
-    'Act mode - All tools enabled (Ctrl+Shift+A)': 'Act mode - All tools enabled (Ctrl+Shift+A)',
-    'Switched to Plan mode': 'Switched to Plan mode',
-    'Switched to Act mode': 'Switched to Act mode'
+    'Act mode - All tools enabled (Ctrl+Shift+A)': 'Act mode - All tools enabled (Ctrl+Shift+A)'
   },
   ja: {
     'Plan mode - Read-only tools enabled': 'プランモード - 読み取り専用ツールのみ有効',
@@ -20,8 +18,6 @@ export const planActMode = {
       'プランモード - 読み取り専用ツールのみ有効 (Ctrl+Shift+A)',
     'Act mode - All tools enabled (⌘+Shift+A)': 'アクトモード - すべてのツールが有効 (⌘+Shift+A)',
     'Act mode - All tools enabled (Ctrl+Shift+A)':
-      'アクトモード - すべてのツールが有効 (Ctrl+Shift+A)',
-    'Switched to Plan mode': 'プランモードに切り替えました',
-    'Switched to Act mode': 'アクトモードに切り替えました'
+      'アクトモード - すべてのツールが有効 (Ctrl+Shift+A)'
   }
 }
