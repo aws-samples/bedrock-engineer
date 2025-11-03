@@ -27,7 +27,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
           type="button"
           onClick={onOpenSettings}
           className="w-full flex items-center gap-2 px-3 py-2 text-sm
-            text-gray-600 dark:text-gray-300 rounded-md hover:text-gray-800 dark:hover:text-gray-500
+            text-gray-900 dark:text-gray-300 rounded-md hover:text-gray-500 dark:hover:text-gray-500
             transition-colors"
         >
           <span className="flex items-center gap-4">
