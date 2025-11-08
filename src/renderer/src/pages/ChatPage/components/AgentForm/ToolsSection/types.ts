@@ -6,6 +6,7 @@ import {
   McpServerConfig,
   FlowConfig
 } from '@/types/agent-chat'
+import { AgentCoreGatewayConfigSchemaType } from '@/types/agent-chat.schema'
 import { BedrockAgent } from '@/types/agent'
 
 /**
@@ -18,6 +19,8 @@ export interface ToolCategory {
   tools: string[]
   hasMcpServers?: boolean // MCPサーバーが設定されているかどうかを示すフラグ
   isMcpCategory?: boolean // MCP ツールカテゴリかどうかを示すフラグ
+  hasAgentCoreGateways?: boolean // AgentCore Gatewayが設定されているかどうかを示すフラグ
+  isAgentCoreCategory?: boolean // AgentCore Gateway ツールカテゴリかどうかを示すフラグ
 }
 
 /**
@@ -38,8 +41,11 @@ export interface ToolsSectionProps {
   flows?: FlowConfig[]
   onFlowsChange?: (flows: FlowConfig[]) => void
   mcpServers?: McpServerConfig[]
+  agentCoreGateways?: AgentCoreGatewayConfigSchemaType[]
   tempMcpTools?: ToolState[] // 一時的なMCPツール（タブ切替時に取得したもの）
+  tempAgentCoreGatewayTools?: ToolState[] // 一時的なAgentCore Gatewayツール
   isLoadingMcpTools?: boolean // MCPツールを読み込み中かどうかを示すフラグ
+  isLoadingAgentCoreTools?: boolean // AgentCore Gatewayツールを読み込み中かどうかを示すフラグ
 }
 
 /**
@@ -70,6 +76,7 @@ export interface AvailableToolsTabProps {
   onToggleTool: (toolName: string) => void
   onShowToolInfo: (toolName: string) => void
   isLoadingMcpTools?: boolean // MCPツールを読み込み中かどうかを示すフラグ
+  isLoadingAgentCoreTools?: boolean // AgentCore Gatewayツールを読み込み中かどうかを示すフラグ
 }
 
 /**
@@ -81,6 +88,7 @@ export interface ToolCategorySectionProps {
   onToggleTool: (toolName: string) => void
   onShowToolInfo: (toolName: string) => void
   isLoadingMcpTools?: boolean // MCPツールを読み込み中かどうかを示すフラグ
+  isLoadingAgentCoreTools?: boolean // AgentCore Gatewayツールを読み込み中かどうかを示すフラグ
 }
 
 /**
@@ -89,6 +97,7 @@ export interface ToolCategorySectionProps {
 export interface ToolItemProps {
   tool: ToolState
   isMcp: boolean
+  isAgentCore?: boolean
   serverInfo?: string
   onToggle: (toolName: string) => void
   onShowInfo?: (toolName: string) => void

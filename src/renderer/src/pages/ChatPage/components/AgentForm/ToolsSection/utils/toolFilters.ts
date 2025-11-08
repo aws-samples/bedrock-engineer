@@ -1,6 +1,6 @@
 import { ToolState } from '@/types/agent-chat'
-import { isMcpTool } from '@/types/tools'
 import { McpServerConfig } from '@/types/agent-chat'
+import { AgentCoreGatewayConfigSchemaType } from '@/types/agent-chat.schema'
 import { CategorizedToolData } from '../types'
 import { TOOL_CATEGORIES } from './toolCategories'
 
@@ -15,19 +15,32 @@ export const isToolEnabled = (tools: ToolState[], toolName: string): boolean => 
  * ツール一覧からMCPツールのみを抽出する
  */
 export const extractMcpTools = (tools: ToolState[]): ToolState[] => {
-  return tools.filter((tool) => {
-    const toolName = tool.toolSpec?.name
-    return toolName ? isMcpTool(toolName) : false
-  })
+  return tools.filter((tool) => tool.toolType === 'mcp')
 }
 
 /**
  * ツール一覧からMCPツール以外のツールを抽出する
  */
 export const extractNonMcpTools = (tools: ToolState[]): ToolState[] => {
+  return tools.filter((tool) => tool.toolType !== 'mcp')
+}
+
+/**
+ * ツール一覧からAgentCore Gatewayツールのみを抽出する
+ * agentCoreGatewayTools配列に存在するツールを抽出
+ */
+export const extractAgentCoreGatewayTools = (
+  tools: ToolState[],
+  agentCoreGatewayTools: ToolState[] = []
+): ToolState[] => {
+  // AgentCore Gatewayツール名のSetを作成
+  const gatewayToolNames = new Set(
+    agentCoreGatewayTools.map((tool) => tool.toolSpec?.name).filter(Boolean)
+  )
+
   return tools.filter((tool) => {
     const toolName = tool.toolSpec?.name
-    return !toolName || !isMcpTool(toolName)
+    return toolName && gatewayToolNames.has(toolName)
   })
 }
 
@@ -48,7 +61,8 @@ export const createVirtualTodoTool = (tools: ToolState[]): ToolState => {
       description: 'Task management and workflow tracking',
       inputSchema: undefined // 仮想ツールなので未定義
     },
-    enabled: isEnabled || false
+    enabled: isEnabled || false,
+    toolType: 'standard' as const
   }
 }
 
@@ -57,16 +71,25 @@ export const createVirtualTodoTool = (tools: ToolState[]): ToolState => {
  */
 export const categorizeTools = (
   tools: ToolState[],
-  mcpServers?: McpServerConfig[]
+  mcpServers?: McpServerConfig[],
+  agentCoreGateways?: AgentCoreGatewayConfigSchemaType[],
+  agentCoreGatewayTools?: ToolState[]
 ): CategorizedToolData[] => {
   // MCPサーバー設定の有無を確認
   const hasMcpServers = mcpServers && mcpServers.length > 0
 
-  // MCPサーバーがない場合は、MCPカテゴリを結果から除外するフィルタを適用
+  // AgentCore Gateway設定の有無を確認
+  const hasAgentCoreGateways = agentCoreGateways && agentCoreGateways.length > 0
+
+  // サーバー/Gateway がない場合は、対応するカテゴリを結果から除外
   const filteredCategories = TOOL_CATEGORIES.filter((category) => {
     // MCPカテゴリの場合、サーバーがない場合は除外
     if (category.id === 'mcp') {
       return hasMcpServers
+    }
+    // AgentCoreカテゴリの場合、Gatewayがない場合は除外
+    if (category.id === 'agentcore') {
+      return hasAgentCoreGateways
     }
     // 他のカテゴリは常に含める
     return true
@@ -74,6 +97,9 @@ export const categorizeTools = (
 
   // MCPツールを抽出
   const mcpTools = extractMcpTools(tools)
+
+  // AgentCore Gatewayツールを抽出（agentCoreGatewayToolsリストを使用）
+  const agentCoreTools = extractAgentCoreGatewayTools(tools, agentCoreGatewayTools)
 
   return filteredCategories.map((category) => {
     // MCP カテゴリの場合は特別処理
@@ -83,6 +109,15 @@ export const categorizeTools = (
         toolsData: mcpTools,
         hasMcpServers, // MCPサーバーがあるかどうかのフラグ
         mcpServersInfo: mcpServers // サーバー情報も含める
+      }
+    }
+
+    // AgentCore Gateway カテゴリの場合は特別処理
+    if (category.id === 'agentcore') {
+      return {
+        ...category,
+        toolsData: agentCoreTools,
+        hasAgentCoreGateways // AgentCore Gatewayがあるかどうかのフラグ
       }
     }
 
@@ -98,7 +133,7 @@ export const categorizeTools = (
       }
 
       // 通常のツール処理
-      const tool = tools?.find((t) => t.toolSpec?.name === toolName && !isMcpTool(toolName))
+      const tool = tools?.find((t) => t.toolSpec?.name === toolName && t.toolType === 'standard')
       if (tool) {
         toolsInCategory.push(tool)
       } else {
@@ -109,7 +144,8 @@ export const categorizeTools = (
         if (toolSpec?.toolSpec) {
           toolsInCategory.push({
             toolSpec: toolSpec.toolSpec,
-            enabled: false
+            enabled: false,
+            toolType: 'standard' as const
           })
         }
       }

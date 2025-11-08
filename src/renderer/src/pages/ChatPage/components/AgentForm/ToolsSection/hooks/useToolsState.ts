@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { ToolState, AgentCategory, McpServerConfig } from '@/types/agent-chat'
+import { AgentCoreGatewayConfigSchemaType } from '@/types/agent-chat.schema'
 import { isMcpTool } from '@/types/tools'
 import { isToolEnabled, categorizeTools } from '../utils/toolFilters'
 import { CategorizedToolData } from '../types'
@@ -11,11 +12,20 @@ export function useToolsState(
   initialTools: ToolState[],
   initialCategory: AgentCategory = 'general',
   mcpServers: McpServerConfig[] = [],
+  agentCoreGateways: AgentCoreGatewayConfigSchemaType[] = [],
+  agentCoreGatewayTools: ToolState[] = [],
   _agentMcpTools: ToolState[] = [],
   onChange: (tools: ToolState[]) => void,
   _onCategoryChange?: (category: AgentCategory) => void,
   _getDefaultToolsForCategory?: (category: string) => ToolState[]
 ) {
+  // AgentCore Gatewayツールかどうかを判定するヘルパー関数
+  const isAgentCoreTool = useCallback(
+    (toolName: string) => {
+      return agentCoreGatewayTools.some((tool) => tool.toolSpec?.name === toolName)
+    },
+    [agentCoreGatewayTools]
+  )
   // 基本状態
   const [agentTools, setAgentTools] = useState<ToolState[]>(initialTools || [])
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory)
@@ -35,8 +45,8 @@ export function useToolsState(
   // ツール設定変更ハンドラ
   const handleToggleTool = useCallback(
     (toolName: string) => {
-      // MCP ツールの場合は常に有効なので変更しない
-      if (isMcpTool(toolName)) {
+      // MCP ツールとAgentCore Gatewayツールの場合は常に有効なので変更しない
+      if (isMcpTool(toolName) || isAgentCoreTool(toolName)) {
         return
       }
 
@@ -70,7 +80,8 @@ export function useToolsState(
             if (toolSpec?.toolSpec) {
               updatedTools.push({
                 toolSpec: toolSpec.toolSpec,
-                enabled: newEnabled
+                enabled: newEnabled,
+                toolType: 'standard' as const
               })
             }
           }
@@ -91,13 +102,13 @@ export function useToolsState(
       setAgentTools(updatedTools)
       onChange(updatedTools)
     },
-    [agentTools, onChange]
+    [agentTools, onChange, isAgentCoreTool]
   )
 
   // 各カテゴリのツールを取得する
   const categorizedTools = useCallback((): CategorizedToolData[] => {
-    return categorizeTools(agentTools, mcpServers)
-  }, [agentTools, mcpServers])
+    return categorizeTools(agentTools, mcpServers, agentCoreGateways, agentCoreGatewayTools)
+  }, [agentTools, mcpServers, agentCoreGateways, agentCoreGatewayTools])
 
   // ツールの展開状態を切り替える
   const toggleToolExpand = useCallback((toolName: string) => {

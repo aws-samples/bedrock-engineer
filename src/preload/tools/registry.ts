@@ -160,7 +160,7 @@ export class ToolRegistry {
    * Execute a tool
    */
   async execute(input: ToolInput, context?: any): Promise<string | ToolResult> {
-    const toolName = this.resolveToolName(input.type)
+    const toolName = input.type
 
     // JSON Parse Error の事前チェック
     if (this.hasJsonParseError(input)) {
@@ -169,11 +169,46 @@ export class ToolRegistry {
 
     toolSystemLogger.info(`Executing tool: ${toolName}`, {
       originalType: input.type,
-      isMcp: isMcpTool(input.type)
+      toolType: input.toolType
     })
 
     try {
-      // Special handling for MCP tools
+      // New approach: Use toolType field for routing
+      if (input.toolType) {
+        if (input.toolType === 'mcp') {
+          const mcpTool = this.getTool('mcp')
+          if (!mcpTool) {
+            throw new ToolNotFoundError('MCP adapter not registered')
+          }
+
+          // Pass the original MCP tool name in the input
+          const mcpInput = {
+            ...input,
+            mcpToolName: input.type // Use the tool name as-is
+          }
+
+          return await mcpTool.execute(mcpInput)
+        }
+
+        if (input.toolType === 'agentcore') {
+          const agentCoreTool = this.getTool('agentcore')
+          if (!agentCoreTool) {
+            throw new ToolNotFoundError('AgentCore Gateway adapter not registered')
+          }
+
+          return await agentCoreTool.execute(input)
+        }
+
+        // Standard tools
+        const tool = this.getTool(toolName)
+        if (!tool) {
+          throw new ToolNotFoundError(toolName)
+        }
+
+        return await tool.execute(input, context)
+      }
+
+      // Legacy fallback: Pattern matching for backward compatibility
       const isLegacyMcp = typeof input.type === 'string' && input.type.startsWith('mcp_')
       const isMcp = isMcpTool(input.type)
 
@@ -183,7 +218,6 @@ export class ToolRegistry {
           throw new ToolNotFoundError('MCP adapter not registered')
         }
 
-        // Pass the original MCP tool name in the input
         const mcpInput = {
           ...input,
           mcpToolName: getOriginalMcpToolName(input.type)
@@ -237,23 +271,6 @@ export class ToolRegistry {
     const errorDetails = input.error || 'JSON parsing failed'
 
     return `Tool input JSON parsing failed. This error occurred because the token limit (${maxTokens}) was exceeded while generating the input JSON for tool use.\n\nOriginal input: ${originalInput}\n\nError details: ${errorDetails}`
-  }
-
-  /**
-   * Resolve tool name from input type
-   */
-  private resolveToolName(type: string): string {
-    // Check if it's a legacy MCP tool first
-    if (type.startsWith('mcp_')) {
-      return 'mcp'
-    }
-
-    // Check if it's an MCP tool (any non-built-in tool)
-    if (isMcpTool(type)) {
-      return 'mcp'
-    }
-
-    return type
   }
 
   /**

@@ -1,7 +1,7 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { ToggleSwitch } from 'flowbite-react'
-import { FiServer } from 'react-icons/fi'
+import { FiServer, FiCloud } from 'react-icons/fi'
 import { getOriginalMcpToolName, ToolName } from '@/types/tools'
 import { toolIcons } from '@renderer/components/icons/ToolIcons'
 import { ToolItemProps } from '../../types'
@@ -10,18 +10,26 @@ import { preventEventPropagation } from '../../utils/eventUtils'
 /**
  * ツールアイテムコンポーネント
  */
-export const ToolItem: React.FC<ToolItemProps> = ({ tool, isMcp, serverInfo, onToggle }) => {
+export const ToolItem: React.FC<ToolItemProps> = ({
+  tool,
+  isMcp,
+  isAgentCore = false,
+  serverInfo,
+  onToggle
+}) => {
   const { t } = useTranslation()
 
   const toolName = tool.toolSpec?.name
   if (!toolName) return null
 
-  // ツール名の表示
+  // ツール名の表示（AgentCoreはプレフィックスなしなのでそのまま）
   const displayedName = isMcp ? getOriginalMcpToolName(toolName) : toolName
 
   // ツールアイコン
   const ToolIcon = isMcp ? (
     <FiServer className="h-5 w-5" />
+  ) : isAgentCore ? (
+    <FiCloud className="h-5 w-5" />
   ) : toolName ? (
     toolIcons[toolName as ToolName]
   ) : null
@@ -45,15 +53,23 @@ export const ToolItem: React.FC<ToolItemProps> = ({ tool, isMcp, serverInfo, onT
           >
             {displayedName}
             {isMcp && (
-              <span className="ml-1 text-xs font-normal bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 py-0.5 px-1 rounded">
+              <span className="ml-1 text-xs font-normal bg-cyan-100 text-cyan-800 dark:bg-cyan-800/50 dark:text-cyan-200 py-0.5 px-1 rounded">
                 MCP
+              </span>
+            )}
+            {isAgentCore && (
+              <span className="ml-1 text-xs font-normal bg-purple-100 text-purple-800 dark:bg-purple-800/50 dark:text-purple-200 py-0.5 px-1 rounded">
+                Gateway
               </span>
             )}
           </p>
           <div>
-            {isMcp ? (
+            {isMcp || isAgentCore ? (
               <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 overflow-hidden">
-                {tool.toolSpec?.description || t('MCP tool from Model Context Protocol server')}
+                {tool.toolSpec?.description ||
+                  (isMcp
+                    ? t('MCP tool from Model Context Protocol server')
+                    : t('AgentCore Gateway tool'))}
                 {serverInfo && (
                   <span className="block mt-0.5 text-gray-500 dark:text-gray-500 truncate">
                     {serverInfo}
@@ -69,7 +85,7 @@ export const ToolItem: React.FC<ToolItemProps> = ({ tool, isMcp, serverInfo, onT
         </div>
       </div>
       <div className="flex-shrink-0" onClick={preventEventPropagation}>
-        {isMcp ? (
+        {isMcp || isAgentCore ? (
           <div className="flex items-center">
             <ToggleSwitch checked={true} onChange={() => {}} disabled={true} label="" />
           </div>

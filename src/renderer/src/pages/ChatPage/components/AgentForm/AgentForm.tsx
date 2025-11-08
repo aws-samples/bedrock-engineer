@@ -26,6 +26,8 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
     agentCategory,
     isLoadingMcpTools,
     tempMcpTools,
+    isLoadingAgentCoreTools,
+    tempAgentCoreTools,
     generateSystemPrompt,
     generateVoiceChatPrompt,
     generateScenarios,
@@ -37,7 +39,8 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
     handleToolsChange,
     handleCategoryChange,
     handleTabChange,
-    fetchMcpTools
+    fetchMcpTools,
+    fetchAgentCoreGatewayTools
   } = useAgentForm(agent, onSave)
 
   const handleAdditionalInstructionChange = React.useCallback(
@@ -80,6 +83,8 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
               projectPath={projectPath}
               isLoadingMcpTools={isLoadingMcpTools}
               tempMcpTools={tempMcpTools}
+              isLoadingAgentCoreTools={isLoadingAgentCoreTools}
+              tempAgentCoreTools={tempAgentCoreTools}
               handleAutoGeneratePrompt={generateSystemPrompt}
               handleVoiceChatGenerate={generateVoiceChatPrompt}
               handleGenerateScenarios={generateScenarios}
@@ -88,6 +93,7 @@ export const AgentForm: React.FC<AgentFormProps> = ({ agent, onSave, onCancel })
               isGeneratingScenarios={isGeneratingScenarios}
               availableTags={availableTags}
               fetchMcpTools={fetchMcpTools}
+              fetchAgentCoreGatewayTools={fetchAgentCoreGatewayTools}
               handleAdditionalInstructionChange={handleAdditionalInstructionChange}
             />
           </div>

@@ -199,6 +199,13 @@ export interface SettingsContextType {
   getAgentMcpTools: (agentId: string) => ToolState[]
   updateAgentMcpTools: (agentId: string, tools: ToolState[]) => void
 
+  // AgentCore Gateway Settings
+  getAgentAgentCoreGateways: (agentId: string) => any[]
+  updateAgentAgentCoreGateways: (agentId: string, gateways: any[]) => void
+  fetchAgentCoreGatewayTools: (gateways?: any[]) => Promise<Tool[]>
+  getAgentAgentCoreGatewayTools: (agentId: string) => ToolState[]
+  updateAgentAgentCoreGatewayTools: (agentId: string, tools: ToolState[]) => void
+
   // エージェント固有のツール設定
   getAgentTools: (agentId: string) => ToolState[]
   updateAgentTools: (agentId: string, tools: ToolState[]) => void
@@ -759,6 +766,45 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [customAgents]
   )
 
+  // AgentCore Gatewayツールをロードする
+  const fetchAgentCoreGatewayTools = useCallback(async (gateways?: any[]) => {
+    try {
+      if (window.api?.agentcore?.getTools && gateways && gateways.length > 0) {
+        // 複数のGatewayからツールを取得して統合
+        const allTools: Tool[] = []
+
+        for (const gateway of gateways) {
+          try {
+            const tools = await window.api.agentcore.getTools(gateway)
+            allTools.push(...(tools || []))
+          } catch (error) {
+            console.error(`Failed to fetch tools from gateway ${gateway.endpoint}:`, error)
+          }
+        }
+
+        return allTools
+      }
+      return []
+    } catch (error) {
+      console.error('Failed to fetch AgentCore Gateway tools:', error)
+      return []
+    }
+  }, [])
+
+  // エージェント固有のAgentCore Gatewayツールを更新する関数
+  const updateAgentAgentCoreGatewayTools = useCallback(
+    (agentId: string, tools: ToolState[]) => {
+      // カスタムエージェントの場合のみ更新可能
+      const updatedAgents = customAgents.map((agent) =>
+        agent.id === agentId ? { ...agent, agentCoreGatewayTools: tools } : agent
+      )
+
+      setCustomAgents(updatedAgents)
+      window.store.set('customAgents', updatedAgents)
+    },
+    [customAgents]
+  )
+
   // Load MCP tools when component mounts and when current agent changes
   useEffect(() => {
     // 初期ロードではエージェント固有のMCPサーバー設定は使わない
@@ -843,7 +889,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         try {
           const mcpTools = await fetchMcpTools(newCustomAgent.mcpServers)
           if (mcpTools && mcpTools.length > 0) {
-            newCustomAgent.mcpTools = mcpTools.map((tool: Tool) => ({ ...tool, enabled: true }))
+            newCustomAgent.mcpTools = mcpTools.map((tool: Tool) => ({
+              ...tool,
+              enabled: true,
+              toolType: 'mcp' as const
+            }))
           }
         } catch (error) {
           console.error(`Failed to fetch MCP tools for agent ${newCustomAgent.name}:`, error)
@@ -1259,6 +1309,17 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     },
     [allAgents]
   )
+
+  // エージェント固有のAgentCore Gatewayツールを取得する関数
+  const getAgentAgentCoreGatewayTools = useCallback(
+    (agentId: string): ToolState[] => {
+      // 現在選択されているエージェントを見つける
+      const agent = allAgents.find((a) => a.id === agentId)
+      // エージェント固有のAgentCore Gatewayツール設定を返す（なければ空配列）
+      return agent?.agentCoreGatewayTools || []
+    },
+    [allAgents]
+  )
   const currentAgent = useMemo(() => {
     return allAgents.find((a) => a.id === selectedAgentId)
   }, [allAgents, selectedAgentId])
@@ -1283,7 +1344,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           if (fetchedTools && fetchedTools.length > 0) {
             const toolStates = fetchedTools.map((tool) => ({
               toolSpec: tool.toolSpec,
-              enabled: true
+              enabled: true,
+              toolType: 'mcp' as const
             })) as ToolState[]
 
             // カスタムエージェントの場合はグローバル状態を更新して保存
@@ -1319,6 +1381,69 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       console.log(`Agent ${currentAgent.name} has no MCP servers configured`)
     }
   }, [currentAgent, fetchMcpTools, updateAgentMcpTools, sharedAgents, directoryAgents])
+
+  // 現在選択中のエージェントが変更されたらAgentCore Gatewayツールを再読み込み
+  useEffect(() => {
+    if (!currentAgent) return
+
+    // エージェントにAgentCore Gateway設定があり、かつagentCoreGatewayToolsがまだ設定されていない場合
+    if (currentAgent?.agentCoreGateways && currentAgent.agentCoreGateways.length > 0) {
+      // すでにAgentCore Gatewayツールがあるか確認
+      const hasGatewayTools =
+        currentAgent.agentCoreGatewayTools && currentAgent.agentCoreGatewayTools.length > 0
+
+      if (!hasGatewayTools) {
+        console.log(
+          `Fetching AgentCore Gateway tools for agent: ${currentAgent.name} (${currentAgent.agentCoreGateways.length} gateways)`
+        )
+
+        // 非同期で実行
+        const fetchAndSetGatewayTools = async () => {
+          const fetchedTools = await fetchAgentCoreGatewayTools(currentAgent.agentCoreGateways)
+          if (fetchedTools && fetchedTools.length > 0) {
+            const toolStates = fetchedTools.map((tool) => ({
+              toolSpec: tool.toolSpec,
+              enabled: true,
+              toolType: 'agentcore' as const
+            })) as ToolState[]
+
+            // カスタムエージェントの場合はグローバル状態を更新して保存
+            if (currentAgent.isCustom) {
+              updateAgentAgentCoreGatewayTools(currentAgent.id, toolStates)
+            } else if (currentAgent.isShared) {
+              // 共有エージェントの場合は一時的にメモリ上でのみ設定
+              const updatedAgentsArray = sharedAgents.map((agent) =>
+                agent.id === currentAgent.id
+                  ? { ...agent, agentCoreGatewayTools: toolStates }
+                  : agent
+              )
+
+              if (currentAgent.isShared) {
+                setSharedAgents(updatedAgentsArray)
+              }
+            }
+          } else {
+            console.log(`No AgentCore Gateway tools found for agent: ${currentAgent.name}`)
+          }
+        }
+
+        fetchAndSetGatewayTools()
+      } else {
+        console.log(
+          `Agent ${currentAgent.name} already has ${currentAgent.agentCoreGatewayTools?.length} AgentCore Gateway tools`
+        )
+      }
+    } else if (currentAgent) {
+      // 現在のエージェントにAgentCore Gateway設定がない場合
+      console.log(`Agent ${currentAgent.name} has no AgentCore Gateways configured`)
+    }
+  }, [
+    currentAgent,
+    fetchAgentCoreGatewayTools,
+    updateAgentAgentCoreGatewayTools,
+    sharedAgents,
+    directoryAgents
+  ])
 
   const enabledTavilySearch = tavilySearchApiKey.length > 0
 
@@ -1392,6 +1517,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const agentMcpTools = mcpTools.map((tool) => ({
         ...tool,
         enabled: true, // MCP ツールは常に有効
+        toolType: 'mcp' as const,
         toolSpec: tool.toolSpec
           ? {
               ...tool.toolSpec,
@@ -1400,13 +1526,28 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           : undefined
       })) as ToolState[]
 
-      // 標準ツールのみを処理（MCP ツールは別途管理）
+      // AgentCore Gateway ツールを取得（常に有効）
+      const agentCoreGatewayTools = agent?.agentCoreGatewayTools || []
+      const agentAgentCoreGatewayTools = agentCoreGatewayTools.map((tool) => ({
+        ...tool,
+        enabled: true, // AgentCore Gateway ツールは常に有効
+        toolType: 'agentcore' as const,
+        toolSpec: tool.toolSpec
+          ? {
+              ...tool.toolSpec,
+              description: replacePlaceholders(tool.toolSpec.description || '', placeholderValues)
+            }
+          : undefined
+      })) as ToolState[]
+
+      // 標準ツールのみを処理（MCP ツールとAgentCore Gateway ツールは別途管理）
       // エージェント固有のツール設定がある場合
       if (agent && agent.tools && agent.tools.length > 0) {
         // 標準ツールの ToolState[] を生成（デフォルトは無効）
         const standardToolStates = tools.map((tool) => ({
           ...tool,
           enabled: false,
+          toolType: 'standard' as const,
           toolSpec: tool.toolSpec
             ? {
                 ...tool.toolSpec,
@@ -1427,12 +1568,12 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return { ...toolState, enabled: isEnabled }
         })
 
-        // 標準ツールと MCP ツールを結合して返す
-        return [...enabledStandardTools, ...agentMcpTools]
+        // 標準ツール、MCP ツール、AgentCore Gateway ツールを結合して返す
+        return [...enabledStandardTools, ...agentMcpTools, ...agentAgentCoreGatewayTools]
       }
 
-      // MCP ツールだけを返す
-      return agentMcpTools
+      // MCP ツールとAgentCore Gateway ツールを返す
+      return [...agentMcpTools, ...agentAgentCoreGatewayTools]
     },
     [allAgents, tools, projectPath]
   )
@@ -1687,6 +1828,33 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       // カスタムエージェントの場合のみ更新可能
       const updatedAgents = customAgents.map((agent) =>
         agent.id === agentId ? { ...agent, tavilySearchConfig: config } : agent
+      )
+
+      setCustomAgents(updatedAgents)
+      window.store.set('customAgents', updatedAgents)
+    },
+    [customAgents]
+  )
+
+  // エージェント固有のAgentCore Gateway設定を取得する関数
+  const getAgentAgentCoreGateways = useCallback(
+    (agentId: string): any[] => {
+      // 現在選択されているエージェントを見つける
+      const agent = allAgents.find((a) => a.id === agentId)
+
+      // エージェント固有のAgentCore Gateway設定がある場合はそれを返す
+      // それ以外は空配列を返す
+      return (agent && agent.agentCoreGateways) || []
+    },
+    [allAgents]
+  )
+
+  // エージェントのAgentCore Gateway設定を更新する関数
+  const updateAgentAgentCoreGateways = useCallback(
+    (agentId: string, gateways: any[]) => {
+      // カスタムエージェントの場合のみ更新可能
+      const updatedAgents = customAgents.map((agent) =>
+        agent.id === agentId ? { ...agent, agentCoreGateways: gateways } : agent
       )
 
       setCustomAgents(updatedAgents)
@@ -1957,6 +2125,13 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     fetchMcpTools,
     getAgentMcpTools,
     updateAgentMcpTools,
+
+    // AgentCore Gateway Settings
+    getAgentAgentCoreGateways,
+    updateAgentAgentCoreGateways,
+    fetchAgentCoreGatewayTools,
+    getAgentAgentCoreGatewayTools,
+    updateAgentAgentCoreGatewayTools,
 
     // エージェント固有の設定
     getAgentAllowedCommands,

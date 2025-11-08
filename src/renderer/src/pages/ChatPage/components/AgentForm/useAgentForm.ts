@@ -6,11 +6,9 @@ import {
   AgentCategory,
   KnowledgeBase,
   McpServerConfig,
-  Scenario,
-  FlowConfig,
-  EnvironmentContextSettings
+  FlowConfig
 } from '@/types/agent-chat'
-import { ToolName, isMcpTool } from '@/types/tools'
+import { ToolName } from '@/types/tools'
 import useSetting from '@renderer/hooks/useSetting'
 import { BedrockAgent } from '@/types/agent'
 import { CommandConfig } from '../../modals/useToolSettingModal'
@@ -20,7 +18,7 @@ import { usePromptGeneration } from './usePromptGeneration'
  * エージェントフォームの状態管理と主要機能を担当するカスタムフック
  */
 // タブ識別子の型定義
-type AgentFormTabId = 'basic' | 'mcp-servers' | 'tools'
+type AgentFormTabId = 'basic' | 'mcp-servers' | 'agentcore-gateways' | 'tools'
 
 export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: CustomAgent) => void) => {
   // 基本フォームデータの状態
@@ -53,6 +51,10 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
   // MCPツール取得状態
   const [isLoadingMcpTools, setIsLoadingMcpTools] = useState<boolean>(false)
   const [tempMcpTools, setTempMcpTools] = useState<ToolState[]>([])
+
+  // AgentCore Gatewayツール取得状態
+  const [isLoadingAgentCoreTools, setIsLoadingAgentCoreTools] = useState<boolean>(false)
+  const [tempAgentCoreTools, setTempAgentCoreTools] = useState<ToolState[]>([])
 
   // 初期化完了状態
   const initializationDone = useRef(false)
@@ -98,38 +100,15 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
   )
 
   // 複数フィールドを一度に更新する関数
-  const updateMultipleFields = useCallback(
-    (
-      updates: Array<
-        [
-          keyof CustomAgent,
-          (
-            | string
-            | boolean
-            | AgentCategory
-            | ToolName[]
-            | Scenario[]
-            | McpServerConfig[]
-            | KnowledgeBase[]
-            | CommandConfig[]
-            | BedrockAgent[]
-            | FlowConfig[]
-            | string[]
-            | EnvironmentContextSettings
-          )
-        ]
-      >
-    ) => {
-      setFormData((prev) => {
-        const newFormData = { ...prev }
-        updates.forEach(([field, value]) => {
-          ;(newFormData[field] as any) = value
-        })
-        return newFormData
+  const updateMultipleFields = useCallback((updates: Array<[keyof CustomAgent, any]>) => {
+    setFormData((prev) => {
+      const newFormData = { ...prev }
+      updates.forEach(([field, value]) => {
+        ;(newFormData[field] as any) = value
       })
-    },
-    []
-  )
+      return newFormData
+    })
+  }, [])
 
   // エージェント初期化関数
   const initializeAgent = useCallback(() => {
@@ -188,6 +167,7 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
     // 既存のエージェントが持つすべてのツール設定情報を明示的にformDataに設定
     updateMultipleFields([
       ['mcpServers', initialAgent.mcpServers || []],
+      ['agentCoreGateways', initialAgent.agentCoreGateways || []],
       ['knowledgeBases', initialAgent.knowledgeBases || []],
       ['allowedCommands', initialAgent.allowedCommands || []],
       ['bedrockAgents', initialAgent.bedrockAgents || []],
@@ -232,7 +212,8 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
           const toolStates = tools.map((tool) => ({
             toolSpec: tool.toolSpec,
             // MCPツールは常に有効化
-            enabled: true
+            enabled: true,
+            toolType: 'mcp' as const
           })) as ToolState[]
 
           setTempMcpTools(toolStates)
@@ -250,14 +231,77 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
     [formData.mcpServers]
   )
 
+  // AgentCore Gatewayツール取得関数
+  const fetchAgentCoreGatewayTools = useCallback(
+    async (gatewaysToUse?: any[]) => {
+      // 引数がなければ現在のformDataから取得
+      const currentGateways = gatewaysToUse || formData.agentCoreGateways
+
+      // デバッグ - 呼び出し内容を確認
+      console.log(
+        'fetchAgentCoreGatewayTools called with:',
+        gatewaysToUse ? `${gatewaysToUse.length} provided gateways` : 'no gateways provided',
+        'current formData gateways:',
+        formData.agentCoreGateways?.length || 0
+      )
+
+      // Gatewayが設定されていない場合は明示的にツールをクリア
+      if (!currentGateways || currentGateways.length === 0) {
+        console.log('No AgentCore Gateways available, clearing tools')
+        setTempAgentCoreTools([])
+        return
+      }
+
+      setIsLoadingAgentCoreTools(true)
+      try {
+        console.log('Fetching AgentCore Gateway tools from:', currentGateways.length, 'gateways')
+
+        // 全てのGatewayからツールを取得
+        const allTools: any[] = []
+        for (const gateway of currentGateways) {
+          try {
+            const tools = await window.api.agentcore.getTools(gateway)
+            if (tools && tools.length > 0) {
+              allTools.push(...tools)
+            }
+          } catch (error) {
+            console.error(`Failed to fetch tools from gateway ${gateway.endpoint}:`, error)
+          }
+        }
+
+        if (allTools.length > 0) {
+          console.log('Received AgentCore Gateway tools:', allTools.length)
+          // APIから取得したツールをToolState形式に変換
+          const toolStates = allTools.map((tool) => ({
+            toolSpec: tool.toolSpec,
+            // AgentCore Gatewayツールは常に有効化
+            enabled: true,
+            toolType: 'agentcore' as const
+          })) as ToolState[]
+
+          setTempAgentCoreTools(toolStates)
+        } else {
+          console.log('No AgentCore Gateway tools found')
+          setTempAgentCoreTools([])
+        }
+      } catch (error) {
+        console.error('Failed to fetch AgentCore Gateway tools:', error)
+        setTempAgentCoreTools([])
+      } finally {
+        setIsLoadingAgentCoreTools(false)
+      }
+    },
+    [formData.agentCoreGateways]
+  )
+
   // ツール設定変更ハンドラー
   const handleToolsChange = useCallback(
     (tools: ToolState[]) => {
       setAgentTools(tools)
 
-      // 有効なツール名のみを抽出
+      // 有効な標準ツール名のみを抽出（MCPとAgentCore Gatewayツールは除外）
       const enabledToolNames = tools
-        .filter((tool) => tool.enabled && tool.toolSpec?.name && !isMcpTool(tool.toolSpec.name))
+        .filter((tool) => tool.enabled && tool.toolSpec?.name && tool.toolType === 'standard')
         .map((tool) => tool.toolSpec?.name as ToolName)
         .filter(Boolean)
 
@@ -284,14 +328,27 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
       if (tabId === 'tools') {
         console.log(
           'Switching to tools tab, fetching MCP tools with current servers:',
-          formData.mcpServers?.length || 0
+          formData.mcpServers?.length || 0,
+          'and AgentCore Gateways:',
+          formData.agentCoreGateways?.length || 0
         )
 
         // MCPツールを取得
         await fetchMcpTools(formData.mcpServers)
+
+        // AgentCore Gatewayツールを取得
+        await fetchAgentCoreGatewayTools(formData.agentCoreGateways)
       }
     },
-    [fetchMcpTools, formData.mcpServers, formData.tools, agentTools, updateField]
+    [
+      fetchMcpTools,
+      fetchAgentCoreGatewayTools,
+      formData.mcpServers,
+      formData.agentCoreGateways,
+      formData.tools,
+      agentTools,
+      updateField
+    ]
   )
 
   // サーバー設定変更時にツールをクリア
@@ -390,6 +447,8 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
     agentCategory,
     isLoadingMcpTools,
     tempMcpTools,
+    isLoadingAgentCoreTools,
+    tempAgentCoreTools,
 
     // プロンプト生成関連
     generateSystemPrompt,
@@ -410,6 +469,7 @@ export const useAgentForm = (initialAgent?: CustomAgent, onSave?: (agent: Custom
     handleToolsChange,
     handleCategoryChange,
     handleTabChange,
-    fetchMcpTools
+    fetchMcpTools,
+    fetchAgentCoreGatewayTools
   }
 }

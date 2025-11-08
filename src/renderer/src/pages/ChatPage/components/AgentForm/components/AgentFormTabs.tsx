@@ -1,10 +1,10 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { FiSettings, FiServer, FiTool } from 'react-icons/fi'
+import { FiSettings, FiServer, FiTool, FiCloud } from 'react-icons/fi'
 import { formEventUtils } from '../utils/formEventUtils'
 
 // タブ識別子の型定義
-type AgentFormTabId = 'basic' | 'mcp-servers' | 'tools'
+type AgentFormTabId = 'basic' | 'mcp-servers' | 'agentcore-gateways' | 'tools'
 
 /**
  * タブナビゲーションコンポーネント
@@ -54,6 +54,22 @@ export const AgentFormTabs: React.FC<{
           >
             <FiServer className="w-4 h-4" />
             {t('MCP Servers')}
+          </button>
+        </li>
+        <li className="mr-2">
+          <button
+            type="button"
+            className={`inline-flex items-center gap-1.5 p-4 border-b-2 rounded-t-lg ${
+              activeTab === 'agentcore-gateways'
+                ? 'text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400'
+                : 'text-gray-500 border-transparent hover:text-gray-600 hover:border-gray-300'
+            }`}
+            onClick={formEventUtils.createSafeHandler(() =>
+              onTabChange('agentcore-gateways' as AgentFormTabId)
+            )}
+          >
+            <FiCloud className="w-4 h-4" />
+            {t('AgentCore Gateway')}
           </button>
         </li>
         <li>

@@ -12,6 +12,7 @@ import { createWebTools } from './handlers/web'
 import { createThinkingTools } from './handlers/thinking'
 import { createCommandTools } from './handlers/command'
 import { createMcpTools } from './handlers/mcp'
+import { createAgentCoreGatewayTools } from './handlers/agentcore'
 import { createBedrockTools } from './handlers/bedrock'
 import { createCodeInterpreterTools } from './handlers/interpreter'
 import { createSystemTools } from './handlers/system'
@@ -45,6 +46,7 @@ export function initializeToolSystem(): void {
     ...createThinkingTools(dependencies),
     ...createCommandTools(dependencies),
     ...createMcpTools(dependencies),
+    ...createAgentCoreGatewayTools(dependencies),
     ...createBedrockTools(dependencies),
     ...createCodeInterpreterTools(dependencies),
     ...createSystemTools(dependencies),

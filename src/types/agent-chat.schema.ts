@@ -319,6 +319,14 @@ export const TavilySearchConfigSchema = z.object({
   excludeDomains: z.array(z.string())
 })
 
+// AgentCoreGatewayConfig schema
+export const AgentCoreGatewayConfigSchema = z.object({
+  endpoint: z.string(),
+  region: z.string().optional(),
+  profile: z.string().optional(),
+  description: z.string().optional()
+})
+
 // EnvironmentContextSettings schema
 export const EnvironmentContextSettingsSchema = z
   .object({
@@ -360,6 +368,8 @@ export const CustomAgentSchema = BaseAgentSchema.extend({
   mcpServers: z.array(McpServerConfigSchema).optional(),
   mcpTools: z.array(z.any()).optional(), // ToolState is complex, use any for type compatibility
   tavilySearchConfig: TavilySearchConfigSchema.optional(),
+  agentCoreGateways: z.array(AgentCoreGatewayConfigSchema).optional(),
+  agentCoreGatewayTools: z.array(z.any()).optional(), // ToolState is complex, use any for type compatibility
   additionalInstruction: z.string().optional(),
   environmentContextSettings: EnvironmentContextSettingsSchema.optional()
 })
@@ -371,6 +381,7 @@ export type KnowledgeBaseSchemaType = z.infer<typeof KnowledgeBaseSchema>
 export type FlowConfigSchemaType = z.infer<typeof FlowConfigSchema>
 export type McpServerConfigSchemaType = z.infer<typeof McpServerConfigSchema>
 export type TavilySearchConfigSchemaType = z.infer<typeof TavilySearchConfigSchema>
+export type AgentCoreGatewayConfigSchemaType = z.infer<typeof AgentCoreGatewayConfigSchema>
 export type CommandConfigSchemaType = z.infer<typeof CommandConfigSchema>
 export type WindowConfigSchemaType = z.infer<typeof WindowConfigSchema>
 export type CameraConfigSchemaType = z.infer<typeof CameraConfigSchema>

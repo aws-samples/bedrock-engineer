@@ -45,8 +45,11 @@ export type AgentChatConfig = {
 
 export type SendMsgKey = 'Enter' | 'Cmd+Enter'
 
+export type ToolType = 'standard' | 'mcp' | 'agentcore'
+
 export type ToolState = {
   enabled: boolean
+  toolType: ToolType
 } & Tool
 
 export type AgentSettings = {

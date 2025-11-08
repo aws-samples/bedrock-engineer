@@ -19,7 +19,12 @@ export const tools = {
       'Click on any tool to view details and configuration options',
     // MCP Tool related
     'MCP tool from Model Context Protocol server': 'MCP tool from Model Context Protocol server',
-    'MCP tools available from configured servers': 'MCP tools available from configured servers',
+    'AgentCore Gateway tool': 'AgentCore Gateway tool',
+    'No AgentCore Gateways configured for this agent. Configure gateways in the AgentCore Gateway tab to use gateway tools.':
+      'No AgentCore Gateways configured for this agent. Configure gateways in the AgentCore Gateway tab to use gateway tools.',
+    'AgentCore Gateways are configured, but no tools are loaded. Click "Load Tools" button in the AgentCore Gateway tab.':
+      'AgentCore Gateways are configured, but no tools are loaded. Click "Load Tools" button in the AgentCore Gateway tab.',
+    Note: 'Note',
     From: 'From',
     'MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.':
       'MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.',
@@ -40,6 +45,33 @@ export const tools = {
     'Tool Group': 'Tool Group',
     'Agent ID': 'Agent ID',
     'Alias ID': 'Alias ID',
+    'Add New AgentCore Gateway': 'AgentCore Gatewayを追加',
+    'Registered Gateways': '登録済みGateway',
+    'No gateways registered yet': 'Gatewayが登録されていません',
+    'Endpoint URL': 'エンドポイントURL',
+    Region: 'リージョン',
+    Profile: 'プロファイル',
+    'AWS Profile': 'AWSプロファイル',
+    'Test Connection': '接続テスト',
+    'Load Tools': 'ツール読み込み',
+    'Connection successful': '接続成功',
+    'Gateway added successfully': 'Gatewayが追加されました',
+    'Gateway removed': 'Gatewayが削除されました',
+    'Gateway updated': 'Gatewayが更新されました',
+    Edit: '編集',
+    Remove: '削除',
+    'Endpoint URL is required': 'Endpoint URL is required',
+    'Optional description for this gateway': 'Optional description for this gateway',
+    'Testing...': 'Testing...',
+    'Loading...': 'Loading...',
+    'Loaded {{count}} tool(s)': 'Loaded {{count}} tool(s)',
+    'AgentCore Gateway Settings': 'AgentCore Gateway Settings',
+    'Configure AgentCore Gateway endpoints for this agent to use gateway tools.':
+      'Configure AgentCore Gateway endpoints for this agent to use gateway tools.',
+    'Register gateways first, then load tools to enable them in the Available Tools tab.':
+      'Register gateways first, then load tools to enable them in the Available Tools tab.',
+    'Add New Gateway': 'Add New Gateway',
+    'Edit Gateway': 'Edit Gateway',
     'Command Shell': 'Command Shell',
     'Command Shell Settings': 'Command Shell Settings',
     'Command Pattern': 'Command Pattern',
@@ -228,9 +260,20 @@ export const tools = {
       generateVideo: 'Generate high-quality videos from text descriptions using Amazon Nova Reel',
       checkVideoStatus: 'Check the status of video generation jobs',
       downloadVideo: 'Download generated videos from S3 to local storage',
-      screenCapture: 'Capture the current screen for AI analysis and debugging'
+      screenCapture: 'Capture the current screen for AI analysis and debugging',
+      agentcore: 'Execute tools provided by Bedrock AgentCore Gateway'
     },
     'tool info': {
+      agentcore: {
+        description:
+          'The AgentCore Gateway tool allows the AI assistant to use tools provided by your Bedrock AgentCore Gateway deployment, enabling access to custom business logic and external APIs.',
+        'about title': 'About AgentCore Gateway',
+        'about description':
+          'Bedrock AgentCore Gateway provides a unified endpoint for accessing multiple tools through a single API Gateway. It uses AWS IAM authentication and supports dynamic tool discovery.',
+        'requirements title': 'Requirements',
+        'requirements description':
+          'You need a deployed AgentCore Gateway endpoint URL and appropriate AWS credentials (IAM role or profile) to access the gateway.'
+      },
       retrieve: {
         description:
           'The retrieve tool allows the AI assistant to search and retrieve information from your Amazon Bedrock Knowledge Bases.',
@@ -475,7 +518,12 @@ export const tools = {
       'カメラリソースを解放するにはプレビューウィンドウを閉じてください',
     // MCP Tool related
     'MCP tool from Model Context Protocol server': 'Model Context Protocol サーバーからのMCPツール',
-    'MCP tools available from configured servers': '設定済みサーバーからのMCPツールが利用可能',
+    'AgentCore Gateway tool': 'AgentCore Gatewayツール',
+    'No AgentCore Gateways configured for this agent. Configure gateways in the AgentCore Gateway tab to use gateway tools.':
+      'このエージェントにはAgentCore Gatewayが設定されていません。ゲートウェイツールを使用するには、AgentCore Gatewayタブでゲートウェイを設定してください。',
+    'AgentCore Gateways are configured, but no tools are loaded. Click "Load Tools" button in the AgentCore Gateway tab.':
+      'AgentCore Gatewayは設定されていますが、ツールがロードされていません。AgentCore Gatewayタブで「ツール読み込み」ボタンをクリックしてください。',
+    Note: '注記',
     From: '提供元',
     'MCP servers are configured, but no tools are available. Make sure MCP servers are running and providing tools.':
       'MCPサーバーは設定されていますが、利用可能なツールがありません。MCPサーバーが実行中で、ツールを提供していることを確認してください。',
@@ -518,6 +566,18 @@ export const tools = {
     'Use * as a wildcard (e.g., "npm *" allows all npm commands)':
       '* をワイルドカードとして使用します（例：「npm *」はすべてのnpmコマンドを許可）',
     Description: '説明',
+    'Endpoint URL is required': 'エンドポイントURLが必要です',
+    'Optional description for this gateway': 'このゲートウェイのオプションの説明',
+    'Testing...': 'テスト中...',
+    'Loading...': '読み込み中...',
+    'Loaded {{count}} tool(s)': '{{count}}個のツールを読み込みました',
+    'AgentCore Gateway Settings': 'AgentCore Gateway設定',
+    'Configure AgentCore Gateway endpoints for this agent to use gateway tools.':
+      'このエージェントがゲートウェイツールを使用するためのAgentCore Gatewayエンドポイントを設定します。',
+    'Register gateways first, then load tools to enable them in the Available Tools tab.':
+      '最初にゲートウェイを登録し、次にツールを読み込んでAvailable Toolsタブで有効化します。',
+    'Add New Gateway': '新しいゲートウェイを追加',
+    'Edit Gateway': 'ゲートウェイを編集',
     'Add Knowledge Base': 'ナレッジベース追加',
     'Knowledge Base ID': 'ナレッジベースID',
     'Registered Knowledge Bases': '登録済みナレッジベース',
@@ -691,9 +751,20 @@ export const tools = {
       generateVideo: 'Amazon Nova Reelを使用してテキスト説明から高品質な動画を生成',
       checkVideoStatus: '動画生成ジョブのステータスを確認',
       downloadVideo: '生成された動画をS3からローカルストレージにダウンロード',
-      screenCapture: 'AI分析とデバッグのために現在の画面をキャプチャ'
+      screenCapture: 'AI分析とデバッグのために現在の画面をキャプチャ',
+      agentcore: 'Bedrock AgentCore Gatewayが提供するツールを実行'
     },
     'tool info': {
+      agentcore: {
+        description:
+          'AgentCore Gateway ツールを使用すると、AIアシスタントはBedrock AgentCore Gatewayデプロイメントが提供するツールを使用でき、カスタムビジネスロジックや外部APIへのアクセスが可能になります。',
+        'about title': 'AgentCore Gatewayについて',
+        'about description':
+          'Bedrock AgentCore GatewayはAPI Gateway経由で複数のツールにアクセスするための統一エンドポイントを提供します。AWS IAM認証を使用し、動的なツール検出をサポートしています。',
+        'requirements title': '必要要件',
+        'requirements description':
+          'デプロイ済みのAgentCore GatewayエンドポイントURLと、ゲートウェイにアクセスするための適切なAWS認証情報（IAMロールまたはプロファイル）が必要です。'
+      },
       retrieve: {
         description:
           'retrieve ツールを使用すると、AIアシスタントはAmazon Bedrock Knowledge Basesから情報を検索して取得できます。',

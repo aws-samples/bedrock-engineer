@@ -36,6 +36,7 @@ import {
 import { pubsubHandlers } from './handlers/pubsub-handlers'
 import { todoHandlers } from './handlers/todo-handlers'
 import { mcpHandlers, cleanupMcpHandlers } from './handlers/mcp-handlers'
+import { agentCoreHandlers, cleanupAgentCoreHandlers } from './handlers/agentcore-handlers'
 import { cleanupMcpClients } from './mcp/index'
 
 // 動的インポートを使用してfix-pathパッケージを読み込む
@@ -451,6 +452,7 @@ app.whenReady().then(async () => {
   registerIpcHandlers(pubsubHandlers, { loggerCategory: 'pubsub:ipc' })
   registerIpcHandlers(todoHandlers, { loggerCategory: 'todo:ipc' })
   registerIpcHandlers(mcpHandlers, { loggerCategory: 'mcp:ipc' })
+  registerIpcHandlers(agentCoreHandlers, { loggerCategory: 'agentcore:ipc' })
   registerIpcHandlers(proxyHandlers, { loggerCategory: 'proxy:ipc' })
 
   // ログハンドラーの登録
@@ -535,6 +537,16 @@ app.whenReady().then(async () => {
         })
     } catch (error) {
       log.error('Failed to cleanup MCP clients', {
+        error: error instanceof Error ? error.message : String(error)
+      })
+    }
+
+    // AgentCore Gateway クライアントのクリーンアップ処理
+    try {
+      cleanupAgentCoreHandlers()
+      log.info('AgentCore Gateway clients cleanup completed')
+    } catch (error) {
+      log.error('Failed to cleanup AgentCore Gateway clients', {
         error: error instanceof Error ? error.message : String(error)
       })
     }

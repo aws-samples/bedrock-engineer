@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSettings } from '@renderer/contexts/SettingsContext'
 import useSetting from '@renderer/hooks/useSetting'
@@ -29,8 +29,11 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({
   flows = [],
   onFlowsChange,
   mcpServers = [],
+  agentCoreGateways = [],
   tempMcpTools = [],
-  isLoadingMcpTools = false
+  tempAgentCoreGatewayTools = [],
+  isLoadingMcpTools = false,
+  isLoadingAgentCoreTools: _isLoadingAgentCoreTools = false
 }) => {
   const { t } = useTranslation()
   const { getDefaultToolsForCategory } = useSetting()
@@ -47,6 +50,7 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({
     expandedTools,
     setActiveTab,
     setToolInfoToShow,
+    setAgentTools: _setAgentTools,
     handleToggleTool,
     toggleToolExpand,
     getEnabledTools,
@@ -56,6 +60,8 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({
     initialTools,
     initialCategory,
     mcpServers,
+    agentCoreGateways,
+    tempAgentCoreGatewayTools || [],
     [],
     onChange,
     onCategoryChange,
@@ -71,6 +77,58 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({
     getAgentMcpTools,
     onChange
   )
+
+  // AgentCore Gatewayツール統合ロジック（MCPと同様のパターン）
+  const prevGatewayMergedToolsRef = React.useRef<string>('')
+  const gatewayIntegrationDoneRef = React.useRef<boolean>(false)
+
+  useEffect(() => {
+    if (tempAgentCoreGatewayTools && tempAgentCoreGatewayTools.length > 0 && onChange) {
+      // 既存のAgentCore Gatewayツール名のSetを作成
+      const gatewayToolNames = new Set(
+        tempAgentCoreGatewayTools.map((tool) => tool.toolSpec?.name).filter(Boolean)
+      )
+
+      // 既存のAgentCore Gatewayツールを除外（ツール名で判定）
+      const nonAgentCoreTools = agentTools.filter((tool) => {
+        const toolName = tool.toolSpec?.name
+        return !toolName || !gatewayToolNames.has(toolName)
+      })
+
+      // 新しいAgentCore Gatewayツールと既存ツールを統合
+      const mergedTools = [...nonAgentCoreTools, ...tempAgentCoreGatewayTools]
+
+      // 前回と今回の結果を比較するための文字列化
+      const mergedToolsKey = JSON.stringify(
+        mergedTools.map((t) => ({
+          name: t.toolSpec?.name,
+          enabled: t.enabled
+        }))
+      )
+
+      // 前回と異なる場合または初回の場合のみ更新
+      if (
+        mergedToolsKey !== prevGatewayMergedToolsRef.current ||
+        !gatewayIntegrationDoneRef.current
+      ) {
+        console.log(
+          'Integrating AgentCore Gateway tools into agent tools:',
+          tempAgentCoreGatewayTools.length
+        )
+
+        // 最新の結果を保存
+        prevGatewayMergedToolsRef.current = mergedToolsKey
+        gatewayIntegrationDoneRef.current = true
+
+        // 非同期で更新（無限ループ防止）
+        setTimeout(() => {
+          onChange(mergedTools)
+        }, 0)
+      } else {
+        console.log('Skipping redundant AgentCore Gateway tools integration (no changes detected)')
+      }
+    }
+  }, [tempAgentCoreGatewayTools, onChange])
 
   // ツール詳細設定に必要な設定
   const enabledTools = getEnabledTools()
@@ -155,6 +213,7 @@ export const ToolsSection: React.FC<ToolsSectionProps> = ({
             onToggleTool={handleToggleTool}
             onShowToolInfo={(toolName: string) => setToolInfoToShow(toolName)}
             isLoadingMcpTools={isLoadingMcpTools}
+            isLoadingAgentCoreTools={_isLoadingAgentCoreTools}
           />
         )}
 

@@ -56,5 +56,13 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     // MCPツールは動的に取得するので空配列として定義
     tools: [],
     isMcpCategory: true
+  },
+  {
+    id: 'agentcore',
+    name: 'AgentCore Gateway',
+    description: 'Tools provided by Bedrock AgentCore Gateway',
+    // AgentCore Gatewayツールは動的に取得するので空配列として定義
+    tools: [],
+    isAgentCoreCategory: true
   }
 ]

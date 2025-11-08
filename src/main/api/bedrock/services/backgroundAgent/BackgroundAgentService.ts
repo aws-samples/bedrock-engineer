@@ -158,6 +158,7 @@ export class BackgroundAgentService {
         if (toolSpec && toolSpec.toolSpec) {
           const toolState: ToolState = {
             enabled: true,
+            toolType: 'standard' as const,
             toolSpec: {
               ...toolSpec.toolSpec,
               description: replacePlaceholders(
@@ -175,6 +176,7 @@ export class BackgroundAgentService {
           })
           const basicToolState: ToolState = {
             enabled: true,
+            toolType: 'standard' as const,
             toolSpec: {
               name: toolName,
               description: replacePlaceholders(`${toolName} tool`, placeholderValues),
@@ -205,6 +207,7 @@ export class BackgroundAgentService {
             if (mcpToolSpec.toolSpec) {
               const toolState: ToolState = {
                 enabled: true,
+                toolType: 'mcp' as const,
                 toolSpec: {
                   ...mcpToolSpec.toolSpec,
                   description: replacePlaceholders(

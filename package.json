@@ -48,6 +48,7 @@
     "@reactour/tour": "3.7.0",
     "@tshepomgaga/aws-sfn-graph": "0.0.6",
     "@types/node-cron": "^3.0.11",
+    "aws4-axios": "^3.4.0",
     "axios": "^1.12.0",
     "chart.js": "^4.4.8",
     "cors": "2.8.5",

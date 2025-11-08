@@ -6,11 +6,12 @@ import { ScenariosSection } from '../ScenariosSection'
 import { TagsSection } from '../TagsSection'
 import { ToolsSection } from '../ToolsSection'
 import { McpServerSection } from '../McpServerSection'
+import { AgentCoreGatewaySection } from '../AgentCoreGatewaySection'
 import { AgentCategory, CustomAgent, ToolState, McpServerConfig } from '@/types/agent-chat'
 import { useTranslation } from 'react-i18next'
 
 // タブ識別子の型定義
-type AgentFormTabId = 'basic' | 'mcp-servers' | 'tools'
+type AgentFormTabId = 'basic' | 'mcp-servers' | 'agentcore-gateways' | 'tools'
 
 /**
  * タブコンテンツコンポーネント
@@ -26,6 +27,8 @@ export const AgentFormContent: React.FC<{
   projectPath: string
   isLoadingMcpTools: boolean
   tempMcpTools: ToolState[]
+  isLoadingAgentCoreTools: boolean
+  tempAgentCoreTools: ToolState[]
   handleAutoGeneratePrompt: () => void
   handleVoiceChatGenerate: () => void
   handleGenerateScenarios: () => void
@@ -34,6 +37,7 @@ export const AgentFormContent: React.FC<{
   isGeneratingScenarios: boolean
   availableTags: string[]
   fetchMcpTools: (servers?: McpServerConfig[]) => Promise<void>
+  fetchAgentCoreGatewayTools: (gateways?: any[]) => Promise<void>
   handleAdditionalInstructionChange?: (value: string) => void
 }> = ({
   activeTab,
@@ -46,6 +50,8 @@ export const AgentFormContent: React.FC<{
   projectPath,
   isLoadingMcpTools,
   tempMcpTools,
+  isLoadingAgentCoreTools,
+  tempAgentCoreTools,
   handleAutoGeneratePrompt,
   handleVoiceChatGenerate,
   handleGenerateScenarios,
@@ -54,6 +60,7 @@ export const AgentFormContent: React.FC<{
   isGeneratingScenarios,
   availableTags,
   fetchMcpTools,
+  fetchAgentCoreGatewayTools: _fetchAgentCoreGatewayTools,
   handleAdditionalInstructionChange
 }) => {
   const { t } = useTranslation()
@@ -141,6 +148,30 @@ export const AgentFormContent: React.FC<{
           />
         </div>
       )
+    case 'agentcore-gateways':
+      return (
+        <div className="pb-4" onClick={formEventUtils.preventPropagation}>
+          <AgentCoreGatewaySection
+            agentCoreGateways={formData.agentCoreGateways || []}
+            onChange={(gateways) => {
+              console.log('AgentCore Gateway設定変更:', gateways.length, 'gateways')
+              updateField('agentCoreGateways', gateways)
+            }}
+            onToolsLoaded={async (tools) => {
+              // ツールが読み込まれたら、agentCoreGatewayToolsに保存
+              // ツール名はそのまま保持（プレフィックスなし）
+              const toolStates = tools.map((tool) => ({
+                toolSpec: tool.toolSpec,
+                enabled: true,
+                toolType: 'agentcore' as const
+              })) as ToolState[]
+
+              updateField('agentCoreGatewayTools', toolStates)
+              console.log('AgentCore Gateway tools loaded:', toolStates.length)
+            }}
+          />
+        </div>
+      )
     case 'tools':
       return (
         <div className="h-full pb-4">
@@ -158,8 +189,11 @@ export const AgentFormContent: React.FC<{
             flows={formData.flows || []}
             onFlowsChange={(flows) => updateField('flows', flows)}
             mcpServers={formData.mcpServers || []}
+            agentCoreGateways={formData.agentCoreGateways || []}
             tempMcpTools={tempMcpTools}
+            tempAgentCoreGatewayTools={tempAgentCoreTools}
             isLoadingMcpTools={isLoadingMcpTools}
+            isLoadingAgentCoreTools={isLoadingAgentCoreTools}
           />
         </div>
       )

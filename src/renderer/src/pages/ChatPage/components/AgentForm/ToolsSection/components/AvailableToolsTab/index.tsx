@@ -12,7 +12,8 @@ export const AvailableToolsTab: React.FC<AvailableToolsTabProps> = ({
   mcpServers,
   onToggleTool,
   onShowToolInfo,
-  isLoadingMcpTools = false
+  isLoadingMcpTools = false,
+  isLoadingAgentCoreTools = false
 }) => {
   const { t } = useTranslation()
 
@@ -29,6 +30,7 @@ export const AvailableToolsTab: React.FC<AvailableToolsTabProps> = ({
           onToggleTool={onToggleTool}
           onShowToolInfo={onShowToolInfo}
           isLoadingMcpTools={category.id === 'mcp' ? isLoadingMcpTools : false}
+          isLoadingAgentCoreTools={category.id === 'agentcore' ? isLoadingAgentCoreTools : false}
         />
       ))}
     </div>

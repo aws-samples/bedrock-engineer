@@ -1,10 +1,10 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { FiSettings, FiServer, FiTool } from 'react-icons/fi'
+import { FiSettings, FiServer, FiTool, FiCloud } from 'react-icons/fi'
 import { formEventUtils } from '../utils/formEventUtils'
 
 // タブ識別子の型定義
-type AgentFormTabId = 'basic' | 'mcp-servers' | 'tools'
+type AgentFormTabId = 'basic' | 'mcp-servers' | 'agentcore-gateways' | 'tools'
 
 /**
  * サイドバーナビゲーションコンポーネント
@@ -42,6 +42,15 @@ export const AgentFormSidebar: React.FC<{
       onClick: (e: React.MouseEvent) => {
         formEventUtils.preventPropagation(e)
         onTabChange('mcp-servers')
+      }
+    },
+    {
+      id: 'agentcore-gateways' as AgentFormTabId,
+      label: t('AgentCore Gateway'),
+      icon: <FiCloud className="w-5 h-5" />,
+      onClick: (e: React.MouseEvent) => {
+        formEventUtils.preventPropagation(e)
+        onTabChange('agentcore-gateways')
       }
     },
     {

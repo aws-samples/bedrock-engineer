@@ -273,6 +273,32 @@ export const api = {
       return result
     }
   },
+  agentcore: {
+    // ツール取得
+    getTools: async (config: any) => {
+      const result = await ipcRenderer.invoke('agentcore:getTools', config)
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      return result.tools
+    },
+    // ツール実行
+    executeTool: async (config: any, toolName: string, input: any) => {
+      return ipcRenderer.invoke('agentcore:executeTool', config, toolName, input)
+    },
+    // 接続テスト
+    testConnection: async (config: any) => {
+      return ipcRenderer.invoke('agentcore:testConnection', config)
+    },
+    // キャッシュクリア
+    clearCache: async () => {
+      const result = await ipcRenderer.invoke('agentcore:clearCache')
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+      return result
+    }
+  },
   codeInterpreter: {
     getCurrentWorkspacePath: () => {
       return CodeInterpreterTool.getCurrentWorkspacePath()

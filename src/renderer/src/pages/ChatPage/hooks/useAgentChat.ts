@@ -20,7 +20,7 @@ import { getThinkingSupportedModelIds } from '@common/models/models'
 
 import { AttachedImage } from '../components/InputForm/TextArea'
 import { ChatMessage } from '@/types/chat/history'
-import { ToolName, isMcpTool } from '@/types/tools'
+import { ToolName } from '@/types/tools'
 import { notificationService } from '@renderer/services/NotificationService'
 import { limitContextLength } from '@renderer/lib/contextLength'
 import { IdentifiableMessage } from '@/types/chat/message'
@@ -125,9 +125,11 @@ export const useAgentChat = (
     }
     // エージェントIDがある場合はエージェント設定から取得
     else if (agentId) {
-      // エージェントオブジェクトを取得（MCPサーバー設定の確認用）
+      // エージェントオブジェクトを取得（MCPサーバー/Gateway設定の確認用）
       const currentAgent = agents.find((a) => a.id === agentId)
       const hasMcpServers = currentAgent?.mcpServers && currentAgent.mcpServers.length > 0
+      const hasAgentCoreGateways =
+        currentAgent?.agentCoreGateways && currentAgent.agentCoreGateways.length > 0
 
       const agentTools = getAgentTools(agentId).filter((tool) => tool.enabled)
 
@@ -144,11 +146,22 @@ export const useAgentChat = (
         }
 
         // MCPツールの場合は、MCPサーバーが設定されていることを確認
-        if (isMcpTool(toolName)) {
+        if (tool.toolType === 'mcp') {
           // MCPサーバーが設定されていない場合は除外
           if (!hasMcpServers) {
             console.warn(
               `MCP tool "${toolName}" is enabled but no MCP servers are configured. Tool will be disabled.`
+            )
+            return false
+          }
+        }
+
+        // AgentCore Gatewayツールの場合は、Gatewayが設定されていることを確認
+        if (tool.toolType === 'agentcore') {
+          // Gatewayが設定されていない場合は除外
+          if (!hasAgentCoreGateways) {
+            console.warn(
+              `AgentCore Gateway tool "${toolName}" is enabled but no gateways are configured. Tool will be disabled.`
             )
             return false
           }
@@ -755,8 +768,14 @@ export const useAgentChat = (
     // 全てのツール実行をPromiseとして準備
     const toolExecutionPromises = toolUseBlocks.map(async (contentBlock) => {
       const toolUse = contentBlock.toolUse!
+
+      // enabledToolsから該当ツールを検索してtoolTypeを取得
+      const matchingTool = enabledTools.find((tool) => tool.toolSpec?.name === toolUse.name)
+      const toolType = matchingTool?.toolType || 'standard'
+
       const toolInput = {
         type: toolUse.name!,
+        toolType: toolType,
         ...(toolUse.input as any)
       }
 

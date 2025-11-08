@@ -32,8 +32,11 @@ export type BuiltInToolName =
 // MCPツール名の型安全な定義（元のツール名をそのまま使用）
 export type McpToolName = string
 
+// AgentCore Gatewayツール名の型安全な定義
+export type AgentCoreGatewayToolName = string
+
 // 統合されたToolName型
-export type ToolName = BuiltInToolName | McpToolName
+export type ToolName = BuiltInToolName | McpToolName | AgentCoreGatewayToolName
 
 // 組み込みツールの定数配列（型ガード用）
 const BUILT_IN_TOOLS: readonly BuiltInToolName[] = [
@@ -70,9 +73,15 @@ export const isBuiltInTool = (name: string): name is BuiltInToolName => {
   return BUILT_IN_TOOLS.includes(name as BuiltInToolName)
 }
 
-// MCPツール名であるかを判定する型ガード（組み込みツールでなければMCPツール）
+// AgentCore Gatewayツール名であるかを判定する型ガード
+export const isAgentCoreGatewayTool = (name: string): name is AgentCoreGatewayToolName => {
+  // agentcore_ プレフィックスで始まる場合はAgentCore Gatewayツール
+  return name.startsWith('agentcore_')
+}
+
+// MCPツール名であるかを判定する型ガード（組み込みツールでもAgentCore Gatewayツールでもなければ MCPツール）
 export const isMcpTool = (name: string): name is McpToolName => {
-  return !isBuiltInTool(name)
+  return !isBuiltInTool(name) && !isAgentCoreGatewayTool(name)
 }
 
 // 後方互換性のため、元のツール名を取得する関数（今は単純に元の名前を返すだけ）
@@ -90,9 +99,23 @@ export const isLegacyMcpTool = (name: string): boolean => {
   return name.startsWith('mcp_')
 }
 
+// 元のAgentCore Gatewayツール名を取得する関数
+export const getOriginalAgentCoreGatewayToolName = (name: string): string => {
+  // agentcore_プリフィックスがある場合は除去
+  if (name.startsWith('agentcore_')) {
+    return name.substring('agentcore_'.length)
+  }
+  return name
+}
+
+// 旧形式のagentcore_プリフィックス判定
+export const isLegacyAgentCoreGatewayTool = (name: string): boolean => {
+  return name.startsWith('agentcore_')
+}
+
 // ToolName全体の型ガード
 export const isValidToolName = (name: string): name is ToolName => {
-  return isBuiltInTool(name) || isMcpTool(name)
+  return isBuiltInTool(name) || isMcpTool(name) || isAgentCoreGatewayTool(name)
 }
 
 export interface ToolResult<T = any> {
@@ -406,8 +429,18 @@ export type McpToolInput = {
   [key: string]: any // MCPツールの任意のパラメータ
 }
 
+// AgentCore Gatewayツールの入力型
+export type AgentCoreGatewayToolInput = {
+  type: string // AgentCore Gatewayツール名
+  toolType?: 'agentcore' // AgentCore Gateway識別用
+  // BackgroundAgentService用のメタデータ（オプション）
+  _agentId?: string
+  _gatewayConfig?: any // AgentCoreGatewayConfig だが循環依存回避のためanyを使用
+  [key: string]: any // Gatewayツールの任意のパラメータ
+}
+
 // ディスクリミネーテッドユニオン型
-export type ToolInput =
+export type ToolInput = (
   | CreateFolderInput
   | ReadFilesInput
   | WriteToFileInput
@@ -433,7 +466,11 @@ export type ToolInput =
   | TodoInput
   | TodoInitInput
   | TodoUpdateInput
-  | McpToolInput // MCPツール入力を追加
+  | McpToolInput
+  | AgentCoreGatewayToolInput
+) & {
+  toolType?: 'standard' | 'mcp' | 'agentcore' // ツール種別の識別子（オプショナル - 後方互換性のため）
+}
 
 // ツール名から入力型を取得するユーティリティ型
 export type ToolInputTypeMap = {

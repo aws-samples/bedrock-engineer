@@ -250,7 +250,8 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
           if (toolSpec?.toolSpec) {
             updatedTools.push({
               toolSpec: toolSpec.toolSpec,
-              enabled: newEnabled
+              enabled: newEnabled,
+              toolType: 'standard' as const
             })
           }
         }
@@ -294,7 +295,8 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
             if (toolSpec?.toolSpec) {
               const newTool: ToolState = {
                 toolSpec: toolSpec.toolSpec,
-                enabled: newEnabled
+                enabled: newEnabled,
+                toolType: 'standard' as const
               }
               updatedTools.push(newTool)
             }
@@ -321,7 +323,8 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
             if (toolSpec?.toolSpec) {
               const newTool: ToolState = {
                 toolSpec: toolSpec.toolSpec,
-                enabled: newEnabled
+                enabled: newEnabled,
+                toolType: 'standard' as const
               }
               updatedTools.push(newTool)
             }
@@ -350,7 +353,8 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
             if (toolSpec?.toolSpec) {
               const newTool: ToolState = {
                 toolSpec: toolSpec.toolSpec,
-                enabled: true
+                enabled: true,
+                toolType: 'standard' as const
               }
               updatedTools.push(newTool)
             }
@@ -369,7 +373,8 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
             if (toolSpec?.toolSpec) {
               const newTool: ToolState = {
                 toolSpec: toolSpec.toolSpec,
-                enabled: true
+                enabled: true,
+                toolType: 'standard' as const
               }
               updatedTools.push(newTool)
             }
@@ -384,7 +389,8 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
         if (toolSpec?.toolSpec) {
           const newTool: ToolState = {
             toolSpec: toolSpec.toolSpec,
-            enabled: true
+            enabled: true,
+            toolType: 'standard' as const
           }
           updatedTools = [...agentTools, newTool]
         } else {
@@ -473,7 +479,8 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
                 description: 'Task management and workflow tracking',
                 inputSchema: {} // 仮想ツールなので空のスキーマ
               },
-              enabled: isEnabled || false
+              enabled: isEnabled || false,
+              toolType: 'standard' as const
             } as ToolState
           }
 
@@ -486,7 +493,8 @@ const ToolSettingModal = memo(({ isOpen, onClose }: ToolSettingModalProps) => {
 
           return {
             toolSpec: toolSpec?.toolSpec,
-            enabled: isEnabled
+            enabled: isEnabled,
+            toolType: 'standard' as const
           } as ToolState
         })
         .filter((tool) => tool.toolSpec) // ToolSpecが見つからないものは除外

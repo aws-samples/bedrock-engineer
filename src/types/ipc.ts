@@ -667,6 +667,43 @@ export interface IPCChannelDefinitions {
     result: { success: boolean; error?: string }
   }
 
+  // AgentCore Gateway関連
+  'agentcore:getTools': {
+    params: any // AgentCoreGatewayConfig
+    result: {
+      success: boolean
+      tools?: any[]
+      error?: string
+    }
+  }
+  'agentcore:executeTool': {
+    params: [any, string, any] // config, toolName, input
+    result: {
+      success: boolean
+      content?: any[]
+      isError?: boolean
+      error?: string
+    }
+  }
+  'agentcore:testConnection': {
+    params: any // AgentCoreGatewayConfig
+    result: {
+      success: boolean
+      message: string
+      details?: {
+        endpoint?: string
+        region?: string
+        toolCount?: number
+        hasMore?: boolean
+        error?: string
+      }
+    }
+  }
+  'agentcore:clearCache': {
+    params: void
+    result: { success: boolean; error?: string }
+  }
+
   // プロキシ関連
   'proxy:test-connection': {
     params: any // ProxyConfiguration
