@@ -232,10 +232,14 @@ export const tools = {
       'Web & Search': 'Web & Search',
       'AI Services': 'AI Services',
       System: 'System',
+      'MCP Servers': 'MCP Servers',
+      'AgentCore Gateway': 'AgentCore Gateway',
       'File System Description': 'Tools for managing files and directories',
       'Web & Search Description': 'Tools for interacting with web resources',
       'AI Services Description': 'Tools that utilize AWS AI services',
-      'System Description': 'Tools for system interaction'
+      'System Description': 'Tools for system interaction',
+      'MCP Servers Description': 'Tools from Model Context Protocol servers',
+      'AgentCore Gateway Description': 'Tools from AgentCore Gateway endpoints'
     },
     'tool descriptions': {
       createFolder: 'Create new directories in your project',
@@ -723,11 +727,15 @@ export const tools = {
       'AI Services': 'AIサービス',
       System: 'システム',
       Thinking: '思考',
+      'MCP Servers': 'MCPサーバー',
+      'AgentCore Gateway': 'AgentCore Gateway',
       'File System Description': 'ファイルやディレクトリを管理するツール',
       'Web & Search Description': 'ウェブリソースを操作するツール',
       'AI Services Description': 'AWS AIサービスを利用するツール',
       'System Description': 'システムと連携するツール',
-      'Thinking Description': '拡張された推論と複雑な問題解決のためのツール'
+      'Thinking Description': '拡張された推論と複雑な問題解決のためのツール',
+      'MCP Servers Description': 'Model Context Protocolサーバーからのツール',
+      'AgentCore Gateway Description': 'AgentCore Gatewayエンドポイントからのツール'
     },
     'tool descriptions': {
       createFolder: 'プロジェクトに新しいディレクトリを作成',
