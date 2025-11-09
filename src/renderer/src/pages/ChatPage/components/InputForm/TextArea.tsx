@@ -133,6 +133,13 @@ export const TextArea: React.FC<TextAreaProps> = ({
     }
   }, [value, isManuallyResized, onHeightChange])
 
+  // Automatically scroll to the bottom when the value changes (to follow new lines)
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.scrollTop = textareaRef.current.scrollHeight
+    }
+  }, [value])
+
   // No scroll position monitoring needed as we're keeping the border visible at all times
 
   const validateAndProcessImage = useCallback(
