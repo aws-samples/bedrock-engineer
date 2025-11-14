@@ -36,6 +36,11 @@ export const TOOL_MAPPING: Record<BuiltInToolName, StrandsTool> = {
     importPath: 'strands_tools',
     supported: true
   },
+  searchFiles: {
+    strandsName: 'file_read',
+    importPath: 'strands_tools',
+    supported: true
+  },
 
   // Web operations
   tavilySearch: {

@@ -9,6 +9,7 @@ export { ApplyDiffEditTool } from './ApplyDiffEditTool'
 export { ListFilesTool } from './ListFilesTool'
 export { MoveFileTool } from './MoveFileTool'
 export { CopyFileTool } from './CopyFileTool'
+export { SearchFilesTool } from './SearchFilesTool'
 
 import type { ToolDependencies } from '../../base/types'
 import { CreateFolderTool } from './CreateFolderTool'
@@ -18,6 +19,7 @@ import { ApplyDiffEditTool } from './ApplyDiffEditTool'
 import { ListFilesTool } from './ListFilesTool'
 import { MoveFileTool } from './MoveFileTool'
 import { CopyFileTool } from './CopyFileTool'
+import { SearchFilesTool } from './SearchFilesTool'
 
 /**
  * Factory function to create all filesystem tools
@@ -30,6 +32,7 @@ export function createFilesystemTools(dependencies: ToolDependencies) {
     { tool: new ApplyDiffEditTool(dependencies), category: 'filesystem' as const },
     { tool: new ListFilesTool(dependencies), category: 'filesystem' as const },
     { tool: new MoveFileTool(dependencies), category: 'filesystem' as const },
-    { tool: new CopyFileTool(dependencies), category: 'filesystem' as const }
+    { tool: new CopyFileTool(dependencies), category: 'filesystem' as const },
+    { tool: new SearchFilesTool(dependencies), category: 'filesystem' as const }
   ]
 }

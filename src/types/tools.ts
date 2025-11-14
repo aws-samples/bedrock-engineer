@@ -8,6 +8,7 @@ export type BuiltInToolName =
   | 'listFiles'
   | 'moveFile'
   | 'copyFile'
+  | 'searchFiles'
   | 'tavilySearch'
   | 'fetchWebsite'
   | 'generateImage'
@@ -43,6 +44,7 @@ const BUILT_IN_TOOLS: readonly BuiltInToolName[] = [
   'listFiles',
   'moveFile',
   'copyFile',
+  'searchFiles',
   'tavilySearch',
   'fetchWebsite',
   'generateImage',
@@ -151,6 +153,21 @@ export type CopyFileInput = {
   type: 'copyFile'
   source: string
   destination: string
+}
+
+export type SearchFilesInput = {
+  type: 'searchFiles'
+  path: string // 検索開始ディレクトリ
+  pattern: string // 正規表現パターン
+  options?: {
+    filePattern?: string // ファイル名フィルター（glob: '*.ts', '*.js'）
+    ignoreFiles?: string[] // gitignore形式の除外パターン
+    caseSensitive?: boolean // 大文字小文字区別（デフォルト: true）
+    contextLines?: number // マッチ前後の表示行数（デフォルト: 2）
+    maxResults?: number // 最大マッチ数（デフォルト: 100）
+    recursive?: boolean // 再帰的にサブディレクトリも検索（デフォルト: true）
+    showLineNumbers?: boolean // 行番号表示（デフォルト: true）
+  }
 }
 
 export type TavilySearchInput = {
@@ -414,6 +431,7 @@ export type ToolInput =
   | ListFilesInput
   | MoveFileInput
   | CopyFileInput
+  | SearchFilesInput
   | TavilySearchInput
   | FetchWebsiteInput
   | GenerateImageInput
@@ -443,6 +461,7 @@ export type ToolInputTypeMap = {
   listFiles: ListFilesInput
   moveFile: MoveFileInput
   copyFile: CopyFileInput
+  searchFiles: SearchFilesInput
   tavilySearch: TavilySearchInput
   fetchWebsite: FetchWebsiteInput
   generateImage: GenerateImageInput

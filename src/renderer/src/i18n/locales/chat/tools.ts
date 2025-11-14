@@ -213,6 +213,7 @@ export const tools = {
       listFiles: 'View directory structure',
       moveFile: 'Move files between locations',
       copyFile: 'Create file duplicates',
+      searchFiles: 'Search for patterns in files using regex',
       tavilySearch: 'Search the web for information',
       fetchWebsite: 'Fetch and analyze content from websites',
       generateImage: 'Generate images using LLMs',
@@ -310,6 +311,11 @@ export const tools = {
         description:
           'Helps the AI understand your project structure by seeing all files and directories. Perfect for project analysis, dependency mapping, or getting a high-level overview of complex projects.',
         tip: 'Use this when you want the AI to help with project organization, architecture review, or understanding complex directory structures without showing specific file contents. When implementing file-based processing with most AI agents (except coding agents), it is recommended to have the agent run this listFiles tool first.'
+      },
+      searchFiles: {
+        description:
+          'Enables the AI to search for specific patterns across multiple files using regular expressions. Essential for finding code patterns, function calls, variable usage, TODO comments, or any text-based patterns in your codebase.',
+        tip: 'Use this when you need to find specific code patterns, debug issues by locating error messages, or understand how a feature is implemented across multiple files. The tool supports file filtering, context lines, and gitignore-style exclusions.'
       },
       moveFile: {
         description:
@@ -677,6 +683,7 @@ export const tools = {
       listFiles: 'ディレクトリ構造を表示',
       moveFile: 'ファイルを別の場所に移動',
       copyFile: 'ファイルの複製を作成',
+      searchFiles: '正規表現を使用してファイル内のパターンを検索',
       tavilySearch: 'Web上の情報を検索',
       fetchWebsite: 'Webサイトのコンテンツを取得して分析',
       generateImage: 'LLMを使用して画像を生成',
@@ -769,6 +776,11 @@ export const tools = {
         description:
           'AIがすべてのファイルとディレクトリを見ることでプロジェクト構造を理解できるようにします。プロジェクト分析、依存関係のマッピング、複雑なプロジェクトの概要把握に最適です。',
         tip: 'AIにプロジェクトの整理、アーキテクチャレビュー、または特定のファイル内容を表示せずに複雑なディレクトリ構造を理解させたい場合に使用します。コーディングエージェント以外のほとんどのAIエージェントの実装においてファイルベースな処理を行う場合はまず最初にこの listFiles ツールを実行させることを推奨します。'
+      },
+      searchFiles: {
+        description:
+          'AIが正規表現を使用して複数ファイルにわたる特定のパターンを検索できるようにします。コードパターン、関数呼び出し、変数の使用状況、TODOコメント、またはコードベース内の任意のテキストベースのパターンの検索に不可欠です。',
+        tip: '特定のコードパターンを見つける必要がある場合、エラーメッセージを特定して問題をデバッグする場合、または複数のファイルにわたる機能の実装を理解する場合に使用します。このツールはファイルフィルタリング、コンテキスト行、gitignoreスタイルの除外をサポートしています。'
       },
       moveFile: {
         description:

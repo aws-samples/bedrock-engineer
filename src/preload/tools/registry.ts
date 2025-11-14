@@ -11,6 +11,7 @@ import { CreateFolderTool } from './handlers/filesystem/CreateFolderTool'
 import { WriteToFileTool } from './handlers/filesystem/WriteToFileTool'
 import { ReadFilesTool } from './handlers/filesystem/ReadFilesTool'
 import { ListFilesTool } from './handlers/filesystem/ListFilesTool'
+import { SearchFilesTool } from './handlers/filesystem/SearchFilesTool'
 import { ApplyDiffEditTool } from './handlers/filesystem/ApplyDiffEditTool'
 import { MoveFileTool } from './handlers/filesystem/MoveFileTool'
 import { CopyFileTool } from './handlers/filesystem/CopyFileTool'
@@ -368,6 +369,11 @@ export class ToolMetadataCollector {
     // Add ListFilesTool specification
     if (ListFilesTool.toolSpec) {
       specs.push({ toolSpec: ListFilesTool.toolSpec })
+    }
+
+    // Add SearchFilesTool specification
+    if (SearchFilesTool.toolSpec) {
+      specs.push({ toolSpec: SearchFilesTool.toolSpec })
     }
 
     // Add ApplyDiffEditTool specification

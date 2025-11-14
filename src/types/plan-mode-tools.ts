@@ -4,6 +4,7 @@ import { ToolName } from './tools'
 export const READ_ONLY_TOOLS: ToolName[] = [
   'readFiles',
   'listFiles',
+  'searchFiles',
   'tavilySearch',
   'fetchWebsite',
   'recognizeImage',

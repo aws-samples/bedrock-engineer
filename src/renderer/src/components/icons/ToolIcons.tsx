@@ -37,6 +37,7 @@ const standardToolIcons = {
   writeToFile: <FaFileSignature className="text-green-500 size-6" />,
   readFiles: <FaFileAlt className="text-yellow-500 size-6" />,
   listFiles: <FaList className="text-purple-500 size-6" />,
+  searchFiles: <FaSearch className="text-indigo-500 size-6" />,
   moveFile: <FaArrowRight className="text-orange-500 size-6" />,
   copyFile: <FaCopy className="text-indigo-500 size-6" />,
   tavilySearch: <FaSearch className="text-red-500 size-6" />,

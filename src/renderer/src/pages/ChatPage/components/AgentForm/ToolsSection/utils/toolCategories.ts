@@ -13,6 +13,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
       'writeToFile',
       'readFiles',
       'listFiles',
+      'searchFiles',
       'moveFile',
       'copyFile',
       'applyDiffEdit'
