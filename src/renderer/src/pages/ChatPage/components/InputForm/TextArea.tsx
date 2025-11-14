@@ -172,9 +172,23 @@ export const TextArea: React.FC<TextAreaProps> = ({
       const items = e.clipboardData?.items
       if (!items) return
 
+      // Check for text data (prioritize text over images)
+      const hasTextData = Array.from(items).some(
+        (item) => item.type === 'text/plain' || item.type === 'text/html'
+      )
+
+      // If text data exists, allow default paste behavior (paste as text)
+      if (hasTextData) {
+        return
+      }
+
+      // Only process as images if no text data exists
       const imageItems = Array.from(items).filter((item) => item.type.indexOf('image') !== -1)
 
       if (imageItems.length === 0) return
+
+      // Prevent default paste behavior when handling as images
+      e.preventDefault()
 
       if (attachedImages.length + imageItems.length > 20) {
         toast.error(t('textarea.imageValidation.tooManyImages'))
