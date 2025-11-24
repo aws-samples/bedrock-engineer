@@ -638,6 +638,35 @@ const MODEL_REGISTRY: ModelConfig[] = [
     }
   },
 
+  // Claude Opus 4.5
+  {
+    baseId: 'claude-opus-4-5-20251101-v1:0',
+    name: 'Claude Opus 4.5',
+    provider: 'anthropic',
+    category: 'text',
+    toolUse: true,
+    maxTokensLimit: 8192,
+    supportsThinking: true,
+    inferenceProfiles: [
+      {
+        type: 'global',
+        prefix: 'global',
+        regions: ['us-west-2', 'us-east-1', 'us-east-2', 'eu-west-1', 'ap-northeast-1'],
+        displaySuffix: '(Global)'
+      }
+    ],
+    pricing: {
+      input: 0.005,
+      output: 0.025,
+      cacheRead: 0.0005,
+      cacheWrite: 0.00625
+    },
+    cache: {
+      supported: true,
+      cacheableFields: ['messages', 'system', 'tools']
+    }
+  },
+
   // Amazon Nova Premier
   {
     baseId: 'nova-premier-v1:0',
