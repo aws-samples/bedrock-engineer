@@ -43,7 +43,7 @@
     "@electron-toolkit/utils": "3.0.0",
     "@headlessui/react": "^2.2.0",
     "@iconify-json/logos": "1.2.0",
-    "@modelcontextprotocol/sdk": "^1.8.0",
+    "@modelcontextprotocol/sdk": "^1.24.0",
     "@monaco-editor/react": "^4.6.0",
     "@reactour/tour": "3.7.0",
     "@tshepomgaga/aws-sfn-graph": "0.0.6",
