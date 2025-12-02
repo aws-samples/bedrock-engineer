@@ -777,6 +777,30 @@ const MODEL_REGISTRY: ModelConfig[] = [
     }
   },
 
+  // Amazon Nova 2 Lite
+  {
+    baseId: 'nova-2-lite-v1:0',
+    name: 'Amazon Nova 2 Lite',
+    provider: 'amazon',
+    category: 'text',
+    toolUse: true,
+    maxTokensLimit: 5120,
+    inferenceProfiles: [
+      {
+        type: 'regional-us',
+        prefix: 'us',
+        regions: ['us-east-1', 'us-west-2'],
+        displaySuffix: '(US)'
+      },
+      {
+        type: 'global',
+        prefix: 'global',
+        regions: ['us-east-1', 'us-west-2'],
+        displaySuffix: '(Global)'
+      }
+    ]
+  },
+
   // Amazon Nova Micro
   {
     baseId: 'nova-micro-v1:0',
