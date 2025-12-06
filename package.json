@@ -54,7 +54,7 @@
     "diff": "6.0.0",
     "electron-store": "8.2.0",
     "electron-updater": "^6.3.9",
-    "express": "^4.21.2",
+    "express": "^4.22.1",
     "fix-path": "^4.0.0",
     "flowbite-react": "0.10.1",
     "framer-motion": "11.3.29",
