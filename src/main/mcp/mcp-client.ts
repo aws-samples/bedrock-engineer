@@ -18,9 +18,7 @@ export class MCPClient {
     this.mcp = new Client(
       { name: 'mcp-client-cli', version: '1.0.0' },
       {
-        capabilities: {
-          tools: {}
-        }
+        capabilities: {}
       }
     )
   }
