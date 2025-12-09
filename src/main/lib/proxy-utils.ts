@@ -224,7 +224,9 @@ export function createProxyAgents(
     if (options.includeNodeHandler) {
       result.requestHandler = new NodeHttpHandler({
         httpAgent: agent,
-        httpsAgent: agent
+        httpsAgent: agent,
+        requestTimeout: 300000, // 5 minutes
+        connectionTimeout: 30000 // 30 seconds
       })
     }
 

@@ -7,10 +7,18 @@ type MessageListProps = {
   messages: IdentifiableMessage[]
   loading: boolean
   reasoning: boolean
+  waitingForResponse?: boolean
+  timeoutCountdown?: number
   deleteMessage?: (index: number) => void
 }
 
-const LoadingMessage = memo(function LoadingMessage() {
+const LoadingMessage = memo(function LoadingMessage({ waiting, countdown }: { waiting?: boolean, countdown?: number }) {
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
   return (
     <div className="flex gap-4">
       <div className="flex items-center justify-center w-10 h-10">
@@ -20,6 +28,11 @@ const LoadingMessage = memo(function LoadingMessage() {
       </div>
       <div className="flex flex-col gap-2 w-full">
         <span className="animate-pulse h-2 w-12 bg-slate-200 rounded"></span>
+        {waiting && countdown !== undefined && (
+          <div className="text-xs text-amber-600 dark:text-amber-400 mb-2">
+            ⏳ Processing... (Timeout in {formatTime(countdown)})
+          </div>
+        )}
         <div className="flex-1 space-y-6 py-1">
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-4">
@@ -39,6 +52,8 @@ const MessageListBase: React.FC<MessageListProps> = ({
   messages,
   loading,
   reasoning,
+  waitingForResponse,
+  timeoutCountdown,
   deleteMessage
 }) => {
   const handleDeleteMessage = useCallback(
@@ -60,7 +75,7 @@ const MessageListBase: React.FC<MessageListProps> = ({
           onDeleteMessage={deleteMessage ? handleDeleteMessage(index) : undefined}
         />
       ))}
-      {loading && <LoadingMessage />}
+      {loading && <LoadingMessage waiting={waitingForResponse} countdown={timeoutCountdown} />}
     </div>
   )
 }
