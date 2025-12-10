@@ -28,6 +28,8 @@ export const SettingPage: React.FC = () => {
     updateContextLength,
     enablePromptCache,
     setEnablePromptCache,
+    requestTimeout,
+    setRequestTimeout,
     tavilySearchApiKey,
     setTavilySearchApiKey,
     awsRegion,
@@ -86,6 +88,8 @@ export const SettingPage: React.FC = () => {
         onUpdateContextLength={updateContextLength}
         enablePromptCache={enablePromptCache}
         onUpdateEnablePromptCache={setEnablePromptCache}
+        requestTimeout={requestTimeout}
+        onUpdateRequestTimeout={setRequestTimeout}
       />
 
       <AWSSection

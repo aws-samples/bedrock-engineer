@@ -10,6 +10,8 @@ interface AgentChatSectionProps {
   onUpdateContextLength: (value: number) => void
   enablePromptCache: boolean
   onUpdateEnablePromptCache: (enabled: boolean) => void
+  requestTimeout: number
+  onUpdateRequestTimeout: (timeout: number) => void
 }
 
 export const AgentChatSection: React.FC<AgentChatSectionProps> = ({
@@ -18,7 +20,9 @@ export const AgentChatSection: React.FC<AgentChatSectionProps> = ({
   contextLength,
   onUpdateContextLength,
   enablePromptCache,
-  onUpdateEnablePromptCache
+  onUpdateEnablePromptCache,
+  requestTimeout,
+  onUpdateRequestTimeout
 }) => {
   const { t } = useTranslation()
 
@@ -26,6 +30,13 @@ export const AgentChatSection: React.FC<AgentChatSectionProps> = ({
     const value = parseInt(e.target.value, 10)
     if (!isNaN(value) && value > 0) {
       onUpdateContextLength(value)
+    }
+  }
+
+  const handleRequestTimeoutChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value, 10)
+    if (!isNaN(value) && value > 0) {
+      onUpdateRequestTimeout(value)
     }
   }
 
@@ -62,6 +73,20 @@ export const AgentChatSection: React.FC<AgentChatSectionProps> = ({
             {t(
               'Limiting context length reduces token usage but may affect conversation continuity'
             )}
+          </div>
+        </div>
+
+        <div className="pt-4">
+          <SettingInput
+            label={t('Request Timeout (minutes)')}
+            type="number"
+            min="1"
+            placeholder="15"
+            value={requestTimeout.toString()}
+            onChange={handleRequestTimeoutChange}
+          />
+          <div className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+            {t('Maximum time to wait for agent responses before timing out')}
           </div>
         </div>
 

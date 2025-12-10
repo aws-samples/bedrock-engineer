@@ -59,6 +59,8 @@ export interface SettingsContextType {
   updateContextLength: (length: number) => void
   enablePromptCache: boolean
   setEnablePromptCache: (enabled: boolean) => void
+  requestTimeout: number
+  setRequestTimeout: (timeout: number) => void
 
   // Notification Settings
   notification: boolean
@@ -290,6 +292,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Agent Chat Settings
   const [contextLength, setContextLength] = useState<number>(60)
   const [enablePromptCache, setStateEnablePromptCache] = useState<boolean>(true)
+  const [requestTimeout, setStateRequestTimeout] = useState<number>(15)
 
   // Notification Settings
   const [notification, setStateNotification] = useState<boolean>(true)
@@ -692,6 +695,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // enablePromptCache の状態を更新
     setStateEnablePromptCache(agentChatConfig.enablePromptCache)
+
+    // requestTimeout の設定
+    if (agentChatConfig.requestTimeout === undefined) {
+      agentChatConfig.requestTimeout = 15
+    }
+
+    // requestTimeout の状態を更新
+    setStateRequestTimeout(agentChatConfig.requestTimeout)
 
     // 設定を保存
     window.store.set('agentChatConfig', agentChatConfig)
@@ -1345,6 +1356,15 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     })
   }, [])
 
+  const setRequestTimeout = useCallback((timeout: number) => {
+    setStateRequestTimeout(timeout)
+    const agentChatConfig = window.store.get('agentChatConfig') || {}
+    window.store.set('agentChatConfig', {
+      ...agentChatConfig,
+      requestTimeout: timeout
+    })
+  }, [])
+
   const setNotification = useCallback((enabled: boolean) => {
     setStateNotification(enabled)
     window.store.set('notification', enabled)
@@ -1842,6 +1862,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     updateContextLength,
     enablePromptCache,
     setEnablePromptCache,
+    requestTimeout,
+    setRequestTimeout,
 
     // Notification Settings
     notification,

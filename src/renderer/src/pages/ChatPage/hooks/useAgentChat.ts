@@ -96,6 +96,7 @@ export const useAgentChat = (
   const [loading, setLoading] = useState(false)
   const [waitingForResponse, setWaitingForResponse] = useState(false)
   const [timeoutCountdown, setTimeoutCountdown] = useState<number>(0)
+  const [heartbeatCount, setHeartbeatCount] = useState<number>(0)
   const [reasoning, setReasoning] = useState(false)
   const [executingTools, setExecutingTools] = useState<Set<ToolName>>(new Set())
   const [latestReasoningText, setLatestReasoningText] = useState<string>('')
@@ -116,7 +117,8 @@ export const useAgentChat = (
     getAgentTools,
     agents,
     enablePromptCache,
-    inferenceParams
+    inferenceParams,
+    requestTimeout
   } = useSettings()
 
   // エージェントIDからツール設定を取得
@@ -342,8 +344,11 @@ export const useAgentChat = (
   const streamChat = async (props: StreamChatCompletionProps, currentMessages: Message[]) => {
     // Track last data received time for timeout detection
     let lastDataTime = Date.now()
+    let timedOut = false
+    let requestCompleted = false
     const WAIT_THRESHOLD = 10000 // 10 seconds without data = waiting state
-    const TIMEOUT_MS = 300000 // 5 minutes total timeout
+    const TIMEOUT_MS = requestTimeout * 60 * 1000 // Convert minutes to milliseconds
+    const HEARTBEAT_INTERVAL = 30000 // 30 seconds heartbeat check
     
     const checkWaitingState = setInterval(() => {
       const timeSinceLastData = Date.now() - lastDataTime
@@ -353,8 +358,37 @@ export const useAgentChat = (
       if (isWaiting) {
         const remainingTime = Math.max(0, TIMEOUT_MS - timeSinceLastData)
         setTimeoutCountdown(Math.floor(remainingTime / 1000))
+        
+        // Abort when timeout is reached
+        if (remainingTime === 0 && abortController.current && !timedOut) {
+          timedOut = true
+          console.log(`Request timed out after ${requestTimeout} minutes - aborting request`)
+          
+          // Add timeout message to chat immediately
+          const timeoutMessage = t('Request timed out after {{timeout}} minutes', { timeout: requestTimeout })
+          const timeoutChatMessage: IdentifiableMessage = {
+            id: generateMessageId(),
+            role: ConversationRole.ASSISTANT,
+            content: [{ text: timeoutMessage }]
+          }
+          setMessages((prev) => [...prev, timeoutChatMessage])
+          
+          abortController.current.abort()
+        }
       }
     }, 1000)
+    
+    // Heartbeat check every 30 seconds
+    const heartbeatCheck = setInterval(() => {
+      if (!requestCompleted && abortController.current) {
+        const timeSinceLastData = Date.now() - lastDataTime
+        // If no data for 30+ seconds, verify connection is still alive
+        if (timeSinceLastData >= HEARTBEAT_INTERVAL) {
+          setHeartbeatCount(prev => prev + 1)
+          console.log(`Heartbeat: ${Math.floor(timeSinceLastData / 1000)}s since last data`)
+        }
+      }
+    }, HEARTBEAT_INTERVAL)
     
     try {
       // 既存の通信があれば中断
@@ -725,10 +759,15 @@ export const useAgentChat = (
           return
         }
         throw innerError
+      } finally {
+        requestCompleted = true
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
         console.log('Chat stream aborted')
+        if (timedOut) {
+          toast.error(t('Request timed out after {{timeout}} minutes', { timeout: requestTimeout }))
+        }
         return
       }
       console.error({ streamChatRequestError: error })
@@ -747,10 +786,12 @@ export const useAgentChat = (
       await persistMessage(errorMessage)
       throw error
     } finally {
-      // Cleanup waiting state checker
+      // Cleanup intervals
       clearInterval(checkWaitingState)
+      clearInterval(heartbeatCheck)
       setWaitingForResponse(false)
       setTimeoutCountdown(0)
+      setHeartbeatCount(0)
       
       // 使用済みの AbortController をクリア
       if (abortController.current?.signal.aborted) {
@@ -1203,6 +1244,7 @@ export const useAgentChat = (
     reasoning,
     waitingForResponse,
     timeoutCountdown,
+    heartbeatCount,
     executingTools,
     latestReasoningText, // 最新のreasoningTextを外部に公開
     handleSubmit,

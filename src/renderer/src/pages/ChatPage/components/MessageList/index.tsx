@@ -1,5 +1,5 @@
 import { IdentifiableMessage } from '@/types/chat/message'
-import React, { memo, useCallback } from 'react'
+import React, { memo, useCallback, useEffect, useRef } from 'react'
 import { ChatMessage } from './Message'
 import AILogo from '@renderer/assets/images/icons/ai.svg'
 
@@ -9,15 +9,26 @@ type MessageListProps = {
   reasoning: boolean
   waitingForResponse?: boolean
   timeoutCountdown?: number
+  heartbeatCount?: number
   deleteMessage?: (index: number) => void
 }
 
-const LoadingMessage = memo(function LoadingMessage({ waiting, countdown }: { waiting?: boolean, countdown?: number }) {
+const LoadingMessage = memo(function LoadingMessage({
+  waiting,
+  countdown,
+  heartbeats
+}: {
+  waiting?: boolean
+  countdown?: number
+  heartbeats?: number
+}) {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
+
+  const dots = heartbeats ? '..'.repeat(Math.min(heartbeats, 10)) : ''
 
   return (
     <div className="flex gap-4">
@@ -30,7 +41,7 @@ const LoadingMessage = memo(function LoadingMessage({ waiting, countdown }: { wa
         <span className="animate-pulse h-2 w-12 bg-slate-200 rounded"></span>
         {waiting && countdown !== undefined && (
           <div className="text-xs text-amber-600 dark:text-amber-400 mb-2">
-            ⏳ Processing... (Timeout in {formatTime(countdown)})
+            ⏳ Processing... (Timeout in {formatTime(countdown)}){dots}
           </div>
         )}
         <div className="flex-1 space-y-6 py-1">
@@ -54,6 +65,7 @@ const MessageListBase: React.FC<MessageListProps> = ({
   reasoning,
   waitingForResponse,
   timeoutCountdown,
+  heartbeatCount,
   deleteMessage
 }) => {
   const handleDeleteMessage = useCallback(
@@ -65,6 +77,13 @@ const MessageListBase: React.FC<MessageListProps> = ({
     [deleteMessage]
   )
 
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to bottom when messages change or loading state changes
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
   return (
     <div className="flex flex-col gap-4">
       {messages.map((message, index) => (
@@ -75,7 +94,14 @@ const MessageListBase: React.FC<MessageListProps> = ({
           onDeleteMessage={deleteMessage ? handleDeleteMessage(index) : undefined}
         />
       ))}
-      {loading && <LoadingMessage waiting={waitingForResponse} countdown={timeoutCountdown} />}
+      {loading && (
+        <LoadingMessage
+          waiting={waitingForResponse}
+          countdown={timeoutCountdown}
+          heartbeats={heartbeatCount}
+        />
+      )}
+      <div ref={messagesEndRef} />
     </div>
   )
 }
