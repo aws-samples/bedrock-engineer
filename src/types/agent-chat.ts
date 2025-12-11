@@ -41,6 +41,7 @@ export type AgentChatConfig = {
   ignoreFiles?: string[]
   contextLength?: number
   enablePromptCache?: boolean
+  requestTimeout?: number
 }
 
 export type SendMsgKey = 'Enter' | 'Cmd+Enter'
