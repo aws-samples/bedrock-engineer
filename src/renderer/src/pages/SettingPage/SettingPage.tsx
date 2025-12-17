@@ -8,7 +8,8 @@ import {
   AWSSection,
   AdvancedSection,
   NotificationSection,
-  GuardrailSettings
+  GuardrailSettings,
+  ImageGenerationSection
 } from './components/sections'
 import { LightModelSettings } from './components/LightModelSettings'
 import { ConfigDirSection } from './components/sections/ConfigDirSection'
@@ -118,6 +119,8 @@ export const SettingPage: React.FC = () => {
       />
 
       <LightModelSettings />
+
+      <ImageGenerationSection />
 
       <AdvancedSection sendMsgKey={sendMsgKey} onUpdateSendMsgKey={updateSendMsgKey} />
 

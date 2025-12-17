@@ -1,4 +1,4 @@
-import { FiHome, FiFeather, FiSettings, FiMic } from 'react-icons/fi'
+import { FiHome, FiFeather, FiSettings, FiMic, FiImage } from 'react-icons/fi'
 import { LuCombine } from 'react-icons/lu'
 import { HiOutlineChatAlt2 } from 'react-icons/hi'
 import { BsLayoutWtf } from 'react-icons/bs'
@@ -8,6 +8,7 @@ import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepF
 import WebsiteGeneratorPage from './pages/WebsiteGeneratorPage/WebsiteGeneratorPage'
 import ChatPage from './pages/ChatPage/ChatPage'
 import DiagramGeneratorPage from './pages/DiagramGeneratorPage/DiagramGeneratorPage'
+import ImageGeneratorPage from './pages/ImageGeneratorPage/ImageGeneratorPage'
 import { AgentDirectoryPage } from './pages/AgentDirectoryPage/AgentDirectoryPage'
 import BackgroundAgentPage from './pages/BackgroundAgentPage/BackgroundAgentPage'
 import TaskExecutionHistoryPage from './pages/BackgroundAgentPage/TaskExecutionHistoryPage'
@@ -71,6 +72,13 @@ export const routes = [
     icon: BsLayoutWtf,
     position: 'top',
     element: <DiagramGeneratorPage />
+  },
+  {
+    name: 'Image Generator',
+    href: '/image-generator',
+    icon: FiImage,
+    position: 'top',
+    element: <ImageGeneratorPage />
   },
   {
     name: 'Setting',

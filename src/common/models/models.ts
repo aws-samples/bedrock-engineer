@@ -919,93 +919,9 @@ const MODEL_REGISTRY: ModelConfig[] = [
 
 /**
  * Image generation model registry
+ * Only includes models with TEXT input and IMAGE output modalities
  */
 const IMAGE_GENERATION_MODELS: ModelConfig[] = [
-  // Stability AI models
-  {
-    baseId: 'stability.sd3-5-large-v1:0',
-    name: 'Stability SD3.5 Large',
-    provider: 'stability',
-    category: 'image',
-    toolUse: false,
-    maxTokensLimit: 0,
-    inferenceProfiles: [
-      {
-        type: 'base',
-        regions: ['us-west-2']
-      }
-    ]
-  },
-  {
-    baseId: 'stability.sd3-large-v1:0',
-    name: 'Stability SD3 Large',
-    provider: 'stability',
-    category: 'image',
-    toolUse: false,
-    maxTokensLimit: 0,
-    inferenceProfiles: [
-      {
-        type: 'base',
-        regions: ['us-west-2']
-      }
-    ]
-  },
-  {
-    baseId: 'stability.stable-image-core-v1:0',
-    name: 'Stability Stable Image Core v1.0',
-    provider: 'stability',
-    category: 'image',
-    toolUse: false,
-    maxTokensLimit: 0,
-    inferenceProfiles: [
-      {
-        type: 'base',
-        regions: ['us-west-2']
-      }
-    ]
-  },
-  {
-    baseId: 'stability.stable-image-core-v1:1',
-    name: 'Stability Stable Image Core v1.1',
-    provider: 'stability',
-    category: 'image',
-    toolUse: false,
-    maxTokensLimit: 0,
-    inferenceProfiles: [
-      {
-        type: 'base',
-        regions: ['us-west-2']
-      }
-    ]
-  },
-  {
-    baseId: 'stability.stable-image-ultra-v1:0',
-    name: 'Stability Stable Image Ultra v1.0',
-    provider: 'stability',
-    category: 'image',
-    toolUse: false,
-    maxTokensLimit: 0,
-    inferenceProfiles: [
-      {
-        type: 'base',
-        regions: ['us-west-2']
-      }
-    ]
-  },
-  {
-    baseId: 'stability.stable-image-ultra-v1:1',
-    name: 'Stability Stable Image Ultra v1.1',
-    provider: 'stability',
-    category: 'image',
-    toolUse: false,
-    maxTokensLimit: 0,
-    inferenceProfiles: [
-      {
-        type: 'base',
-        regions: ['us-west-2']
-      }
-    ]
-  },
   // Amazon models
   {
     baseId: 'amazon.nova-canvas-v1:0',
@@ -1017,7 +933,7 @@ const IMAGE_GENERATION_MODELS: ModelConfig[] = [
     inferenceProfiles: [
       {
         type: 'base',
-        regions: ['us-east-1', 'ap-northeast-1', 'eu-west-1']
+        regions: ['us-east-1', 'us-west-2', 'ap-northeast-1', 'eu-west-1']
       }
     ]
   },
@@ -1045,7 +961,50 @@ const IMAGE_GENERATION_MODELS: ModelConfig[] = [
     inferenceProfiles: [
       {
         type: 'base',
-        regions: ['us-east-1', 'us-west-2', 'eu-west-1', 'eu-west-2', 'ap-south-1']
+        regions: ['us-east-1', 'us-west-2']
+      }
+    ]
+  },
+  // Stability AI models
+  {
+    baseId: 'stability.sd3-5-large-v1:0',
+    name: 'Stable Diffusion 3.5 Large',
+    provider: 'stability',
+    category: 'image',
+    toolUse: false,
+    maxTokensLimit: 0,
+    inferenceProfiles: [
+      {
+        type: 'base',
+        regions: ['us-west-2']
+      }
+    ]
+  },
+  {
+    baseId: 'stability.stable-image-core-v1:1',
+    name: 'Stable Image Core',
+    provider: 'stability',
+    category: 'image',
+    toolUse: false,
+    maxTokensLimit: 0,
+    inferenceProfiles: [
+      {
+        type: 'base',
+        regions: ['us-west-2']
+      }
+    ]
+  },
+  {
+    baseId: 'stability.stable-image-ultra-v1:1',
+    name: 'Stable Image Ultra',
+    provider: 'stability',
+    category: 'image',
+    toolUse: false,
+    maxTokensLimit: 0,
+    inferenceProfiles: [
+      {
+        type: 'base',
+        regions: ['us-west-2']
       }
     ]
   }
