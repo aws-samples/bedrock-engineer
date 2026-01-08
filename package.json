@@ -34,7 +34,7 @@
     "@aws-sdk/client-bedrock-agent-runtime": "^3.782.0",
     "@aws-sdk/client-bedrock-runtime": "^3.821.0",
     "@aws-sdk/client-s3": "^3.826.0",
-    "@aws-sdk/client-sts": "3.699.0",
+    "@aws-sdk/client-sts": "3.965.0",
     "@aws-sdk/client-translate": "^3.825.0",
     "@aws-sdk/credential-providers": "^3.772.0",
     "@codemirror/autocomplete": "6.18.0",
