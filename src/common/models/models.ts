@@ -667,6 +667,41 @@ const MODEL_REGISTRY: ModelConfig[] = [
     }
   },
 
+  // Claude Opus 4.6
+  {
+    baseId: 'claude-opus-4-6-v1',
+    name: 'Claude Opus 4.6',
+    provider: 'anthropic',
+    category: 'text',
+    toolUse: true,
+    maxTokensLimit: 128000,
+    supportsThinking: true,
+    inferenceProfiles: [
+      {
+        type: 'global',
+        prefix: 'global',
+        regions: ['us-west-2', 'us-east-1', 'us-east-2', 'eu-west-1', 'ap-northeast-1'],
+        displaySuffix: '(Global)'
+      },
+      {
+        type: 'regional-us',
+        prefix: 'us',
+        regions: ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2'],
+        displaySuffix: '(US)'
+      }
+    ],
+    pricing: {
+      input: 0.005,
+      output: 0.025,
+      cacheRead: 0.0005,
+      cacheWrite: 0.00625
+    },
+    cache: {
+      supported: true,
+      cacheableFields: ['messages', 'system', 'tools']
+    }
+  },
+
   // Amazon Nova Premier
   {
     baseId: 'nova-premier-v1:0',

@@ -79,6 +79,32 @@ test('should calculate cost for Claude Opus 4.1', () => {
   expect(actualCost).toBeCloseTo(expectedCost, 6)
 })
 
+test('should calculate cost for Claude Opus 4.6', () => {
+  const modelId = 'anthropic.claude-opus-4-6-v1'
+  const pricingCalculator = new PricingCalculator(modelId)
+
+  const inputTokens = 1000
+  const outputTokens = 500
+  const cacheReadTokens = 200
+  const cacheWriteTokens = 100
+
+  const expectedCost =
+    (inputTokens * 0.005 +
+      outputTokens * 0.025 +
+      cacheReadTokens * 0.0005 +
+      cacheWriteTokens * 0.00625) /
+    1000
+
+  const actualCost = pricingCalculator.calculateTotalCost(
+    inputTokens,
+    outputTokens,
+    cacheReadTokens,
+    cacheWriteTokens
+  )
+
+  expect(actualCost).toBeCloseTo(expectedCost, 6)
+})
+
 test('should return 0 for unknown model', () => {
   const modelId = 'unknown-model'
   const pricingCalculator = new PricingCalculator(modelId)
