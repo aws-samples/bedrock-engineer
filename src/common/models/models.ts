@@ -667,6 +667,62 @@ const MODEL_REGISTRY: ModelConfig[] = [
     }
   },
 
+  // Claude Sonnet 4.6
+  {
+    baseId: 'claude-sonnet-4-6-v1:0',
+    name: 'Claude Sonnet 4.6',
+    provider: 'anthropic',
+    category: 'text',
+    toolUse: true,
+    maxTokensLimit: 64000,
+    supportsThinking: true,
+    inferenceProfiles: [
+      {
+        type: 'jp',
+        prefix: 'jp',
+        regions: ['ap-northeast-1', 'ap-northeast-3'],
+        displaySuffix: '(JP)'
+      },
+      {
+        type: 'global',
+        prefix: 'global',
+        regions: ['us-west-2', 'us-east-1', 'us-east-2', 'eu-west-1', 'ap-northeast-1'],
+        displaySuffix: '(Global)'
+      },
+      {
+        type: 'regional-us',
+        prefix: 'us',
+        regions: ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2'],
+        displaySuffix: '(US)'
+      },
+      {
+        type: 'regional-eu',
+        prefix: 'eu',
+        regions: [
+          'eu-central-1',
+          'eu-central-2',
+          'eu-north-1',
+          'eu-south-1',
+          'eu-south-2',
+          'eu-west-1',
+          'eu-west-2',
+          'eu-west-3'
+        ],
+        displaySuffix: '(EU)'
+      }
+    ],
+    pricing: {
+      input: 0.003,
+      output: 0.015,
+      cacheRead: 0.0003,
+      cacheWrite: 0.00375
+    },
+    cache: {
+      supported: true,
+      cacheableFields: ['messages', 'system', 'tools']
+    }
+  },
+
   // Claude Opus 4.6
   {
     baseId: 'claude-opus-4-6-v1',
