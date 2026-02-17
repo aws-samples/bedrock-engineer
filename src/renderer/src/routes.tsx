@@ -1,7 +1,9 @@
+import { IconType } from 'react-icons'
 import { FiHome, FiFeather, FiSettings, FiMic } from 'react-icons/fi'
-import { LuCombine } from 'react-icons/lu'
+import { LuCombine, LuBookDown } from 'react-icons/lu'
 import { HiOutlineChatAlt2 } from 'react-icons/hi'
 import { BsLayoutWtf } from 'react-icons/bs'
+import { PiPulse } from 'react-icons/pi'
 import HomePage from './pages/HomePage/HomePage'
 import SettingPage from './pages/SettingPage/SettingPage'
 import StepFunctionsGeneratorPage from './pages/StepFunctionsGeneratorPage/StepFunctionsGeneratorPage'
@@ -12,10 +14,16 @@ import { AgentDirectoryPage } from './pages/AgentDirectoryPage/AgentDirectoryPag
 import BackgroundAgentPage from './pages/BackgroundAgentPage/BackgroundAgentPage'
 import TaskExecutionHistoryPage from './pages/BackgroundAgentPage/TaskExecutionHistoryPage'
 import SpeakPage from './pages/SpeakPage'
-import { LuBookDown } from 'react-icons/lu'
-import { PiPulse } from 'react-icons/pi'
 
-export const routes = [
+export interface AppRoute {
+  name: string
+  href: string
+  icon: IconType
+  position: 'top' | 'hidden'
+  element: React.ReactElement
+}
+
+export const routes: AppRoute[] = [
   {
     name: 'Home',
     href: '/',
