@@ -40,7 +40,7 @@ import { LoaderWithReasoning } from './components/LoaderWithReasoning'
 import { ContinueDevelopmentButton } from './components/ContinueDevelopmentButton'
 import { generateContinueDevelopmentPrompt } from './utils/promptGenerator'
 import { preserveScrollPosition } from './extensions/preserveScrollPosition'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 
 // Layout constants
 const LAYOUT_CONSTANTS = {

@@ -1,8 +1,8 @@
 import 'react-cmdk/dist/cmdk.css'
 import CommandPalette, { filterItems, getItemIndex } from 'react-cmdk'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { routes } from './routes'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 
 const CmdK = () => {
   const [page] = useState<'root' | 'projects'>('root')
@@ -11,8 +11,8 @@ const CmdK = () => {
 
   const navigate = useNavigate()
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
       if (e.metaKey && e.key === 'k') {
         e.preventDefault()
         e.stopPropagation()
@@ -36,14 +36,17 @@ const CmdK = () => {
           console.log(e)
         }
       }
-    }
+    },
+    [navigate]
+  )
 
+  useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [handleKeyDown])
 
   const items = routes.map((route) => {
     return {
@@ -51,7 +54,7 @@ const CmdK = () => {
       children: route.name,
       href: '#' + route.href,
       icon: () => route.icon({ className: 'text-xl' }),
-      onClick: () => navigate('#' + route.href)
+      onClick: () => navigate(route.href)
     }
   })
 
