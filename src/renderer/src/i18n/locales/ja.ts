@@ -2,6 +2,7 @@ import { chatPage } from './chat'
 import { awsDiagramGenerator } from './awsDiagramGenerator'
 import { stepFunctionGenerator } from './stepFunctionGenerator'
 import { websiteGenerator } from './websiteGenerator'
+import { imageGenerator } from './imageGenerator'
 import {
   iamPolicy,
   notificationSettings,
@@ -1001,7 +1002,8 @@ const ja = {
   backgroundAgent: BackgroundAgent,
   ignoreSettings: IgnoreSettings,
   projectIgnore: ProjectIgnore,
-  common: Common
+  common: Common,
+  imageGenerator: imageGenerator.ja
 }
 
 export default ja
