@@ -669,7 +669,7 @@ const MODEL_REGISTRY: ModelConfig[] = [
 
   // Claude Sonnet 4.6
   {
-    baseId: 'claude-sonnet-4-6-v1:0',
+    baseId: 'claude-sonnet-4-6',
     name: 'Claude Sonnet 4.6',
     provider: 'anthropic',
     category: 'text',

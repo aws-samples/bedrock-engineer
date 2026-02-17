@@ -319,7 +319,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // LLM Settings
   const defaultModel = {
-    modelId: 'global.anthropic.claude-sonnet-4-6-v1:0',
+    modelId: 'global.anthropic.claude-sonnet-4-6',
     modelName: 'Claude Sonnet 4.6 (Global)',
     toolUse: true,
     regions: BEDROCK_SUPPORTED_REGIONS,
