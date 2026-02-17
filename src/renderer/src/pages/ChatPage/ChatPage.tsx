@@ -19,7 +19,7 @@ import { useSystemPromptModal } from './modals/useSystemPromptModal'
 import { useTokenAnalyticsModal } from './modals/useTokenAnalyticsModal'
 import { useTodoModal } from './modals/useTodoModal'
 import { useChatHistory } from '@renderer/contexts/ChatHistoryContext'
-import { useLocation } from 'react-router'
+import { useLocation } from 'react-router-dom'
 
 export default function ChatPage() {
   const { t } = useTranslation()

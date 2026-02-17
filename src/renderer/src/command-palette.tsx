@@ -2,7 +2,7 @@ import 'react-cmdk/dist/cmdk.css'
 import CommandPalette, { filterItems, getItemIndex } from 'react-cmdk'
 import { useEffect, useState } from 'react'
 import { routes } from './routes'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 
 const CmdK = () => {
   const [page] = useState<'root' | 'projects'>('root')

@@ -17,7 +17,7 @@ import {
   generateCDKImplementPrompt,
   generateCDKImplementPromptJa
 } from './utils/cdkPromptGenerator'
-import { useNavigate } from 'react-router'
+import { useNavigate } from 'react-router-dom'
 
 function StepFunctionsGeneratorPage() {
   const {
