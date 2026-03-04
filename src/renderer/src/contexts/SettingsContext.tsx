@@ -319,11 +319,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   // LLM Settings
   const defaultModel = {
-    modelId: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
-    modelName: 'Claude 3.5 Sonnet v2',
+    modelId: 'global.anthropic.claude-sonnet-4-6',
+    modelName: 'Claude Sonnet 4.6 (Global)',
     toolUse: true,
     regions: BEDROCK_SUPPORTED_REGIONS,
-    supportsThinking: false
+    supportsThinking: true
   }
   const [currentLLM, setCurrentLLM] = useState<LLM>(defaultModel)
   const [inferenceParams, setInferenceParams] =
