@@ -100,6 +100,7 @@
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
+    "@types/node-cron": "^3.0.11",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "4.3.4",
