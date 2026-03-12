@@ -1,4 +1,4 @@
-import { Message } from '@aws-sdk/client-bedrock-runtime'
+import type { Message } from '@aws-sdk/client-bedrock-runtime'
 
 /**
  * コンテキストの長さを制限し、重要なメッセージを保持する関数

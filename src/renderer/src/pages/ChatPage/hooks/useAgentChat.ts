@@ -1,4 +1,4 @@
-import {
+import type {
   ConversationRole,
   ContentBlock,
   Message,
@@ -368,7 +368,7 @@ export const useAgentChat = (
           const timeoutMessage = t('Request timed out after {{timeout}} minutes', { timeout: requestTimeout })
           const timeoutChatMessage: IdentifiableMessage = {
             id: generateMessageId(),
-            role: ConversationRole.ASSISTANT,
+            role: 'assistant' as ConversationRole,
             content: [{ text: timeoutMessage }]
           }
           setMessages((prev) => [...prev, timeoutChatMessage])
