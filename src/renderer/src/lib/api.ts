@@ -1,6 +1,6 @@
 import { LLM } from '@/types/llm'
-import { RetrieveAndGenerateCommandInput } from '@aws-sdk/client-bedrock-agent-runtime'
-import {
+import type { RetrieveAndGenerateCommandInput } from '@aws-sdk/client-bedrock-agent-runtime'
+import type {
   ConverseStreamOutput,
   InferenceConfiguration,
   Message,

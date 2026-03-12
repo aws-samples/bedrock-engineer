@@ -1,5 +1,5 @@
 import { limitContextLength } from '../'
-import { Message } from '@aws-sdk/client-bedrock-runtime'
+import type { Message } from '@aws-sdk/client-bedrock-runtime'
 import { describe, test, expect } from '@jest/globals'
 
 /* eslint-disable @typescript-eslint/no-unused-vars */

@@ -1,4 +1,4 @@
-import { Message } from '@aws-sdk/client-bedrock-runtime'
+import type { Message } from '@aws-sdk/client-bedrock-runtime'
 
 import { IdentifiableMessage } from '@/types/chat/message'
 import { Modal } from 'flowbite-react'

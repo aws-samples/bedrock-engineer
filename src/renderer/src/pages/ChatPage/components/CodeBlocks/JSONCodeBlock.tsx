@@ -1,4 +1,4 @@
-import { KnowledgeBaseRetrievalResult } from '@aws-sdk/client-bedrock-agent-runtime'
+import type { KnowledgeBaseRetrievalResult } from '@aws-sdk/client-bedrock-agent-runtime'
 import React, { useCallback } from 'react'
 import { RetrievalResult } from './RetrievalResult'
 import { TavilySearchResult } from './TavilySearch/TavilySearchResult'
