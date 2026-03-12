@@ -1,4 +1,4 @@
-import { ConversationRole } from '@aws-sdk/client-bedrock-runtime'
+import type { ConversationRole } from '@aws-sdk/client-bedrock-runtime'
 import React from 'react'
 import { LiaUserCircleSolid } from 'react-icons/lia'
 import AILogo from '@renderer/assets/images/icons/ai.svg'

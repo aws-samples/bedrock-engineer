@@ -1,5 +1,5 @@
 import { KnowledgeBase } from '@/types/agent-chat'
-import { Message } from '@aws-sdk/client-bedrock-runtime'
+import type { Message } from '@aws-sdk/client-bedrock-runtime'
 
 // コードブロックを抽出する関数
 export const extractCodeBlock = (text: string): string[] => {

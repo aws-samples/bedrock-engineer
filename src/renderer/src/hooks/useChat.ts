@@ -1,4 +1,4 @@
-import { StopReason } from '@aws-sdk/client-bedrock-runtime'
+import type { StopReason } from '@aws-sdk/client-bedrock-runtime'
 import { streamChatCompletion } from '@renderer/lib/api'
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'

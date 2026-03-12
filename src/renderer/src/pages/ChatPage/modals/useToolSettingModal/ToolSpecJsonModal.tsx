@@ -2,7 +2,7 @@ import { Modal, Button } from 'flowbite-react'
 import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 import JSONViewer from '@renderer/components/JSONViewer'
-import { Tool } from '@aws-sdk/client-bedrock-runtime'
+import type { Tool } from '@aws-sdk/client-bedrock-runtime'
 
 interface ToolSpecJsonModalProps {
   isOpen: boolean
