@@ -59,6 +59,16 @@ This security warning appears because the application is not distributed through
 
 ![PKG Security Warning Privacy Setting](./assets/macos-security-warning-pkg-privacy-setting.png)
 
+### macOS Code Signing (Required)
+
+Due to macOS security restrictions, you must run the following command after installation to properly sign the application:
+
+```bash
+sudo codesign --force --deep --sign - "/Applications/Bedrock Engineer.app"
+```
+
+This ad-hoc code signing is required to ensure the application functions correctly on macOS, including proper handling of system permission dialogs.
+
 ### Configuration Issues
 
 If a configuration file error occurs when starting the application, please check the following configuration files. If you cannot start the application even after deleting the configuration files and restarting it, please file an issue.
