@@ -80,7 +80,7 @@
     "rxjs": "^7.8.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "uuid": "^13.0.0",
+    "uuid": "^14.0.0",
     "vite-plugin-svgr": "4.3.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
