@@ -47,7 +47,7 @@
     "@monaco-editor/react": "^4.6.0",
     "@reactour/tour": "3.7.0",
     "@tshepomgaga/aws-sfn-graph": "0.0.6",
-    "axios": "^1.13.5",
+    "axios": "^1.15.0",
     "chart.js": "^4.4.8",
     "cors": "2.8.5",
     "diff": "8.0.3",
@@ -118,12 +118,15 @@
     "tailwindcss": "3.4.10",
     "ts-jest": "29.2.4",
     "typescript": "5.5.2",
-    "vite": "^6.4.1"
+    "vite": "^6.4.2"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.24.0",
     "@rollup/rollup-win32-x64-msvc": "4.20.0",
     "dmg-license": "1.0.11"
+  },
+  "overrides": {
+    "fast-xml-parser": "5.5.8"
   },
   "jest": {
     "preset": "ts-jest",
