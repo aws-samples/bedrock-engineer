@@ -60,7 +60,7 @@
     "i18next": "23.15.0",
     "lottie-react": "2.4.0",
     "mammoth": "^1.11.0",
-    "mermaid": "^11.4.0",
+    "mermaid": "^11.15.0",
     "node-cron": "^4.2.0",
     "node-fetch": "^3.3.2",
     "pdf-parse": "^1.1.1",
