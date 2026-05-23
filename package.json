@@ -52,7 +52,7 @@
     "cors": "2.8.5",
     "diff": "8.0.3",
     "electron-store": "8.2.0",
-    "express": "^4.22.1",
+    "express": "^4.22.2",
     "fix-path": "^4.0.0",
     "flowbite-react": "0.10.1",
     "framer-motion": "11.3.29",
