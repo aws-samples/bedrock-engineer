@@ -47,7 +47,7 @@
     "@monaco-editor/react": "^4.6.0",
     "@reactour/tour": "3.7.0",
     "@tshepomgaga/aws-sfn-graph": "0.0.6",
-    "axios": "^1.13.5",
+    "axios": "^1.16.0",
     "chart.js": "^4.4.8",
     "cors": "2.8.5",
     "diff": "8.0.3",
