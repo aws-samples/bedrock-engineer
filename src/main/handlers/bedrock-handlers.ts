@@ -35,6 +35,13 @@ export const bedrockHandlers = {
     return result
   },
 
+  'bedrock:agenticRetrieveStream': async (_event: IpcMainInvokeEvent, params: any) => {
+    bedrockLogger.debug('Agentic retrieve stream from knowledge base')
+    const result = await bedrock.agenticRetrieveStream(params)
+    bedrockLogger.info('Agentic retrieve stream successful')
+    return result
+  },
+
   'bedrock:retrieve': async (_event: IpcMainInvokeEvent, params: any) => {
     bedrockLogger.debug('Retrieving from knowledge base', {
       knowledgeBaseId: params.knowledgeBaseId,
