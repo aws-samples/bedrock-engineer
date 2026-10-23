@@ -221,6 +221,16 @@ const SpeakPage = {
   'permissionHelp.tooltip': 'Help with permission dialogs',
 
   // Voice Chat
+  'confirmCommand.title': 'Confirm command execution',
+  'confirmCommand.description':
+    'The AI wants to run the following command on your computer. Allow it?',
+  'confirmCommand.descriptionStdin':
+    'The AI wants to send the following input to a running process. Allow it?',
+  'confirmCommand.command': 'Command',
+  'confirmCommand.stdin': 'Input (stdin)',
+  'confirmCommand.cwd': 'Working directory',
+  'confirmCommand.allow': 'Allow',
+  'confirmCommand.deny': 'Deny',
   'voiceChat.regionWarning.title': 'Voice Chat Not Available',
   'voiceChat.regionWarning.message':
     'Voice Chat (Nova Sonic) is not available in the current region ({{currentRegion}}). Please switch to a supported region: {{supportedRegions}}.',

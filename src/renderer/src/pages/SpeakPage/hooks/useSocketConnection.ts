@@ -1,4 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import {
+  COMMAND_DENIED_MESSAGE,
+  confirmCommandExecution,
+  needsCommandConfirmation
+} from '@renderer/lib/confirmCommandExecution'
 import { io, Socket } from 'socket.io-client'
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
@@ -131,6 +136,24 @@ export function useSocketConnection(
 
           if (!toolRequest.requestId) {
             throw new Error('Request ID is required')
+          }
+
+          if (needsCommandConfirmation(toolRequest)) {
+            // サーバー側(SonicToolExecutor)の 30 秒タイムアウトより前に拒否扱いで閉じる
+            const allowed = await confirmCommandExecution(toolRequest, { timeoutMs: 25000 })
+            if (!allowed) {
+              socket.emit('tool:executeResponse', {
+                requestId: toolRequest.requestId,
+                success: false,
+                error: COMMAND_DENIED_MESSAGE,
+                errorDetails: {
+                  category: 'permission',
+                  toolType: toolRequest.type,
+                  timestamp: new Date().toISOString()
+                }
+              })
+              return
+            }
           }
 
           // Execute the tool using the preload API

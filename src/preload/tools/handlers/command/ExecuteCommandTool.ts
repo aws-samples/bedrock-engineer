@@ -54,7 +54,7 @@ let commandServiceState: CommandServiceState | null = null
 export class ExecuteCommandTool extends BaseTool<ExecuteCommandInput, ExecuteCommandResult> {
   static readonly toolName = 'executeCommand'
   static readonly toolDescription =
-    'Execute a command or send input to a running process. First execute the command to get a PID, then use that PID to send input if needed. Usage: 1) First call with command and cwd to start process, 2) If input is required, call again with pid and stdin.\n\nRun system commands with user permission. Only use commands from allowed list: {{allowedCommands}}.'
+    'Execute a command or send input to a running process. First execute the command to get a PID, then use that PID to send input if needed. Usage: 1) First call with command and cwd to start process, 2) If input is required, call again with pid and stdin.\n\nRun system commands with user permission. Only use commands from allowed list: {{allowedCommands}}. Pipes, redirection, command chaining and $ expansion are not supported; run one command per call and use cwd for the directory.'
 
   readonly name = ExecuteCommandTool.toolName
   readonly description = ExecuteCommandTool.toolDescription

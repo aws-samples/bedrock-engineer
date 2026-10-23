@@ -5,6 +5,12 @@ import type {
   ToolUseBlockStart,
   ImageFormat
 } from '@aws-sdk/client-bedrock-runtime'
+import {
+  COMMAND_DENIED_MESSAGE,
+  cancelPendingCommandConfirmations,
+  confirmCommandExecution,
+  needsCommandConfirmation
+} from '@renderer/lib/confirmCommandExecution'
 import { ToolState } from '@/types/agent-chat'
 import { generateMessageId } from '@/types/chat/metadata'
 import { StreamChatCompletionProps, streamChatCompletion } from '@renderer/lib/api'
@@ -170,6 +176,8 @@ export const useAgentChat = (
 
   // 通信を中断する関数
   const abortCurrentRequest = useCallback(() => {
+    // 応答待ちのコマンド実行確認モーダルは拒否扱いで閉じる
+    cancelPendingCommandConfirmations()
     if (abortController.current) {
       abortController.current.abort()
       abortController.current = null
@@ -179,6 +187,8 @@ export const useAgentChat = (
 
   // 通信を中断し、不完全なtoolUse/toolResultペアを削除する関数
   const stopGeneration = useCallback(() => {
+    // 応答待ちのコマンド実行確認モーダルは拒否扱いで閉じる
+    cancelPendingCommandConfirmations()
     if (abortController.current) {
       abortController.current.abort()
       abortController.current = null
@@ -841,6 +851,24 @@ export const useAgentChat = (
       setExecutingTools((prev) => new Set([...prev, toolInput.type]))
 
       try {
+        if (needsCommandConfirmation(toolInput)) {
+          const allowed = await confirmCommandExecution(toolInput)
+          if (!allowed) {
+            setExecutingTools((prev) => {
+              const next = new Set(prev)
+              next.delete(toolInput.type)
+              return next
+            })
+            return {
+              toolResult: {
+                toolUseId: toolUse.toolUseId,
+                content: [{ text: COMMAND_DENIED_MESSAGE }],
+                status: 'error'
+              }
+            } as ContentBlock
+          }
+        }
+
         const toolResult = await window.api.bedrock.executeTool(toolInput, {
           sessionId: currentSessionId
         })

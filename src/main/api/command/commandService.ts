@@ -139,6 +139,23 @@ export class CommandService {
     }
   }
 
+  // シェルの制御構文・コマンド置換・変数展開を検出し、見つかった構文を返す（なければ null）
+  private containsShellControlSyntax(command: string): string | null {
+    const constructs: [string, string][] = [
+      ['\n', 'newline'],
+      ['\r', 'carriage return'],
+      [';', ';'],
+      ['&', '&'],
+      ['|', '|'],
+      ['`', '`'],
+      ['$', '$'], // コマンド置換 $( ) と変数展開 $VAR / ${VAR}
+      ['>', '>'],
+      ['<', '<']
+    ]
+    const found = constructs.find(([token]) => command.includes(token))
+    return found ? found[1] : null
+  }
+
   private isCommandAllowed(commandToExecute: string): boolean {
     const executeParts = this.parseCommandPattern(commandToExecute)
 
@@ -239,6 +256,16 @@ export class CommandService {
       // シェルの存在確認（Windows環境での追加チェック）
       if (!this.config.shell) {
         reject(new Error('Shell configuration is missing'))
+        return
+      }
+
+      const rejectedSyntax = this.containsShellControlSyntax(input.command)
+      if (rejectedSyntax) {
+        reject(
+          new Error(
+            `Command not allowed: shell control syntax (${rejectedSyntax}) is not supported. Pipes, redirection, command chaining and $ expansion are not supported; run one command per call and use the cwd parameter instead of "cd ... &&".`
+          )
+        )
         return
       }
 
