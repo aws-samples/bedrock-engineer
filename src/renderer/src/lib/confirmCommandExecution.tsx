@@ -1,4 +1,4 @@
-import { createRoot } from 'react-dom/client'
+import { createRoot, Root } from 'react-dom/client'
 import { Modal } from 'flowbite-react'
 import i18n from '@renderer/i18n/config'
 
@@ -85,32 +85,52 @@ const ConfirmCommandDialog = ({ request, onResult }: DialogProps) => {
   )
 }
 
+// 確認モーダルを 1 件ずつ表示するための待ち行列（並列のツール呼び出しでモーダルが重ならないように）
+let confirmationQueue: Promise<void> = Promise.resolve()
+
 /**
  * コマンド実行前にユーザー確認モーダルを表示する。Allow で true、Deny/閉じる で false。
- * timeoutMs を指定した場合、時間内に応答がなければ拒否扱いで閉じる。
+ * 複数の確認が同時に要求された場合は順番に 1 件ずつ表示する。
+ * timeoutMs を指定した場合、要求から時間内に応答がなければ拒否扱いで閉じる（表示待ちの間も含む）。
  */
 export const confirmCommandExecution = (
   request: CommandRequest,
   options: { timeoutMs?: number } = {}
 ): Promise<boolean> =>
   new Promise((resolve) => {
-    const container = document.createElement('div')
-    document.body.appendChild(container)
-    const root = createRoot(container)
+    let root: Root | undefined
+    let container: HTMLDivElement | undefined
     let timer: ReturnType<typeof setTimeout> | undefined
     let finished = false
+    let releaseQueue: () => void = () => {}
     const onResult = (allowed: boolean) => {
       if (finished) return
       finished = true
       if (timer) clearTimeout(timer)
       pendingConfirmations.delete(onResult)
-      root.unmount()
-      container.remove()
+      root?.unmount()
+      container?.remove()
+      releaseQueue()
       resolve(allowed)
     }
     pendingConfirmations.add(onResult)
     if (options.timeoutMs !== undefined) {
       timer = setTimeout(() => onResult(false), options.timeoutMs)
     }
-    root.render(<ConfirmCommandDialog request={request} onResult={onResult} />)
+
+    confirmationQueue = confirmationQueue.then(
+      () =>
+        new Promise<void>((release) => {
+          // 表示待ちの間に拒否・タイムアウト済みなら表示しない
+          if (finished) {
+            release()
+            return
+          }
+          releaseQueue = release
+          container = document.createElement('div')
+          document.body.appendChild(container)
+          root = createRoot(container)
+          root.render(<ConfirmCommandDialog request={request} onResult={onResult} />)
+        })
+    )
   })

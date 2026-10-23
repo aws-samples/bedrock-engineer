@@ -1,15 +1,16 @@
-import { spawn } from 'child_process'
+import type { ChildProcessWithoutNullStreams } from 'child_process'
+import crossSpawn from 'cross-spawn'
 import {
   CommandConfig,
   CommandExecutionResult,
   CommandInput,
-  CommandPattern,
   CommandStdinInput,
   DetachedProcessInfo,
   InputDetectionPattern,
   ProcessState,
   CommandPatternConfig
 } from './types'
+import { matchesAllowedPattern, tokenizeCommand } from './commandTokenizer'
 
 export class CommandService {
   private config: CommandConfig
@@ -128,61 +129,14 @@ export class CommandService {
     return env
   }
 
-  private parseCommandPattern(commandStr: string): CommandPattern {
-    const parts = commandStr.split(' ')
-    const hasWildcard = parts.some((part) => part === '*')
-
-    return {
-      command: parts[0],
-      args: parts.slice(1),
-      wildcard: hasWildcard
-    }
-  }
-
-  // シェルの制御構文・コマンド置換・変数展開を検出し、見つかった構文を返す（なければ null）
-  private containsShellControlSyntax(command: string): string | null {
-    const constructs: [string, string][] = [
-      ['\n', 'newline'],
-      ['\r', 'carriage return'],
-      [';', ';'],
-      ['&', '&'],
-      ['|', '|'],
-      ['`', '`'],
-      ['$', '$'], // コマンド置換 $( ) と変数展開 $VAR / ${VAR}
-      ['>', '>'],
-      ['<', '<']
-    ]
-    const found = constructs.find(([token]) => command.includes(token))
-    return found ? found[1] : null
-  }
-
-  private isCommandAllowed(commandToExecute: string): boolean {
-    const executeParts = this.parseCommandPattern(commandToExecute)
-
+  // トークン化済みコマンドが許可パターンのいずれかに一致するか
+  private isCommandAllowed(commandTokens: string[]): boolean {
     // allowedCommands が未定義の場合は空の配列として処理
     const allowedCommands = this.config.allowedCommands || []
 
     return allowedCommands.some((allowedCmd) => {
-      const allowedParts = this.parseCommandPattern(allowedCmd.pattern)
-
-      if (allowedParts.command !== executeParts.command) {
-        return false
-      }
-
-      if (allowedParts.wildcard) {
-        return true
-      }
-
-      if (allowedParts.args.length !== executeParts.args.length) {
-        return false
-      }
-
-      return allowedParts.args.every((arg, index) => {
-        if (arg === '*') {
-          return true
-        }
-        return arg === executeParts.args[index]
-      })
+      const pattern = tokenizeCommand(allowedCmd.pattern)
+      return pattern.ok && matchesAllowedPattern(pattern.tokens, commandTokens)
     })
   }
 
@@ -253,23 +207,19 @@ export class CommandService {
         return
       }
 
-      // シェルの存在確認（Windows環境での追加チェック）
-      if (!this.config.shell) {
-        reject(new Error('Shell configuration is missing'))
-        return
-      }
-
-      const rejectedSyntax = this.containsShellControlSyntax(input.command)
-      if (rejectedSyntax) {
+      // シェルを介さずに実行するため、クォートを解釈して引数配列に分解する
+      const tokenized = tokenizeCommand(input.command)
+      if (!tokenized.ok) {
         reject(
           new Error(
-            `Command not allowed: shell control syntax (${rejectedSyntax}) is not supported. Pipes, redirection, command chaining and $ expansion are not supported; run one command per call and use the cwd parameter instead of "cd ... &&".`
+            `Command not allowed: ${tokenized.error}. Commands run without a shell, so pipes, redirection, command chaining and variable expansion are not supported; run one command per call and use the cwd parameter instead of "cd ... &&".`
           )
         )
         return
       }
+      const [file, ...args] = tokenized.tokens
 
-      if (!this.isCommandAllowed(input.command)) {
+      if (!this.isCommandAllowed(tokenized.tokens)) {
         reject(new Error(`Command not allowed: ${input.command}`))
         return
       }
@@ -280,41 +230,33 @@ export class CommandService {
       // Electron特有の環境変数問題を解決
       const spawnEnv = this.getEnhancedEnvironment(isWindows)
 
-      let childProcess
-
-      if (isWindows) {
-        // Windows: shell=trueを使用してコマンドを直接実行
-        // Node.js公式推奨方法: spawn(command, {shell: true})
-        childProcess = spawn(input.command, {
-          cwd: input.cwd,
-          stdio: ['pipe', 'pipe', 'pipe'],
-          shell: true, // Windowsでは必須
-          env: spawnEnv,
-          windowsHide: true // コンソールウィンドウを隠す
-        })
-      } else {
-        // Unix系: 従来通りシェルに引数を渡す
-        childProcess = spawn(this.config.shell, ['-ic', input.command], {
-          cwd: input.cwd,
-          detached: true,
-          stdio: ['pipe', 'pipe', 'pipe'],
-          env: spawnEnv
-        })
-      }
+      // shell: false で実行ファイルを直接起動する（シェルによる構文解釈・展開を行わない）
+      // cross-spawn は Windows で .cmd/.bat（npm.cmd など）の起動と引数のエスケープを扱う
+      const childProcess = crossSpawn(file, args, {
+        cwd: input.cwd,
+        shell: false,
+        // Unix系: プロセスグループ単位で終了できるよう detached で起動
+        detached: !isWindows,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: spawnEnv,
+        windowsHide: true // コンソールウィンドウを隠す
+      }) as ChildProcessWithoutNullStreams // stdio はすべて 'pipe' のため null にならない
 
       if (typeof childProcess.pid === 'undefined') {
-        const errorMessage = `Failed to start process: PID is undefined
+        // 実行ファイルが見つからない場合などは pid が未定義になり、後から error イベントが発生する。
+        // リスナーがないと未処理例外になるため、ここで受け取る
+        childProcess.once('error', (error) => {
+          console.error('Process spawn error:', error)
+        })
+        const errorMessage = `Failed to start process: ${file}
 Platform: ${process.platform}
-Shell: ${this.config.shell}
 Command: ${input.command}
 Working Directory: ${input.cwd}
-Spawn Method: ${isWindows ? 'shell=true' : 'shell+args'}`
+Hint: The executable may not be found on PATH. Shell builtins (such as cd or dir) are not available because commands run without a shell.`
         console.error('Process spawn failed:', {
           platform: process.platform,
-          shell: this.config.shell,
           command: input.command,
           cwd: input.cwd,
-          spawnMethod: isWindows ? 'shell=true' : 'shell+args',
           spawnfile: childProcess.spawnfile,
           spawnargs: childProcess.spawnargs
         })
@@ -459,7 +401,7 @@ Spawn Method: ${isWindows ? 'shell=true' : 'shell+args'}`
         if (process.platform === 'win32' && error instanceof Error) {
           if (error.message.includes('ENOENT')) {
             errorMessage +=
-              '\nHint: The command or shell may not be found. Please check if the command exists and the shell path is correct.'
+              '\nHint: The command may not be found. Please check if the command exists on PATH.'
           } else if (error.message.includes('EACCES')) {
             errorMessage +=
               '\nHint: Permission denied. Please check if you have the necessary permissions to execute this command.'
