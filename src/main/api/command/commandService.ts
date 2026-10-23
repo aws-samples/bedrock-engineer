@@ -1,4 +1,4 @@
-import type { ChildProcessWithoutNullStreams } from 'child_process'
+import type { ChildProcessWithoutNullStreams, SpawnOptions } from 'child_process'
 import crossSpawn from 'cross-spawn'
 import {
   CommandConfig,
@@ -11,6 +11,12 @@ import {
   CommandPatternConfig
 } from './types'
 import { matchesAllowedPattern, tokenizeCommand } from './commandTokenizer'
+
+// cross-spawn が公開している内部の解析関数（型定義には含まれない）。
+// Windows では PATH 上で実行ファイルを解決できない場合に file が undefined になる
+const crossSpawnInternal = crossSpawn as typeof crossSpawn & {
+  _parse: (command: string, args: string[], options: SpawnOptions) => { file?: string }
+}
 
 export class CommandService {
   private config: CommandConfig
@@ -230,9 +236,7 @@ export class CommandService {
       // Electron特有の環境変数問題を解決
       const spawnEnv = this.getEnhancedEnvironment(isWindows)
 
-      // shell: false で実行ファイルを直接起動する（シェルによる構文解釈・展開を行わない）
-      // cross-spawn は Windows で .cmd/.bat（npm.cmd など）の起動と引数のエスケープを扱う
-      const childProcess = crossSpawn(file, args, {
+      const spawnOptions: SpawnOptions = {
         cwd: input.cwd,
         shell: false,
         // Unix系: プロセスグループ単位で終了できるよう detached で起動
@@ -240,12 +244,23 @@ export class CommandService {
         stdio: ['pipe', 'pipe', 'pipe'],
         env: spawnEnv,
         windowsHide: true // コンソールウィンドウを隠す
-      }) as ChildProcessWithoutNullStreams // stdio はすべて 'pipe' のため null にならない
+      }
 
-      if (typeof childProcess.pid === 'undefined') {
+      // Windows の cross-spawn は PATH 上で解決できないコマンドも cmd.exe 経由で起動してしまうため、
+      // 起動前に cross-spawn と同じ解決処理で実行ファイルの有無を確認する
+      const executableMissing =
+        isWindows && !crossSpawnInternal._parse(file, args, spawnOptions).file
+
+      // shell: false で実行ファイルを直接起動する（シェルによる構文解釈・展開を行わない）
+      // cross-spawn は Windows で .cmd/.bat（npm.cmd など）の起動と引数のエスケープを扱う
+      const childProcess = executableMissing
+        ? undefined
+        : (crossSpawn(file, args, spawnOptions) as ChildProcessWithoutNullStreams) // stdio はすべて 'pipe' のため null にならない
+
+      if (!childProcess || typeof childProcess.pid === 'undefined') {
         // 実行ファイルが見つからない場合などは pid が未定義になり、後から error イベントが発生する。
         // リスナーがないと未処理例外になるため、ここで受け取る
-        childProcess.once('error', (error) => {
+        childProcess?.once('error', (error) => {
           console.error('Process spawn error:', error)
         })
         const errorMessage = `Failed to start process: ${file}
@@ -257,8 +272,8 @@ Hint: The executable may not be found on PATH. Shell builtins (such as cd or dir
           platform: process.platform,
           command: input.command,
           cwd: input.cwd,
-          spawnfile: childProcess.spawnfile,
-          spawnargs: childProcess.spawnargs
+          spawnfile: childProcess?.spawnfile,
+          spawnargs: childProcess?.spawnargs
         })
         reject(new Error(errorMessage))
         return
