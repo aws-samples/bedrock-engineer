@@ -352,9 +352,11 @@ export class NovaSonicBidirectionalStreamClient {
           ? JSON.parse(toolUseContent.content)
           : toolUseContent.content || {}
 
+      // モデルの入力で type やメタデータ(_agentId 等)が上書きされないようにする
+      const { _agentId, _mcpServers, ...modelInput } = content
       const toolInput = {
-        type: toolName,
-        ...content
+        ...modelInput,
+        type: toolName
       }
 
       return toolInput

@@ -226,6 +226,16 @@ const SpeakPage = {
   'permissionHelp.tooltip': '許可ダイヤログが繰り返し表示される？',
 
   // Voice Chat
+  'confirmCommand.title': 'コマンド実行の確認',
+  'confirmCommand.description':
+    'AIが次のコマンドをあなたのコンピュータで実行しようとしています。許可しますか？',
+  'confirmCommand.descriptionStdin':
+    'AIが実行中のプロセスに次の入力を送信しようとしています。許可しますか？',
+  'confirmCommand.command': 'コマンド',
+  'confirmCommand.stdin': '入力 (stdin)',
+  'confirmCommand.cwd': '作業ディレクトリ',
+  'confirmCommand.allow': '許可',
+  'confirmCommand.deny': '拒否',
   'voiceChat.regionWarning.title': 'Voice Chat機能が利用できません',
   'voiceChat.regionWarning.message':
     'Voice Chat（Nova Sonic）は現在のリージョン（{{currentRegion}}）では利用できません。対応リージョンに切り替えてください：{{supportedRegions}}',

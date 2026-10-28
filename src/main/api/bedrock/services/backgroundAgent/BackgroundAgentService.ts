@@ -152,6 +152,14 @@ export class BackgroundAgentService {
 
       // 1. 静的ツールの処理（toolNamesに基づく）
       for (const toolName of toolNames) {
+        // 無人実行のバックグラウンドエージェントではコマンド実行を許可しない
+        if (toolName === 'executeCommand') {
+          logger.warn('executeCommand is disabled for background agents; skipping tool spec', {
+            agentId: agent.id
+          })
+          continue
+        }
+
         // 静的ツール仕様から対応するツール仕様を検索
         const toolSpec = allToolSpecs.find((spec) => spec.toolSpec?.name === toolName)
 
@@ -740,6 +748,22 @@ export class BackgroundAgentService {
     agent: CustomAgent,
     config: BackgroundAgentConfig
   ): Promise<NonNullable<BackgroundChatResult['toolExecutions']>[0]> {
+    if (toolUse?.name === 'executeCommand') {
+      const error =
+        'Command execution (executeCommand) is disabled for background agents because no user can confirm it.'
+      logger.warn('Refused executeCommand call from background agent', {
+        toolUseId: toolUse.toolUseId,
+        agentId: config.agentId
+      })
+      return {
+        toolName: toolUse.name,
+        input: toolUse.input,
+        output: null,
+        success: false,
+        error
+      }
+    }
+
     try {
       logger.debug('Executing tool via preload tool system', {
         toolName: toolUse.name,
@@ -747,12 +771,13 @@ export class BackgroundAgentService {
         input: toolUse.input
       })
 
+      // モデルの入力で type やメタデータが上書きされないよう、入力を先に展開する
       const toolInput: ToolInput = {
+        ...toolUse.input,
         type: toolUse.name,
         // BackgroundAgentService用のメタデータを追加
         _agentId: config.agentId,
-        _mcpServers: agent.mcpServers,
-        ...toolUse.input
+        _mcpServers: agent.mcpServers
       } as ToolInput
 
       // IPC経由でpreloadツールを実行

@@ -5,6 +5,12 @@ import type {
   ToolUseBlockStart,
   ImageFormat
 } from '@aws-sdk/client-bedrock-runtime'
+import {
+  COMMAND_DENIED_MESSAGE,
+  cancelPendingCommandConfirmations,
+  confirmCommandExecution,
+  needsCommandConfirmation
+} from '@renderer/lib/confirmCommandExecution'
 import { ToolState } from '@/types/agent-chat'
 import { generateMessageId } from '@/types/chat/metadata'
 import { StreamChatCompletionProps, streamChatCompletion } from '@renderer/lib/api'
@@ -103,6 +109,8 @@ export const useAgentChat = (
   const [currentSessionId, setCurrentSessionId] = useState<string | undefined>(sessionId)
   const lastAssistantMessageId = useRef<string | null>(null)
   const abortController = useRef<AbortController | null>(null)
+  // 停止・中断のたびに増える世代番号（停止後にツール実行ループを続けないため）
+  const generationRef = useRef(0)
   // キャッシュポイントを保持するための状態
   const lastCachePoint = useRef<number | undefined>(undefined)
   // タイトル生成済みフラグ（同じセッションで複数回生成しないため）
@@ -170,6 +178,9 @@ export const useAgentChat = (
 
   // 通信を中断する関数
   const abortCurrentRequest = useCallback(() => {
+    generationRef.current++
+    // 応答待ちのコマンド実行確認モーダルは拒否扱いで閉じる
+    cancelPendingCommandConfirmations()
     if (abortController.current) {
       abortController.current.abort()
       abortController.current = null
@@ -179,6 +190,9 @@ export const useAgentChat = (
 
   // 通信を中断し、不完全なtoolUse/toolResultペアを削除する関数
   const stopGeneration = useCallback(() => {
+    generationRef.current++
+    // 応答待ちのコマンド実行確認モーダルは拒否扱いで閉じる
+    cancelPendingCommandConfirmations()
     if (abortController.current) {
       abortController.current.abort()
       abortController.current = null
@@ -819,6 +833,7 @@ export const useAgentChat = (
   }
 
   const recursivelyExecTool = async (contentBlocks: ContentBlock[], currentMessages: Message[]) => {
+    const generation = generationRef.current
     const contentBlock = contentBlocks.find((block) => block.toolUse)
     if (!contentBlock) {
       return
@@ -832,15 +847,35 @@ export const useAgentChat = (
     // 全てのツール実行をPromiseとして準備
     const toolExecutionPromises = toolUseBlocks.map(async (contentBlock) => {
       const toolUse = contentBlock.toolUse!
+      // モデルの入力で type やメタデータ(_agentId 等)が上書きされないようにする
+      const { _agentId, _mcpServers, ...modelInput } = (toolUse.input as any) || {}
       const toolInput = {
-        type: toolUse.name!,
-        ...(toolUse.input as any)
+        ...modelInput,
+        type: toolUse.name!
       }
 
       // 実行中ツールセットに追加
       setExecutingTools((prev) => new Set([...prev, toolInput.type]))
 
       try {
+        if (needsCommandConfirmation(toolInput)) {
+          const allowed = await confirmCommandExecution(toolInput)
+          if (!allowed) {
+            setExecutingTools((prev) => {
+              const next = new Set(prev)
+              next.delete(toolInput.type)
+              return next
+            })
+            return {
+              toolResult: {
+                toolUseId: toolUse.toolUseId,
+                content: [{ text: COMMAND_DENIED_MESSAGE }],
+                status: 'error'
+              }
+            } as ContentBlock
+          }
+        }
+
         const toolResult = await window.api.bedrock.executeTool(toolInput, {
           sessionId: currentSessionId
         })
@@ -961,6 +996,11 @@ export const useAgentChat = (
 
     // 全てのツール実行を並列実行し、全ての結果を待つ
     const settledResults = await Promise.allSettled(toolExecutionPromises)
+
+    // ツール実行中に停止・セッション切り替えが行われた場合は、結果を追加せず会話を続けない
+    if (generationRef.current !== generation) {
+      return
+    }
 
     // 結果を処理
     const toolResults: ContentBlock[] = settledResults.map((result, index) => {
