@@ -1,3 +1,14 @@
+> [!WARNING]
+> **このリポジトリは非推奨（deprecated）となり、メンテナンスを終了しました。**
+>
+> Bedrock Engineer は、Amazon Bedrock で自律型の開発エージェントを構築する方法を紹介するため、[Bedrock Engineer ワークショップ](https://catalog.us-east-1.prod.workshops.aws/workshops/57e0af6e-41a5-42cc-98e0-1f1a3fd0c6c4/ja-JP) や関連する登壇のサンプルとして公開していました。これらのコンテンツは役目を終え、ソフトウェア開発向けの AI エージェントも正式にサポートされた製品として広く利用できるようになりました。そのため、サンプルとしての役割を終えたと判断しました。
+>
+> - 今後、新機能の追加、バグ修正、セキュリティアップデートは行いません。Issue / Pull Request の受け付けも終了します。
+> - ソースコードと過去のリリースは、参考用に読み取り専用のアーカイブとして残します。引き続き利用する場合は、自己責任でご利用ください。
+> - AWS がサポートする代替サービスとして、AI を活用したソフトウェア開発には [Kiro](https://kiro.dev/) を、AI エージェントと日々の業務を進める AI ワークスペースとしては [AWS Quick](https://aws.amazon.com/quick/) をご検討ください。
+>
+> これまで利用、コントリビュート、フィードバックをくださった皆様、ありがとうございました。
+
 Language: [English](./README.md) / [Japanese](./README-ja.md)
 
 > [!IMPORTANT]

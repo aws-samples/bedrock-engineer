@@ -1,3 +1,14 @@
+> [!WARNING]
+> **This repository is deprecated and is no longer maintained.**
+>
+> Bedrock Engineer was created as a companion sample for the [Bedrock Engineer workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/57e0af6e-41a5-42cc-98e0-1f1a3fd0c6c4/ja-JP) and related talks, to show how to build an autonomous development agent on Amazon Bedrock. That content has reached its end of life, and AI agents for software development are now widely available as fully supported products. Its role as a sample is therefore complete.
+>
+> - No new features, bug fixes, or security updates will be provided, and Issues / Pull Requests will no longer be accepted.
+> - The source code and past releases remain available as a read-only archive for reference. If you continue to use them, please do so at your own risk.
+> - As AWS-supported alternatives, consider [Kiro](https://kiro.dev/) for AI-powered software development, and [AWS Quick](https://aws.amazon.com/quick/), an AI workspace for everyday work with AI agents.
+>
+> Thank you to everyone who used, contributed to, and gave feedback on this project.
+
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/aws-samples/bedrock-engineer) [![Workshop Studio](https://img.shields.io/badge/Workshop_Studio-8A2BE2)](https://catalog.us-east-1.prod.workshops.aws/workshops/57e0af6e-41a5-42cc-98e0-1f1a3fd0c6c4/ja-JP)
 
 Language: [English](./README.md) / [Japanese](./README-ja.md)
