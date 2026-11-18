@@ -9,22 +9,34 @@ import { ValidationResult } from '../../base/types'
 import { ToolResult } from '../../../../types/tools'
 
 /**
+ * Filter configuration shared between vector and managed search
+ */
+interface SearchFilter {
+  equals?: {
+    key: string
+    value: any
+  }
+}
+
+/**
  * Input type for RetrieveTool
  */
 interface RetrieveInput {
   type: 'retrieve'
   query: string
   knowledgeBaseId: string
+  knowledgeBaseType?: 'VECTOR' | 'MANAGED'
+  useAgenticRetrieval?: boolean
+  generateResponse?: boolean
   retrievalConfiguration?: {
-    vectorSearchConfiguration: {
+    vectorSearchConfiguration?: {
       numberOfResults?: number
       overrideSearchType?: 'HYBRID' | 'SEMANTIC'
-      filter?: {
-        equals?: {
-          key: string
-          value: any
-        }
-      }
+      filter?: SearchFilter
+    }
+    managedSearchConfiguration?: {
+      numberOfResults?: number
+      filter?: SearchFilter
     }
   }
 }
@@ -65,6 +77,12 @@ export class RetrieveTool extends BaseTool<RetrieveInput, RetrieveResult> {
           query: {
             type: 'string',
             description: 'The query to search for in the knowledge base'
+          },
+          knowledgeBaseType: {
+            type: 'string',
+            enum: ['VECTOR', 'MANAGED'],
+            description:
+              'The type of knowledge base. Use MANAGED for managed knowledge bases. Use VECTOR for legacy vector-store-backed KBs.'
           }
         },
         required: ['knowledgeBaseId', 'query']
@@ -98,19 +116,40 @@ export class RetrieveTool extends BaseTool<RetrieveInput, RetrieveResult> {
       errors.push('Knowledge base ID must be a string')
     }
 
-    if (input.retrievalConfiguration) {
-      const config = input.retrievalConfiguration.vectorSearchConfiguration
+    if (input.knowledgeBaseType !== undefined) {
+      if (!['VECTOR', 'MANAGED'].includes(input.knowledgeBaseType)) {
+        errors.push('Knowledge base type must be either VECTOR or MANAGED')
+      }
+    }
 
-      if (config.numberOfResults !== undefined) {
-        if (typeof config.numberOfResults !== 'number' || config.numberOfResults < 1) {
-          errors.push('Number of results must be a positive number')
+    if (input.retrievalConfiguration) {
+      const vectorConfig = input.retrievalConfiguration.vectorSearchConfiguration
+      const managedConfig = input.retrievalConfiguration.managedSearchConfiguration
+
+      if (vectorConfig) {
+        if (vectorConfig.numberOfResults !== undefined) {
+          if (typeof vectorConfig.numberOfResults !== 'number' || vectorConfig.numberOfResults < 1) {
+            errors.push('Number of results must be a positive number')
+          }
+        }
+
+        if (vectorConfig.overrideSearchType !== undefined) {
+          if (!['HYBRID', 'SEMANTIC'].includes(vectorConfig.overrideSearchType)) {
+            errors.push('Override search type must be either HYBRID or SEMANTIC')
+          }
         }
       }
 
-      if (config.overrideSearchType !== undefined) {
-        if (!['HYBRID', 'SEMANTIC'].includes(config.overrideSearchType)) {
-          errors.push('Override search type must be either HYBRID or SEMANTIC')
+      if (managedConfig) {
+        if (managedConfig.numberOfResults !== undefined) {
+          if (
+            typeof managedConfig.numberOfResults !== 'number' ||
+            managedConfig.numberOfResults < 1
+          ) {
+            errors.push('Number of results must be a positive number')
+          }
         }
+
       }
     }
 
@@ -121,21 +160,113 @@ export class RetrieveTool extends BaseTool<RetrieveInput, RetrieveResult> {
   }
 
   /**
+   * Build the retrieval configuration based on knowledgeBaseType.
+   * For MANAGED type, uses managedSearchConfiguration.
+   * For VECTOR type, uses vectorSearchConfiguration.
+   */
+  private buildRetrievalConfiguration(input: RetrieveInput) {
+    const { knowledgeBaseType = 'VECTOR', retrievalConfiguration } = input
+
+    if (!retrievalConfiguration) {
+      return undefined
+    }
+
+    if (knowledgeBaseType === 'MANAGED') {
+      // For managed KBs, prefer managedSearchConfiguration if provided directly,
+      // otherwise adapt from vectorSearchConfiguration for backward compatibility
+      if (retrievalConfiguration.managedSearchConfiguration) {
+        return {
+          managedSearchConfiguration: retrievalConfiguration.managedSearchConfiguration
+        }
+      }
+      // Adapt vectorSearchConfiguration fields to managedSearchConfiguration format
+      if (retrievalConfiguration.vectorSearchConfiguration) {
+        const vectorConfig = retrievalConfiguration.vectorSearchConfiguration
+        return {
+          managedSearchConfiguration: {
+            numberOfResults: vectorConfig.numberOfResults,
+            filter: vectorConfig.filter
+          }
+        }
+      }
+      return undefined
+    }
+
+    // Default: VECTOR type - use vectorSearchConfiguration as-is
+    if (retrievalConfiguration.vectorSearchConfiguration) {
+      return {
+        vectorSearchConfiguration: retrievalConfiguration.vectorSearchConfiguration
+      }
+    }
+    return undefined
+  }
+
+  /**
    * Execute the tool
    */
   protected async executeInternal(input: RetrieveInput): Promise<RetrieveResult> {
-    const { query, knowledgeBaseId, retrievalConfiguration } = input
+    const { query, knowledgeBaseId, knowledgeBaseType = 'VECTOR' } = input
+    const useAgentic = input.useAgenticRetrieval ?? knowledgeBaseType === 'MANAGED'
+    const generateResponse = input.generateResponse ?? false
 
     this.logger.debug('Retrieving from Knowledge Base', {
       knowledgeBaseId,
+      knowledgeBaseType,
+      useAgentic,
       query
     })
 
     try {
+      // Use AgenticRetrieveStream for MANAGED KBs (with fallback)
+      if (useAgentic && knowledgeBaseType === 'MANAGED') {
+        try {
+          const agenticResult = await ipc('bedrock:agenticRetrieveStream', {
+            messages: [{ content: [{ text: query }], role: 'user' }],
+            retrievers: [
+              {
+                type: 'KNOWLEDGE_BASE',
+                knowledgeBaseConfiguration: {
+                  knowledgeBaseId,
+                  numberOfResults:
+                    input.retrievalConfiguration?.managedSearchConfiguration?.numberOfResults ?? 5
+                }
+              }
+            ],
+            agenticRetrieveConfiguration: {
+              foundationModelType: 'MANAGED',
+              rerankingConfiguration: { type: 'MANAGED' }
+            },
+            generateResponse
+          })
+
+          this.logger.info('Agentic retrieval successful', {
+            knowledgeBaseId,
+            resultsCount: agenticResult.results?.length || 0
+          })
+
+          return {
+            success: true,
+            name: 'retrieve' as const,
+            message: `Retrieved information from knowledge base ${knowledgeBaseId} via agentic retrieval`,
+            result: {
+              retrievalResults: agenticResult.results || [],
+              ...(generateResponse && agenticResult.generatedResponse
+                ? { generatedAnswer: agenticResult.generatedResponse.answer }
+                : {})
+            }
+          }
+        } catch {
+          this.logger.warn('AgenticRetrieveStream not available, falling back to Retrieve')
+        }
+      }
+
       this.logger.info('Calling Bedrock Knowledge Base', {
         knowledgeBaseId,
+        knowledgeBaseType,
         queryLength: query.length
       })
+
+      const retrievalConfiguration = this.buildRetrievalConfiguration(input)
 
       // Call the main process API using type-safe IPC
       const result = await ipc('bedrock:retrieve', {

@@ -96,6 +96,7 @@ export function createAgentRuntimeClient(awsCredentials: AWSCredentials) {
     return new BedrockAgentRuntimeClient({
       region,
       credentials: fromIni({ profile }),
+      customUserAgent: [["bedrock-engineer", "bedrock-kb"]],
       ...defaultHttpOptions
     })
   }
@@ -103,6 +104,7 @@ export function createAgentRuntimeClient(awsCredentials: AWSCredentials) {
   return new BedrockAgentRuntimeClient({
     region,
     credentials,
+    customUserAgent: [["bedrock-engineer", "bedrock-kb"]],
     ...defaultHttpOptions
   })
 }

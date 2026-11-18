@@ -34,6 +34,15 @@ export interface IPCChannelDefinitions {
     }
     result: any // AWS SDKの型に合わせる
   }
+  'bedrock:agenticRetrieveStream': {
+    params: {
+      messages: any[]
+      retrievers: any[]
+      agenticRetrieveConfiguration?: any
+      generateResponse?: boolean
+    }
+    result: any
+  }
   'bedrock:invokeAgent': {
     params: {
       agentId: string

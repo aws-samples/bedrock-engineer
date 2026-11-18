@@ -66,6 +66,10 @@ export class BedrockService {
     return this.agentService.retrieve(props)
   }
 
+  async agenticRetrieveStream(props: any) {
+    return this.agentService.agenticRetrieveStream(props)
+  }
+
   async invokeAgent(props: Parameters<AgentService['invokeAgent']>[0]) {
     return this.agentService.invokeAgent(props)
   }

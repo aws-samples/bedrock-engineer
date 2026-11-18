@@ -2,6 +2,7 @@ import {
   RetrieveAndGenerateCommand,
   RetrieveAndGenerateCommandInput,
   RetrieveCommand,
+  AgenticRetrieveStreamCommand,
   RetrieveCommandInput,
   InvokeAgentCommand,
   InvokeAgentCommandInput,
@@ -58,6 +59,13 @@ export class AgentService {
   async retrieve(props: RetrieveCommandInput) {
     const agentClient = createAgentRuntimeClient(this.context.store.get('aws'))
     const command = new RetrieveCommand(props)
+    const res = await agentClient.send(command)
+    return res
+  }
+
+  async agenticRetrieveStream(props: any) {
+    const agentClient = createAgentRuntimeClient(this.context.store.get('aws'))
+    const command = new AgenticRetrieveStreamCommand(props)
     const res = await agentClient.send(command)
     return res
   }

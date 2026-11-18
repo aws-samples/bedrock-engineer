@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock": "^3.995.0",
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.995.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1075.0",
     "@aws-sdk/client-bedrock-runtime": "^3.995.0",
     "@aws-sdk/client-s3": "^3.995.0",
     "@aws-sdk/client-sts": "3.995.0",
